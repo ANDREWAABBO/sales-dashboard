@@ -568,13 +568,18 @@
 
         // Create status dropdown that's always editable
         function createStatusDropdown(lead, leadId) {
-            const statuses = ['Active', 'Not Qualified', 'Follow Up Later', 'Dead'];
+            const statuses = [
+                {value: 'Active', label: 'Active'},
+                {value: 'Not Qualified', label: 'Not Qualified'},
+                {value: 'Follow Up Later', label: 'Follow Up Later'},
+                {value: 'Dead', label: 'Dead (Archive)'}
+            ];
             let html = `<select class="status-select" onchange="updateStatus(this, ${leadId})">`;
             
             statuses.forEach(status => {
-                const selected = lead.status === status ? 'selected' : '';
-                const className = status.toLowerCase().replace(' ', '');
-                html += `<option value="${status}" ${selected} class="status-${className}">${status}</option>`;
+                const selected = lead.status === status.value ? 'selected' : '';
+                const className = status.value.toLowerCase().replace(' ', '');
+                html += `<option value="${status.value}" ${selected} class="status-${className}">${status.label}</option>`;
             });
             
             html += '</select>';
@@ -586,7 +591,7 @@
             const newStatus = selectElement.value;
             
             if (newStatus === 'Dead') {
-                if (confirm('Are you sure you want to archive this lead?')) {
+                if (confirm('Setting status to "Dead" will archive this lead and remove it from the active list. Are you sure you want to archive this lead?')) {
                     await archiveLead(leadId);
                 } else {
                     // Reset to previous value
