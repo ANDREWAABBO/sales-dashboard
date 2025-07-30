@@ -338,21 +338,8 @@
                         <input type="text" id="repName" name="repName" placeholder="Enter your name" required>
                     </div>
                     <div class="form-group">
-                        <label for="followUp">Follow Up</label>
-                        <select id="followUp" name="followUp">
-                            <option value="1 month">1 month</option>
-                            <option value="2 months">2 months</option>
-                            <option value="3 months">3 months</option>
-                            <option value="4 months">4 months</option>
-                            <option value="5 months">5 months</option>
-                            <option value="6 months">6 months</option>
-                            <option value="7 months">7 months</option>
-                            <option value="8 months">8 months</option>
-                            <option value="9 months">9 months</option>
-                            <option value="10 months">10 months</option>
-                            <option value="11 months">11 months</option>
-                            <option value="12 months">12 months</option>
-                        </select>
+                        <label for="followUp">Follow Up Date</label>
+                        <input type="date" id="followUp" name="followUp" required>
                     </div>
                 </div>
                 <button type="submit" class="btn" id="submitBtn">Add Lead</button>
@@ -618,7 +605,7 @@
             input.select();
         }
 
-        // Edit follow up with dropdown
+        // Edit follow up with date picker
         function editFollowUp(cell, leadId) {
             // If another cell is being edited, cancel it
             if (currentEditingCell && currentEditingCell !== cell) {
@@ -630,58 +617,47 @@
             cell.dataset.originalValue = cell.textContent;
             
             const currentValue = cell.textContent;
-            const select = document.createElement('select');
-            select.className = 'edit-input';
-            
-            // Add follow up options in months
-            const monthOptions = [
-                '1 month', '2 months', '3 months', '4 months', '5 months', '6 months',
-                '7 months', '8 months', '9 months', '10 months', '11 months', '12 months'
-            ];
-            
-            monthOptions.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt;
-                option.textContent = opt;
-                if (opt === currentValue) option.selected = true;
-                select.appendChild(option);
-            });
+            const input = document.createElement('input');
+            input.type = 'date';
+            input.value = currentValue;
+            input.className = 'edit-input';
             
             let isUpdating = false;
             
             const saveValue = async () => {
-                if (!isUpdating) {
+                if (!isUpdating && input.value) {
                     isUpdating = true;
-                    await updateLead(leadId, 'followUp', select.value);
+                    await updateLead(leadId, 'followUp', input.value);
+                    cell.textContent = input.value;
                     currentEditingCell = null;
                 }
             };
             
-            select.addEventListener('change', () => {
-                saveValue();
-            });
+            input.addEventListener('change', saveValue);
             
-            select.addEventListener('blur', () => {
+            input.addEventListener('blur', () => {
                 setTimeout(() => {
-                    if (!isUpdating) {
-                        cell.textContent = select.value;
-                        currentEditingCell = null;
+                    if (!isUpdating && input.value) {
+                        cell.textContent = input.value;
+                    } else if (!input.value) {
+                        cell.textContent = currentValue;
                     }
-                }, 300);
+                    currentEditingCell = null;
+                }, 200);
             });
             
-            // Prevent cell click from interfering
-            select.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-            });
-            
-            select.addEventListener('click', (e) => {
-                e.stopPropagation();
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cell.textContent = currentValue;
+                    currentEditingCell = null;
+                }
             });
             
             cell.innerHTML = '';
-            cell.appendChild(select);
-            select.focus();
+            cell.appendChild(input);
+            input.focus();
+            input.showPicker?.(); // Show date picker if supported
         }
 
         // Update lead data
