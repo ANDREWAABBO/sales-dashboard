@@ -339,7 +339,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-btn">← Back to Dashboard</a>
+        <a href="#" onclick="window.location.href='index.html'; return false;" class="back-btn">← Back to Dashboard</a>
         
         <div class="header">
             <h1>Lead Logging System</h1>
@@ -569,6 +569,32 @@
 
         // Create table row for a lead
         function createLeadRow(lead) {
+            // Debug the lead structure
+            console.log('Creating row for lead:', lead);
+            
+            // Check if data is coming as a single concatenated string in companyName
+            if (lead.companyName && lead.companyName.includes('\n')) {
+                // Parse the concatenated data
+                const parts = lead.companyName.split('\n');
+                console.log('Parsing concatenated data:', parts);
+                
+                // Reconstruct the lead object
+                lead = {
+                    id: lead.id || lead.iD || lead.ID,
+                    dateAdded: lead.dateAdded,
+                    companyName: parts[0] || '',
+                    contactName: parts[1] || '',
+                    phoneNumber: parts[2] || '',
+                    emailAddress: parts[3] || '',
+                    repName: parts[4] || '',
+                    followUp: parts[5] || '',
+                    status: lead.status || 'Active',
+                    appointmentMade: lead.appointmentMade || 'No',
+                    appointmentDate: lead.appointmentDate || '',
+                    notes: lead.notes || ''
+                };
+            }
+            
             // Handle field name variations from Google Sheets
             const leadId = lead.id || lead.iD || lead.ID;
             const companyName = lead.companyName || lead.companyname || lead['Company Name'] || '';
