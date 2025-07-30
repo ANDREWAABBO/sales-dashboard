@@ -223,7 +223,7 @@
             color: white;
         }
 
-        .status-followup {
+        .status-followuplater {
             background-color: #3b82f6;
             color: white;
         }
@@ -304,7 +304,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back-btn">← Back to Dashboard</a>
+        <a href="/sales-dashboard/" class="back-btn">← Back to Dashboard</a>
         
         <div class="header">
             <h1>Lead Logging System</h1>
@@ -402,8 +402,8 @@
     </div>
 
     <script>
-        // Google Sheets Integration
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec'; // You'll replace this after deploying the Google Apps Script
+        // Google Sheets Integration - UPDATED WITH CORRECT URL
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec';
 
         let leadsData = [];
 
@@ -527,25 +527,32 @@
 
         // Create table row for a lead
         function createLeadRow(lead) {
+            // Handle both 'id' and 'iD' field names
+            const leadId = lead.id || lead.iD;
+            
             // Format date to simpler format (MM/DD/YY)
             let formattedDate = lead.dateAdded;
             if (lead.dateAdded && lead.dateAdded.includes('-')) {
                 const [year, month, day] = lead.dateAdded.split('-');
                 formattedDate = `${month}/${day}/${year.slice(2)}`;
+            } else if (lead.dateAdded && lead.dateAdded.includes('T')) {
+                // Handle ISO date format
+                const date = new Date(lead.dateAdded);
+                formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear().toString().slice(2)}`;
             }
             
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${formattedDate}</td>
-                <td class="editable" onclick="editCell(this, ${lead.id}, 'companyName')">${lead.companyName}</td>
-                <td class="editable" onclick="editCell(this, ${lead.id}, 'contactName')">${lead.contactName}</td>
-                <td class="editable" onclick="editCell(this, ${lead.id}, 'phoneNumber')">${lead.phoneNumber}</td>
-                <td class="editable" onclick="editCell(this, ${lead.id}, 'emailAddress')">${lead.emailAddress || ''}</td>
-                <td class="editable" onclick="editCell(this, ${lead.id}, 'repName')">${lead.repName}</td>
-                <td class="editable" onclick="editFollowUp(this, ${lead.id})">${lead.followUp}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'companyName')">${lead.companyName}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'contactName')">${lead.contactName}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'phoneNumber')">${lead.phoneNumber}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'emailAddress')">${lead.emailAddress || ''}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'repName')">${lead.repName}</td>
+                <td class="editable" onclick="editFollowUp(this, ${leadId})">${lead.followUp}</td>
                 <td><span class="status-badge status-${lead.status.toLowerCase().replace(' ', '')}">${lead.status}</span></td>
                 <td>
-                    <button class="action-btn archive" onclick="archiveLead(${lead.id})">Archive</button>
+                    <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
             `;
             return row;
