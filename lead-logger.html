@@ -339,7 +339,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="/sales-dashboard/" class="back-btn">← Back to Dashboard</a>
+        <a href="index.html" class="back-btn">← Back to Dashboard</a>
         
         <div class="header">
             <h1>Lead Logging System</h1>
@@ -511,6 +511,13 @@
                 
                 if (data.status === 'success') {
                     leadsData = data.leads;
+                    
+                    // Debug: Log the data structure
+                    if (leadsData.length > 0) {
+                        console.log('First lead data:', leadsData[0]);
+                        console.log('All field names:', Object.keys(leadsData[0]));
+                    }
+                    
                     displayLeads();
                 } else {
                     throw new Error(data.message);
