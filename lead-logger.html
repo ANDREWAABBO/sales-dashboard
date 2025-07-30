@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Logging System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            margin-left: 10px;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow-x: auto;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-controls select,
+        .filter-controls input {
+            padding: 8px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:hover {
+            background-color: #f7fafc;
+        }
+
+        .editable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable:hover {
+            background-color: #edf2f7;
+            border-radius: 5px;
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .status-followup {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .status-notqualified {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .status-dead {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.archive {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .action-btn.archive:hover {
+            background-color: #dc2626;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .message {
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .message.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        /* Back button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Back to Dashboard</a>
+        
+        <div class="header">
+            <h1>Lead Logging System</h1>
+        </div>
+
+        <div class="message" id="message"></div>
+
+        <!-- Add New Lead Form -->
+        <div class="form-section">
+            <h2 style="margin-bottom: 20px; color: #2d3748;">Add New Lead</h2>
+            <form id="leadForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="companyName">Company Name*</label>
+                        <input type="text" id="companyName" name="companyName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactName">Contact Name*</label>
+                        <input type="text" id="contactName" name="contactName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number*</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailAddress">Email Address</label>
+                        <input type="email" id="emailAddress" name="emailAddress">
+                    </div>
+                    <div class="form-group">
+                        <label for="repName">Rep Name*</label>
+                        <input type="text" id="repName" name="repName" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="followUp">Follow Up</label>
+                        <select id="followUp" name="followUp">
+                            <option value="1">1st Follow Up</option>
+                            <option value="2">2nd Follow Up</option>
+                            <option value="3">3rd Follow Up</option>
+                            <option value="4">4th Follow Up</option>
+                            <option value="5">5th Follow Up</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">Add Lead</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+            </form>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2 style="color: #2d3748;">Lead Database</h2>
+                <div class="filter-controls">
+                    <select id="repFilter" onchange="filterLeads()">
+                        <option value="">All Reps</option>
+                        <!-- Dynamically populated -->
+                    </select>
+                    <select id="statusFilter" onchange="filterLeads()">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Not Qualified">Not Qualified</option>
+                        <option value="Follow Up Later">Follow Up Later</option>
+                        <option value="Dead">Dead</option>
+                    </select>
+                    <input type="text" id="searchBox" placeholder="Search leads..." onkeyup="filterLeads()">
+                </div>
+            </div>
+            <div class="loading" id="loading">Loading leads...</div>
+            <table id="leadsTable">
+                <thead>
+                    <tr>
+                        <th>Date Added</th>
+                        <th>Company Name</th>
+                        <th>Contact Name</th>
+                        <th>Phone Number</th>
+                        <th>Email Address</th>
+                        <th>Rep Name</th>
+                        <th>Follow Up</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody">
+                    <!-- Leads will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets Integration
+        const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // You'll replace this after deploying the Google Apps Script
+
+        let leadsData = [];
+
+        // Load leads on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLeads();
+            
+            // Load saved rep name if exists
+            const savedRepName = localStorage.getItem('leadLoggerRepName');
+            if (savedRepName) {
+                document.getElementById('repName').value = savedRepName;
+            }
+        });
+
+        // Form submission
+        document.getElementById('leadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const repName = formData.get('repName');
+            
+            // Save rep name for next time
+            localStorage.setItem('leadLoggerRepName', repName);
+            
+            const leadData = {
+                companyName: formData.get('companyName'),
+                contactName: formData.get('contactName'),
+                phoneNumber: formData.get('phoneNumber'),
+                emailAddress: formData.get('emailAddress'),
+                repName: repName,
+                followUp: formData.get('followUp')
+            };
+
+            // Show loading
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Adding...';
+
+            try {
+                // Send to Google Sheets
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addLead',
+                        lead: leadData
+                    })
+                });
+
+                showMessage('Lead added successfully!', 'success');
+                resetForm();
+                await loadLeads(); // Reload the leads
+                
+            } catch (error) {
+                showMessage('Error adding lead. Please try again.', 'error');
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').textContent = 'Add Lead';
+            }
+        });
+
+        // Load and display leads from Google Sheets
+        async function loadLeads() {
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=getActiveLeads');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    leadsData = data.leads;
+                    displayLeads();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Error loading leads:', error);
+                showMessage('Error loading leads. Please refresh the page.', 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Display leads in table
+        function displayLeads() {
+            const tbody = document.getElementById('leadsTableBody');
+            tbody.innerHTML = '';
+            
+            // Get unique rep names for filter
+            const uniqueReps = [...new Set(leadsData.map(lead => lead.repName))].filter(Boolean).sort();
+            updateRepFilter(uniqueReps);
+            
+            leadsData.forEach(lead => {
+                if (lead.status !== 'Dead') {
+                    const row = createLeadRow(lead);
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        // Update rep filter dropdown with actual reps
+        function updateRepFilter(reps) {
+            const repFilter = document.getElementById('repFilter');
+            // Keep the "All Reps" option
+            repFilter.innerHTML = '<option value="">All Reps</option>';
+            
+            // Add each unique rep
+            reps.forEach(rep => {
+                const option = document.createElement('option');
+                option.value = rep;
+                option.textContent = rep;
+                repFilter.appendChild(option);
+            });
+        }
+
+        // Create table row for a lead
+        function createLeadRow(lead) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${lead.dateAdded}</td>
+                <td class="editable" onclick="editCell(this, ${lead.id}, 'companyName')">${lead.companyName}</td>
+                <td class="editable" onclick="editCell(this, ${lead.id}, 'contactName')">${lead.contactName}</td>
+                <td class="editable" onclick="editCell(this, ${lead.id}, 'phoneNumber')">${lead.phoneNumber}</td>
+                <td class="editable" onclick="editCell(this, ${lead.id}, 'emailAddress')">${lead.emailAddress || ''}</td>
+                <td class="editable" onclick="editCell(this, ${lead.id}, 'repName')">${lead.repName}</td>
+                <td class="editable" onclick="editFollowUp(this, ${lead.id})">${lead.followUp}</td>
+                <td><span class="status-badge status-${lead.status.toLowerCase().replace(' ', '')}">${lead.status}</span></td>
+                <td>
+                    <button class="action-btn archive" onclick="archiveLead(${lead.id})">Archive</button>
+                </td>
+            `;
+            return row;
+        }
+
+        // Edit cell functionality
+        function editCell(cell, leadId, field) {
+            const currentValue = cell.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.className = 'edit-input';
+            
+            input.onblur = function() {
+                updateLead(leadId, field, input.value);
+                cell.textContent = input.value;
+            };
+            
+            input.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+            };
+            
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+        }
+
+        // Edit follow up with dropdown
+        async function editFollowUp(cell, leadId) {
+            const currentValue = cell.textContent;
+            const select = document.createElement('select');
+            select.className = 'edit-input';
+            
+            // Add follow up options
+            for (let i = 1; i <= 5; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                if (i == currentValue) option.selected = true;
+                select.appendChild(option);
+            }
+            
+            // Add extended follow up options
+            const extendedOptions = [
+                'Follow up in 1 month',
+                'Follow up in 2 months',
+                'Follow up in 3 months',
+                'Follow up in 4 months',
+                'Follow up in 5 months',
+                'Follow up in 6 months',
+                'Follow up in 7 months',
+                'Follow up in 8 months',
+                'Follow up in 9 months',
+                'Follow up in 10 months',
+                'Follow up in 11 months',
+                'Follow up in 1 year'
+            ];
+            
+            extendedOptions.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+            
+            select.onchange = async function() {
+                await updateLead(leadId, 'followUp', select.value);
+            };
+            
+            cell.innerHTML = '';
+            cell.appendChild(select);
+            select.focus();
+        }
+
+        // Update lead data
+        async function updateLead(leadId, field, value) {
+            try {
+                const updates = {};
+                updates[field] = value;
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateLead',
+                        leadId: leadId,
+                        updates: updates
+                    })
+                });
+                
+                showMessage('Lead updated successfully!', 'success');
+                await loadLeads(); // Reload to get updated data
+            } catch (error) {
+                console.error('Error updating lead:', error);
+                showMessage('Error updating lead. Please try again.', 'error');
+            }
+        }
+
+        // Archive lead
+        async function archiveLead(leadId) {
+            if (confirm('Are you sure you want to archive this lead?')) {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'archiveLead',
+                            leadId: leadId
+                        })
+                    });
+                    
+                    showMessage('Lead archived successfully!', 'success');
+                    await loadLeads();
+                } catch (error) {
+                    console.error('Error archiving lead:', error);
+                    showMessage('Error archiving lead. Please try again.', 'error');
+                }
+            }
+        }
+
+        // Filter leads
+        function filterLeads() {
+            const repFilter = document.getElementById('repFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            const tbody = document.getElementById('leadsTableBody');
+            tbody.innerHTML = '';
+            
+            leadsData.forEach(lead => {
+                if (lead.status === 'Dead') return; // Don't show archived
+                
+                let show = true;
+                
+                if (repFilter && lead.repName !== repFilter) show = false;
+                if (statusFilter && lead.status !== statusFilter) show = false;
+                if (searchTerm && !Object.values(lead).some(val => 
+                    String(val).toLowerCase().includes(searchTerm)
+                )) show = false;
+                
+                if (show) {
+                    const row = createLeadRow(lead);
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('leadForm').reset();
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
