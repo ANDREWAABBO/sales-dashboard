@@ -174,11 +174,24 @@
         .editable {
             cursor: pointer;
             position: relative;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
 
         .editable:hover {
             background-color: #edf2f7;
-            border-radius: 5px;
+            box-shadow: 0 0 0 2px #e2e8f0;
+        }
+
+        .editable:hover::after {
+            content: '✏️';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            opacity: 0.6;
         }
 
         .edit-input {
@@ -187,6 +200,14 @@
             border: 2px solid #667eea;
             border-radius: 5px;
             font-size: 14px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .edit-input:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
 
         .status-badge {
@@ -375,7 +396,7 @@
 
     <script>
         // Google Sheets Integration
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec'; // You'll replace this after deploying the Google Apps Script
+        const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // You'll replace this after deploying the Google Apps Script
 
         let leadsData = [];
 
@@ -513,32 +534,77 @@
             return row;
         }
 
+        // Global variable to track current editing cell
+        let currentEditingCell = null;
+
         // Edit cell functionality
         function editCell(cell, leadId, field) {
+            // If another cell is being edited, cancel it
+            if (currentEditingCell && currentEditingCell !== cell) {
+                const prevCell = currentEditingCell;
+                prevCell.textContent = prevCell.dataset.originalValue || '';
+            }
+            
+            currentEditingCell = cell;
+            cell.dataset.originalValue = cell.textContent;
+            
             const currentValue = cell.textContent;
             const input = document.createElement('input');
             input.type = 'text';
             input.value = currentValue;
             input.className = 'edit-input';
             
-            input.onblur = function() {
-                updateLead(leadId, field, input.value);
+            let isUpdating = false;
+            
+            const saveValue = async () => {
+                if (!isUpdating && input.value !== currentValue) {
+                    isUpdating = true;
+                    await updateLead(leadId, field, input.value);
+                }
                 cell.textContent = input.value;
+                currentEditingCell = null;
             };
             
-            input.onkeypress = function(e) {
+            const cancelEdit = () => {
+                cell.textContent = currentValue;
+                currentEditingCell = null;
+            };
+            
+            input.addEventListener('blur', () => {
+                setTimeout(saveValue, 200);
+            });
+            
+            input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     input.blur();
                 }
-            };
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
             
             cell.innerHTML = '';
             cell.appendChild(input);
             input.focus();
+            input.select();
         }
 
         // Edit follow up with dropdown
-        async function editFollowUp(cell, leadId) {
+        function editFollowUp(cell, leadId) {
+            // If another cell is being edited, cancel it
+            if (currentEditingCell && currentEditingCell !== cell) {
+                const prevCell = currentEditingCell;
+                prevCell.textContent = prevCell.dataset.originalValue || '';
+            }
+            
+            currentEditingCell = cell;
+            cell.dataset.originalValue = cell.textContent;
+            
             const currentValue = cell.textContent;
             const select = document.createElement('select');
             select.className = 'edit-input';
@@ -572,12 +638,41 @@
                 const option = document.createElement('option');
                 option.value = opt;
                 option.textContent = opt;
+                if (opt === currentValue) option.selected = true;
                 select.appendChild(option);
             });
             
-            select.onchange = async function() {
-                await updateLead(leadId, 'followUp', select.value);
+            let isUpdating = false;
+            
+            const saveValue = async () => {
+                if (!isUpdating) {
+                    isUpdating = true;
+                    await updateLead(leadId, 'followUp', select.value);
+                    currentEditingCell = null;
+                }
             };
+            
+            select.addEventListener('change', () => {
+                saveValue();
+            });
+            
+            select.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!isUpdating) {
+                        cell.textContent = select.value;
+                        currentEditingCell = null;
+                    }
+                }, 300);
+            });
+            
+            // Prevent cell click from interfering
+            select.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+            });
+            
+            select.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
             
             cell.innerHTML = '';
             cell.appendChild(select);
