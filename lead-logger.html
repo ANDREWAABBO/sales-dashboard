@@ -395,6 +395,9 @@
                         <th>Rep Name</th>
                         <th>Follow Up</th>
                         <th>Status</th>
+                        <th>Appt Made</th>
+                        <th>Appt Date</th>
+                        <th>Notes</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -535,19 +538,9 @@
             const leadId = lead.id || lead.iD;
             
             // Format date to simpler format (MM/DD/YY)
-            let formattedDate = lead.dateAdded;
-            if (lead.dateAdded) {
-                try {
-                    const date = new Date(lead.dateAdded);
-                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                    const day = date.getDate().toString().padStart(2, '0');
-                    const year = date.getFullYear().toString().slice(-2);
-                    formattedDate = `${month}/${day}/${year}`;
-                } catch (e) {
-                    // If date parsing fails, use original
-                    formattedDate = lead.dateAdded;
-                }
-            }
+            let formattedDate = formatDate(lead.dateAdded);
+            let formattedFollowUp = formatDate(lead.followUp);
+            let formattedApptDate = formatDate(lead.appointmentDate);
             
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -557,13 +550,99 @@
                 <td class="editable" onclick="editCell(this, ${leadId}, 'phoneNumber')">${lead.phoneNumber}</td>
                 <td class="editable" onclick="editCell(this, ${leadId}, 'emailAddress')">${lead.emailAddress || ''}</td>
                 <td class="editable" onclick="editCell(this, ${leadId}, 'repName')">${lead.repName}</td>
-                <td class="editable" onclick="editFollowUp(this, ${leadId})">${lead.followUp || 'Set date'}</td>
+                <td class="editable" onclick="editFollowUp(this, ${leadId})">${formattedFollowUp || 'Set date'}</td>
                 <td>${createStatusDropdown(lead, leadId)}</td>
+                <td>${createAppointmentDropdown(lead, leadId)}</td>
+                <td class="editable" onclick="editAppointmentDate(this, ${leadId})">${formattedApptDate || 'Set date'}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'notes')">${lead.notes || 'Add notes'}</td>
                 <td>
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
             `;
             return row;
+        }
+
+        // Format any date to MM/DD/YY
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return dateValue; // Return original if invalid
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear().toString().slice(-2);
+                return `${month}/${day}/${year}`;
+            } catch (e) {
+                return dateValue;
+            }
+        }
+
+        // Create appointment made dropdown
+        function createAppointmentDropdown(lead, leadId) {
+            const selected = lead.appointmentMade || 'No';
+            let html = `<select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">`;
+            html += `<option value="No" ${selected === 'No' ? 'selected' : ''}>No</option>`;
+            html += `<option value="Yes" ${selected === 'Yes' ? 'selected' : ''}>Yes</option>`;
+            html += '</select>';
+            return html;
+        }
+
+        // Update appointment made status
+        async function updateAppointmentMade(selectElement, leadId) {
+            await updateLead(leadId, 'appointmentMade', selectElement.value);
+        }
+
+        // Edit appointment date with date picker
+        function editAppointmentDate(cell, leadId) {
+            // If another cell is being edited, cancel it
+            if (currentEditingCell && currentEditingCell !== cell) {
+                const prevCell = currentEditingCell;
+                prevCell.textContent = prevCell.dataset.originalValue || '';
+            }
+            
+            currentEditingCell = cell;
+            cell.dataset.originalValue = cell.textContent;
+            
+            const currentValue = cell.textContent === 'Set date' ? '' : cell.textContent;
+            const input = document.createElement('input');
+            input.type = 'date';
+            
+            // Try to parse the MM/DD/YY format back to YYYY-MM-DD for the date input
+            if (currentValue && currentValue.match(/\d{2}\/\d{2}\/\d{2}/)) {
+                const [month, day, year] = currentValue.split('/');
+                input.value = `20${year}-${month}-${day}`;
+            }
+            
+            input.className = 'edit-input';
+            
+            let isUpdating = false;
+            
+            const saveValue = async () => {
+                if (!isUpdating && input.value) {
+                    isUpdating = true;
+                    await updateLead(leadId, 'appointmentDate', input.value);
+                    cell.textContent = formatDate(input.value);
+                    currentEditingCell = null;
+                }
+            };
+            
+            input.addEventListener('change', saveValue);
+            
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!isUpdating && input.value) {
+                        cell.textContent = formatDate(input.value);
+                    } else if (!input.value) {
+                        cell.textContent = 'Set date';
+                    }
+                    currentEditingCell = null;
+                }, 200);
+            });
+            
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            input.showPicker?.();
         }
 
         // Create status dropdown that's always editable
@@ -676,10 +755,16 @@
             currentEditingCell = cell;
             cell.dataset.originalValue = cell.textContent;
             
-            const currentValue = cell.textContent;
+            const currentValue = cell.textContent === 'Set date' ? '' : cell.textContent;
             const input = document.createElement('input');
             input.type = 'date';
-            input.value = currentValue;
+            
+            // Try to parse the MM/DD/YY format back to YYYY-MM-DD for the date input
+            if (currentValue && currentValue.match(/\d{2}\/\d{2}\/\d{2}/)) {
+                const [month, day, year] = currentValue.split('/');
+                input.value = `20${year}-${month}-${day}`;
+            }
+            
             input.className = 'edit-input';
             
             let isUpdating = false;
@@ -688,7 +773,7 @@
                 if (!isUpdating && input.value) {
                     isUpdating = true;
                     await updateLead(leadId, 'followUp', input.value);
-                    cell.textContent = input.value;
+                    cell.textContent = formatDate(input.value);
                     currentEditingCell = null;
                 }
             };
@@ -698,9 +783,9 @@
             input.addEventListener('blur', () => {
                 setTimeout(() => {
                     if (!isUpdating && input.value) {
-                        cell.textContent = input.value;
+                        cell.textContent = formatDate(input.value);
                     } else if (!input.value) {
-                        cell.textContent = currentValue;
+                        cell.textContent = 'Set date';
                     }
                     currentEditingCell = null;
                 }, 200);
@@ -709,7 +794,7 @@
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    cell.textContent = currentValue;
+                    cell.textContent = cell.dataset.originalValue;
                     currentEditingCell = null;
                 }
             });
