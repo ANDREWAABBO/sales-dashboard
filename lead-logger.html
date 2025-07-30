@@ -218,6 +218,23 @@
             font-weight: 600;
         }
 
+        .status-select {
+            padding: 5px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .status-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         .status-active {
             background-color: #10b981;
             color: white;
@@ -519,13 +536,17 @@
             
             // Format date to simpler format (MM/DD/YY)
             let formattedDate = lead.dateAdded;
-            if (lead.dateAdded && lead.dateAdded.includes('-')) {
-                const [year, month, day] = lead.dateAdded.split('-');
-                formattedDate = `${month}/${day}/${year.slice(2)}`;
-            } else if (lead.dateAdded && lead.dateAdded.includes('T')) {
-                // Handle ISO date format
-                const date = new Date(lead.dateAdded);
-                formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear().toString().slice(2)}`;
+            if (lead.dateAdded) {
+                try {
+                    const date = new Date(lead.dateAdded);
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const year = date.getFullYear().toString().slice(-2);
+                    formattedDate = `${month}/${day}/${year}`;
+                } catch (e) {
+                    // If date parsing fails, use original
+                    formattedDate = lead.dateAdded;
+                }
             }
             
             const row = document.createElement('tr');
@@ -536,13 +557,47 @@
                 <td class="editable" onclick="editCell(this, ${leadId}, 'phoneNumber')">${lead.phoneNumber}</td>
                 <td class="editable" onclick="editCell(this, ${leadId}, 'emailAddress')">${lead.emailAddress || ''}</td>
                 <td class="editable" onclick="editCell(this, ${leadId}, 'repName')">${lead.repName}</td>
-                <td class="editable" onclick="editFollowUp(this, ${leadId})">${lead.followUp}</td>
-                <td><span class="status-badge status-${lead.status.toLowerCase().replace(' ', '')}">${lead.status}</span></td>
+                <td class="editable" onclick="editFollowUp(this, ${leadId})">${lead.followUp || 'Set date'}</td>
+                <td>${createStatusDropdown(lead, leadId)}</td>
                 <td>
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
             `;
             return row;
+        }
+
+        // Create status dropdown that's always editable
+        function createStatusDropdown(lead, leadId) {
+            const statuses = ['Active', 'Not Qualified', 'Follow Up Later', 'Dead'];
+            let html = `<select class="status-select" onchange="updateStatus(this, ${leadId})">`;
+            
+            statuses.forEach(status => {
+                const selected = lead.status === status ? 'selected' : '';
+                const className = status.toLowerCase().replace(' ', '');
+                html += `<option value="${status}" ${selected} class="status-${className}">${status}</option>`;
+            });
+            
+            html += '</select>';
+            return html;
+        }
+
+        // Update status directly
+        async function updateStatus(selectElement, leadId) {
+            const newStatus = selectElement.value;
+            
+            if (newStatus === 'Dead') {
+                if (confirm('Are you sure you want to archive this lead?')) {
+                    await archiveLead(leadId);
+                } else {
+                    // Reset to previous value
+                    const lead = leadsData.find(l => (l.id || l.iD) === leadId);
+                    if (lead) {
+                        selectElement.value = lead.status;
+                    }
+                }
+            } else {
+                await updateLead(leadId, 'status', newStatus);
+            }
         }
 
         // Global variable to track current editing cell
