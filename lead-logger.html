@@ -175,11 +175,15 @@
             border-bottom: 1px solid #e2e8f0;
             position: relative;
             min-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         td:nth-child(11) { /* Notes column */
             min-width: 200px;
             max-width: 300px;
+            white-space: normal;
         }
 
         tr:hover {
@@ -572,46 +576,31 @@
             // Debug the lead structure
             console.log('Creating row for lead:', lead);
             
-            // Check if data is coming as a single concatenated string in companyName
-            if (lead.companyName && lead.companyName.includes('\n')) {
-                // Parse the concatenated data
-                const parts = lead.companyName.split('\n');
-                console.log('Parsing concatenated data:', parts);
-                
-                // Reconstruct the lead object
-                lead = {
-                    id: lead.id || lead.iD || lead.ID,
-                    dateAdded: lead.dateAdded,
-                    companyName: parts[0] || '',
-                    contactName: parts[1] || '',
-                    phoneNumber: parts[2] || '',
-                    emailAddress: parts[3] || '',
-                    repName: parts[4] || '',
-                    followUp: parts[5] || '',
-                    status: lead.status || 'Active',
-                    appointmentMade: lead.appointmentMade || 'No',
-                    appointmentDate: lead.appointmentDate || '',
-                    notes: lead.notes || ''
-                };
-            }
-            
             // Handle field name variations from Google Sheets
             const leadId = lead.id || lead.iD || lead.ID;
-            const companyName = lead.companyName || lead.companyname || lead['Company Name'] || '';
-            const contactName = lead.contactName || lead.contactname || lead['Contact Name'] || '';
-            const phoneNumber = lead.phoneNumber || lead.phonenumber || lead['Phone Number'] || '';
-            const emailAddress = lead.emailAddress || lead.emailaddress || lead['Email Address'] || '';
-            const repName = lead.repName || lead.repname || lead['Rep Name'] || '';
-            const followUp = lead.followUp || lead.followup || lead['Follow Up'] || '';
-            const status = lead.status || lead.Status || '';
-            const appointmentMade = lead.appointmentMade || lead.appointmentmade || lead['Appointment Made'] || 'No';
-            const appointmentDate = lead.appointmentDate || lead.appointmentdate || lead['Appointment Date'] || '';
-            const notes = lead.notes || lead.Notes || '';
+            const companyName = (lead.companyName || '').replace(/\n/g, ' ').trim();
+            const contactName = (lead.contactName || '').replace(/\n/g, ' ').trim();
+            const phoneNumber = (lead.phoneNumber || '').replace(/\n/g, ' ').trim();
+            const emailAddress = (lead.emailAddress || '').replace(/\n/g, ' ').trim();
+            const repName = (lead.repName || '').replace(/\n/g, ' ').trim();
+            const followUp = lead.followUp || '';
+            const status = lead.status || 'Active';
+            const appointmentMade = lead.appointmentMade || 'No';
+            const appointmentDate = lead.appointmentDate || '';
+            const notes = (lead.notes || '').replace(/\n/g, ' ').trim();
             
             // Format dates
-            let formattedDate = formatDate(lead.dateAdded || lead.dateadded || lead['Date Added']);
+            let formattedDate = formatDate(lead.dateAdded);
             let formattedFollowUp = formatDate(followUp);
             let formattedApptDate = formatDate(appointmentDate);
+            
+            console.log('Formatted data:', {
+                companyName,
+                contactName,
+                phoneNumber,
+                emailAddress,
+                repName
+            });
             
             const row = document.createElement('tr');
             row.innerHTML = `
