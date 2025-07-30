@@ -56,14 +56,13 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        .form-group.full-width {
+            grid-column: 1 / -1;
         }
 
         .form-group label {
@@ -73,16 +72,24 @@
         }
 
         .form-group input,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             padding: 12px;
             border: 2px solid #e2e8f0;
             border-radius: 10px;
             font-size: 16px;
             transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
         }
 
         .form-group input:focus,
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -165,6 +172,13 @@
         td {
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
+            position: relative;
+            min-width: 100px;
+        }
+
+        td:nth-child(11) { /* Notes column */
+            min-width: 200px;
+            max-width: 300px;
         }
 
         tr:hover {
@@ -177,6 +191,9 @@
             padding: 4px 8px;
             border-radius: 4px;
             transition: all 0.2s ease;
+            display: inline-block;
+            min-height: 30px;
+            width: 100%;
         }
 
         .editable:hover {
@@ -358,6 +375,10 @@
                         <label for="followUp">Follow Up Date</label>
                         <input type="date" id="followUp" name="followUp" required>
                     </div>
+                    <div class="form-group full-width">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" placeholder="Add any notes about this lead..."></textarea>
+                    </div>
                 </div>
                 <button type="submit" class="btn" id="submitBtn">Add Lead</button>
                 <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
@@ -441,7 +462,8 @@
                 phoneNumber: formData.get('phoneNumber'),
                 emailAddress: formData.get('emailAddress'),
                 repName: repName,
-                followUp: formData.get('followUp')
+                followUp: formData.get('followUp'),
+                notes: formData.get('notes')
             };
 
             // Show loading
@@ -698,11 +720,28 @@
             currentEditingCell = cell;
             cell.dataset.originalValue = cell.textContent;
             
-            const currentValue = cell.textContent;
-            const input = document.createElement('input');
+            const currentValue = cell.textContent === 'Add notes' ? '' : cell.textContent;
+            
+            // Store the cell dimensions
+            const cellHeight = cell.offsetHeight;
+            const cellWidth = cell.offsetWidth;
+            
+            const input = field === 'notes' 
+                ? document.createElement('textarea')
+                : document.createElement('input');
+            
             input.type = 'text';
             input.value = currentValue;
             input.className = 'edit-input';
+            
+            // Set dimensions to match cell
+            input.style.width = '100%';
+            input.style.minHeight = cellHeight + 'px';
+            
+            if (field === 'notes') {
+                input.style.resize = 'vertical';
+                input.style.minHeight = '60px';
+            }
             
             let isUpdating = false;
             
@@ -711,12 +750,12 @@
                     isUpdating = true;
                     await updateLead(leadId, field, input.value);
                 }
-                cell.textContent = input.value;
+                cell.textContent = input.value || (field === 'notes' ? 'Add notes' : '');
                 currentEditingCell = null;
             };
             
             const cancelEdit = () => {
-                cell.textContent = currentValue;
+                cell.textContent = cell.dataset.originalValue;
                 currentEditingCell = null;
             };
             
@@ -724,12 +763,14 @@
                 setTimeout(saveValue, 200);
             });
             
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    input.blur();
-                }
-            });
+            if (field !== 'notes') {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        input.blur();
+                    }
+                });
+            }
             
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -737,6 +778,10 @@
                     cancelEdit();
                 }
             });
+            
+            // Maintain cell dimensions
+            cell.style.height = cellHeight + 'px';
+            cell.style.width = cellWidth + 'px';
             
             cell.innerHTML = '';
             cell.appendChild(input);
