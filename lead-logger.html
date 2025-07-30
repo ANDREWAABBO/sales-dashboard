@@ -84,7 +84,8 @@
 
         .form-group textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
+            width: 100%;
         }
 
         .form-group input:focus,
@@ -531,6 +532,11 @@
             const uniqueReps = [...new Set(leadsData.map(lead => lead.repName))].filter(Boolean).sort();
             updateRepFilter(uniqueReps);
             
+            // Debug: Log the data structure
+            if (leadsData.length > 0) {
+                console.log('Lead data structure:', leadsData[0]);
+            }
+            
             leadsData.forEach(lead => {
                 if (lead.status !== 'Dead') {
                     const row = createLeadRow(lead);
@@ -556,27 +562,37 @@
 
         // Create table row for a lead
         function createLeadRow(lead) {
-            // Handle both 'id' and 'iD' field names
-            const leadId = lead.id || lead.iD;
+            // Handle field name variations from Google Sheets
+            const leadId = lead.id || lead.iD || lead.ID;
+            const companyName = lead.companyName || lead.companyname || lead['Company Name'] || '';
+            const contactName = lead.contactName || lead.contactname || lead['Contact Name'] || '';
+            const phoneNumber = lead.phoneNumber || lead.phonenumber || lead['Phone Number'] || '';
+            const emailAddress = lead.emailAddress || lead.emailaddress || lead['Email Address'] || '';
+            const repName = lead.repName || lead.repname || lead['Rep Name'] || '';
+            const followUp = lead.followUp || lead.followup || lead['Follow Up'] || '';
+            const status = lead.status || lead.Status || '';
+            const appointmentMade = lead.appointmentMade || lead.appointmentmade || lead['Appointment Made'] || 'No';
+            const appointmentDate = lead.appointmentDate || lead.appointmentdate || lead['Appointment Date'] || '';
+            const notes = lead.notes || lead.Notes || '';
             
-            // Format date to simpler format (MM/DD/YY)
-            let formattedDate = formatDate(lead.dateAdded);
-            let formattedFollowUp = formatDate(lead.followUp);
-            let formattedApptDate = formatDate(lead.appointmentDate);
+            // Format dates
+            let formattedDate = formatDate(lead.dateAdded || lead.dateadded || lead['Date Added']);
+            let formattedFollowUp = formatDate(followUp);
+            let formattedApptDate = formatDate(appointmentDate);
             
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${formattedDate}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'companyName')">${lead.companyName}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'contactName')">${lead.contactName}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'phoneNumber')">${lead.phoneNumber}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'emailAddress')">${lead.emailAddress || ''}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'repName')">${lead.repName}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'companyName')">${companyName}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'contactName')">${contactName}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'phoneNumber')">${phoneNumber}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'emailAddress')">${emailAddress}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'repName')">${repName}</td>
                 <td class="editable" onclick="editFollowUp(this, ${leadId})">${formattedFollowUp || 'Set date'}</td>
-                <td>${createStatusDropdown(lead, leadId)}</td>
-                <td>${createAppointmentDropdown(lead, leadId)}</td>
+                <td>${createStatusDropdown({status: status}, leadId)}</td>
+                <td>${createAppointmentDropdown({appointmentMade: appointmentMade}, leadId)}</td>
                 <td class="editable" onclick="editAppointmentDate(this, ${leadId})">${formattedApptDate || 'Set date'}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'notes')">${lead.notes || 'Add notes'}</td>
+                <td class="editable" onclick="editCell(this, ${leadId}, 'notes')">${notes || 'Add notes'}</td>
                 <td>
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
