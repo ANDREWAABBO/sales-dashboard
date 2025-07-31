@@ -783,22 +783,36 @@
                 
                 const save = async () => {
                     console.log('Saving date:', input.value);
-                    await updateLead(leadId, field, input.value);
+                    
+                    // Store the date value exactly as selected (no timezone conversion)
+                    let dateToSave = input.value;
+                    
+                    // If we have a value, ensure it's saved as YYYY-MM-DD string
+                    if (input.value) {
+                        dateToSave = input.value; // Keep as string to avoid timezone issues
+                    }
+                    
+                    await updateLead(leadId, field, dateToSave);
                     cell.innerHTML = input.value ? formatDate(input.value) : 'Set date';
                     cell.style.width = '';
                     cell.style.height = '';
                     cell.style.position = '';
                 };
                 
-                input.addEventListener('change', save);
+                // Save immediately on change to avoid delays
+                input.addEventListener('change', function() {
+                    save();
+                });
                 
                 input.addEventListener('blur', function(e) {
-                    setTimeout(() => {
-                        if (!cell.contains(document.activeElement)) {
-                            save();
-                        }
-                    }, 200);
+                    // Only save on blur if value changed
+                    if (input.value !== input.dataset.originalValue) {
+                        save();
+                    }
                 });
+                
+                // Store original value
+                input.dataset.originalValue = input.value;
                 
                 input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
@@ -890,7 +904,7 @@
                 phoneNumber: formData.get('phoneNumber').trim(),
                 emailAddress: formData.get('emailAddress').trim() || '',
                 repName: repName.trim(),
-                followUp: formData.get('followUp') || '',
+                followUp: formData.get('followUp') || '', // Keep as string YYYY-MM-DD
                 notes: formData.get('notes').trim() || ''
             };
 
@@ -1087,11 +1101,19 @@
             });
         }
 
-        // Format date to MM/DD/YY
+        // Format date to MM/DD/YY - Fixed for timezone issues
         function formatDate(dateValue) {
             if (!dateValue) return '';
             try {
-                const date = new Date(dateValue);
+                let date;
+                if (typeof dateValue === 'string' && dateValue.includes('-')) {
+                    // For YYYY-MM-DD format from date input
+                    const [year, month, day] = dateValue.split('-');
+                    date = new Date(year, month - 1, day); // This creates date in local timezone
+                } else {
+                    date = new Date(dateValue);
+                }
+                
                 if (isNaN(date.getTime())) return '';
                 
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
