@@ -245,7 +245,7 @@
         }
 
         .company-btn {
-            padding: 15px 30px;
+            padding: 12px 25px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.2);
             color: white;
@@ -256,7 +256,7 @@
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             backdrop-filter: blur(10px);
         }
 
@@ -272,8 +272,19 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
 
-        .company-icon {
-            font-size: 20px;
+        .company-logo {
+            height: 35px;
+            width: auto;
+            filter: brightness(0) invert(1);
+            transition: all 0.3s ease;
+        }
+
+        .abbondanza-logo {
+            height: 40px;
+        }
+
+        .company-btn:hover .company-logo {
+            transform: scale(1.05);
         }
 
         /* Row Separator */
@@ -378,12 +389,12 @@
     <!-- Company Switcher -->
     <div class="company-switcher">
         <button class="company-btn active" onclick="switchCompany('abbondanza')">
-            <span class="company-icon">🍕</span>
-            Abbondanza Vending LLC
+            <img src="https://i.imgur.com/YOUR_ABBONDANZA_LOGO.png" alt="Abbondanza" class="company-logo abbondanza-logo">
+            <span>Abbondanza Vending LLC</span>
         </button>
         <button class="company-btn" onclick="switchCompany('quantum')">
-            <span class="company-icon">⚡</span>
-            Quantum Solutions
+            <img src="https://i.imgur.com/YOUR_QUANTUM_LOGO.png" alt="Quantum Solutions" class="company-logo">
+            <span>Quantum Solutions</span>
         </button>
     </div>
 
