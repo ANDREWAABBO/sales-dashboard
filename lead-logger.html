@@ -603,6 +603,175 @@
         let leadsData = [];
         let currentEditingCell = null;
 
+        // Define makeEditable function early
+        function makeEditable(cell, leadId, field) {
+            console.log('makeEditable called:', field, leadId);
+            
+            if (cell.querySelector('input, textarea')) {
+                console.log('Already editing, returning');
+                return;
+            }
+            
+            const currentText = cell.textContent.trim();
+            const isPlaceholder = currentText === 'Set date' || currentText === 'Add notes';
+            
+            console.log('Current text:', currentText, 'Is placeholder:', isPlaceholder);
+            
+            if (field === 'notes') {
+                const oldTitle = cell.getAttribute('title');
+                cell.removeAttribute('title');
+                
+                const textarea = document.createElement('textarea');
+                textarea.className = 'edit-input';
+                textarea.value = isPlaceholder ? '' : currentText;
+                textarea.style.width = '100%';
+                textarea.style.minHeight = '60px';
+                textarea.style.position = 'relative';
+                textarea.style.zIndex = '1000';
+                
+                cell.innerHTML = '';
+                cell.appendChild(textarea);
+                
+                const save = async () => {
+                    const newValue = textarea.value.trim();
+                    console.log('Saving notes:', newValue);
+                    
+                    await updateLead(leadId, field, newValue);
+                    cell.innerHTML = newValue || 'Add notes';
+                    
+                    if (newValue && newValue.length > 20) {
+                        cell.setAttribute('title', newValue);
+                    }
+                };
+                
+                textarea.addEventListener('blur', function() {
+                    save();
+                });
+                
+                textarea.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab' || (e.key === 'Enter' && e.ctrlKey)) {
+                        e.preventDefault();
+                        save();
+                    }
+                });
+                
+                textarea.focus();
+                return;
+            }
+            
+            const cellRect = cell.getBoundingClientRect();
+            cell.style.width = cellRect.width + 'px';
+            cell.style.height = cellRect.height + 'px';
+            cell.style.position = 'relative';
+            
+            cell.innerHTML = '';
+            
+            if (field === 'followUp' || field === 'appointmentDate') {
+                const input = document.createElement('input');
+                input.className = 'edit-input';
+                input.type = 'date';
+                input.style.width = '100%';
+                input.style.height = '100%';
+                
+                if (!isPlaceholder && currentText) {
+                    const parts = currentText.split('/');
+                    if (parts.length === 3) {
+                        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+                        const month = parts[0].padStart(2, '0');
+                        const day = parts[1].padStart(2, '0');
+                        input.value = `${year}-${month}-${day}`;
+                    }
+                }
+                
+                const restore = () => {
+                    cell.innerHTML = currentText;
+                    cell.style.width = '';
+                    cell.style.height = '';
+                    cell.style.position = '';
+                };
+                
+                const save = async () => {
+                    console.log('Saving date:', input.value);
+                    await updateLead(leadId, field, input.value);
+                    cell.innerHTML = input.value ? formatDate(input.value) : 'Set date';
+                    cell.style.width = '';
+                    cell.style.height = '';
+                    cell.style.position = '';
+                };
+                
+                input.addEventListener('change', save);
+                
+                input.addEventListener('blur', function(e) {
+                    setTimeout(() => {
+                        if (!cell.contains(document.activeElement)) {
+                            save();
+                        }
+                    }, 200);
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        restore();
+                    }
+                });
+                
+                cell.appendChild(input);
+                input.focus();
+                
+                setTimeout(() => {
+                    try {
+                        input.showPicker();
+                    } catch (e) {}
+                }, 10);
+                
+            } else {
+                const input = document.createElement('input');
+                input.className = 'edit-input';
+                input.type = 'text';
+                input.value = isPlaceholder ? '' : currentText;
+                input.style.width = '100%';
+                input.style.height = '100%';
+                
+                const restore = () => {
+                    cell.innerHTML = currentText;
+                    cell.style.width = '';
+                    cell.style.height = '';
+                    cell.style.position = '';
+                };
+                
+                const save = async () => {
+                    const newValue = input.value.trim();
+                    console.log('Saving:', field, newValue);
+                    if (newValue !== currentText || (isPlaceholder && newValue)) {
+                        await updateLead(leadId, field, newValue);
+                        cell.innerHTML = newValue || '';
+                    } else {
+                        cell.innerHTML = currentText;
+                    }
+                    cell.style.width = '';
+                    cell.style.height = '';
+                    cell.style.position = '';
+                };
+                
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        save();
+                    }
+                    if (e.key === 'Escape') {
+                        restore();
+                    }
+                });
+                
+                cell.appendChild(input);
+                input.focus();
+                input.select();
+            }
+        }
+        
+        window.makeEditable = makeEditable;
+
         // Load leads on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadLeads();
