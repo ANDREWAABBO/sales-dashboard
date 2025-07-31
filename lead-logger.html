@@ -595,18 +595,23 @@
             // Debug the lead structure
             console.log('Creating row for lead:', lead);
             
+            // Check for newlines in data
+            console.log('Checking for newlines:');
+            console.log('companyName has newlines:', lead.companyName.includes('\n'));
+            console.log('companyName raw:', JSON.stringify(lead.companyName));
+            
             // Handle field name variations from Google Sheets
             const leadId = lead.id || lead.iD || lead.ID;
-            const companyName = (lead.companyName || '').replace(/\n/g, ' ').trim();
-            const contactName = (lead.contactName || '').replace(/\n/g, ' ').trim();
-            const phoneNumber = (lead.phoneNumber || '').replace(/\n/g, ' ').trim();
-            const emailAddress = (lead.emailAddress || '').replace(/\n/g, ' ').trim();
-            const repName = (lead.repName || '').replace(/\n/g, ' ').trim();
+            const companyName = (lead.companyName || '').replace(/[\r\n]+/g, ' ').trim();
+            const contactName = (lead.contactName || '').replace(/[\r\n]+/g, ' ').trim();
+            const phoneNumber = (lead.phoneNumber || '').replace(/[\r\n]+/g, ' ').trim();
+            const emailAddress = (lead.emailAddress || '').replace(/[\r\n]+/g, ' ').trim();
+            const repName = (lead.repName || '').replace(/[\r\n]+/g, ' ').trim();
             const followUp = lead.followUp || '';
             const status = lead.status || 'Active';
             const appointmentMade = lead.appointmentMade || 'No';
             const appointmentDate = lead.appointmentDate || '';
-            const notes = (lead.notes || '').replace(/\n/g, ' ').trim();
+            const notes = (lead.notes || '').replace(/[\r\n]+/g, ' ').trim();
             
             // Format dates
             let formattedDate = formatDate(lead.dateAdded);
