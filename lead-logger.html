@@ -202,30 +202,17 @@
             background-color: #f7fafc;
         }
 
-        .editable {
+        .editable-cell {
             cursor: pointer;
             position: relative;
             padding: 4px 8px;
             border-radius: 4px;
             transition: all 0.2s ease;
-            /* REMOVED display: inline-block */
-            min-height: 30px;
-            width: 100%;
         }
 
-        .editable:hover {
+        .editable-cell:hover {
             background-color: #edf2f7;
             box-shadow: 0 0 0 2px #e2e8f0;
-        }
-
-        .editable:hover::after {
-            content: '✏️';
-            position: absolute;
-            right: -20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 12px;
-            opacity: 0.6;
         }
 
         .edit-input {
@@ -557,7 +544,7 @@
             }
         }
 
-        // Display leads in table
+        // Display leads in table - CLEAN VERSION
         function displayLeads() {
             const tbody = document.getElementById('leadsTableBody');
             tbody.innerHTML = '';
@@ -566,67 +553,46 @@
             const uniqueReps = [...new Set(leadsData.map(lead => lead.repName))].filter(Boolean).sort();
             updateRepFilter(uniqueReps);
             
-            // Create a simple test row first
-            const testRow = document.createElement('tr');
-            testRow.className = 'test-row';
-            testRow.innerHTML = `
-                <td>TEST DATE</td>
-                <td>TEST COMPANY</td>
-                <td>TEST CONTACT</td>
-                <td>TEST PHONE</td>
-                <td>TEST EMAIL</td>
-                <td>TEST REP</td>
-                <td>TEST FOLLOWUP</td>
-                <td>TEST STATUS</td>
-                <td>TEST APPT</td>
-                <td>TEST APPT DATE</td>
-                <td>TEST NOTES</td>
-                <td>TEST ACTION</td>
-            `;
-            tbody.appendChild(testRow);
-            
-            // Now add the real data - simplified approach
+            // Add each lead as a row
             leadsData.forEach(lead => {
                 if (lead.status !== 'Dead') {
-                    // Create row with simple HTML first
                     const row = document.createElement('tr');
                     
-                    // Format the date
-                    let dateStr = '---';
-                    if (lead.dateAdded) {
-                        try {
-                            const date = new Date(lead.dateAdded);
-                            dateStr = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear().toString().slice(-2)}`;
-                        } catch (e) {
-                            dateStr = lead.dateAdded;
-                        }
-                    }
+                    // Format dates
+                    const dateAdded = formatDate(lead.dateAdded);
+                    const followUpDate = formatDate(lead.followUp);
+                    const apptDate = formatDate(lead.appointmentDate);
                     
-                    // Build row HTML as a single string
-                    const rowHTML = `
-                        <td>${dateStr}</td>
-                        <td>${lead.companyName || ''}</td>
-                        <td>${lead.contactName || ''}</td>
-                        <td>${lead.phoneNumber || ''}</td>
-                        <td>${lead.emailAddress || ''}</td>
-                        <td>${lead.repName || ''}</td>
-                        <td>${lead.followUp ? formatDate(lead.followUp) : 'Set date'}</td>
-                        <td><select onchange="updateStatus(this, ${lead.id || lead.iD})">
-                            <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
-                            <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
-                            <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
-                            <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead (Archive)</option>
-                        </select></td>
-                        <td><select onchange="updateAppointmentMade(this, ${lead.id || lead.iD})">
-                            <option value="No" ${lead.appointmentMade !== 'Yes' ? 'selected' : ''}>No</option>
-                            <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
-                        </select></td>
-                        <td>${lead.appointmentDate ? formatDate(lead.appointmentDate) : 'Set date'}</td>
-                        <td>${lead.notes || 'Add notes'}</td>
-                        <td><button class="action-btn archive" onclick="archiveLead(${lead.id || lead.iD})">Archive</button></td>
+                    // Build the row - keeping it simple but functional
+                    row.innerHTML = `
+                        <td>${dateAdded}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'companyName')">${lead.companyName || ''}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'contactName')">${lead.contactName || ''}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'phoneNumber')">${lead.phoneNumber || ''}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'emailAddress')">${lead.emailAddress || ''}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'repName')">${lead.repName || ''}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'followUp')">${followUpDate || 'Set date'}</td>
+                        <td>
+                            <select class="status-select" onchange="updateStatus(this, ${lead.id || lead.iD})">
+                                <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
+                                <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
+                                <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
+                                <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead (Archive)</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="status-select" onchange="updateAppointmentMade(this, ${lead.id || lead.iD})">
+                                <option value="No" ${(lead.appointmentMade || 'No') === 'No' ? 'selected' : ''}>No</option>
+                                <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
+                            </select>
+                        </td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'appointmentDate')">${apptDate || 'Set date'}</td>
+                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'notes')">${lead.notes || 'Add notes'}</td>
+                        <td>
+                            <button class="action-btn archive" onclick="archiveLead(${lead.id || lead.iD})">Archive</button>
+                        </td>
                     `;
                     
-                    row.innerHTML = rowHTML;
                     tbody.appendChild(row);
                 }
             });
@@ -793,201 +759,34 @@
             await updateLead(leadId, 'appointmentMade', selectElement.value);
         }
 
-        // Global variable to track current editing cell
-        let currentEditingCell = null;
-
-        // Edit cell functionality
-        function editCell(cell, leadId, field) {
-            // If another cell is being edited, cancel it
-            if (currentEditingCell && currentEditingCell !== cell) {
-                const prevCell = currentEditingCell;
-                prevCell.textContent = prevCell.dataset.originalValue || '';
-            }
-            
-            currentEditingCell = cell;
-            cell.dataset.originalValue = cell.textContent;
-            
-            const currentValue = cell.textContent === 'Add notes' ? '' : cell.textContent;
-            
-            // Store the cell dimensions
-            const cellHeight = cell.offsetHeight;
-            const cellWidth = cell.offsetWidth;
-            
-            const input = field === 'notes' 
-                ? document.createElement('textarea')
-                : document.createElement('input');
-            
-            input.type = 'text';
-            input.value = currentValue;
-            input.className = 'edit-input';
-            
-            // Set dimensions to match cell
+        // Simple editable cell function
+        function makeEditable(cell, leadId, field) {
+            const currentValue = cell.textContent;
+            const input = document.createElement('input');
+            input.type = field === 'followUp' || field === 'appointmentDate' ? 'date' : 'text';
+            input.value = currentValue === 'Set date' || currentValue === 'Add notes' ? '' : currentValue;
             input.style.width = '100%';
-            input.style.minHeight = cellHeight + 'px';
+            input.style.padding = '5px';
             
-            if (field === 'notes') {
-                input.style.resize = 'vertical';
-                input.style.minHeight = '60px';
-            }
-            
-            let isUpdating = false;
-            
-            const saveValue = async () => {
-                if (!isUpdating && input.value !== currentValue) {
-                    isUpdating = true;
+            input.onblur = async function() {
+                if (input.value !== currentValue) {
                     await updateLead(leadId, field, input.value);
+                    cell.textContent = input.value || (field === 'notes' ? 'Add notes' : 'Set date');
+                } else {
+                    cell.textContent = currentValue;
                 }
-                cell.textContent = input.value || (field === 'notes' ? 'Add notes' : '');
-                currentEditingCell = null;
             };
             
-            const cancelEdit = () => {
-                cell.textContent = cell.dataset.originalValue;
-                currentEditingCell = null;
+            input.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
             };
             
-            input.addEventListener('blur', () => {
-                setTimeout(saveValue, 200);
-            });
-            
-            if (field !== 'notes') {
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        input.blur();
-                    }
-                });
-            }
-            
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    cancelEdit();
-                }
-            });
-            
-            // Maintain cell dimensions
-            cell.style.height = cellHeight + 'px';
-            cell.style.width = cellWidth + 'px';
-            
-            cell.innerHTML = '';
+            cell.textContent = '';
             cell.appendChild(input);
             input.focus();
             input.select();
-        }
-
-        // Edit follow up with date picker
-        function editFollowUp(cell, leadId) {
-            // If another cell is being edited, cancel it
-            if (currentEditingCell && currentEditingCell !== cell) {
-                const prevCell = currentEditingCell;
-                prevCell.textContent = prevCell.dataset.originalValue || '';
-            }
-            
-            currentEditingCell = cell;
-            cell.dataset.originalValue = cell.textContent;
-            
-            const currentValue = cell.textContent === 'Set date' ? '' : cell.textContent;
-            const input = document.createElement('input');
-            input.type = 'date';
-            
-            // Try to parse the MM/DD/YY format back to YYYY-MM-DD for the date input
-            if (currentValue && currentValue.match(/\d{2}\/\d{2}\/\d{2}/)) {
-                const [month, day, year] = currentValue.split('/');
-                input.value = `20${year}-${month}-${day}`;
-            }
-            
-            input.className = 'edit-input';
-            
-            let isUpdating = false;
-            
-            const saveValue = async () => {
-                if (!isUpdating && input.value) {
-                    isUpdating = true;
-                    await updateLead(leadId, 'followUp', input.value);
-                    cell.textContent = formatDate(input.value);
-                    currentEditingCell = null;
-                }
-            };
-            
-            input.addEventListener('change', saveValue);
-            
-            input.addEventListener('blur', () => {
-                setTimeout(() => {
-                    if (!isUpdating && input.value) {
-                        cell.textContent = formatDate(input.value);
-                    } else if (!input.value) {
-                        cell.textContent = 'Set date';
-                    }
-                    currentEditingCell = null;
-                }, 200);
-            });
-            
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    cell.textContent = cell.dataset.originalValue;
-                    currentEditingCell = null;
-                }
-            });
-            
-            cell.innerHTML = '';
-            cell.appendChild(input);
-            input.focus();
-            input.showPicker?.();
-        }
-
-        // Edit appointment date with date picker
-        function editAppointmentDate(cell, leadId) {
-            // If another cell is being edited, cancel it
-            if (currentEditingCell && currentEditingCell !== cell) {
-                const prevCell = currentEditingCell;
-                prevCell.textContent = prevCell.dataset.originalValue || '';
-            }
-            
-            currentEditingCell = cell;
-            cell.dataset.originalValue = cell.textContent;
-            
-            const currentValue = cell.textContent === 'Set date' ? '' : cell.textContent;
-            const input = document.createElement('input');
-            input.type = 'date';
-            
-            // Try to parse the MM/DD/YY format back to YYYY-MM-DD for the date input
-            if (currentValue && currentValue.match(/\d{2}\/\d{2}\/\d{2}/)) {
-                const [month, day, year] = currentValue.split('/');
-                input.value = `20${year}-${month}-${day}`;
-            }
-            
-            input.className = 'edit-input';
-            
-            let isUpdating = false;
-            
-            const saveValue = async () => {
-                if (!isUpdating && input.value) {
-                    isUpdating = true;
-                    await updateLead(leadId, 'appointmentDate', input.value);
-                    cell.textContent = formatDate(input.value);
-                    currentEditingCell = null;
-                }
-            };
-            
-            input.addEventListener('change', saveValue);
-            
-            input.addEventListener('blur', () => {
-                setTimeout(() => {
-                    if (!isUpdating && input.value) {
-                        cell.textContent = formatDate(input.value);
-                    } else if (!input.value) {
-                        cell.textContent = 'Set date';
-                    }
-                    currentEditingCell = null;
-                }, 200);
-            });
-            
-            cell.innerHTML = '';
-            cell.appendChild(input);
-            input.focus();
-            input.showPicker?.();
         }
 
         // Update lead data
