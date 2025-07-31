@@ -751,7 +751,14 @@
                             cell.style.backgroundColor = '#f0f0f0'; // Visual indicator
                             cell.onclick = function() {
                                 console.log('Notes clicked!', leadId);
-                                window.makeEditable(cell, leadId, 'notes');
+                                console.log('window.makeEditable exists?', typeof window.makeEditable);
+                                if (window.makeEditable) {
+                                    window.makeEditable(cell, leadId, 'notes');
+                                } else {
+                                    console.error('makeEditable function not found!');
+                                    // Fallback: call makeEditable directly
+                                    makeEditable(cell, leadId, 'notes');
+                                }
                             };
                         }
                     });
