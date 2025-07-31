@@ -216,7 +216,7 @@
         .dropdown-content a:hover {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding-left: 25px;
+            padding-left: 30px;
         }
 
         .dropdown-content a[style*="cursor: default"]:hover {
@@ -233,6 +233,19 @@
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* New badge */
+        .new-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            font-size: 0.75em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
         }
     </style>
     <script>
@@ -288,15 +301,20 @@
         </div>
 
         <div class="grid-container">
-            <!-- First Button: Link to Google Slides Proposal Generator -->
+            <!-- First Button: NEW HTML Proposal Generator -->
             <div class="card">
                 <div class="card-icon">📊</div>
-                <h2>Proposal Generator</h2>
-                <p>Create customized proposals using our Google Slides template with automated PDF generation.</p>
-                <p style="font-size: 0.9em; color: #4a5568; margin-top: 10px; background: #f7fafc; padding: 10px; border-radius: 8px;">
-                    <strong>First time?</strong> You may need to authorize the script when the presentation opens. Look for the "Proposal Generator" menu at the top.
-                </p>
-                <a href="https://docs.google.com/presentation/d/1UEqEqT3VFJFAnvgnoOw6HAaRdlxwwwpderyF13ViuoM/edit?usp=sharing" target="_blank" class="btn">Open Proposal Generator</a>
+                <h2>Proposal Generator <span class="new-badge">NEW!</span></h2>
+                <p>Create customized PDF proposals instantly with our built-in generator. No Google Slides needed!</p>
+                <div class="btn-group">
+                    <a href="https://andrewaabbo.github.io/proposal-generator.html/proposal-generator.html" target="_blank" class="btn">Open Proposal Generator</a>
+                    <div class="dropdown">
+                        <button class="btn btn-dropdown">Legacy Version ▼</button>
+                        <div class="dropdown-content">
+                            <a href="https://docs.google.com/presentation/d/1UEqEqT3VFJFAnvgnoOw6HAaRdlxwwwpderyF13ViuoM/edit?usp=sharing" target="_blank">Google Slides Version</a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Second Button: Abbondanza Marketing -->
