@@ -182,20 +182,33 @@
             font-weight: 600;
             position: sticky;
             top: 0;
-            white-space: nowrap;
+            white-space: normal;
             z-index: 10;
+            min-width: 100px;
         }
 
         td {
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
             position: relative;
-            white-space: nowrap;
+            vertical-align: middle;
         }
+
+        td:nth-child(1) { min-width: 100px; } /* Date Added */
+        td:nth-child(2) { min-width: 150px; } /* Company Name */
+        td:nth-child(3) { min-width: 150px; } /* Contact Name */
+        td:nth-child(4) { min-width: 130px; } /* Phone Number */
+        td:nth-child(5) { min-width: 180px; } /* Email Address */
+        td:nth-child(6) { min-width: 120px; } /* Rep Name */
+        td:nth-child(7) { min-width: 120px; } /* Follow Up */
+        td:nth-child(8) { min-width: 140px; } /* Status */
+        td:nth-child(9) { min-width: 100px; } /* Appt Made */
+        td:nth-child(10) { min-width: 120px; } /* Appt Date */
+        td:nth-child(11) { min-width: 200px; max-width: 300px; } /* Notes */
+        td:nth-child(12) { min-width: 100px; } /* Actions */
 
         td.notes-cell {
             white-space: normal;
-            max-width: 300px;
             word-wrap: break-word;
         }
 
@@ -209,8 +222,10 @@
             padding: 4px 8px;
             border-radius: 4px;
             transition: all 0.2s ease;
-            min-height: 30px;
-            display: inline-block;
+            min-height: 35px;
+            display: flex;
+            align-items: center;
+            width: 100%;
         }
 
         .editable-cell:hover {
@@ -226,6 +241,11 @@
             font-size: 14px;
             background-color: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            min-height: 35px;
+        }
+
+        .edit-input[type="date"] {
+            cursor: pointer;
         }
 
         .edit-input:focus {
@@ -659,6 +679,10 @@
             const currentValue = cell.textContent;
             const isPlaceholder = currentValue === 'Set date' || currentValue === 'Add notes';
             
+            // Store original height to prevent jumping
+            const originalHeight = cell.parentElement.offsetHeight;
+            cell.parentElement.style.minHeight = originalHeight + 'px';
+            
             const input = document.createElement('input');
             input.className = 'edit-input';
             
@@ -674,29 +698,41 @@
                         input.value = `${year}-${month}-${day}`;
                     }
                 }
+            } else if (field === 'notes') {
+                // Use textarea for notes
+                const textarea = document.createElement('textarea');
+                textarea.className = 'edit-input';
+                textarea.style.minHeight = '60px';
+                textarea.style.resize = 'vertical';
+                textarea.value = isPlaceholder ? '' : currentValue;
+                
+                textarea.onblur = async function() {
+                    await handleEditComplete(textarea, cell, leadId, field, currentValue, isPlaceholder);
+                };
+                
+                textarea.onkeydown = function(e) {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        textarea.blur();
+                    }
+                    if (e.key === 'Escape') {
+                        cell.textContent = currentValue;
+                        cell.parentElement.style.minHeight = '';
+                        currentEditingCell = null;
+                    }
+                };
+                
+                cell.textContent = '';
+                cell.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                return;
             } else {
                 input.type = 'text';
                 input.value = isPlaceholder ? '' : currentValue;
             }
             
             input.onblur = async function() {
-                const newValue = input.value;
-                
-                // If value changed, update it
-                if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
-                    await updateLead(leadId, field, newValue);
-                    
-                    // Update display
-                    if (field === 'followUp' || field === 'appointmentDate') {
-                        cell.textContent = formatDate(newValue) || 'Set date';
-                    } else {
-                        cell.textContent = newValue || (field === 'notes' ? 'Add notes' : '');
-                    }
-                } else {
-                    cell.textContent = currentValue;
-                }
-                
-                currentEditingCell = null;
+                await handleEditComplete(input, cell, leadId, field, currentValue, isPlaceholder);
             };
             
             input.onkeypress = function(e) {
@@ -705,6 +741,7 @@
                 }
                 if (e.key === 'Escape') {
                     cell.textContent = currentValue;
+                    cell.parentElement.style.minHeight = '';
                     currentEditingCell = null;
                 }
             };
@@ -712,7 +749,38 @@
             cell.textContent = '';
             cell.appendChild(input);
             input.focus();
-            input.select();
+            
+            // For date inputs, click to open calendar
+            if (input.type === 'date') {
+                setTimeout(() => {
+                    input.showPicker?.();
+                }, 100);
+            } else {
+                input.select();
+            }
+        }
+
+        // Handle edit completion
+        async function handleEditComplete(input, cell, leadId, field, currentValue, isPlaceholder) {
+            const newValue = input.value;
+            
+            // If value changed, update it
+            if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
+                await updateLead(leadId, field, newValue);
+                
+                // Update display
+                if (field === 'followUp' || field === 'appointmentDate') {
+                    cell.textContent = formatDate(newValue) || 'Set date';
+                } else {
+                    cell.textContent = newValue || (field === 'notes' ? 'Add notes' : '');
+                }
+            } else {
+                cell.textContent = currentValue;
+            }
+            
+            // Reset row height
+            cell.parentElement.style.minHeight = '';
+            currentEditingCell = null;
         }
 
         // Update status
