@@ -563,6 +563,18 @@
         </div>
     </div>
 
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Edit Notes</h3>
+            <textarea id="modalNotesInput" placeholder="Add your notes here..."></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeNotesModal()">Cancel</button>
+                <button class="modal-btn modal-btn-save" onclick="saveNotesModal()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Force full width on load
         window.addEventListener('DOMContentLoaded', function() {
@@ -602,6 +614,64 @@
 
         let leadsData = [];
         let currentEditingCell = null;
+        let currentNotesLeadId = null;
+        let currentNotesCell = null;
+
+        // Modal functions
+        function openNotesModal(leadId, currentNotes, cell) {
+            currentNotesLeadId = leadId;
+            currentNotesCell = cell;
+            const modal = document.getElementById('notesModal');
+            const textarea = document.getElementById('modalNotesInput');
+            
+            textarea.value = currentNotes === 'Add notes' ? '' : currentNotes;
+            modal.style.display = 'block';
+            
+            setTimeout(() => {
+                textarea.focus();
+                textarea.select();
+            }, 100);
+        }
+
+        function closeNotesModal() {
+            document.getElementById('notesModal').style.display = 'none';
+            currentNotesLeadId = null;
+            currentNotesCell = null;
+        }
+
+        async function saveNotesModal() {
+            const textarea = document.getElementById('modalNotesInput');
+            const newValue = textarea.value.trim();
+            
+            if (currentNotesLeadId && currentNotesCell) {
+                await updateLead(currentNotesLeadId, 'notes', newValue);
+                currentNotesCell.innerHTML = newValue || 'Add notes';
+                
+                if (newValue && newValue.length > 20) {
+                    currentNotesCell.setAttribute('title', newValue);
+                } else {
+                    currentNotesCell.removeAttribute('title');
+                }
+                
+                showMessage('Notes updated successfully!', 'success');
+            }
+            
+            closeNotesModal();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('notesModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNotesModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('notesModal').style.display === 'block') {
+                closeNotesModal();
+            }
+        });
 
         // Define makeEditable function early
         function makeEditable(cell, leadId, field) {
@@ -916,59 +986,12 @@
                         } else if (cellIndex === 9) { // Appt Date
                             cell.onclick = () => window.makeEditable(cell, leadId, 'appointmentDate');
                         } else if (cellIndex === 10) { // Notes
-                            cell.style.backgroundColor = '#f0f0f0'; // Visual indicator
+                            console.log('Setting notes click handler for cell:', cell);
                             cell.onclick = function(e) {
                                 e.stopPropagation();
-                                console.log('Notes clicked!', leadId);
-                                
-                                // Simple inline edit for notes
-                                if (cell.querySelector('textarea')) return;
-                                
-                                const currentText = cell.textContent.trim();
-                                const isPlaceholder = currentText === 'Add notes';
-                                
-                                const textarea = document.createElement('textarea');
-                                textarea.style.width = '100%';
-                                textarea.style.minHeight = '60px';
-                                textarea.style.padding = '8px';
-                                textarea.style.border = '2px solid #667eea';
-                                textarea.style.borderRadius = '5px';
-                                textarea.style.fontSize = '14px';
-                                textarea.value = isPlaceholder ? '' : currentText;
-                                
-                                cell.innerHTML = '';
-                                cell.appendChild(textarea);
-                                
-                                const saveNotes = async () => {
-                                    const newValue = textarea.value.trim();
-                                    console.log('Saving notes:', newValue);
-                                    
-                                    await updateLead(leadId, 'notes', newValue);
-                                    cell.innerHTML = newValue || 'Add notes';
-                                    
-                                    if (newValue && newValue.length > 20) {
-                                        cell.setAttribute('title', newValue);
-                                    }
-                                    
-                                    // Reset cell styles
-                                    cell.style.width = '';
-                                    cell.style.height = '';
-                                    cell.style.position = '';
-                                    cell.style.minHeight = '';
-                                };
-                                
-                                textarea.addEventListener('blur', function() {
-                                    saveNotes();
-                                });
-                                
-                                textarea.addEventListener('keydown', function(e) {
-                                    if ((e.key === 'Enter' && e.ctrlKey) || e.key === 'Tab') {
-                                        e.preventDefault();
-                                        saveNotes();
-                                    }
-                                });
-                                
-                                textarea.focus();
+                                console.log('Opening notes modal for lead:', leadId);
+                                const currentNotes = cell.textContent.trim();
+                                openNotesModal(leadId, currentNotes, cell);
                             };
                         }
                     });
