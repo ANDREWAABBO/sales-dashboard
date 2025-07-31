@@ -158,6 +158,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed; /* Add this to prevent column collapsing */
         }
 
         th {
@@ -168,6 +169,12 @@
             font-weight: 600;
             position: sticky;
             top: 0;
+            white-space: nowrap; /* Prevent header text wrapping */
+        }
+
+        th:first-child,
+        td:first-child {
+            min-width: 80px; /* Ensure first column (Date) has minimum width */
         }
 
         td {
@@ -621,6 +628,11 @@
             console.log('Date:', formattedDate, 'from', lead.dateAdded);
             console.log('Company:', companyName);
             console.log('Contact:', contactName);
+            
+            // Count columns
+            const headerCells = document.querySelectorAll('#leadsTable thead th');
+            const dataCells = 12; // We're inserting 12 td elements
+            console.log(`Header columns: ${headerCells.length}, Data columns: ${dataCells}`);
             
             row.innerHTML = `
                 <td>${formattedDate}</td>
