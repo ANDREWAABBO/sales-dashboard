@@ -515,6 +515,12 @@
         window.addEventListener('DOMContentLoaded', function() {
             if (checkAuth()) {
                 addLogoutButton();
+                
+                // Add event listener for the generate button
+                const generateBtn = document.getElementById('generateBtn');
+                if (generateBtn) {
+                    generateBtn.addEventListener('click', generateProposal);
+                }
             }
         });
 
@@ -533,6 +539,18 @@
         function openProposalGenerator() {
             document.getElementById('proposalModal').style.display = 'block';
             updatePricingSummary();
+            
+            // Re-attach event listener when modal opens
+            setTimeout(() => {
+                const generateBtn = document.getElementById('generateBtn');
+                if (generateBtn) {
+                    // Remove any existing listeners
+                    generateBtn.removeEventListener('click', generateProposal);
+                    // Add the listener
+                    generateBtn.addEventListener('click', generateProposal);
+                    console.log('Event listener attached to generate button');
+                }
+            }, 100);
         }
 
         function closeModal(modalId) {
