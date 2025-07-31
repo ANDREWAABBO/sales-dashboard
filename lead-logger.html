@@ -238,11 +238,12 @@
             bottom: 0;
             padding: 12px 8px;
             border-radius: 4px;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.15s ease;
             display: flex;
             align-items: center;
             overflow: hidden;
             text-overflow: ellipsis;
+            user-select: none;
         }
 
         .editable-cell:hover {
@@ -255,14 +256,19 @@
         }
 
         .edit-input {
-            width: 100%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            width: calc(100% - 4px);
             padding: 8px;
             border: 2px solid #667eea;
             border-radius: 5px;
             font-size: 14px;
             background-color: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            height: 35px;
+            z-index: 20;
         }
 
         .edit-input[type="date"] {
@@ -521,13 +527,13 @@
             localStorage.setItem('leadLoggerRepName', repName);
             
             const leadData = {
-                companyName: formData.get('companyName'),
-                contactName: formData.get('contactName'),
-                phoneNumber: formData.get('phoneNumber'),
-                emailAddress: formData.get('emailAddress') || '',
-                repName: repName,
+                companyName: formData.get('companyName').trim(),
+                contactName: formData.get('contactName').trim(),
+                phoneNumber: formData.get('phoneNumber').trim(),
+                emailAddress: formData.get('emailAddress').trim() || '',
+                repName: repName.trim(),
                 followUp: formData.get('followUp') || '',
-                notes: formData.get('notes') || ''
+                notes: formData.get('notes').trim() || ''
             };
 
             // Show loading
@@ -632,7 +638,7 @@
             const apptDate = formatDate(lead.appointmentDate);
             
             row.innerHTML = `
-                <td>${dateAdded}</td>
+                <td style="padding: 8px; text-align: center;">${dateAdded}</td>
                 <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'companyName')">${sanitizeText(lead.companyName) || ''}</div></td>
                 <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'contactName')">${sanitizeText(lead.contactName) || ''}</div></td>
                 <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'phoneNumber')">${sanitizeText(lead.phoneNumber) || ''}</div></td>
@@ -700,17 +706,22 @@
 
         // Make cell editable
         function makeEditable(cell, leadId, field) {
-            // If already editing, ignore
-            if (currentEditingCell) return;
+            // Prevent multiple rapid clicks
+            if (cell.classList.contains('editing')) return;
+            
+            // If already editing another cell, save it first
+            if (currentEditingCell && currentEditingCell !== cell) {
+                const activeInput = currentEditingCell.querySelector('input, textarea');
+                if (activeInput) {
+                    activeInput.blur();
+                }
+            }
             
             currentEditingCell = cell;
             cell.classList.add('editing');
             
-            const currentValue = cell.textContent;
+            const currentValue = cell.textContent.trim();
             const isPlaceholder = currentValue === 'Set date' || currentValue === 'Add notes';
-            
-            // Store original content
-            const originalContent = cell.innerHTML;
             
             if (field === 'followUp' || field === 'appointmentDate') {
                 const input = document.createElement('input');
@@ -721,7 +732,7 @@
                     // Convert MM/DD/YY to YYYY-MM-DD for date input
                     const parts = currentValue.split('/');
                     if (parts.length === 3) {
-                        const year = '20' + parts[2];
+                        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
                         const month = parts[0].padStart(2, '0');
                         const day = parts[1].padStart(2, '0');
                         input.value = `${year}-${month}-${day}`;
@@ -731,33 +742,36 @@
                 const saveValue = async () => {
                     const newValue = input.value;
                     
-                    if (newValue !== currentValue && newValue !== '') {
+                    if (newValue !== '' && newValue !== input.dataset.originalValue) {
                         await updateLead(leadId, field, newValue);
-                        cell.innerHTML = formatDate(newValue) || 'Set date';
+                        cell.textContent = formatDate(newValue) || 'Set date';
                     } else {
-                        cell.innerHTML = originalContent;
+                        cell.textContent = currentValue;
                     }
                     
                     cell.classList.remove('editing');
                     currentEditingCell = null;
                 };
                 
-                input.onblur = saveValue;
-                input.onchange = saveValue;
+                input.dataset.originalValue = input.value;
                 
-                input.onkeydown = function(e) {
+                input.addEventListener('blur', saveValue);
+                input.addEventListener('change', saveValue);
+                
+                input.addEventListener('keydown', function(e) {
+                    e.stopPropagation();
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        saveValue();
+                        input.blur();
                     }
                     if (e.key === 'Escape') {
-                        cell.innerHTML = originalContent;
+                        cell.textContent = currentValue;
                         cell.classList.remove('editing');
                         currentEditingCell = null;
                     }
-                };
+                });
                 
-                cell.innerHTML = '';
+                cell.textContent = '';
                 cell.appendChild(input);
                 input.focus();
                 
@@ -766,41 +780,47 @@
                     try {
                         input.showPicker();
                     } catch (e) {
-                        // Browser doesn't support showPicker, user will click to open
+                        // Browser doesn't support showPicker
                     }
-                }, 10);
+                }, 50);
                 
             } else if (field === 'notes') {
                 const textarea = document.createElement('textarea');
                 textarea.className = 'edit-input';
+                textarea.style.minHeight = '60px';
+                textarea.style.height = 'auto';
                 textarea.value = isPlaceholder ? '' : currentValue;
                 
-                textarea.onblur = async function() {
-                    const newValue = textarea.value;
+                const saveValue = async () => {
+                    const newValue = textarea.value.trim();
                     
-                    if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
+                    if (newValue !== currentValue || (isPlaceholder && newValue !== '')) {
                         await updateLead(leadId, field, newValue);
-                        cell.innerHTML = newValue || 'Add notes';
+                        cell.textContent = newValue || 'Add notes';
                     } else {
-                        cell.innerHTML = originalContent;
+                        cell.textContent = currentValue;
                     }
                     
                     cell.classList.remove('editing');
                     currentEditingCell = null;
                 };
                 
-                textarea.onkeydown = function(e) {
+                textarea.addEventListener('blur', saveValue);
+                
+                textarea.addEventListener('keydown', function(e) {
+                    e.stopPropagation();
                     if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
                         textarea.blur();
                     }
                     if (e.key === 'Escape') {
-                        cell.innerHTML = originalContent;
+                        cell.textContent = currentValue;
                         cell.classList.remove('editing');
                         currentEditingCell = null;
                     }
-                };
+                });
                 
-                cell.innerHTML = '';
+                cell.textContent = '';
                 cell.appendChild(textarea);
                 textarea.focus();
                 textarea.select();
@@ -811,35 +831,36 @@
                 input.type = 'text';
                 input.value = isPlaceholder ? '' : currentValue;
                 
-                input.onblur = async function() {
-                    const newValue = input.value;
+                const saveValue = async () => {
+                    const newValue = input.value.trim();
                     
-                    if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
+                    if (newValue !== currentValue || (isPlaceholder && newValue !== '')) {
                         await updateLead(leadId, field, newValue);
-                        cell.innerHTML = newValue || '';
+                        cell.textContent = newValue || '';
                     } else {
-                        cell.innerHTML = originalContent;
+                        cell.textContent = currentValue;
                     }
                     
                     cell.classList.remove('editing');
                     currentEditingCell = null;
                 };
                 
-                input.onkeypress = function(e) {
+                input.addEventListener('blur', saveValue);
+                
+                input.addEventListener('keydown', function(e) {
+                    e.stopPropagation();
                     if (e.key === 'Enter') {
+                        e.preventDefault();
                         input.blur();
                     }
-                };
-                
-                input.onkeydown = function(e) {
                     if (e.key === 'Escape') {
-                        cell.innerHTML = originalContent;
+                        cell.textContent = currentValue;
                         cell.classList.remove('editing');
                         currentEditingCell = null;
                     }
-                };
+                });
                 
-                cell.innerHTML = '';
+                cell.textContent = '';
                 cell.appendChild(input);
                 input.focus();
                 input.select();
