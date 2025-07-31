@@ -547,8 +547,8 @@
                                 <th>Phone Number</th>
                                 <th>Email Address</th>
                                 <th>Rep Name</th>
-                                <th>Follow Up</th>
                                 <th>Status</th>
+                                <th>Follow Up</th>
                                 <th>Appt Made</th>
                                 <th>Appt Date</th>
                                 <th>Notes</th>
@@ -981,7 +981,7 @@
                             cell.onclick = () => window.makeEditable(cell, leadId, 'emailAddress');
                         } else if (cellIndex === 5) { // Rep Name
                             cell.onclick = () => window.makeEditable(cell, leadId, 'repName');
-                        } else if (cellIndex === 6) { // Follow Up
+                        } else if (cellIndex === 7) { // Follow Up (now after Status)
                             cell.onclick = () => window.makeEditable(cell, leadId, 'followUp');
                         } else if (cellIndex === 9) { // Appt Date
                             cell.onclick = () => window.makeEditable(cell, leadId, 'appointmentDate');
@@ -1016,7 +1016,6 @@
                 <td><div class="editable-cell">${sanitizeText(lead.phoneNumber) || ''}</div></td>
                 <td><div class="editable-cell">${sanitizeText(lead.emailAddress) || ''}</div></td>
                 <td><div class="editable-cell">${sanitizeText(lead.repName) || ''}</div></td>
-                <td><div class="editable-cell">${followUpDate || 'Set date'}</div></td>
                 <td style="padding: 8px;">
                     <select class="status-select" onchange="updateStatus(this, ${leadId})">
                         <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
@@ -1025,6 +1024,7 @@
                         <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead (Archive)</option>
                     </select>
                 </td>
+                <td><div class="editable-cell">${followUpDate || 'Set date'}</div></td>
                 <td style="padding: 8px;">
                     <select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">
                         <option value="No" ${(lead.appointmentMade || 'No') === 'No' ? 'selected' : ''}>No</option>
