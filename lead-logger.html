@@ -567,6 +567,28 @@
                 }
             }
             
+            // Test with hardcoded values to verify table structure
+            console.log('Creating test row with hardcoded values');
+            
+            const testRow = document.createElement('tr');
+            testRow.style.backgroundColor = '#f0f0f0'; // Gray background to identify test row
+            testRow.innerHTML = `
+                <td>TEST DATE</td>
+                <td>TEST COMPANY</td>
+                <td>TEST CONTACT</td>
+                <td>TEST PHONE</td>
+                <td>TEST EMAIL</td>
+                <td>TEST REP</td>
+                <td>TEST FOLLOWUP</td>
+                <td>TEST STATUS</td>
+                <td>TEST APPT</td>
+                <td>TEST APPT DATE</td>
+                <td>TEST NOTES</td>
+                <td>TEST ACTION</td>
+            `;
+            tbody.appendChild(testRow);
+            
+            // Now add the real data
             leadsData.forEach(lead => {
                 if (lead.status !== 'Dead') {
                     const row = createLeadRow(lead);
