@@ -61,6 +61,11 @@
             margin-bottom: 20px;
         }
 
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
         .form-group.full-width {
             grid-column: 1 / -1;
         }
@@ -158,7 +163,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* Add this to prevent column collapsing */
+            table-layout: fixed;
         }
 
         th {
@@ -169,12 +174,12 @@
             font-weight: 600;
             position: sticky;
             top: 0;
-            white-space: nowrap; /* Prevent header text wrapping */
+            white-space: nowrap;
         }
 
         th:first-child,
         td:first-child {
-            min-width: 80px; /* Ensure first column (Date) has minimum width */
+            min-width: 80px;
         }
 
         td {
@@ -187,7 +192,7 @@
             text-overflow: ellipsis;
         }
 
-        td:nth-child(11) { /* Notes column */
+        td:nth-child(11) {
             min-width: 200px;
             max-width: 300px;
             white-space: normal;
@@ -346,6 +351,12 @@
             background: rgba(255, 255, 255, 0.2);
             transform: translateX(-5px);
         }
+
+        /* Test row style */
+        .test-row {
+            background-color: #e0e0e0 !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -444,11 +455,10 @@
     <script>
         // Back button function
         function goBack() {
-            // Use replace to avoid password prompt
             window.location.replace('index.html');
         }
         
-        // Google Sheets Integration - UPDATED WITH CORRECT URL
+        // Google Sheets Integration
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec';
 
         let leadsData = [];
@@ -571,20 +581,20 @@
             console.log('Creating test row with hardcoded values');
             
             const testRow = document.createElement('tr');
-            testRow.style.backgroundColor = '#f0f0f0'; // Gray background to identify test row
+            testRow.className = 'test-row';
             testRow.innerHTML = `
-                <td>TEST DATE</td>
-                <td>TEST COMPANY</td>
-                <td>TEST CONTACT</td>
-                <td>TEST PHONE</td>
-                <td>TEST EMAIL</td>
-                <td>TEST REP</td>
-                <td>TEST FOLLOWUP</td>
-                <td>TEST STATUS</td>
-                <td>TEST APPT</td>
-                <td>TEST APPT DATE</td>
-                <td>TEST NOTES</td>
-                <td>TEST ACTION</td>
+                <td style="background:#ffcccc">TEST DATE</td>
+                <td style="background:#ccffcc">TEST COMPANY</td>
+                <td style="background:#ccccff">TEST CONTACT</td>
+                <td style="background:#ffffcc">TEST PHONE</td>
+                <td style="background:#ffccff">TEST EMAIL</td>
+                <td style="background:#ccffff">TEST REP</td>
+                <td style="background:#ffd9cc">TEST FOLLOWUP</td>
+                <td style="background:#ccffd9">TEST STATUS</td>
+                <td style="background:#d9ccff">TEST APPT</td>
+                <td style="background:#ffd9ff">TEST APPT DATE</td>
+                <td style="background:#d9ffcc">TEST NOTES</td>
+                <td style="background:#ccd9ff">TEST ACTION</td>
             `;
             tbody.appendChild(testRow);
             
@@ -600,16 +610,40 @@
         // Update rep filter dropdown with actual reps
         function updateRepFilter(reps) {
             const repFilter = document.getElementById('repFilter');
-            // Keep the "All Reps" option
             repFilter.innerHTML = '<option value="">All Reps</option>';
             
-            // Add each unique rep
             reps.forEach(rep => {
                 const option = document.createElement('option');
                 option.value = rep;
                 option.textContent = rep;
                 repFilter.appendChild(option);
             });
+        }
+
+        // Format any date to MM/DD/YY
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            try {
+                // Handle ISO date strings
+                let date;
+                if (typeof dateValue === 'string' && dateValue.includes('T')) {
+                    date = new Date(dateValue);
+                } else if (typeof dateValue === 'string' && dateValue.includes('-')) {
+                    date = new Date(dateValue);
+                } else {
+                    date = new Date(dateValue);
+                }
+                
+                if (isNaN(date.getTime())) return dateValue;
+                
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear().toString().slice(-2);
+                return `${month}/${day}/${year}`;
+            } catch (e) {
+                console.error('Date formatting error:', e, 'for value:', dateValue);
+                return dateValue || '';
+            }
         }
 
         // Create table row for a lead
@@ -658,7 +692,7 @@
             
             // Count columns
             const headerCells = document.querySelectorAll('#leadsTable thead th');
-            const dataCells = 12; // We're inserting 12 td elements
+            const dataCells = 12;
             console.log(`Header columns: ${headerCells.length}, Data columns: ${dataCells}`);
             
             row.innerHTML = `
@@ -678,100 +712,6 @@
                 </td>
             `;
             return row;
-        }
-
-        // Format any date to MM/DD/YY
-        function formatDate(dateValue) {
-            if (!dateValue) return '';
-            try {
-                // Handle ISO date strings
-                let date;
-                if (typeof dateValue === 'string' && dateValue.includes('T')) {
-                    date = new Date(dateValue);
-                } else if (typeof dateValue === 'string' && dateValue.includes('-')) {
-                    date = new Date(dateValue);
-                } else {
-                    date = new Date(dateValue);
-                }
-                
-                if (isNaN(date.getTime())) return dateValue; // Return original if invalid
-                
-                const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                const day = date.getDate().toString().padStart(2, '0');
-                const year = date.getFullYear().toString().slice(-2);
-                return `${month}/${day}/${year}`;
-            } catch (e) {
-                console.error('Date formatting error:', e, 'for value:', dateValue);
-                return dateValue || '';
-            }
-        }
-
-        // Create appointment made dropdown
-        function createAppointmentDropdown(lead, leadId) {
-            const selected = lead.appointmentMade || 'No';
-            let html = `<select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">`;
-            html += `<option value="No" ${selected === 'No' ? 'selected' : ''}>No</option>`;
-            html += `<option value="Yes" ${selected === 'Yes' ? 'selected' : ''}>Yes</option>`;
-            html += '</select>';
-            return html;
-        }
-
-        // Update appointment made status
-        async function updateAppointmentMade(selectElement, leadId) {
-            await updateLead(leadId, 'appointmentMade', selectElement.value);
-        }
-
-        // Edit appointment date with date picker
-        function editAppointmentDate(cell, leadId) {
-            // If another cell is being edited, cancel it
-            if (currentEditingCell && currentEditingCell !== cell) {
-                const prevCell = currentEditingCell;
-                prevCell.textContent = prevCell.dataset.originalValue || '';
-            }
-            
-            currentEditingCell = cell;
-            cell.dataset.originalValue = cell.textContent;
-            
-            const currentValue = cell.textContent === 'Set date' ? '' : cell.textContent;
-            const input = document.createElement('input');
-            input.type = 'date';
-            
-            // Try to parse the MM/DD/YY format back to YYYY-MM-DD for the date input
-            if (currentValue && currentValue.match(/\d{2}\/\d{2}\/\d{2}/)) {
-                const [month, day, year] = currentValue.split('/');
-                input.value = `20${year}-${month}-${day}`;
-            }
-            
-            input.className = 'edit-input';
-            
-            let isUpdating = false;
-            
-            const saveValue = async () => {
-                if (!isUpdating && input.value) {
-                    isUpdating = true;
-                    await updateLead(leadId, 'appointmentDate', input.value);
-                    cell.textContent = formatDate(input.value);
-                    currentEditingCell = null;
-                }
-            };
-            
-            input.addEventListener('change', saveValue);
-            
-            input.addEventListener('blur', () => {
-                setTimeout(() => {
-                    if (!isUpdating && input.value) {
-                        cell.textContent = formatDate(input.value);
-                    } else if (!input.value) {
-                        cell.textContent = 'Set date';
-                    }
-                    currentEditingCell = null;
-                }, 200);
-            });
-            
-            cell.innerHTML = '';
-            cell.appendChild(input);
-            input.focus();
-            input.showPicker?.();
         }
 
         // Create status dropdown that's always editable
@@ -811,6 +751,21 @@
             } else {
                 await updateLead(leadId, 'status', newStatus);
             }
+        }
+
+        // Create appointment made dropdown
+        function createAppointmentDropdown(lead, leadId) {
+            const selected = lead.appointmentMade || 'No';
+            let html = `<select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">`;
+            html += `<option value="No" ${selected === 'No' ? 'selected' : ''}>No</option>`;
+            html += `<option value="Yes" ${selected === 'Yes' ? 'selected' : ''}>Yes</option>`;
+            html += '</select>';
+            return html;
+        }
+
+        // Update appointment made status
+        async function updateAppointmentMade(selectElement, leadId) {
+            await updateLead(leadId, 'appointmentMade', selectElement.value);
         }
 
         // Global variable to track current editing cell
@@ -954,7 +909,60 @@
             cell.innerHTML = '';
             cell.appendChild(input);
             input.focus();
-            input.showPicker?.(); // Show date picker if supported
+            input.showPicker?.();
+        }
+
+        // Edit appointment date with date picker
+        function editAppointmentDate(cell, leadId) {
+            // If another cell is being edited, cancel it
+            if (currentEditingCell && currentEditingCell !== cell) {
+                const prevCell = currentEditingCell;
+                prevCell.textContent = prevCell.dataset.originalValue || '';
+            }
+            
+            currentEditingCell = cell;
+            cell.dataset.originalValue = cell.textContent;
+            
+            const currentValue = cell.textContent === 'Set date' ? '' : cell.textContent;
+            const input = document.createElement('input');
+            input.type = 'date';
+            
+            // Try to parse the MM/DD/YY format back to YYYY-MM-DD for the date input
+            if (currentValue && currentValue.match(/\d{2}\/\d{2}\/\d{2}/)) {
+                const [month, day, year] = currentValue.split('/');
+                input.value = `20${year}-${month}-${day}`;
+            }
+            
+            input.className = 'edit-input';
+            
+            let isUpdating = false;
+            
+            const saveValue = async () => {
+                if (!isUpdating && input.value) {
+                    isUpdating = true;
+                    await updateLead(leadId, 'appointmentDate', input.value);
+                    cell.textContent = formatDate(input.value);
+                    currentEditingCell = null;
+                }
+            };
+            
+            input.addEventListener('change', saveValue);
+            
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!isUpdating && input.value) {
+                        cell.textContent = formatDate(input.value);
+                    } else if (!input.value) {
+                        cell.textContent = 'Set date';
+                    }
+                    currentEditingCell = null;
+                }, 200);
+            });
+            
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            input.showPicker?.();
         }
 
         // Update lead data
