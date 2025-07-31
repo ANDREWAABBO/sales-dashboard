@@ -726,24 +726,33 @@
                     const leadId = lead.id || lead.iD || lead.ID;
                     
                     // Add click handlers for editable cells
-                    row.querySelectorAll('.editable-cell').forEach(cell => {
+                    row.querySelectorAll('.editable-cell').forEach((cell, index) => {
                         const parent = cell.parentElement;
-                        if (parent.cellIndex === 1) { // Company Name
+                        const cellIndex = parent.cellIndex;
+                        
+                        console.log('Setting up cell:', index, 'Parent cellIndex:', cellIndex, 'Text:', cell.textContent.substring(0, 20));
+                        
+                        if (cellIndex === 1) { // Company Name
                             cell.onclick = () => window.makeEditable(cell, leadId, 'companyName');
-                        } else if (parent.cellIndex === 2) { // Contact Name
+                        } else if (cellIndex === 2) { // Contact Name
                             cell.onclick = () => window.makeEditable(cell, leadId, 'contactName');
-                        } else if (parent.cellIndex === 3) { // Phone Number
+                        } else if (cellIndex === 3) { // Phone Number
                             cell.onclick = () => window.makeEditable(cell, leadId, 'phoneNumber');
-                        } else if (parent.cellIndex === 4) { // Email
+                        } else if (cellIndex === 4) { // Email
                             cell.onclick = () => window.makeEditable(cell, leadId, 'emailAddress');
-                        } else if (parent.cellIndex === 5) { // Rep Name
+                        } else if (cellIndex === 5) { // Rep Name
                             cell.onclick = () => window.makeEditable(cell, leadId, 'repName');
-                        } else if (parent.cellIndex === 6) { // Follow Up
+                        } else if (cellIndex === 6) { // Follow Up
                             cell.onclick = () => window.makeEditable(cell, leadId, 'followUp');
-                        } else if (parent.cellIndex === 9) { // Appt Date
+                        } else if (cellIndex === 9) { // Appt Date
                             cell.onclick = () => window.makeEditable(cell, leadId, 'appointmentDate');
-                        } else if (parent.cellIndex === 10) { // Notes
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'notes');
+                        } else if (cellIndex === 10) { // Notes
+                            console.log('Setting notes click handler for cell:', cell);
+                            cell.style.backgroundColor = '#f0f0f0'; // Visual indicator
+                            cell.onclick = function() {
+                                console.log('Notes clicked!', leadId);
+                                window.makeEditable(cell, leadId, 'notes');
+                            };
                         }
                     });
                 }
