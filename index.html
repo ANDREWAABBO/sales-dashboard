@@ -237,6 +237,12 @@
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Dropdown Styles */
         .btn-group {
             display: flex;
@@ -319,8 +325,147 @@
             font-weight: 600;
             animation: pulse 2s infinite;
         }
+
+        /* Popup/Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #2d3748;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pricing-summary {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 2px solid #667eea;
+        }
+
+        .pricing-summary h4 {
+            margin: 0 0 10px 0;
+            color: #2d3748;
+        }
+
+        .pricing-display {
+            font-size: 16px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            flex: 2;
+        }
+
+        .success-popup {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .error-popup {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <script>
+        // Your deployed Web App URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyfbiF43TRNnutPedx9XiLVFtHZdF__4njijtORnULsahsXagA2uLd-pBAwW8A6xDGm/exec';
+
         // Company switcher function
         function switchCompany(company) {
             // Update active button
@@ -383,6 +528,152 @@
             logoutBtn.onclick = logout;
             header.appendChild(logoutBtn);
         }
+
+        // Proposal Generator Functions
+        function openProposalGenerator() {
+            document.getElementById('proposalModal').style.display = 'block';
+            updatePricingSummary();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function updatePricingSummary() {
+            const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1;
+            const basePrice = parseInt(document.getElementById('monthlyFee').value) || 795;
+            
+            let monthlyTotal = basePrice;
+            let setupFee = 295;
+            
+            if (fridgeCount > 1) {
+                const additionalUnits = fridgeCount - 1;
+                const discountedPrice = basePrice - 100;
+                monthlyTotal = basePrice + (discountedPrice * additionalUnits);
+                setupFee = 295 + (79 * additionalUnits);
+            }
+            
+            let pricingText = `Monthly Total: $${monthlyTotal}/month`;
+            if (fridgeCount > 1) {
+                pricingText += ` (${fridgeCount} fridges)<br>`;
+                pricingText += `First unit: $${basePrice}/month<br>`;
+                pricingText += `Additional units: $${basePrice - 100}/month each<br>`;
+            } else {
+                pricingText += '<br>';
+            }
+            pricingText += `Setup Fee: $${setupFee} (one-time)`;
+            
+            document.getElementById('pricingSummary').innerHTML = pricingText;
+        }
+
+        async function generateProposal() {
+            const submitBtn = document.getElementById('generateBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+            
+            try {
+                // Get form data
+                const formData = {
+                    companyName: document.getElementById('companyName').value,
+                    contactName: document.getElementById('contactName').value || '',
+                    preparedBy: document.getElementById('preparedBy').value,
+                    preparedByPhone: document.getElementById('preparedByPhone').value,
+                    preparedByEmail: document.getElementById('preparedByEmail').value,
+                    fridgeCount: document.getElementById('fridgeCount').value,
+                    monthlyFee: document.getElementById('monthlyFee').value
+                };
+
+                // Validate required fields
+                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
+                    throw new Error('Please fill in all required fields.');
+                }
+
+                // Call Web App
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    closeModal('proposalModal');
+                    showProposalSuccess(result);
+                } else {
+                    throw new Error(result.message || 'Unknown error occurred');
+                }
+
+            } catch (error) {
+                console.error('Error generating proposal:', error);
+                showPopup(`Error generating proposal: ${error.message}`, 'error');
+            } finally {
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        function showProposalSuccess(result) {
+            const successHtml = `
+                <div class="success-popup">
+                    <h3>🎉 Proposal Generated Successfully!</h3>
+                    <p><strong>File:</strong> ${result.fileName}</p>
+                    <p><strong>Monthly Total:</strong> $${result.monthlyTotal}/month</p>
+                    <p><strong>Setup Fee:</strong> $${result.setupTotal}</p>
+                    <div style="margin-top: 20px;">
+                        <a href="${result.url}" target="_blank" class="btn btn-primary">Open Proposal PDF</a>
+                    </div>
+                </div>
+            `;
+            showPopup(successHtml, 'success');
+        }
+
+        function showPopup(content, type) {
+            const popup = document.createElement('div');
+            popup.className = 'modal-overlay';
+            popup.innerHTML = `
+                <div class="modal">
+                    <div class="${type === 'error' ? 'error-popup' : 'success-popup'}">
+                        ${content}
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(popup);
+            
+            // Auto-remove after 10 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.remove();
+                    }
+                }, 10000);
+            }
+        }
+
+        // Service Agreement Generator (placeholder for future implementation)
+        function generateServiceAgreement() {
+            showPopup('Service Agreement generator coming soon! This will work the same way as the proposal generator.', 'info');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
     </script>
 </head>
 <body>
@@ -440,10 +731,10 @@
         <div class="grid-container">
             <div class="card">
                 <div class="card-icon">📊</div>
-                <h2>Proposal Generator <span class="new-badge">NEW!</span></h2>
+                <h2>Proposal Generator <span class="new-badge">UPDATED!</span></h2>
                 <p>Create customized PDF proposals instantly with our built-in generator.</p>
                 <div class="btn-group">
-                    <a href="https://andrewaabbo.github.io/proposal-generator.html/proposal-generator.html" target="_blank" class="btn">Open Generator</a>
+                    <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>
                     <div class="dropdown">
                         <button class="btn btn-dropdown">Legacy ▼</button>
                         <div class="dropdown-content">
@@ -464,7 +755,7 @@
                 <div class="card-icon">📑</div>
                 <h2>Service Agreement</h2>
                 <p>Generate subsidy agreements with automated pricing calculations.</p>
-                <a href="https://docs.google.com/presentation/d/1d0q7kzopP_VsLfQDm7wOzOfhzu-rVrFW5sqWefFv4tE/edit?usp=sharing" target="_blank" class="btn">Create Agreement</a>
+                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button>
             </div>
         </div>
 
@@ -478,6 +769,71 @@
                 <h2>Lead Logger</h2>
                 <p>Log and track sales leads with follow-up management and status tracking.</p>
                 <a href="lead-logger.html" target="_blank" class="btn">Open Lead Logger</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proposal Generator Modal -->
+    <div id="proposalModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Fresh Food Solutions Proposal</h3>
+            
+            <div class="form-group">
+                <label for="companyName">Company Name *</label>
+                <input type="text" id="companyName" name="companyName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="contactName">Contact Name (Optional)</label>
+                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="preparedBy">Your Name *</label>
+                    <input type="text" id="preparedBy" name="preparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preparedByPhone">Your Phone *</label>
+                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="preparedByEmail">Your Email *</label>
+                <input type="email" id="preparedByEmail" name="preparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fridgeCount">Number of Fridges *</label>
+                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
+                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
+                        <option value="395">$395/month</option>
+                        <option value="495">$495/month</option>
+                        <option value="595">$595/month</option>
+                        <option value="695">$695/month</option>
+                        <option value="795" selected>$795/month</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Pricing Summary</h4>
+                <div class="pricing-display" id="pricingSummary">
+                    Monthly Total: $795/month<br>
+                    Setup Fee: $295 (one-time)
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
+                <button class="btn btn-primary" id="generateBtn" onclick="generateProposal()">Generate Proposal PDF</button>
             </div>
         </div>
     </div>
