@@ -221,6 +221,26 @@
             overflow: visible;
         }
 
+        /* Fixed table dimensions */
+        thead {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        tbody {
+            display: block;
+            max-height: calc(100vh - 400px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
         tr {
             height: 50px;
         }
@@ -231,55 +251,56 @@
 
         .editable-cell {
             cursor: pointer;
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            display: block;
             padding: 12px 8px;
-            border-radius: 4px;
-            transition: background-color 0.15s ease;
-            display: flex;
-            align-items: center;
+            height: 100%;
+            position: relative;
             overflow: hidden;
             text-overflow: ellipsis;
-            user-select: none;
+            white-space: nowrap;
         }
 
         .editable-cell:hover {
             background-color: #edf2f7;
+            border-radius: 4px;
         }
 
         .editable-cell.editing {
             padding: 0;
-            background-color: transparent;
+            overflow: visible;
+        }
+
+        .edit-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
         }
 
         .edit-input {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            right: 2px;
-            bottom: 2px;
-            width: calc(100% - 4px);
+            width: 100%;
+            height: 100%;
             padding: 8px;
             border: 2px solid #667eea;
             border-radius: 5px;
             font-size: 14px;
             background-color: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            z-index: 20;
+            z-index: 100;
         }
 
         .edit-input[type="date"] {
             cursor: pointer;
-            height: 35px;
+            min-height: 40px;
         }
 
         textarea.edit-input {
             min-height: 60px;
             height: auto;
             resize: vertical;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 100;
         }
 
         .edit-input:focus {
@@ -639,12 +660,12 @@
             
             row.innerHTML = `
                 <td style="padding: 8px; text-align: center;">${dateAdded}</td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'companyName')">${sanitizeText(lead.companyName) || ''}</div></td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'contactName')">${sanitizeText(lead.contactName) || ''}</div></td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'phoneNumber')">${sanitizeText(lead.phoneNumber) || ''}</div></td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'emailAddress')">${sanitizeText(lead.emailAddress) || ''}</div></td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'repName')">${sanitizeText(lead.repName) || ''}</div></td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'followUp')">${followUpDate || 'Set date'}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'companyName')">${sanitizeText(lead.companyName) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'contactName')">${sanitizeText(lead.contactName) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'phoneNumber')">${sanitizeText(lead.phoneNumber) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'emailAddress')">${sanitizeText(lead.emailAddress) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'repName')">${sanitizeText(lead.repName) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'followUp')">${followUpDate || 'Set date'}</div></td>
                 <td style="padding: 8px;">
                     <select class="status-select" onchange="updateStatus(this, ${leadId})">
                         <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
@@ -659,8 +680,8 @@
                         <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
                     </select>
                 </td>
-                <td style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
-                <td class="notes-cell" style="position: relative;"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">${sanitizeText(lead.notes) || 'Add notes'}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
+                <td class="notes-cell"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">${sanitizeText(lead.notes) || 'Add notes'}</div></td>
                 <td style="padding: 8px;">
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
@@ -704,24 +725,17 @@
             }
         }
 
-        // Make cell editable
+        // Make cell editable - simplified approach
         function makeEditable(cell, leadId, field) {
-            // Prevent multiple rapid clicks
-            if (cell.classList.contains('editing')) return;
-            
-            // If already editing another cell, save it first
-            if (currentEditingCell && currentEditingCell !== cell) {
-                const activeInput = currentEditingCell.querySelector('input, textarea');
-                if (activeInput) {
-                    activeInput.blur();
-                }
-            }
-            
-            currentEditingCell = cell;
-            cell.classList.add('editing');
+            // Prevent double editing
+            if (cell.querySelector('input, textarea')) return;
             
             const currentValue = cell.textContent.trim();
             const isPlaceholder = currentValue === 'Set date' || currentValue === 'Add notes';
+            
+            // Create wrapper div
+            const wrapper = document.createElement('div');
+            wrapper.className = 'edit-wrapper';
             
             if (field === 'followUp' || field === 'appointmentDate') {
                 const input = document.createElement('input');
@@ -729,7 +743,6 @@
                 input.type = 'date';
                 
                 if (!isPlaceholder && currentValue) {
-                    // Convert MM/DD/YY to YYYY-MM-DD for date input
                     const parts = currentValue.split('/');
                     if (parts.length === 3) {
                         const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
@@ -739,91 +752,73 @@
                     }
                 }
                 
-                const saveValue = async () => {
-                    const newValue = input.value;
-                    
-                    if (newValue !== '' && newValue !== input.dataset.originalValue) {
-                        await updateLead(leadId, field, newValue);
-                        cell.textContent = formatDate(newValue) || 'Set date';
+                input.onclick = function(e) {
+                    e.stopPropagation();
+                };
+                
+                input.onfocus = function() {
+                    this.showPicker?.();
+                };
+                
+                const save = async () => {
+                    if (input.value) {
+                        await updateLead(leadId, field, input.value);
+                        cell.textContent = formatDate(input.value);
                     } else {
                         cell.textContent = currentValue;
                     }
-                    
                     cell.classList.remove('editing');
-                    currentEditingCell = null;
                 };
                 
-                input.dataset.originalValue = input.value;
+                input.onchange = save;
+                input.onblur = function(e) {
+                    // Delay to allow date picker selection
+                    setTimeout(() => {
+                        if (!cell.contains(document.activeElement)) {
+                            save();
+                        }
+                    }, 200);
+                };
                 
-                input.addEventListener('blur', saveValue);
-                input.addEventListener('change', saveValue);
-                
-                input.addEventListener('keydown', function(e) {
-                    e.stopPropagation();
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        input.blur();
-                    }
+                input.onkeydown = function(e) {
                     if (e.key === 'Escape') {
                         cell.textContent = currentValue;
                         cell.classList.remove('editing');
-                        currentEditingCell = null;
                     }
-                });
+                };
                 
-                cell.textContent = '';
-                cell.appendChild(input);
-                input.focus();
-                
-                // Try to open date picker
-                setTimeout(() => {
-                    try {
-                        input.showPicker();
-                    } catch (e) {
-                        // Browser doesn't support showPicker
-                    }
-                }, 50);
+                wrapper.appendChild(input);
                 
             } else if (field === 'notes') {
                 const textarea = document.createElement('textarea');
                 textarea.className = 'edit-input';
-                textarea.style.minHeight = '60px';
-                textarea.style.height = 'auto';
                 textarea.value = isPlaceholder ? '' : currentValue;
                 
-                const saveValue = async () => {
+                const save = async () => {
                     const newValue = textarea.value.trim();
-                    
-                    if (newValue !== currentValue || (isPlaceholder && newValue !== '')) {
+                    if (newValue !== currentValue || (isPlaceholder && newValue)) {
                         await updateLead(leadId, field, newValue);
                         cell.textContent = newValue || 'Add notes';
                     } else {
                         cell.textContent = currentValue;
                     }
-                    
                     cell.classList.remove('editing');
-                    currentEditingCell = null;
                 };
                 
-                textarea.addEventListener('blur', saveValue);
-                
-                textarea.addEventListener('keydown', function(e) {
+                textarea.onblur = save;
+                textarea.onkeydown = function(e) {
                     e.stopPropagation();
-                    if (e.key === 'Enter' && e.ctrlKey) {
+                    if (e.key === 'Tab' || (e.key === 'Enter' && e.ctrlKey)) {
                         e.preventDefault();
-                        textarea.blur();
+                        save();
                     }
                     if (e.key === 'Escape') {
                         cell.textContent = currentValue;
                         cell.classList.remove('editing');
-                        currentEditingCell = null;
                     }
-                });
+                };
                 
-                cell.textContent = '';
-                cell.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
+                wrapper.appendChild(textarea);
                 
             } else {
                 const input = document.createElement('input');
@@ -831,39 +826,39 @@
                 input.type = 'text';
                 input.value = isPlaceholder ? '' : currentValue;
                 
-                const saveValue = async () => {
+                const save = async () => {
                     const newValue = input.value.trim();
-                    
-                    if (newValue !== currentValue || (isPlaceholder && newValue !== '')) {
+                    if (newValue !== currentValue || (isPlaceholder && newValue)) {
                         await updateLead(leadId, field, newValue);
                         cell.textContent = newValue || '';
                     } else {
                         cell.textContent = currentValue;
                     }
-                    
                     cell.classList.remove('editing');
-                    currentEditingCell = null;
                 };
                 
-                input.addEventListener('blur', saveValue);
-                
-                input.addEventListener('keydown', function(e) {
-                    e.stopPropagation();
+                input.onblur = save;
+                input.onkeydown = function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        input.blur();
+                        save();
                     }
                     if (e.key === 'Escape') {
                         cell.textContent = currentValue;
                         cell.classList.remove('editing');
-                        currentEditingCell = null;
                     }
-                });
+                };
                 
-                cell.textContent = '';
-                cell.appendChild(input);
-                input.focus();
-                input.select();
+                wrapper.appendChild(input);
+            }
+            
+            cell.classList.add('editing');
+            cell.textContent = '';
+            cell.appendChild(wrapper);
+            const inputEl = wrapper.querySelector('input, textarea');
+            inputEl.focus();
+            if (inputEl.type !== 'date') {
+                inputEl.select();
             }
         }
 
