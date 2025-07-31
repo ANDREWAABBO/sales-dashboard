@@ -613,49 +613,43 @@
                     throw new Error('Please fill in all required fields.');
                 }
 
-                console.log('Making request to:', WEB_APP_URL);
+                console.log('Using form submission method to bypass CORS');
 
-                // Call Web App with timeout
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+                // Create a hidden form to submit data (bypasses CORS)
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = WEB_APP_URL;
+                form.target = '_blank'; // Open result in new tab
+                form.style.display = 'none';
 
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                    signal: controller.signal
+                // Add form data as hidden inputs
+                Object.keys(formData).forEach(key => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = formData[key];
+                    form.appendChild(input);
                 });
 
-                clearTimeout(timeoutId);
-                console.log('Response received, status:', response.status);
+                // Add to page and submit
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response error:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
-                }
-
-                const result = await response.json();
-                console.log('Result:', result);
-                
-                if (result.status === 'success') {
-                    closeModal('proposalModal');
-                    showProposalSuccess(result);
-                } else {
-                    throw new Error(result.message || 'Unknown error occurred');
-                }
+                // Show success message immediately
+                closeModal('proposalModal');
+                showPopup(`
+                    <div class="success-popup">
+                        <h3>🚀 Proposal Generation Started!</h3>
+                        <p>Your proposal is being generated. A new tab will open with the results shortly.</p>
+                        <p><strong>Company:</strong> ${formData.companyName}</p>
+                        <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
+                    </div>
+                `, 'success');
 
             } catch (error) {
                 console.error('Error generating proposal:', error);
-                
-                let errorMessage = error.message;
-                if (error.name === 'AbortError') {
-                    errorMessage = 'Request timed out. The proposal generation is taking longer than expected.';
-                }
-                
-                showPopup(`Error generating proposal: ${errorMessage}`, 'error');
+                showPopup(`Error generating proposal: ${error.message}`, 'error');
             } finally {
                 // Reset button
                 submitBtn.disabled = false;
