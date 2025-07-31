@@ -620,12 +620,13 @@
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             
-            let left = event.clientX - 20;
-            let top = event.clientY - tooltipRect.height - 15;
+            // Position tooltip slightly offset from cursor
+            let left = event.clientX + 10;
+            let top = event.clientY - tooltipRect.height - 10;
             
             // Keep tooltip within viewport horizontally
             if (left + tooltipRect.width > viewportWidth - 10) {
-                left = viewportWidth - tooltipRect.width - 10;
+                left = event.clientX - tooltipRect.width - 10;
             }
             if (left < 10) {
                 left = 10;
@@ -633,7 +634,7 @@
             
             // If tooltip would go above viewport, show it below cursor
             if (top < 10) {
-                top = event.clientY + 15;
+                top = event.clientY + 10;
                 // Move arrow to top
                 currentTooltip.style.setProperty('--arrow-bottom', 'auto');
                 currentTooltip.style.setProperty('--arrow-top', '-6px');
@@ -909,18 +910,20 @@
                 };
                 
                 const save = async () => {
-                    if (input.value) {
-                        await updateLead(leadId, field, input.value);
-                        cell.textContent = formatDate(input.value);
-                    } else {
-                        cell.textContent = currentText;
-                    }
+                    // Save even if empty (to clear the date)
+                    await updateLead(leadId, field, input.value);
+                    cell.textContent = input.value ? formatDate(input.value) : 'Set date';
                     cell.style.width = '';
                     cell.style.height = '';
                     cell.style.position = '';
                 };
                 
-                input.addEventListener('change', save);
+                input.addEventListener('change', function() {
+                    // If date is cleared (empty value), save empty string
+                    if (input.value === '') {
+                        save();
+                    }
+                });
                 input.addEventListener('blur', function(e) {
                     setTimeout(() => {
                         if (!cell.contains(document.activeElement)) {
