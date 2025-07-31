@@ -251,7 +251,7 @@
             position: relative;
         }
 
-        /* Notes hover tooltip - improved */
+        /* Notes hover tooltip - fixed positioning and wrapping */
         .notes-cell {
             position: relative;
         }
@@ -264,15 +264,9 @@
             max-width: 180px;
         }
 
-        .notes-cell:hover .notes-tooltip {
-            display: block;
-        }
-
         .notes-tooltip {
+            position: fixed;
             display: none;
-            position: absolute;
-            bottom: 100%;
-            left: 0;
             background: #2d3748;
             color: white;
             padding: 12px 16px;
@@ -281,23 +275,28 @@
             line-height: 1.6;
             max-width: 400px;
             min-width: 200px;
-            width: max-content;
-            z-index: 1000;
+            z-index: 10000;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            margin-bottom: 8px;
-            white-space: normal;
+            white-space: pre-wrap;
             word-wrap: break-word;
+            word-break: break-word;
         }
 
         .notes-tooltip::after {
             content: '';
             position: absolute;
-            bottom: -6px;
+            bottom: var(--arrow-bottom, -6px);
+            top: var(--arrow-top, auto);
             left: 20px;
             width: 12px;
             height: 12px;
             background: #2d3748;
-            transform: rotate(45deg);
+            transform: var(--arrow-transform, rotate(45deg));
+        }
+
+        /* Show tooltip on hover */
+        .notes-cell:hover .notes-tooltip.has-content {
+            display: block;
         }
 
         .editable-cell:hover {
@@ -565,6 +564,63 @@
     </div>
 
     <script>
+        // Tooltip positioning functions
+        let currentTooltip = null;
+        
+        function showNotesTooltip(event, cell) {
+            const tooltip = cell.querySelector('.notes-tooltip');
+            const notes = cell.querySelector('.editable-cell').textContent.trim();
+            
+            if (tooltip && notes && notes !== 'Add notes' && notes.length > 20) {
+                currentTooltip = tooltip;
+                tooltip.style.display = 'block';
+                updateTooltipPosition(event);
+            }
+        }
+        
+        function hideNotesTooltip() {
+            if (currentTooltip) {
+                currentTooltip.style.display = 'none';
+                currentTooltip = null;
+            }
+        }
+        
+        function updateTooltipPosition(event) {
+            if (!currentTooltip) return;
+            
+            const tooltipRect = currentTooltip.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            let left = event.clientX - 20;
+            let top = event.clientY - tooltipRect.height - 15;
+            
+            // Keep tooltip within viewport horizontally
+            if (left + tooltipRect.width > viewportWidth - 10) {
+                left = viewportWidth - tooltipRect.width - 10;
+            }
+            if (left < 10) {
+                left = 10;
+            }
+            
+            // If tooltip would go above viewport, show it below cursor
+            if (top < 10) {
+                top = event.clientY + 15;
+                // Move arrow to top
+                currentTooltip.style.setProperty('--arrow-bottom', 'auto');
+                currentTooltip.style.setProperty('--arrow-top', '-6px');
+                currentTooltip.style.setProperty('--arrow-transform', 'rotate(225deg)');
+            } else {
+                // Reset arrow to bottom
+                currentTooltip.style.setProperty('--arrow-bottom', '-6px');
+                currentTooltip.style.setProperty('--arrow-top', 'auto');
+                currentTooltip.style.setProperty('--arrow-transform', 'rotate(45deg)');
+            }
+            
+            currentTooltip.style.left = left + 'px';
+            currentTooltip.style.top = top + 'px';
+        }
+
         // Back button function
         function goBack() {
             window.location.replace('index.html');
@@ -731,11 +787,14 @@
                     </select>
                 </td>
                 <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
-                <td class="notes-cell" data-notes="${sanitizeText(lead.notes).replace(/"/g, '&quot;')}">
+                <td class="notes-cell" 
+                    onmouseenter="showNotesTooltip(event, this)" 
+                    onmouseleave="hideNotesTooltip()"
+                    onmousemove="updateTooltipPosition(event)">
                     <div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">
                         ${sanitizeText(lead.notes) || 'Add notes'}
                     </div>
-                    ${lead.notes && lead.notes.length > 20 ? `<div class="notes-tooltip">${sanitizeText(lead.notes)}</div>` : ''}
+                    ${lead.notes && lead.notes.length > 20 ? `<div class="notes-tooltip has-content">${sanitizeText(lead.notes)}</div>` : '<div class="notes-tooltip"></div>'}
                 </td>
                 <td style="padding: 8px;">
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
@@ -896,13 +955,14 @@
                             const oldTooltip = parentTd.querySelector('.notes-tooltip');
                             if (oldTooltip) oldTooltip.remove();
                             
-                            // Add new tooltip if text is long
+                            // Add new tooltip
+                            const tooltip = document.createElement('div');
+                            tooltip.className = 'notes-tooltip';
                             if (newValue && newValue.length > 20) {
-                                const tooltip = document.createElement('div');
-                                tooltip.className = 'notes-tooltip';
+                                tooltip.classList.add('has-content');
                                 tooltip.textContent = newValue;
-                                parentTd.appendChild(tooltip);
                             }
+                            parentTd.appendChild(tooltip);
                         } else {
                             cell.textContent = newValue || '';
                         }
