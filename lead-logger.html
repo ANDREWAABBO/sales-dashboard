@@ -144,12 +144,15 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .filter-controls {
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .filter-controls select,
@@ -160,10 +163,15 @@
             font-size: 14px;
         }
 
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
+            min-width: 1200px;
         }
 
         th {
@@ -175,27 +183,20 @@
             position: sticky;
             top: 0;
             white-space: nowrap;
-        }
-
-        th:first-child,
-        td:first-child {
-            min-width: 80px;
+            z-index: 10;
         }
 
         td {
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
             position: relative;
-            min-width: 100px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        td:nth-child(11) {
-            min-width: 200px;
-            max-width: 300px;
+        td.notes-cell {
             white-space: normal;
+            max-width: 300px;
+            word-wrap: break-word;
         }
 
         tr:hover {
@@ -208,6 +209,8 @@
             padding: 4px 8px;
             border-radius: 4px;
             transition: all 0.2s ease;
+            min-height: 30px;
+            display: inline-block;
         }
 
         .editable-cell:hover {
@@ -231,14 +234,6 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
         .status-select {
             padding: 5px 10px;
             border: 2px solid #e2e8f0;
@@ -254,26 +249,6 @@
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .status-active {
-            background-color: #10b981;
-            color: white;
-        }
-
-        .status-followuplater {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        .status-notqualified {
-            background-color: #ef4444;
-            color: white;
-        }
-
-        .status-dead {
-            background-color: #6b7280;
-            color: white;
         }
 
         .action-btn {
@@ -332,6 +307,7 @@
             border-radius: 10px;
             margin-bottom: 20px;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .back-btn:hover {
@@ -339,10 +315,34 @@
             transform: translateX(-5px);
         }
 
-        /* Test row style */
-        .test-row {
-            background-color: #e0e0e0 !important;
-            font-weight: bold;
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .filter-controls select,
+            .filter-controls input {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -383,7 +383,7 @@
                     </div>
                     <div class="form-group">
                         <label for="followUp">Follow Up Date</label>
-                        <input type="date" id="followUp" name="followUp" required>
+                        <input type="date" id="followUp" name="followUp">
                     </div>
                     <div class="form-group full-width">
                         <label for="notes">Notes</label>
@@ -402,7 +402,6 @@
                 <div class="filter-controls">
                     <select id="repFilter" onchange="filterLeads()">
                         <option value="">All Reps</option>
-                        <!-- Dynamically populated -->
                     </select>
                     <select id="statusFilter" onchange="filterLeads()">
                         <option value="">All Status</option>
@@ -415,27 +414,28 @@
                 </div>
             </div>
             <div class="loading" id="loading">Loading leads...</div>
-            <table id="leadsTable">
-                <thead>
-                    <tr>
-                        <th>Date Added</th>
-                        <th>Company Name</th>
-                        <th>Contact Name</th>
-                        <th>Phone Number</th>
-                        <th>Email Address</th>
-                        <th>Rep Name</th>
-                        <th>Follow Up</th>
-                        <th>Status</th>
-                        <th>Appt Made</th>
-                        <th>Appt Date</th>
-                        <th>Notes</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="leadsTableBody">
-                    <!-- Leads will be populated here -->
-                </tbody>
-            </table>
+            <div class="table-wrapper">
+                <table id="leadsTable">
+                    <thead>
+                        <tr>
+                            <th>Date Added</th>
+                            <th>Company Name</th>
+                            <th>Contact Name</th>
+                            <th>Phone Number</th>
+                            <th>Email Address</th>
+                            <th>Rep Name</th>
+                            <th>Follow Up</th>
+                            <th>Status</th>
+                            <th>Appt Made</th>
+                            <th>Appt Date</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -449,6 +449,7 @@
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec';
 
         let leadsData = [];
+        let currentEditingCell = null;
 
         // Load leads on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -475,10 +476,10 @@
                 companyName: formData.get('companyName'),
                 contactName: formData.get('contactName'),
                 phoneNumber: formData.get('phoneNumber'),
-                emailAddress: formData.get('emailAddress'),
+                emailAddress: formData.get('emailAddress') || '',
                 repName: repName,
-                followUp: formData.get('followUp'),
-                notes: formData.get('notes')
+                followUp: formData.get('followUp') || '',
+                notes: formData.get('notes') || ''
             };
 
             // Show loading
@@ -498,13 +499,18 @@
                     })
                 });
 
-                showMessage('Lead added successfully!', 'success');
-                resetForm();
-                
-                // Keep rep name filled
-                document.getElementById('repName').value = repName;
-                
-                await loadLeads(); // Reload the leads
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showMessage('Lead added successfully!', 'success');
+                    resetForm();
+                    
+                    // Keep rep name filled
+                    document.getElementById('repName').value = repName;
+                    
+                    await loadLeads(); // Reload the leads
+                } else {
+                    throw new Error(result.message || 'Failed to add lead');
+                }
                 
             } catch (error) {
                 showMessage('Error adding lead. Please try again.', 'error');
@@ -524,13 +530,13 @@
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    leadsData = data.leads;
-                    
-                    // Debug: Log the data structure
-                    if (leadsData.length > 0) {
-                        console.log('First lead data:', leadsData[0]);
-                        console.log('All field names:', Object.keys(leadsData[0]));
-                    }
+                    // Filter out any test data
+                    leadsData = (data.leads || []).filter(lead => {
+                        // Skip if company name starts with TEST or is empty
+                        return lead.companyName && 
+                               !lead.companyName.toUpperCase().startsWith('TEST') &&
+                               lead.companyName.trim() !== '';
+                    });
                     
                     displayLeads();
                 } else {
@@ -544,7 +550,7 @@
             }
         }
 
-        // Display leads in table - CLEAN VERSION
+        // Display leads in table
         function displayLeads() {
             const tbody = document.getElementById('leadsTableBody');
             tbody.innerHTML = '';
@@ -553,52 +559,69 @@
             const uniqueReps = [...new Set(leadsData.map(lead => lead.repName))].filter(Boolean).sort();
             updateRepFilter(uniqueReps);
             
+            if (leadsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" class="empty-state"><h3>No leads found</h3><p>Add your first lead using the form above.</p></td></tr>';
+                return;
+            }
+            
             // Add each lead as a row
             leadsData.forEach(lead => {
                 if (lead.status !== 'Dead') {
-                    const row = document.createElement('tr');
-                    
-                    // Format dates
-                    const dateAdded = formatDate(lead.dateAdded);
-                    const followUpDate = formatDate(lead.followUp);
-                    const apptDate = formatDate(lead.appointmentDate);
-                    
-                    // Build the row - keeping it simple but functional
-                    row.innerHTML = `
-                        <td>${dateAdded}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'companyName')">${lead.companyName || ''}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'contactName')">${lead.contactName || ''}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'phoneNumber')">${lead.phoneNumber || ''}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'emailAddress')">${lead.emailAddress || ''}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'repName')">${lead.repName || ''}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'followUp')">${followUpDate || 'Set date'}</td>
-                        <td>
-                            <select class="status-select" onchange="updateStatus(this, ${lead.id || lead.iD})">
-                                <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
-                                <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
-                                <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
-                                <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead (Archive)</option>
-                            </select>
-                        </td>
-                        <td>
-                            <select class="status-select" onchange="updateAppointmentMade(this, ${lead.id || lead.iD})">
-                                <option value="No" ${(lead.appointmentMade || 'No') === 'No' ? 'selected' : ''}>No</option>
-                                <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
-                            </select>
-                        </td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'appointmentDate')">${apptDate || 'Set date'}</td>
-                        <td class="editable-cell" onclick="makeEditable(this, ${lead.id || lead.iD}, 'notes')">${lead.notes || 'Add notes'}</td>
-                        <td>
-                            <button class="action-btn archive" onclick="archiveLead(${lead.id || lead.iD})">Archive</button>
-                        </td>
-                    `;
-                    
+                    const row = createLeadRow(lead);
                     tbody.appendChild(row);
                 }
             });
         }
 
-        // Update rep filter dropdown with actual reps
+        // Create table row for a lead
+        function createLeadRow(lead) {
+            const leadId = lead.id || lead.iD || lead.ID;
+            const row = document.createElement('tr');
+            
+            // Format dates
+            const dateAdded = formatDate(lead.dateAdded);
+            const followUpDate = formatDate(lead.followUp);
+            const apptDate = formatDate(lead.appointmentDate);
+            
+            row.innerHTML = `
+                <td>${dateAdded}</td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'companyName')">${sanitizeText(lead.companyName) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'contactName')">${sanitizeText(lead.contactName) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'phoneNumber')">${sanitizeText(lead.phoneNumber) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'emailAddress')">${sanitizeText(lead.emailAddress) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'repName')">${sanitizeText(lead.repName) || ''}</div></td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'followUp')">${followUpDate || 'Set date'}</div></td>
+                <td>
+                    <select class="status-select" onchange="updateStatus(this, ${leadId})">
+                        <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
+                        <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
+                        <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
+                        <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead (Archive)</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">
+                        <option value="No" ${(lead.appointmentMade || 'No') === 'No' ? 'selected' : ''}>No</option>
+                        <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
+                    </select>
+                </td>
+                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
+                <td class="notes-cell"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">${sanitizeText(lead.notes) || 'Add notes'}</div></td>
+                <td>
+                    <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        // Sanitize text to remove newlines and trim
+        function sanitizeText(text) {
+            if (!text) return '';
+            return String(text).replace(/[\r\n]+/g, ' ').trim();
+        }
+
+        // Update rep filter dropdown
         function updateRepFilter(reps) {
             const repFilter = document.getElementById('repFilter');
             repFilter.innerHTML = '<option value="">All Reps</option>';
@@ -611,127 +634,94 @@
             });
         }
 
-        // Format any date to MM/DD/YY
+        // Format date to MM/DD/YY
         function formatDate(dateValue) {
             if (!dateValue) return '';
             try {
-                // Handle ISO date strings
-                let date;
-                if (typeof dateValue === 'string' && dateValue.includes('T')) {
-                    date = new Date(dateValue);
-                } else if (typeof dateValue === 'string' && dateValue.includes('-')) {
-                    date = new Date(dateValue);
-                } else {
-                    date = new Date(dateValue);
-                }
-                
-                if (isNaN(date.getTime())) return dateValue;
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return '';
                 
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
                 const year = date.getFullYear().toString().slice(-2);
                 return `${month}/${day}/${year}`;
             } catch (e) {
-                console.error('Date formatting error:', e, 'for value:', dateValue);
-                return dateValue || '';
+                return '';
             }
         }
 
-        // Create table row for a lead
-        function createLeadRow(lead) {
-            // Debug the lead structure
-            console.log('Creating row for lead:', lead);
+        // Make cell editable
+        function makeEditable(cell, leadId, field) {
+            // If already editing, ignore
+            if (currentEditingCell) return;
             
-            // Check for newlines in data
-            console.log('Checking for newlines:');
-            console.log('companyName has newlines:', lead.companyName.includes('\n'));
-            console.log('companyName raw:', JSON.stringify(lead.companyName));
+            currentEditingCell = cell;
+            const currentValue = cell.textContent;
+            const isPlaceholder = currentValue === 'Set date' || currentValue === 'Add notes';
             
-            // Handle field name variations from Google Sheets
-            const leadId = lead.id || lead.iD || lead.ID;
-            const companyName = (lead.companyName || '').replace(/[\r\n]+/g, ' ').trim();
-            const contactName = (lead.contactName || '').replace(/[\r\n]+/g, ' ').trim();
-            const phoneNumber = (lead.phoneNumber || '').replace(/[\r\n]+/g, ' ').trim();
-            const emailAddress = (lead.emailAddress || '').replace(/[\r\n]+/g, ' ').trim();
-            const repName = (lead.repName || '').replace(/[\r\n]+/g, ' ').trim();
-            const followUp = lead.followUp || '';
-            const status = lead.status || 'Active';
-            const appointmentMade = lead.appointmentMade || 'No';
-            const appointmentDate = lead.appointmentDate || '';
-            const notes = (lead.notes || '').replace(/[\r\n]+/g, ' ').trim();
+            const input = document.createElement('input');
+            input.className = 'edit-input';
             
-            // Format dates
-            let formattedDate = formatDate(lead.dateAdded);
-            let formattedFollowUp = formatDate(followUp);
-            let formattedApptDate = formatDate(appointmentDate);
+            if (field === 'followUp' || field === 'appointmentDate') {
+                input.type = 'date';
+                if (!isPlaceholder && currentValue) {
+                    // Convert MM/DD/YY to YYYY-MM-DD for date input
+                    const parts = currentValue.split('/');
+                    if (parts.length === 3) {
+                        const year = '20' + parts[2];
+                        const month = parts[0].padStart(2, '0');
+                        const day = parts[1].padStart(2, '0');
+                        input.value = `${year}-${month}-${day}`;
+                    }
+                }
+            } else {
+                input.type = 'text';
+                input.value = isPlaceholder ? '' : currentValue;
+            }
             
-            console.log('Formatted data:', {
-                companyName,
-                contactName,
-                phoneNumber,
-                emailAddress,
-                repName
-            });
+            input.onblur = async function() {
+                const newValue = input.value;
+                
+                // If value changed, update it
+                if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
+                    await updateLead(leadId, field, newValue);
+                    
+                    // Update display
+                    if (field === 'followUp' || field === 'appointmentDate') {
+                        cell.textContent = formatDate(newValue) || 'Set date';
+                    } else {
+                        cell.textContent = newValue || (field === 'notes' ? 'Add notes' : '');
+                    }
+                } else {
+                    cell.textContent = currentValue;
+                }
+                
+                currentEditingCell = null;
+            };
             
-            const row = document.createElement('tr');
+            input.onkeypress = function(e) {
+                if (e.key === 'Enter') {
+                    input.blur();
+                }
+                if (e.key === 'Escape') {
+                    cell.textContent = currentValue;
+                    currentEditingCell = null;
+                }
+            };
             
-            // Debug: Log what we're about to insert
-            console.log('About to create row with:');
-            console.log('Date:', formattedDate, 'from', lead.dateAdded);
-            console.log('Company:', companyName);
-            console.log('Contact:', contactName);
-            
-            // Count columns
-            const headerCells = document.querySelectorAll('#leadsTable thead th');
-            const dataCells = 12;
-            console.log(`Header columns: ${headerCells.length}, Data columns: ${dataCells}`);
-            
-            row.innerHTML = `
-                <td>${formattedDate}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'companyName')">${companyName}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'contactName')">${contactName}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'phoneNumber')">${phoneNumber}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'emailAddress')">${emailAddress}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'repName')">${repName}</td>
-                <td class="editable" onclick="editFollowUp(this, ${leadId})">${formattedFollowUp || 'Set date'}</td>
-                <td>${createStatusDropdown({status: status}, leadId)}</td>
-                <td>${createAppointmentDropdown({appointmentMade: appointmentMade}, leadId)}</td>
-                <td class="editable" onclick="editAppointmentDate(this, ${leadId})">${formattedApptDate || 'Set date'}</td>
-                <td class="editable" onclick="editCell(this, ${leadId}, 'notes')">${notes || 'Add notes'}</td>
-                <td>
-                    <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
-                </td>
-            `;
-            return row;
+            cell.textContent = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
         }
 
-        // Create status dropdown that's always editable
-        function createStatusDropdown(lead, leadId) {
-            const statuses = [
-                {value: 'Active', label: 'Active'},
-                {value: 'Not Qualified', label: 'Not Qualified'},
-                {value: 'Follow Up Later', label: 'Follow Up Later'},
-                {value: 'Dead', label: 'Dead (Archive)'}
-            ];
-            let html = `<select class="status-select" onchange="updateStatus(this, ${leadId})">`;
-            
-            statuses.forEach(status => {
-                const selected = lead.status === status.value ? 'selected' : '';
-                const className = status.value.toLowerCase().replace(' ', '');
-                html += `<option value="${status.value}" ${selected} class="status-${className}">${status.label}</option>`;
-            });
-            
-            html += '</select>';
-            return html;
-        }
-
-        // Update status directly
+        // Update status
         async function updateStatus(selectElement, leadId) {
             const newStatus = selectElement.value;
             
             if (newStatus === 'Dead') {
-                if (confirm('Setting status to "Dead" will archive this lead and remove it from the active list. Are you sure you want to archive this lead?')) {
-                    await archiveLead(leadId);
+                if (confirm('Setting status to "Dead" will archive this lead. Continue?')) {
+                    await updateLead(leadId, 'status', newStatus);
                 } else {
                     // Reset to previous value
                     const lead = leadsData.find(l => (l.id || l.iD) === leadId);
@@ -744,49 +734,9 @@
             }
         }
 
-        // Create appointment made dropdown
-        function createAppointmentDropdown(lead, leadId) {
-            const selected = lead.appointmentMade || 'No';
-            let html = `<select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">`;
-            html += `<option value="No" ${selected === 'No' ? 'selected' : ''}>No</option>`;
-            html += `<option value="Yes" ${selected === 'Yes' ? 'selected' : ''}>Yes</option>`;
-            html += '</select>';
-            return html;
-        }
-
         // Update appointment made status
         async function updateAppointmentMade(selectElement, leadId) {
             await updateLead(leadId, 'appointmentMade', selectElement.value);
-        }
-
-        // Simple editable cell function
-        function makeEditable(cell, leadId, field) {
-            const currentValue = cell.textContent;
-            const input = document.createElement('input');
-            input.type = field === 'followUp' || field === 'appointmentDate' ? 'date' : 'text';
-            input.value = currentValue === 'Set date' || currentValue === 'Add notes' ? '' : currentValue;
-            input.style.width = '100%';
-            input.style.padding = '5px';
-            
-            input.onblur = async function() {
-                if (input.value !== currentValue) {
-                    await updateLead(leadId, field, input.value);
-                    cell.textContent = input.value || (field === 'notes' ? 'Add notes' : 'Set date');
-                } else {
-                    cell.textContent = currentValue;
-                }
-            };
-            
-            input.onkeypress = function(e) {
-                if (e.key === 'Enter') {
-                    input.blur();
-                }
-            };
-            
-            cell.textContent = '';
-            cell.appendChild(input);
-            input.focus();
-            input.select();
         }
 
         // Update lead data
@@ -807,69 +757,83 @@
                     })
                 });
                 
-                showMessage('Lead updated successfully!', 'success');
-                // Don't reload immediately to prevent flickering
-                setTimeout(() => loadLeads(), 1000);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showMessage('Lead updated successfully!', 'success');
+                    
+                    // Update local data
+                    const lead = leadsData.find(l => (l.id || l.iD) === leadId);
+                    if (lead) {
+                        lead[field] = value;
+                    }
+                    
+                    // If status changed to Dead, reload to remove from list
+                    if (field === 'status' && value === 'Dead') {
+                        setTimeout(() => loadLeads(), 500);
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to update lead');
+                }
             } catch (error) {
                 console.error('Error updating lead:', error);
                 showMessage('Error updating lead. Please try again.', 'error');
+                // Reload to restore original state
+                setTimeout(() => loadLeads(), 1000);
             }
         }
 
         // Archive lead
         async function archiveLead(leadId) {
-            if (confirm('Are you sure you want to archive this lead?')) {
-                try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
-                        body: JSON.stringify({
-                            action: 'archiveLead',
-                            leadId: leadId
-                        })
-                    });
-                    
-                    showMessage('Lead archived successfully!', 'success');
-                    setTimeout(() => loadLeads(), 1000);
-                } catch (error) {
-                    console.error('Error archiving lead:', error);
-                    showMessage('Error archiving lead. Please try again.', 'error');
-                }
+            if (confirm('Archive this lead? This will remove it from the active list.')) {
+                await updateLead(leadId, 'status', 'Dead');
             }
         }
 
         // Filter leads
         function filterLeads() {
-            const repFilter = document.getElementById('repFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
+            const repFilter = document.getElementById('repFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
             const searchTerm = document.getElementById('searchBox').value.toLowerCase();
             
-            const tbody = document.getElementById('leadsTableBody');
-            tbody.innerHTML = '';
+            const rows = document.querySelectorAll('#leadsTableBody tr');
             
-            leadsData.forEach(lead => {
-                if (lead.status === 'Dead') return; // Don't show archived
+            rows.forEach(row => {
+                // Skip empty state row
+                if (row.querySelector('.empty-state')) return;
                 
-                let show = true;
+                const cells = row.querySelectorAll('td');
+                const repName = cells[5]?.textContent.toLowerCase() || '';
+                const status = row.querySelector('.status-select')?.value.toLowerCase() || '';
                 
-                if (repFilter && lead.repName !== repFilter) show = false;
-                if (statusFilter && lead.status !== statusFilter) show = false;
-                if (searchTerm && !Object.values(lead).some(val => 
-                    String(val).toLowerCase().includes(searchTerm)
-                )) show = false;
+                let showRow = true;
                 
-                if (show) {
-                    const row = createLeadRow(lead);
-                    tbody.appendChild(row);
+                // Apply filters
+                if (repFilter && repName !== repFilter) showRow = false;
+                if (statusFilter && status !== statusFilter) showRow = false;
+                
+                // Search filter
+                if (searchTerm && showRow) {
+                    let matchFound = false;
+                    cells.forEach(cell => {
+                        if (cell.textContent.toLowerCase().includes(searchTerm)) {
+                            matchFound = true;
+                        }
+                    });
+                    if (!matchFound) showRow = false;
                 }
+                
+                row.style.display = showRow ? '' : 'none';
             });
         }
 
         // Reset form
         function resetForm() {
             document.getElementById('leadForm').reset();
+            // Keep rep name
+            const savedRepName = localStorage.getItem('leadLoggerRepName');
+            if (savedRepName) {
+                document.getElementById('repName').value = savedRepName;
+            }
         }
 
         // Show message
