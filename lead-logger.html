@@ -564,7 +564,7 @@
     </div>
 
     <!-- Notes Modal -->
-    <div id="notesModal" class="modal-overlay">
+    <div id="notesModal" class="modal-overlay" style="display: none;">
         <div class="modal">
             <h3>Edit Notes</h3>
             <textarea id="modalNotesInput" placeholder="Add your notes here..."></textarea>
@@ -619,6 +619,7 @@
 
         // Modal functions
         function openNotesModal(leadId, currentNotes, cell) {
+            console.log('Opening notes modal for lead:', leadId, 'Current notes:', currentNotes);
             currentNotesLeadId = leadId;
             currentNotesCell = cell;
             const modal = document.getElementById('notesModal');
@@ -634,6 +635,7 @@
         }
 
         function closeNotesModal() {
+            console.log('Closing notes modal');
             document.getElementById('notesModal').style.display = 'none';
             currentNotesLeadId = null;
             currentNotesCell = null;
@@ -642,6 +644,8 @@
         async function saveNotesModal() {
             const textarea = document.getElementById('modalNotesInput');
             const newValue = textarea.value.trim();
+            
+            console.log('Saving notes:', newValue, 'for lead:', currentNotesLeadId);
             
             if (currentNotesLeadId && currentNotesCell) {
                 await updateLead(currentNotesLeadId, 'notes', newValue);
@@ -659,17 +663,34 @@
             closeNotesModal();
         }
 
-        // Close modal on overlay click
-        document.getElementById('notesModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeNotesModal();
+        // Modal event listeners - set up after DOM is loaded
+        window.addEventListener('DOMContentLoaded', function() {
+            // Close modal on overlay click
+            const modalOverlay = document.getElementById('notesModal');
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeNotesModal();
+                    }
+                });
             }
-        });
 
-        // Close modal on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('notesModal').style.display === 'block') {
-                closeNotesModal();
+            // Close modal on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modalOverlay && modalOverlay.style.display === 'block') {
+                    closeNotesModal();
+                }
+            });
+            
+            // Save on Ctrl+Enter in textarea
+            const textarea = document.getElementById('modalNotesInput');
+            if (textarea) {
+                textarea.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        e.preventDefault();
+                        saveNotesModal();
+                    }
+                });
             }
         });
 
