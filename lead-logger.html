@@ -592,64 +592,6 @@
             }
         });
 
-        // Tooltip positioning functions
-        let currentTooltip = null;
-        
-        function showNotesTooltip(event, cell) {
-            const tooltip = cell.querySelector('.notes-tooltip');
-            const notes = cell.querySelector('.editable-cell').textContent.trim();
-            
-            if (tooltip && notes && notes !== 'Add notes' && notes.length > 20) {
-                currentTooltip = tooltip;
-                tooltip.style.display = 'block';
-                updateTooltipPosition(event);
-            }
-        }
-        
-        function hideNotesTooltip() {
-            if (currentTooltip) {
-                currentTooltip.style.display = 'none';
-                currentTooltip = null;
-            }
-        }
-        
-        function updateTooltipPosition(event) {
-            if (!currentTooltip) return;
-            
-            const tooltipRect = currentTooltip.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const viewportHeight = window.innerHeight;
-            
-            // Position tooltip slightly offset from cursor
-            let left = event.clientX + 10;
-            let top = event.clientY - tooltipRect.height - 10;
-            
-            // Keep tooltip within viewport horizontally
-            if (left + tooltipRect.width > viewportWidth - 10) {
-                left = event.clientX - tooltipRect.width - 10;
-            }
-            if (left < 10) {
-                left = 10;
-            }
-            
-            // If tooltip would go above viewport, show it below cursor
-            if (top < 10) {
-                top = event.clientY + 10;
-                // Move arrow to top
-                currentTooltip.style.setProperty('--arrow-bottom', 'auto');
-                currentTooltip.style.setProperty('--arrow-top', '-6px');
-                currentTooltip.style.setProperty('--arrow-transform', 'rotate(225deg)');
-            } else {
-                // Reset arrow to bottom
-                currentTooltip.style.setProperty('--arrow-bottom', '-6px');
-                currentTooltip.style.setProperty('--arrow-top', 'auto');
-                currentTooltip.style.setProperty('--arrow-transform', 'rotate(45deg)');
-            }
-            
-            currentTooltip.style.left = left + 'px';
-            currentTooltip.style.top = top + 'px';
-        }
-
         // Back button function
         function goBack() {
             window.location.replace('index.html');
@@ -816,14 +758,12 @@
                     </select>
                 </td>
                 <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
-                <td class="notes-cell" 
-                    onmouseenter="showNotesTooltip(event, this)" 
-                    onmouseleave="hideNotesTooltip()"
-                    onmousemove="updateTooltipPosition(event)">
-                    <div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">
+                <td class="notes-cell">
+                    <div class="editable-cell" 
+                         onclick="makeEditable(this, ${leadId}, 'notes')"
+                         ${lead.notes && lead.notes.length > 20 ? `title="${sanitizeText(lead.notes)}"` : ''}>
                         ${sanitizeText(lead.notes) || 'Add notes'}
                     </div>
-                    ${lead.notes && lead.notes.length > 20 ? `<div class="notes-tooltip has-content">${sanitizeText(lead.notes)}</div>` : '<div class="notes-tooltip"></div>'}
                 </td>
                 <td style="padding: 8px;">
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
@@ -903,23 +843,36 @@
                 }
                 
                 const restore = () => {
-                    cell.textContent = currentText;
+                    if (input.value === '') {
+                        // If cleared, show "Set date"
+                        cell.textContent = 'Set date';
+                    } else {
+                        cell.textContent = currentText;
+                    }
                     cell.style.width = '';
                     cell.style.height = '';
                     cell.style.position = '';
                 };
                 
                 const save = async () => {
-                    // Save even if empty (to clear the date)
+                    // Always save the value, even if empty
                     await updateLead(leadId, field, input.value);
-                    cell.textContent = input.value ? formatDate(input.value) : 'Set date';
+                    if (input.value) {
+                        cell.textContent = formatDate(input.value);
+                    } else {
+                        cell.textContent = 'Set date';
+                    }
                     cell.style.width = '';
                     cell.style.height = '';
                     cell.style.position = '';
                 };
                 
+                // Listen for both change and input events to catch clearing
                 input.addEventListener('change', function() {
-                    // If date is cleared (empty value), save empty string
+                    save();
+                });
+                
+                input.addEventListener('input', function() {
                     if (input.value === '') {
                         save();
                     }
