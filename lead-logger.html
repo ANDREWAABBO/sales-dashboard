@@ -564,6 +564,34 @@
     </div>
 
     <script>
+        // Force full width on load
+        window.addEventListener('DOMContentLoaded', function() {
+            // Override any inherited styles
+            document.documentElement.style.width = '100%';
+            document.documentElement.style.maxWidth = '100%';
+            document.body.style.width = '100%';
+            document.body.style.maxWidth = '100%';
+            
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.maxWidth = '100%';
+                container.style.width = '100%';
+                container.style.padding = '0 10px';
+            }
+            
+            const formSection = document.querySelector('.form-section');
+            if (formSection) {
+                formSection.style.maxWidth = '100%';
+                formSection.style.margin = '0 0 20px 0';
+            }
+            
+            const tableSection = document.querySelector('.table-section');
+            if (tableSection) {
+                tableSection.style.maxWidth = '100%';
+                tableSection.style.margin = '0';
+            }
+        });
+
         // Tooltip positioning functions
         let currentTooltip = null;
         
