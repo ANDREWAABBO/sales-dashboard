@@ -749,15 +749,17 @@
                         } else if (cellIndex === 10) { // Notes
                             console.log('Setting notes click handler for cell:', cell);
                             cell.style.backgroundColor = '#f0f0f0'; // Visual indicator
-                            cell.onclick = function() {
+                            cell.onclick = function(e) {
+                                e.stopPropagation();
                                 console.log('Notes clicked!', leadId);
-                                console.log('window.makeEditable exists?', typeof window.makeEditable);
-                                if (window.makeEditable) {
-                                    window.makeEditable(cell, leadId, 'notes');
-                                } else {
-                                    console.error('makeEditable function not found!');
-                                    // Fallback: call makeEditable directly
+                                console.log('Cell element:', cell);
+                                console.log('Cell content:', cell.textContent);
+                                
+                                try {
+                                    // Try calling directly
                                     makeEditable(cell, leadId, 'notes');
+                                } catch (error) {
+                                    console.error('Error calling makeEditable:', error);
                                 }
                             };
                         }
