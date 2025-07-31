@@ -251,56 +251,53 @@
             position: relative;
         }
 
-        /* Notes hover tooltip */
-        .notes-cell .editable-cell {
-            white-space: normal;
-            overflow: visible;
+        /* Notes hover tooltip - improved */
+        .notes-cell {
             position: relative;
         }
 
+        .notes-cell .editable-cell {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            max-width: 180px;
+        }
+
+        .notes-cell:hover .notes-tooltip {
+            display: block;
+        }
+
         .notes-tooltip {
+            display: none;
             position: absolute;
-            top: 100%;
+            bottom: 100%;
             left: 0;
             background: #2d3748;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
             max-width: 400px;
+            min-width: 200px;
             width: max-content;
             z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            pointer-events: none;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            margin-top: 5px;
+            margin-bottom: 8px;
+            white-space: normal;
+            word-wrap: break-word;
         }
 
-        .notes-tooltip::before {
+        .notes-tooltip::after {
             content: '';
             position: absolute;
-            top: -5px;
+            bottom: -6px;
             left: 20px;
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             background: #2d3748;
             transform: rotate(45deg);
-        }
-
-        .notes-cell .editable-cell:hover .notes-tooltip {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .notes-preview {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 180px;
         }
 
         .editable-cell:hover {
@@ -734,11 +731,11 @@
                     </select>
                 </td>
                 <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
-                <td class="notes-cell">
+                <td class="notes-cell" data-notes="${sanitizeText(lead.notes).replace(/"/g, '&quot;')}">
                     <div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">
-                        <span class="notes-preview">${sanitizeText(lead.notes) || 'Add notes'}</span>
-                        ${lead.notes && lead.notes.length > 30 ? `<div class="notes-tooltip">${sanitizeText(lead.notes)}</div>` : ''}
+                        ${sanitizeText(lead.notes) || 'Add notes'}
                     </div>
+                    ${lead.notes && lead.notes.length > 20 ? `<div class="notes-tooltip">${sanitizeText(lead.notes)}</div>` : ''}
                 </td>
                 <td style="padding: 8px;">
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
@@ -889,18 +886,22 @@
                         await updateLead(leadId, field, newValue);
                         // Update cell with new content including tooltip if needed
                         if (isNotes) {
-                            const preview = document.createElement('span');
-                            preview.className = 'notes-preview';
-                            preview.textContent = newValue || 'Add notes';
+                            cell.textContent = newValue || 'Add notes';
                             
-                            cell.innerHTML = '';
-                            cell.appendChild(preview);
+                            // Update parent td with tooltip
+                            const parentTd = cell.parentElement;
+                            parentTd.setAttribute('data-notes', newValue);
                             
-                            if (newValue && newValue.length > 30) {
+                            // Remove old tooltip if exists
+                            const oldTooltip = parentTd.querySelector('.notes-tooltip');
+                            if (oldTooltip) oldTooltip.remove();
+                            
+                            // Add new tooltip if text is long
+                            if (newValue && newValue.length > 20) {
                                 const tooltip = document.createElement('div');
                                 tooltip.className = 'notes-tooltip';
                                 tooltip.textContent = newValue;
-                                cell.appendChild(tooltip);
+                                parentTd.appendChild(tooltip);
                             }
                         } else {
                             cell.textContent = newValue || '';
