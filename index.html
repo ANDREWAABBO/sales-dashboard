@@ -567,8 +567,13 @@
         }
 
         async function generateProposal() {
+            console.log('Generate Proposal function called!'); // Debug log
+            
             const submitBtn = document.getElementById('generateBtn');
             const originalText = submitBtn.innerHTML;
+            
+            // Show immediate feedback
+            alert('Starting proposal generation...'); // Temporary debug alert
             
             // Disable button and show loading
             submitBtn.disabled = true;
@@ -586,10 +591,14 @@
                     monthlyFee: document.getElementById('monthlyFee').value
                 };
 
+                console.log('Form data:', formData); // Debug log
+
                 // Validate required fields
                 if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
                     throw new Error('Please fill in all required fields.');
                 }
+
+                console.log('Calling Web App URL:', WEB_APP_URL); // Debug log
 
                 // Call Web App
                 const response = await fetch(WEB_APP_URL, {
@@ -600,11 +609,14 @@
                     body: JSON.stringify(formData)
                 });
 
+                console.log('Response status:', response.status); // Debug log
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const result = await response.json();
+                console.log('Result:', result); // Debug log
                 
                 if (result.status === 'success') {
                     closeModal('proposalModal');
