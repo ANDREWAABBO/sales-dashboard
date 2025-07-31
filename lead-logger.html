@@ -777,18 +777,21 @@
                 };
                 
                 const save = async () => {
-                    console.log('Saving date:', input.value);
+                    console.log('Date input value:', input.value);
                     
-                    // Store the date value exactly as selected (no timezone conversion)
-                    let dateToSave = input.value;
+                    // Send exactly what's in the input (YYYY-MM-DD) or empty string
+                    const valueToSave = input.value || '';
                     
-                    // If we have a value, ensure it's saved as YYYY-MM-DD string
-                    if (input.value) {
-                        dateToSave = input.value; // Keep as string to avoid timezone issues
+                    console.log('Saving date value:', valueToSave);
+                    await updateLead(leadId, field, valueToSave);
+                    
+                    // Display the formatted date
+                    if (valueToSave) {
+                        cell.innerHTML = formatDate(valueToSave);
+                    } else {
+                        cell.innerHTML = 'Set date';
                     }
                     
-                    await updateLead(leadId, field, dateToSave);
-                    cell.innerHTML = input.value ? formatDate(input.value) : 'Set date';
                     cell.style.width = '';
                     cell.style.height = '';
                     cell.style.position = '';
@@ -1034,10 +1037,19 @@
             const leadId = lead.id || lead.iD || lead.ID;
             const row = document.createElement('tr');
             
-            // Format dates
+            // Format dates - check for invalid dates
             const dateAdded = formatDate(lead.dateAdded);
-            const followUpDate = formatDate(lead.followUp);
-            const apptDate = formatDate(lead.appointmentDate);
+            let followUpDate = '';
+            let apptDate = '';
+            
+            // Check for invalid/default dates
+            if (lead.followUp && lead.followUp !== '' && lead.followUp !== '1969-12-31') {
+                followUpDate = formatDate(lead.followUp);
+            }
+            
+            if (lead.appointmentDate && lead.appointmentDate !== '' && lead.appointmentDate !== '1969-12-31') {
+                apptDate = formatDate(lead.appointmentDate);
+            }
             
             row.innerHTML = `
                 <td style="padding: 8px; text-align: center;">${dateAdded}</td>
@@ -1096,46 +1108,26 @@
             });
         }
 
-        // Format date to MM/DD/YY - Direct string manipulation to avoid timezone
+        // Format date to MM/DD/YY - Keep it simple, no timezone conversion
         function formatDate(dateValue) {
-            if (!dateValue) return '';
+            if (!dateValue || dateValue === '') return '';
             
-            // If it's already in MM/DD/YY format, return as is
-            if (typeof dateValue === 'string' && dateValue.match(/^\d{1,2}\/\d{1,2}\/\d{2}$/)) {
+            // Handle YYYY-MM-DD format directly (from date picker)
+            if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+                const parts = dateValue.split('-');
+                const month = parseInt(parts[1], 10);
+                const day = parseInt(parts[2], 10);
+                const year = parts[0].substring(2);
+                return `${month}/${day}/${year}`;
+            }
+            
+            // Handle MM/DD/YY or MM/DD/YYYY format (already formatted)
+            if (typeof dateValue === 'string' && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(dateValue)) {
                 return dateValue;
             }
             
-            // Handle YYYY-MM-DD format from date input
-            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = dateValue.split('-');
-                return `${parseInt(month)}/${parseInt(day)}/${year.slice(-2)}`;
-            }
-            
-            // For other formats, try to parse
-            try {
-                // If it's a date string with time, extract just the date part
-                if (typeof dateValue === 'string' && dateValue.includes('T')) {
-                    dateValue = dateValue.split('T')[0];
-                    if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        const [year, month, day] = dateValue.split('-');
-                        return `${parseInt(month)}/${parseInt(day)}/${year.slice(-2)}`;
-                    }
-                }
-                
-                // Last resort - try Date object but be careful with timezone
-                const date = new Date(dateValue);
-                if (!isNaN(date.getTime())) {
-                    // Use UTC methods to avoid timezone shifts
-                    const month = date.getUTCMonth() + 1;
-                    const day = date.getUTCDate();
-                    const year = date.getUTCFullYear().toString().slice(-2);
-                    return `${month}/${day}/${year}`;
-                }
-            } catch (e) {
-                console.error('Date formatting error:', e);
-            }
-            
-            return dateValue || '';
+            // Don't try to parse invalid dates
+            return '';
         }
 
         // Make cell editable - final stable approach
