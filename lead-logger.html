@@ -172,44 +172,50 @@
             width: 100%;
             border-collapse: collapse;
             min-width: 1200px;
+            table-layout: fixed;
         }
 
         th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px;
+            padding: 15px 8px;
             text-align: left;
             font-weight: 600;
             position: sticky;
             top: 0;
             white-space: normal;
+            word-wrap: break-word;
             z-index: 10;
-            min-width: 100px;
-        }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #e2e8f0;
-            position: relative;
             vertical-align: middle;
         }
 
-        td:nth-child(1) { min-width: 100px; } /* Date Added */
-        td:nth-child(2) { min-width: 150px; } /* Company Name */
-        td:nth-child(3) { min-width: 150px; } /* Contact Name */
-        td:nth-child(4) { min-width: 130px; } /* Phone Number */
-        td:nth-child(5) { min-width: 180px; } /* Email Address */
-        td:nth-child(6) { min-width: 120px; } /* Rep Name */
-        td:nth-child(7) { min-width: 120px; } /* Follow Up */
-        td:nth-child(8) { min-width: 140px; } /* Status */
-        td:nth-child(9) { min-width: 100px; } /* Appt Made */
-        td:nth-child(10) { min-width: 120px; } /* Appt Date */
-        td:nth-child(11) { min-width: 200px; max-width: 300px; } /* Notes */
-        td:nth-child(12) { min-width: 100px; } /* Actions */
+        /* Fixed column widths to prevent jumping */
+        th:nth-child(1), td:nth-child(1) { width: 80px; } /* Date Added */
+        th:nth-child(2), td:nth-child(2) { width: 140px; } /* Company Name */
+        th:nth-child(3), td:nth-child(3) { width: 140px; } /* Contact Name */
+        th:nth-child(4), td:nth-child(4) { width: 120px; } /* Phone Number */
+        th:nth-child(5), td:nth-child(5) { width: 160px; } /* Email Address */
+        th:nth-child(6), td:nth-child(6) { width: 100px; } /* Rep Name */
+        th:nth-child(7), td:nth-child(7) { width: 80px; } /* Follow Up */
+        th:nth-child(8), td:nth-child(8) { width: 100px; } /* Status */
+        th:nth-child(9), td:nth-child(9) { width: 80px; } /* Appt Made */
+        th:nth-child(10), td:nth-child(10) { width: 80px; } /* Appt Date */
+        th:nth-child(11), td:nth-child(11) { width: 200px; } /* Notes */
+        th:nth-child(12), td:nth-child(12) { width: 80px; } /* Actions */
+
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e2e8f0;
+            position: relative;
+            vertical-align: middle;
+            height: 50px;
+            overflow: hidden;
+        }
 
         td.notes-cell {
             white-space: normal;
             word-wrap: break-word;
+            overflow: visible;
         }
 
         tr:hover {
@@ -221,8 +227,9 @@
             position: relative;
             padding: 4px 8px;
             border-radius: 4px;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease;
             min-height: 35px;
+            height: 100%;
             display: flex;
             align-items: center;
             width: 100%;
@@ -230,7 +237,11 @@
 
         .editable-cell:hover {
             background-color: #edf2f7;
-            box-shadow: 0 0 0 2px #e2e8f0;
+        }
+
+        .editable-cell.editing {
+            padding: 0;
+            background-color: transparent;
         }
 
         .edit-input {
@@ -241,11 +252,18 @@
             font-size: 14px;
             background-color: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            min-height: 35px;
+            height: 35px;
         }
 
         .edit-input[type="date"] {
             cursor: pointer;
+            height: 35px;
+        }
+
+        textarea.edit-input {
+            min-height: 60px;
+            height: auto;
+            resize: vertical;
         }
 
         .edit-input:focus {
@@ -676,18 +694,19 @@
             if (currentEditingCell) return;
             
             currentEditingCell = cell;
+            cell.classList.add('editing');
+            
             const currentValue = cell.textContent;
             const isPlaceholder = currentValue === 'Set date' || currentValue === 'Add notes';
             
-            // Store original height to prevent jumping
-            const originalHeight = cell.parentElement.offsetHeight;
-            cell.parentElement.style.minHeight = originalHeight + 'px';
-            
-            const input = document.createElement('input');
-            input.className = 'edit-input';
+            // Store original content
+            const originalContent = cell.innerHTML;
             
             if (field === 'followUp' || field === 'appointmentDate') {
+                const input = document.createElement('input');
+                input.className = 'edit-input';
                 input.type = 'date';
+                
                 if (!isPlaceholder && currentValue) {
                     // Convert MM/DD/YY to YYYY-MM-DD for date input
                     const parts = currentValue.split('/');
@@ -698,16 +717,66 @@
                         input.value = `${year}-${month}-${day}`;
                     }
                 }
+                
+                const saveValue = async () => {
+                    const newValue = input.value;
+                    
+                    if (newValue !== currentValue && newValue !== '') {
+                        await updateLead(leadId, field, newValue);
+                        cell.innerHTML = formatDate(newValue) || 'Set date';
+                    } else {
+                        cell.innerHTML = originalContent;
+                    }
+                    
+                    cell.classList.remove('editing');
+                    currentEditingCell = null;
+                };
+                
+                input.onblur = saveValue;
+                input.onchange = saveValue;
+                
+                input.onkeydown = function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveValue();
+                    }
+                    if (e.key === 'Escape') {
+                        cell.innerHTML = originalContent;
+                        cell.classList.remove('editing');
+                        currentEditingCell = null;
+                    }
+                };
+                
+                cell.innerHTML = '';
+                cell.appendChild(input);
+                input.focus();
+                
+                // Try to open date picker
+                setTimeout(() => {
+                    try {
+                        input.showPicker();
+                    } catch (e) {
+                        // Browser doesn't support showPicker, user will click to open
+                    }
+                }, 10);
+                
             } else if (field === 'notes') {
-                // Use textarea for notes
                 const textarea = document.createElement('textarea');
                 textarea.className = 'edit-input';
-                textarea.style.minHeight = '60px';
-                textarea.style.resize = 'vertical';
                 textarea.value = isPlaceholder ? '' : currentValue;
                 
                 textarea.onblur = async function() {
-                    await handleEditComplete(textarea, cell, leadId, field, currentValue, isPlaceholder);
+                    const newValue = textarea.value;
+                    
+                    if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
+                        await updateLead(leadId, field, newValue);
+                        cell.innerHTML = newValue || 'Add notes';
+                    } else {
+                        cell.innerHTML = originalContent;
+                    }
+                    
+                    cell.classList.remove('editing');
+                    currentEditingCell = null;
                 };
                 
                 textarea.onkeydown = function(e) {
@@ -715,72 +784,56 @@
                         textarea.blur();
                     }
                     if (e.key === 'Escape') {
-                        cell.textContent = currentValue;
-                        cell.parentElement.style.minHeight = '';
+                        cell.innerHTML = originalContent;
+                        cell.classList.remove('editing');
                         currentEditingCell = null;
                     }
                 };
                 
-                cell.textContent = '';
+                cell.innerHTML = '';
                 cell.appendChild(textarea);
                 textarea.focus();
                 textarea.select();
-                return;
+                
             } else {
+                const input = document.createElement('input');
+                input.className = 'edit-input';
                 input.type = 'text';
                 input.value = isPlaceholder ? '' : currentValue;
-            }
-            
-            input.onblur = async function() {
-                await handleEditComplete(input, cell, leadId, field, currentValue, isPlaceholder);
-            };
-            
-            input.onkeypress = function(e) {
-                if (e.key === 'Enter') {
-                    input.blur();
-                }
-                if (e.key === 'Escape') {
-                    cell.textContent = currentValue;
-                    cell.parentElement.style.minHeight = '';
+                
+                input.onblur = async function() {
+                    const newValue = input.value;
+                    
+                    if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
+                        await updateLead(leadId, field, newValue);
+                        cell.innerHTML = newValue || '';
+                    } else {
+                        cell.innerHTML = originalContent;
+                    }
+                    
+                    cell.classList.remove('editing');
                     currentEditingCell = null;
-                }
-            };
-            
-            cell.textContent = '';
-            cell.appendChild(input);
-            input.focus();
-            
-            // For date inputs, click to open calendar
-            if (input.type === 'date') {
-                setTimeout(() => {
-                    input.showPicker?.();
-                }, 100);
-            } else {
+                };
+                
+                input.onkeypress = function(e) {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    }
+                };
+                
+                input.onkeydown = function(e) {
+                    if (e.key === 'Escape') {
+                        cell.innerHTML = originalContent;
+                        cell.classList.remove('editing');
+                        currentEditingCell = null;
+                    }
+                };
+                
+                cell.innerHTML = '';
+                cell.appendChild(input);
+                input.focus();
                 input.select();
             }
-        }
-
-        // Handle edit completion
-        async function handleEditComplete(input, cell, leadId, field, currentValue, isPlaceholder) {
-            const newValue = input.value;
-            
-            // If value changed, update it
-            if (newValue !== currentValue && !(isPlaceholder && newValue === '')) {
-                await updateLead(leadId, field, newValue);
-                
-                // Update display
-                if (field === 'followUp' || field === 'appointmentDate') {
-                    cell.textContent = formatDate(newValue) || 'Set date';
-                } else {
-                    cell.textContent = newValue || (field === 'notes' ? 'Add notes' : '');
-                }
-            } else {
-                cell.textContent = currentValue;
-            }
-            
-            // Reset row height
-            cell.parentElement.style.minHeight = '';
-            currentEditingCell = null;
         }
 
         // Update status
