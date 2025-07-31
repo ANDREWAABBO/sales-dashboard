@@ -209,36 +209,25 @@
         td {
             padding: 0;
             border-bottom: 1px solid #e2e8f0;
-            position: relative;
-            vertical-align: middle;
             height: 50px;
-            overflow: visible;
+            vertical-align: middle;
         }
 
         td.notes-cell {
-            white-space: normal;
-            word-wrap: break-word;
             overflow: visible;
         }
 
-        /* Fixed table dimensions */
+        /* Remove old styling */
         thead {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+            display: table-header-group;
         }
 
         tbody {
-            display: block;
-            max-height: calc(100vh - 400px);
-            overflow-y: auto;
-            overflow-x: hidden;
+            display: table-row-group;
         }
 
         tbody tr {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+            display: table-row;
         }
 
         tr {
@@ -252,55 +241,49 @@
         .editable-cell {
             cursor: pointer;
             display: block;
-            padding: 12px 8px;
-            height: 100%;
-            position: relative;
+            padding: 15px 8px;
+            height: 50px;
+            line-height: 20px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        .notes-cell .editable-cell {
+            white-space: normal;
+            overflow: visible;
         }
 
         .editable-cell:hover {
             background-color: #edf2f7;
-            border-radius: 4px;
         }
 
-        .editable-cell.editing {
-            padding: 0;
-            overflow: visible;
-        }
-
-        .edit-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
+        .cell-content {
+            display: none;
         }
 
         .edit-input {
             width: 100%;
-            height: 100%;
+            height: 48px;
             padding: 8px;
             border: 2px solid #667eea;
             border-radius: 5px;
             font-size: 14px;
             background-color: white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            z-index: 100;
+            margin: -15px -8px;
+            box-sizing: border-box;
         }
 
         .edit-input[type="date"] {
             cursor: pointer;
-            min-height: 40px;
         }
 
         textarea.edit-input {
-            min-height: 60px;
+            min-height: 80px;
             height: auto;
             resize: vertical;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 100;
         }
 
         .edit-input:focus {
@@ -490,26 +473,42 @@
             </div>
             <div class="loading" id="loading">Loading leads...</div>
             <div class="table-wrapper">
-                <table id="leadsTable">
-                    <thead>
-                        <tr>
-                            <th>Date Added</th>
-                            <th>Company Name</th>
-                            <th>Contact Name</th>
-                            <th>Phone Number</th>
-                            <th>Email Address</th>
-                            <th>Rep Name</th>
-                            <th>Follow Up</th>
-                            <th>Status</th>
-                            <th>Appt Made</th>
-                            <th>Appt Date</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leadsTableBody">
-                    </tbody>
-                </table>
+                <div class="table-scroll">
+                    <table id="leadsTable">
+                        <colgroup>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                            <col>
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Date Added</th>
+                                <th>Company Name</th>
+                                <th>Contact Name</th>
+                                <th>Phone Number</th>
+                                <th>Email Address</th>
+                                <th>Rep Name</th>
+                                <th>Follow Up</th>
+                                <th>Status</th>
+                                <th>Appt Made</th>
+                                <th>Appt Date</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadsTableBody">
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -725,25 +724,28 @@
             }
         }
 
-        // Make cell editable - simplified approach
+        // Make cell editable - new stable approach
         function makeEditable(cell, leadId, field) {
-            // Prevent double editing
+            // Check if already editing
             if (cell.querySelector('input, textarea')) return;
             
-            const currentValue = cell.textContent.trim();
-            const isPlaceholder = currentValue === 'Set date' || currentValue === 'Add notes';
+            const currentText = cell.textContent.trim();
+            const isPlaceholder = currentText === 'Set date' || currentText === 'Add notes';
             
-            // Create wrapper div
-            const wrapper = document.createElement('div');
-            wrapper.className = 'edit-wrapper';
+            // Store original content
+            const originalContent = cell.innerHTML;
+            
+            // Clear cell and maintain height
+            cell.style.height = '50px';
+            cell.innerHTML = '';
             
             if (field === 'followUp' || field === 'appointmentDate') {
                 const input = document.createElement('input');
                 input.className = 'edit-input';
                 input.type = 'date';
                 
-                if (!isPlaceholder && currentValue) {
-                    const parts = currentValue.split('/');
+                if (!isPlaceholder && currentText) {
+                    const parts = currentText.split('/');
                     if (parts.length === 3) {
                         const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
                         const month = parts[0].padStart(2, '0');
@@ -752,113 +754,89 @@
                     }
                 }
                 
-                input.onclick = function(e) {
-                    e.stopPropagation();
-                };
-                
-                input.onfocus = function() {
-                    this.showPicker?.();
+                const restore = () => {
+                    cell.innerHTML = originalContent;
+                    cell.style.height = '';
                 };
                 
                 const save = async () => {
                     if (input.value) {
                         await updateLead(leadId, field, input.value);
-                        cell.textContent = formatDate(input.value);
+                        cell.innerHTML = formatDate(input.value);
                     } else {
-                        cell.textContent = currentValue;
+                        restore();
                     }
-                    cell.classList.remove('editing');
+                    cell.style.height = '';
                 };
                 
-                input.onchange = save;
-                input.onblur = function(e) {
-                    // Delay to allow date picker selection
+                input.addEventListener('change', save);
+                input.addEventListener('blur', function(e) {
                     setTimeout(() => {
                         if (!cell.contains(document.activeElement)) {
-                            save();
+                            restore();
                         }
                     }, 200);
-                };
+                });
                 
-                input.onkeydown = function(e) {
+                input.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
-                        cell.textContent = currentValue;
-                        cell.classList.remove('editing');
+                        restore();
                     }
-                };
+                });
                 
-                wrapper.appendChild(input);
-                
-            } else if (field === 'notes') {
-                const textarea = document.createElement('textarea');
-                textarea.className = 'edit-input';
-                textarea.value = isPlaceholder ? '' : currentValue;
-                
-                const save = async () => {
-                    const newValue = textarea.value.trim();
-                    if (newValue !== currentValue || (isPlaceholder && newValue)) {
-                        await updateLead(leadId, field, newValue);
-                        cell.textContent = newValue || 'Add notes';
-                    } else {
-                        cell.textContent = currentValue;
-                    }
-                    cell.classList.remove('editing');
-                };
-                
-                textarea.onblur = save;
-                textarea.onkeydown = function(e) {
-                    e.stopPropagation();
-                    if (e.key === 'Tab' || (e.key === 'Enter' && e.ctrlKey)) {
-                        e.preventDefault();
-                        save();
-                    }
-                    if (e.key === 'Escape') {
-                        cell.textContent = currentValue;
-                        cell.classList.remove('editing');
-                    }
-                };
-                
-                wrapper.appendChild(textarea);
+                cell.appendChild(input);
+                input.focus();
+                // Open picker after a brief delay
+                setTimeout(() => {
+                    try {
+                        input.showPicker();
+                    } catch (e) {}
+                }, 10);
                 
             } else {
-                const input = document.createElement('input');
+                const isNotes = field === 'notes';
+                const input = document.createElement(isNotes ? 'textarea' : 'input');
                 input.className = 'edit-input';
-                input.type = 'text';
-                input.value = isPlaceholder ? '' : currentValue;
+                input.value = isPlaceholder ? '' : currentText;
+                
+                if (isNotes) {
+                    cell.parentElement.style.height = 'auto';
+                }
+                
+                const restore = () => {
+                    cell.innerHTML = originalContent;
+                    cell.style.height = '';
+                    if (isNotes) {
+                        cell.parentElement.style.height = '';
+                    }
+                };
                 
                 const save = async () => {
                     const newValue = input.value.trim();
-                    if (newValue !== currentValue || (isPlaceholder && newValue)) {
+                    if (newValue !== currentText || (isPlaceholder && newValue)) {
                         await updateLead(leadId, field, newValue);
-                        cell.textContent = newValue || '';
+                        cell.innerHTML = newValue || (isNotes ? 'Add notes' : '');
                     } else {
-                        cell.textContent = currentValue;
+                        restore();
                     }
-                    cell.classList.remove('editing');
                 };
                 
-                input.onblur = save;
-                input.onkeydown = function(e) {
-                    if (e.key === 'Enter') {
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && (!isNotes || e.ctrlKey)) {
                         e.preventDefault();
                         save();
                     }
                     if (e.key === 'Escape') {
-                        cell.textContent = currentValue;
-                        cell.classList.remove('editing');
+                        restore();
                     }
-                };
+                });
                 
-                wrapper.appendChild(input);
-            }
-            
-            cell.classList.add('editing');
-            cell.textContent = '';
-            cell.appendChild(wrapper);
-            const inputEl = wrapper.querySelector('input, textarea');
-            inputEl.focus();
-            if (inputEl.type !== 'date') {
-                inputEl.select();
+                cell.appendChild(input);
+                input.focus();
+                if (!isNotes) {
+                    input.select();
+                }
             }
         }
 
