@@ -916,20 +916,59 @@
                         } else if (cellIndex === 9) { // Appt Date
                             cell.onclick = () => window.makeEditable(cell, leadId, 'appointmentDate');
                         } else if (cellIndex === 10) { // Notes
-                            console.log('Setting notes click handler for cell:', cell);
                             cell.style.backgroundColor = '#f0f0f0'; // Visual indicator
                             cell.onclick = function(e) {
                                 e.stopPropagation();
                                 console.log('Notes clicked!', leadId);
-                                console.log('Cell element:', cell);
-                                console.log('Cell content:', cell.textContent);
                                 
-                                try {
-                                    // Try calling directly
-                                    makeEditable(cell, leadId, 'notes');
-                                } catch (error) {
-                                    console.error('Error calling makeEditable:', error);
-                                }
+                                // Simple inline edit for notes
+                                if (cell.querySelector('textarea')) return;
+                                
+                                const currentText = cell.textContent.trim();
+                                const isPlaceholder = currentText === 'Add notes';
+                                
+                                const textarea = document.createElement('textarea');
+                                textarea.style.width = '100%';
+                                textarea.style.minHeight = '60px';
+                                textarea.style.padding = '8px';
+                                textarea.style.border = '2px solid #667eea';
+                                textarea.style.borderRadius = '5px';
+                                textarea.style.fontSize = '14px';
+                                textarea.value = isPlaceholder ? '' : currentText;
+                                
+                                cell.innerHTML = '';
+                                cell.appendChild(textarea);
+                                
+                                const saveNotes = async () => {
+                                    const newValue = textarea.value.trim();
+                                    console.log('Saving notes:', newValue);
+                                    
+                                    await updateLead(leadId, 'notes', newValue);
+                                    cell.innerHTML = newValue || 'Add notes';
+                                    
+                                    if (newValue && newValue.length > 20) {
+                                        cell.setAttribute('title', newValue);
+                                    }
+                                    
+                                    // Reset cell styles
+                                    cell.style.width = '';
+                                    cell.style.height = '';
+                                    cell.style.position = '';
+                                    cell.style.minHeight = '';
+                                };
+                                
+                                textarea.addEventListener('blur', function() {
+                                    saveNotes();
+                                });
+                                
+                                textarea.addEventListener('keydown', function(e) {
+                                    if ((e.key === 'Enter' && e.ctrlKey) || e.key === 'Tab') {
+                                        e.preventDefault();
+                                        saveNotes();
+                                    }
+                                });
+                                
+                                textarea.focus();
                             };
                         }
                     });
