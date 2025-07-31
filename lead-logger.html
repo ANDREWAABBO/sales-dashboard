@@ -251,9 +251,56 @@
             position: relative;
         }
 
+        /* Notes hover tooltip */
         .notes-cell .editable-cell {
             white-space: normal;
             overflow: visible;
+            position: relative;
+        }
+
+        .notes-tooltip {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #2d3748;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 400px;
+            width: max-content;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-top: 5px;
+        }
+
+        .notes-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 20px;
+            width: 10px;
+            height: 10px;
+            background: #2d3748;
+            transform: rotate(45deg);
+        }
+
+        .notes-cell .editable-cell:hover .notes-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .notes-preview {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 180px;
         }
 
         .editable-cell:hover {
@@ -306,6 +353,8 @@
             background-color: white;
             cursor: pointer;
             transition: all 0.2s ease;
+            width: 100%;
+            max-width: 120px;
         }
 
         .status-select:focus {
@@ -685,7 +734,12 @@
                     </select>
                 </td>
                 <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
-                <td class="notes-cell"><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">${sanitizeText(lead.notes) || 'Add notes'}</div></td>
+                <td class="notes-cell">
+                    <div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'notes')">
+                        <span class="notes-preview">${sanitizeText(lead.notes) || 'Add notes'}</span>
+                        ${lead.notes && lead.notes.length > 30 ? `<div class="notes-tooltip">${sanitizeText(lead.notes)}</div>` : ''}
+                    </div>
+                </td>
                 <td style="padding: 8px;">
                     <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
@@ -729,7 +783,7 @@
             }
         }
 
-        // Make cell editable - new stable approach
+        // Make cell editable - final stable approach
         function makeEditable(cell, leadId, field) {
             // Check if already editing
             if (cell.querySelector('input, textarea')) return;
@@ -737,12 +791,16 @@
             const currentText = cell.textContent.trim();
             const isPlaceholder = currentText === 'Set date' || currentText === 'Add notes';
             
-            // Store original content
-            const originalContent = cell.innerHTML;
+            // Save dimensions
+            const cellRect = cell.getBoundingClientRect();
+            cell.style.width = cellRect.width + 'px';
+            cell.style.height = cellRect.height + 'px';
+            cell.style.position = 'relative';
             
-            // Clear cell and maintain height
-            cell.style.height = '50px';
-            cell.innerHTML = '';
+            // Hide text but keep it for spacing
+            const textSpan = document.createElement('span');
+            textSpan.textContent = currentText;
+            textSpan.style.visibility = 'hidden';
             
             if (field === 'followUp' || field === 'appointmentDate') {
                 const input = document.createElement('input');
@@ -760,18 +818,22 @@
                 }
                 
                 const restore = () => {
-                    cell.innerHTML = originalContent;
+                    cell.textContent = currentText;
+                    cell.style.width = '';
                     cell.style.height = '';
+                    cell.style.position = '';
                 };
                 
                 const save = async () => {
                     if (input.value) {
                         await updateLead(leadId, field, input.value);
-                        cell.innerHTML = formatDate(input.value);
+                        cell.textContent = formatDate(input.value);
                     } else {
-                        restore();
+                        cell.textContent = currentText;
                     }
+                    cell.style.width = '';
                     cell.style.height = '';
+                    cell.style.position = '';
                 };
                 
                 input.addEventListener('change', save);
@@ -789,9 +851,12 @@
                     }
                 });
                 
+                cell.innerHTML = '';
+                cell.appendChild(textSpan);
                 cell.appendChild(input);
                 input.focus();
-                // Open picker after a brief delay
+                
+                // Open picker
                 setTimeout(() => {
                     try {
                         input.showPicker();
@@ -805,25 +870,48 @@
                 input.value = isPlaceholder ? '' : currentText;
                 
                 if (isNotes) {
-                    cell.parentElement.style.height = 'auto';
+                    input.style.position = 'relative';
+                    cell.style.height = 'auto';
+                    cell.style.minHeight = cellRect.height + 'px';
                 }
                 
                 const restore = () => {
-                    cell.innerHTML = originalContent;
+                    cell.textContent = currentText;
+                    cell.style.width = '';
                     cell.style.height = '';
-                    if (isNotes) {
-                        cell.parentElement.style.height = '';
-                    }
+                    cell.style.minHeight = '';
+                    cell.style.position = '';
                 };
                 
                 const save = async () => {
                     const newValue = input.value.trim();
                     if (newValue !== currentText || (isPlaceholder && newValue)) {
                         await updateLead(leadId, field, newValue);
-                        cell.innerHTML = newValue || (isNotes ? 'Add notes' : '');
+                        // Update cell with new content including tooltip if needed
+                        if (isNotes) {
+                            const preview = document.createElement('span');
+                            preview.className = 'notes-preview';
+                            preview.textContent = newValue || 'Add notes';
+                            
+                            cell.innerHTML = '';
+                            cell.appendChild(preview);
+                            
+                            if (newValue && newValue.length > 30) {
+                                const tooltip = document.createElement('div');
+                                tooltip.className = 'notes-tooltip';
+                                tooltip.textContent = newValue;
+                                cell.appendChild(tooltip);
+                            }
+                        } else {
+                            cell.textContent = newValue || '';
+                        }
                     } else {
-                        restore();
+                        cell.textContent = currentText;
                     }
+                    cell.style.width = '';
+                    cell.style.height = '';
+                    cell.style.minHeight = '';
+                    cell.style.position = '';
                 };
                 
                 input.addEventListener('blur', save);
@@ -837,6 +925,8 @@
                     }
                 });
                 
+                cell.innerHTML = '';
+                cell.appendChild(textSpan);
                 cell.appendChild(input);
                 input.focus();
                 if (!isNotes) {
