@@ -568,6 +568,8 @@
 
         // Generate PDF
         function generatePDF(proposalData) {
+            // Create new jsPDF instance
+            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const pageHeight = doc.internal.pageSize.height;
             const pageWidth = doc.internal.pageSize.width;
@@ -581,181 +583,187 @@
                 }
             }
 
-            // Page 1 - Cover Page
-            // Header
-            doc.setFillColor(86, 133, 106);
-            doc.rect(0, 0, pageWidth, 40, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(24);
-            doc.text('Fresh Food Solutions Proposal', pageWidth / 2, 25, { align: 'center' });
-            
-            yPosition = 60;
-            
-            // Prepared Information Box
-            doc.setFillColor(247, 250, 252);
-            doc.rect(20, yPosition - 10, pageWidth - 40, 50, 'F');
-            
-            doc.setTextColor(45, 55, 72);
-            doc.setFontSize(14);
-            doc.text('Prepared Information', 30, yPosition);
-            
-            doc.setFontSize(11);
-            yPosition += 10;
-            doc.text(`Prepared For: ${proposalData.companyName}`, 30, yPosition);
-            doc.text(`Date: ${proposalData.date}`, 120, yPosition);
-            
-            yPosition += 8;
-            doc.text(`Attention: ${proposalData.contactName}`, 30, yPosition);
-            doc.text(`Sales Rep: ${proposalData.preparedBy}`, 120, yPosition);
-            
-            yPosition += 8;
-            doc.text(`Phone: ${proposalData.preparedByPhone}`, 120, yPosition);
-            
-            yPosition += 8;
-            doc.text(`Email: ${proposalData.preparedByEmail}`, 120, yPosition);
-            
-            // Executive Summary
-            yPosition += 30;
-            doc.setFontSize(16);
-            doc.setTextColor(45, 55, 72);
-            doc.text('Executive Summary', 20, yPosition);
-            
-            yPosition += 10;
-            doc.setFontSize(11);
-            doc.setTextColor(74, 85, 104);
-            const summaryText = 'Abbondanza Vending provides revolutionary fresh food solutions through state-of-the-art smart kiosks equipped with RFID technology. We deliver restaurant-quality, locally-prepared meals directly to your facility, ensuring your team has access to healthy, delicious food options 24/7.';
-            
-            const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 40);
-            doc.text(summaryLines, 20, yPosition);
-            yPosition += summaryLines.length * 5 + 10;
-
-            // The Challenge We Solve
-            checkNewPage(40);
-            doc.setFillColor(240, 248, 255);
-            doc.rect(20, yPosition - 5, pageWidth - 40, 35, 'F');
-            
-            doc.setFontSize(14);
-            doc.setTextColor(44, 90, 160);
-            doc.text('The Challenge We Solve', 30, yPosition + 5);
-            
-            yPosition += 15;
-            doc.setFontSize(11);
-            doc.setTextColor(74, 85, 104);
-            const challengeText = 'Most establishments struggle to provide fresh, healthy food options for their staff. Traditional vending offers limited processed foods, while on-site cafeterias require significant investment, staffing, and management overhead.';
-            const challengeLines = doc.splitTextToSize(challengeText, pageWidth - 60);
-            doc.text(challengeLines, 30, yPosition);
-            
-            // Page 2 - Investment & Terms
-            doc.addPage();
-            yPosition = 20;
-            
-            // Header
-            doc.setFillColor(86, 133, 106);
-            doc.rect(0, 0, pageWidth, 30, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
-            doc.text('Investment & Terms', pageWidth / 2, 20, { align: 'center' });
-            
-            yPosition = 50;
-            
-            // Complete Service Package
-            doc.setFillColor(86, 133, 106);
-            doc.rect(20, yPosition - 10, pageWidth - 40, 40, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(16);
-            doc.text('Complete Service Package Monthly', pageWidth / 2, yPosition, { align: 'center' });
-            
-            yPosition += 15;
-            doc.setFontSize(24);
-            if (proposalData.fridgeCount > 1) {
-                doc.text(`$${proposalData.monthlyFee}/1st unit / $${proposalData.monthlyFee - 100}/All Additional Units`, pageWidth / 2, yPosition, { align: 'center' });
-            } else {
-                doc.text(`$${proposalData.monthlyFee}/month`, pageWidth / 2, yPosition, { align: 'center' });
-            }
-            
-            yPosition += 20;
-            doc.setFontSize(12);
-            doc.text('Everything included • No hidden fees', pageWidth / 2, yPosition, { align: 'center' });
-            
-            yPosition += 10;
-            doc.setFontSize(14);
-            if (proposalData.fridgeCount > 1) {
-                doc.text(`One-time setup & delivery fee: $295 / $79 Per Additional Unit`, pageWidth / 2, yPosition, { align: 'center' });
+            try {
+                // Page 1 - Cover Page
+                // Header
+                doc.setFillColor(86, 133, 106);
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.text('Fresh Food Solutions Proposal', pageWidth / 2, 25, { align: 'center' });
+                
+                yPosition = 60;
+                
+                // Prepared Information Box
+                doc.setFillColor(247, 250, 252);
+                doc.rect(20, yPosition - 10, pageWidth - 40, 50, 'F');
+                
+                doc.setTextColor(45, 55, 72);
+                doc.setFontSize(14);
+                doc.text('Prepared Information', 30, yPosition);
+                
+                doc.setFontSize(11);
+                yPosition += 10;
+                doc.text(`Prepared For: ${proposalData.companyName}`, 30, yPosition);
+                doc.text(`Date: ${proposalData.date}`, 120, yPosition);
+                
                 yPosition += 8;
+                doc.text(`Attention: ${proposalData.contactName}`, 30, yPosition);
+                doc.text(`Sales Rep: ${proposalData.preparedBy}`, 120, yPosition);
+                
+                yPosition += 8;
+                doc.text(`Phone: ${proposalData.preparedByPhone}`, 120, yPosition);
+                
+                yPosition += 8;
+                doc.text(`Email: ${proposalData.preparedByEmail}`, 120, yPosition);
+                
+                // Executive Summary
+                yPosition += 30;
+                doc.setFontSize(16);
+                doc.setTextColor(45, 55, 72);
+                doc.text('Executive Summary', 20, yPosition);
+                
+                yPosition += 10;
+                doc.setFontSize(11);
+                doc.setTextColor(74, 85, 104);
+                const summaryText = 'Abbondanza Vending provides revolutionary fresh food solutions through state-of-the-art smart kiosks equipped with RFID technology. We deliver restaurant-quality, locally-prepared meals directly to your facility, ensuring your team has access to healthy, delicious food options 24/7.';
+                
+                const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 40);
+                doc.text(summaryLines, 20, yPosition);
+                yPosition += summaryLines.length * 5 + 10;
+
+                // The Challenge We Solve
+                checkNewPage(40);
+                doc.setFillColor(240, 248, 255);
+                doc.rect(20, yPosition - 5, pageWidth - 40, 35, 'F');
+                
+                doc.setFontSize(14);
+                doc.setTextColor(44, 90, 160);
+                doc.text('The Challenge We Solve', 30, yPosition + 5);
+                
+                yPosition += 15;
+                doc.setFontSize(11);
+                doc.setTextColor(74, 85, 104);
+                const challengeText = 'Most establishments struggle to provide fresh, healthy food options for their staff. Traditional vending offers limited processed foods, while on-site cafeterias require significant investment, staffing, and management overhead.';
+                const challengeLines = doc.splitTextToSize(challengeText, pageWidth - 60);
+                doc.text(challengeLines, 30, yPosition);
+                
+                // Page 2 - Investment & Terms
+                doc.addPage();
+                yPosition = 20;
+                
+                // Header
+                doc.setFillColor(86, 133, 106);
+                doc.rect(0, 0, pageWidth, 30, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(20);
+                doc.text('Investment & Terms', pageWidth / 2, 20, { align: 'center' });
+                
+                yPosition = 50;
+                
+                // Complete Service Package
+                doc.setFillColor(86, 133, 106);
+                doc.rect(20, yPosition - 10, pageWidth - 40, 40, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(16);
+                doc.text('Complete Service Package Monthly', pageWidth / 2, yPosition, { align: 'center' });
+                
+                yPosition += 15;
+                doc.setFontSize(24);
+                if (proposalData.fridgeCount > 1) {
+                    const priceText = `${proposalData.monthlyFee}/1st unit / ${proposalData.monthlyFee - 100}/All Additional Units`;
+                    doc.text(priceText, pageWidth / 2, yPosition, { align: 'center' });
+                } else {
+                    doc.text(`${proposalData.monthlyFee}/month`, pageWidth / 2, yPosition, { align: 'center' });
+                }
+                
+                yPosition += 20;
                 doc.setFontSize(12);
-                doc.text(`(Total: $${proposalData.setupFee})`, pageWidth / 2, yPosition, { align: 'center' });
-            } else {
-                doc.text(`One-time setup & delivery fee: $295`, pageWidth / 2, yPosition, { align: 'center' });
+                doc.text('Everything included • No hidden fees', pageWidth / 2, yPosition, { align: 'center' });
+                
+                yPosition += 10;
+                doc.setFontSize(14);
+                if (proposalData.fridgeCount > 1) {
+                    doc.text('One-time setup & delivery fee: $295 / $79 Per Additional Unit', pageWidth / 2, yPosition, { align: 'center' });
+                    yPosition += 8;
+                    doc.setFontSize(12);
+                    doc.text(`(Total: ${proposalData.setupFee})`, pageWidth / 2, yPosition, { align: 'center' });
+                } else {
+                    doc.text('One-time setup & delivery fee: $295', pageWidth / 2, yPosition, { align: 'center' });
+                }
+                
+                // Monthly Total Summary
+                yPosition += 30;
+                doc.setFillColor(240, 248, 255);
+                doc.rect(20, yPosition - 10, pageWidth - 40, 30, 'F');
+                
+                doc.setTextColor(44, 90, 160);
+                doc.setFontSize(16);
+                doc.text('Total Monthly Investment:', 30, yPosition);
+                doc.text(`${proposalData.monthlyTotal}/month`, pageWidth - 30, yPosition, { align: 'right' });
+                
+                yPosition += 10;
+                doc.setFontSize(12);
+                doc.setTextColor(74, 85, 104);
+                doc.text(`For ${proposalData.fridgeCount} ${proposalData.fridgeCount > 1 ? 'units' : 'unit'}`, 30, yPosition);
+                
+                // What's Included
+                yPosition += 30;
+                doc.setTextColor(45, 55, 72);
+                doc.setFontSize(16);
+                doc.text("What's Included", 20, yPosition);
+                
+                yPosition += 15;
+                
+                // Two columns
+                doc.setFontSize(14);
+                doc.setTextColor(74, 144, 111);
+                doc.text('Equipment & Installation', 30, yPosition);
+                doc.text('Service & Support', 120, yPosition);
+                
+                yPosition += 10;
+                doc.setFontSize(11);
+                doc.setTextColor(74, 85, 104);
+                
+                const equipment = [
+                    '✓ Smart RFID refrigerated kiosk',
+                    '✓ Professional installation',
+                    '✓ Payment processing system',
+                    '✓ Remote monitoring technology',
+                    '✓ Security and tamper protection',
+                    '✓ Temp Monitoring'
+                ];
+                
+                const service = [
+                    '✓ Fresh food delivery 3x weekly',
+                    '✓ Inventory management',
+                    '✓ Menu planning and rotation',
+                    '✓ Equipment maintenance',
+                    '✓ Customer support',
+                    '✓ Real-time monitoring'
+                ];
+                
+                equipment.forEach((item, index) => {
+                    doc.text(item, 30, yPosition + (index * 7));
+                });
+                
+                service.forEach((item, index) => {
+                    doc.text(item, 120, yPosition + (index * 7));
+                });
+                
+                // Footer
+                doc.setFontSize(10);
+                doc.setTextColor(113, 128, 150);
+                doc.text('Abbondanza Vending, LLC • Hampton Falls, NH • abbofresh.com', pageWidth / 2, pageHeight - 10, { align: 'center' });
+                
+                return doc;
+            } catch (error) {
+                console.error('Error in PDF generation:', error);
+                throw error;
             }
-            
-            // Monthly Total Summary
-            yPosition += 30;
-            doc.setFillColor(240, 248, 255);
-            doc.rect(20, yPosition - 10, pageWidth - 40, 30, 'F');
-            
-            doc.setTextColor(44, 90, 160);
-            doc.setFontSize(16);
-            doc.text('Total Monthly Investment:', 30, yPosition);
-            doc.text(`$${proposalData.monthlyTotal}/month`, pageWidth - 30, yPosition, { align: 'right' });
-            
-            yPosition += 10;
-            doc.setFontSize(12);
-            doc.setTextColor(74, 85, 104);
-            doc.text(`For ${proposalData.fridgeCount} ${proposalData.fridgeCount > 1 ? 'units' : 'unit'}`, 30, yPosition);
-            
-            // What's Included
-            yPosition += 30;
-            doc.setTextColor(45, 55, 72);
-            doc.setFontSize(16);
-            doc.text("What's Included", 20, yPosition);
-            
-            yPosition += 15;
-            
-            // Two columns
-            doc.setFontSize(14);
-            doc.setTextColor(74, 144, 111);
-            doc.text('Equipment & Installation', 30, yPosition);
-            doc.text('Service & Support', 120, yPosition);
-            
-            yPosition += 10;
-            doc.setFontSize(11);
-            doc.setTextColor(74, 85, 104);
-            
-            const equipment = [
-                '✓ Smart RFID refrigerated kiosk',
-                '✓ Professional installation',
-                '✓ Payment processing system',
-                '✓ Remote monitoring technology',
-                '✓ Security and tamper protection',
-                '✓ Temp Monitoring'
-            ];
-            
-            const service = [
-                '✓ Fresh food delivery 3x weekly',
-                '✓ Inventory management',
-                '✓ Menu planning and rotation',
-                '✓ Equipment maintenance',
-                '✓ Customer support',
-                '✓ Real-time monitoring'
-            ];
-            
-            equipment.forEach((item, index) => {
-                doc.text(item, 30, yPosition + (index * 7));
-            });
-            
-            service.forEach((item, index) => {
-                doc.text(item, 120, yPosition + (index * 7));
-            });
-            
-            // Footer
-            doc.setFontSize(10);
-            doc.setTextColor(113, 128, 150);
-            doc.text('Abbondanza Vending, LLC • Hampton Falls, NH • abbofresh.com', pageWidth / 2, pageHeight - 10, { align: 'center' });
-            
-            return doc;
         }
 
         // Form Submission
@@ -905,8 +913,14 @@
         // Download Current Proposal
         function downloadCurrentProposal() {
             if (currentProposal) {
-                const pdf = generatePDF(currentProposal);
-                pdf.save(currentProposal.fileName + '.pdf');
+                try {
+                    const pdf = generatePDF(currentProposal);
+                    const fileName = currentProposal.fileName || `${currentProposal.companyName}_Proposal_${currentProposal.date.replace(/\//g, '-')}`;
+                    pdf.save(fileName + '.pdf');
+                } catch (error) {
+                    console.error('Error downloading PDF:', error);
+                    alert('Error generating PDF. Please try again or contact support.');
+                }
             }
         }
 
