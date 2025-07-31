@@ -615,6 +615,13 @@
             });
             
             const row = document.createElement('tr');
+            
+            // Debug: Log what we're about to insert
+            console.log('About to create row with:');
+            console.log('Date:', formattedDate, 'from', lead.dateAdded);
+            console.log('Company:', companyName);
+            console.log('Contact:', contactName);
+            
             row.innerHTML = `
                 <td>${formattedDate}</td>
                 <td class="editable" onclick="editCell(this, ${leadId}, 'companyName')">${companyName}</td>
@@ -638,14 +645,25 @@
         function formatDate(dateValue) {
             if (!dateValue) return '';
             try {
-                const date = new Date(dateValue);
+                // Handle ISO date strings
+                let date;
+                if (typeof dateValue === 'string' && dateValue.includes('T')) {
+                    date = new Date(dateValue);
+                } else if (typeof dateValue === 'string' && dateValue.includes('-')) {
+                    date = new Date(dateValue);
+                } else {
+                    date = new Date(dateValue);
+                }
+                
                 if (isNaN(date.getTime())) return dateValue; // Return original if invalid
+                
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
                 const year = date.getFullYear().toString().slice(-2);
                 return `${month}/${day}/${year}`;
             } catch (e) {
-                return dateValue;
+                console.error('Date formatting error:', e, 'for value:', dateValue);
+                return dateValue || '';
             }
         }
 
