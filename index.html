@@ -613,35 +613,27 @@
                     throw new Error('Please fill in all required fields.');
                 }
 
-                console.log('Using form submission method to bypass CORS');
+                console.log('Using URL parameters method to avoid JSON parsing');
 
-                // Create a hidden form to submit data (bypasses CORS)
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = WEB_APP_URL;
-                form.target = '_blank'; // Open result in new tab
-                form.style.display = 'none';
-
-                // Add form data as hidden inputs
+                // Create URL with parameters instead of form submission
+                const params = new URLSearchParams();
                 Object.keys(formData).forEach(key => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = formData[key];
-                    form.appendChild(input);
+                    params.append(key, formData[key]);
                 });
 
-                // Add to page and submit
-                document.body.appendChild(form);
-                form.submit();
-                document.body.removeChild(form);
+                // Open URL directly with parameters
+                const url = `${WEB_APP_URL}?${params.toString()}`;
+                console.log('Opening URL:', url);
+                
+                // Open in new tab
+                window.open(url, '_blank');
 
                 // Show success message immediately
                 closeModal('proposalModal');
                 showPopup(`
                     <div class="success-popup">
                         <h3>🚀 Proposal Generation Started!</h3>
-                        <p>Your proposal is being generated. A new tab will open with the results shortly.</p>
+                        <p>Your proposal is being generated. A new tab has opened with the results.</p>
                         <p><strong>Company:</strong> ${formData.companyName}</p>
                         <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
                     </div>
@@ -765,7 +757,7 @@
         <div class="grid-container">
             <div class="card">
                 <div class="card-icon">📊</div>
-                <h2>Proposal Generator <span class="new-badge">UPDATED!</span></h2>
+                <h2>Proposal Generator <span class="new-badge">FIXED!</span></h2>
                 <p>Create customized PDF proposals instantly with our built-in generator.</p>
                 <div class="btn-group">
                     <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>
