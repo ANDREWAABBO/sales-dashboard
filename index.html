@@ -388,6 +388,13 @@
             border-color: #667eea;
         }
 
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #718096;
+            font-size: 0.875em;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -560,16 +567,20 @@
         function updatePricingSummary() {
             const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1;
             const basePrice = parseInt(document.getElementById('monthlyFee').value) || 795;
+            const additionalDeliveryFee = parseInt(document.getElementById('deliveryFee').value) || 0;
             
             let monthlyTotal = basePrice;
-            let setupFee = 295;
+            let baseSetupFee = 295;
             
             if (fridgeCount > 1) {
                 const additionalUnits = fridgeCount - 1;
                 const discountedPrice = basePrice - 100;
                 monthlyTotal = basePrice + (discountedPrice * additionalUnits);
-                setupFee = 295 + (79 * additionalUnits);
+                baseSetupFee = 295 + (79 * additionalUnits);
             }
+            
+            // Total setup fee = base + additional
+            const totalSetupFee = baseSetupFee + additionalDeliveryFee;
             
             let pricingText = `Monthly Total: $${monthlyTotal}/month`;
             if (fridgeCount > 1) {
@@ -579,9 +590,22 @@
             } else {
                 pricingText += '<br>';
             }
-            pricingText += `Setup Fee: $${setupFee} (one-time)`;
+            
+            pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
+            
+            if (additionalDeliveryFee > 0) {
+                pricingText += `<br><small style="color: #667eea;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee}</small>`;
+            }
             
             document.getElementById('pricingSummary').innerHTML = pricingText;
+            
+            // Validation - ensure delivery fee is not negative
+            const deliveryInput = document.getElementById('deliveryFee');
+            if (additionalDeliveryFee < 0) {
+                deliveryInput.setCustomValidity('Additional delivery charges cannot be negative');
+            } else {
+                deliveryInput.setCustomValidity('');
+            }
         }
 
         async function generateProposal() {
@@ -595,7 +619,7 @@
             submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
             
             try {
-                // Get form data
+                // Get form data - INCLUDING DELIVERY FEE
                 const formData = {
                     companyName: document.getElementById('companyName').value,
                     contactName: document.getElementById('contactName').value || '',
@@ -603,7 +627,8 @@
                     preparedByPhone: document.getElementById('preparedByPhone').value,
                     preparedByEmail: document.getElementById('preparedByEmail').value,
                     fridgeCount: document.getElementById('fridgeCount').value,
-                    monthlyFee: document.getElementById('monthlyFee').value
+                    monthlyFee: document.getElementById('monthlyFee').value,
+                    deliveryFee: document.getElementById('deliveryFee').value || '' // ADD THIS LINE
                 };
 
                 console.log('Form data:', formData);
@@ -847,6 +872,13 @@
                         <option value="795" selected>$795/month</option>
                     </select>
                 </div>
+            </div>
+            
+            <!-- ADDED: Delivery Fee Field -->
+            <div class="form-group">
+                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
+                <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
+                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. This amount will be added to the base setup fee.</small>
             </div>
             
             <div class="pricing-summary">
