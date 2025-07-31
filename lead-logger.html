@@ -721,6 +721,31 @@
                 if (lead.status !== 'Dead') {
                     const row = createLeadRow(lead);
                     tbody.appendChild(row);
+                    
+                    // Add click handlers after row is added to DOM
+                    const leadId = lead.id || lead.iD || lead.ID;
+                    
+                    // Add click handlers for editable cells
+                    row.querySelectorAll('.editable-cell').forEach(cell => {
+                        const parent = cell.parentElement;
+                        if (parent.cellIndex === 1) { // Company Name
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'companyName');
+                        } else if (parent.cellIndex === 2) { // Contact Name
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'contactName');
+                        } else if (parent.cellIndex === 3) { // Phone Number
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'phoneNumber');
+                        } else if (parent.cellIndex === 4) { // Email
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'emailAddress');
+                        } else if (parent.cellIndex === 5) { // Rep Name
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'repName');
+                        } else if (parent.cellIndex === 6) { // Follow Up
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'followUp');
+                        } else if (parent.cellIndex === 9) { // Appt Date
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'appointmentDate');
+                        } else if (parent.cellIndex === 10) { // Notes
+                            cell.onclick = () => window.makeEditable(cell, leadId, 'notes');
+                        }
+                    });
                 }
             });
         }
@@ -737,12 +762,12 @@
             
             row.innerHTML = `
                 <td style="padding: 8px; text-align: center;">${dateAdded}</td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'companyName')">${sanitizeText(lead.companyName) || ''}</div></td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'contactName')">${sanitizeText(lead.contactName) || ''}</div></td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'phoneNumber')">${sanitizeText(lead.phoneNumber) || ''}</div></td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'emailAddress')">${sanitizeText(lead.emailAddress) || ''}</div></td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'repName')">${sanitizeText(lead.repName) || ''}</div></td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'followUp')">${followUpDate || 'Set date'}</div></td>
+                <td><div class="editable-cell">${sanitizeText(lead.companyName) || ''}</div></td>
+                <td><div class="editable-cell">${sanitizeText(lead.contactName) || ''}</div></td>
+                <td><div class="editable-cell">${sanitizeText(lead.phoneNumber) || ''}</div></td>
+                <td><div class="editable-cell">${sanitizeText(lead.emailAddress) || ''}</div></td>
+                <td><div class="editable-cell">${sanitizeText(lead.repName) || ''}</div></td>
+                <td><div class="editable-cell">${followUpDate || 'Set date'}</div></td>
                 <td style="padding: 8px;">
                     <select class="status-select" onchange="updateStatus(this, ${leadId})">
                         <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
@@ -757,10 +782,10 @@
                         <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
                     </select>
                 </td>
-                <td><div class="editable-cell" onclick="makeEditable(this, ${leadId}, 'appointmentDate')">${apptDate || 'Set date'}</div></td>
+                <td><div class="editable-cell">${apptDate || 'Set date'}</div></td>
                 <td class="notes-cell">
                     <div class="editable-cell" 
-                         onclick="makeEditable(this, ${leadId}, 'notes')"
+                         style="cursor: pointer;"
                          ${lead.notes && lead.notes.length > 20 ? `title="${sanitizeText(lead.notes)}"` : ''}>
                         ${sanitizeText(lead.notes) || 'Add notes'}
                     </div>
