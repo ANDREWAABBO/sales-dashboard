@@ -1008,7 +1008,10 @@
         async function updateLead(leadId, field, value) {
             try {
                 const updates = {};
-                updates[field] = value;
+                // Explicitly handle empty strings for dates
+                updates[field] = value === '' ? '' : value;
+                
+                console.log('Updating lead:', leadId, field, value); // Debug log
                 
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
