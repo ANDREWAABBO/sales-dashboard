@@ -567,13 +567,10 @@
         }
 
         async function generateProposal() {
-            console.log('Generate Proposal function called!'); // Debug log
+            console.log('Generate Proposal function called!');
             
             const submitBtn = document.getElementById('generateBtn');
             const originalText = submitBtn.innerHTML;
-            
-            // Show immediate feedback
-            alert('Starting proposal generation...'); // Temporary debug alert
             
             // Disable button and show loading
             submitBtn.disabled = true;
@@ -591,32 +588,39 @@
                     monthlyFee: document.getElementById('monthlyFee').value
                 };
 
-                console.log('Form data:', formData); // Debug log
+                console.log('Form data:', formData);
 
                 // Validate required fields
                 if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
                     throw new Error('Please fill in all required fields.');
                 }
 
-                console.log('Calling Web App URL:', WEB_APP_URL); // Debug log
+                console.log('Making request to:', WEB_APP_URL);
 
-                // Call Web App
+                // Call Web App with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(formData),
+                    signal: controller.signal
                 });
 
-                console.log('Response status:', response.status); // Debug log
+                clearTimeout(timeoutId);
+                console.log('Response received, status:', response.status);
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
                 }
 
                 const result = await response.json();
-                console.log('Result:', result); // Debug log
+                console.log('Result:', result);
                 
                 if (result.status === 'success') {
                     closeModal('proposalModal');
@@ -627,7 +631,13 @@
 
             } catch (error) {
                 console.error('Error generating proposal:', error);
-                showPopup(`Error generating proposal: ${error.message}`, 'error');
+                
+                let errorMessage = error.message;
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timed out. The proposal generation is taking longer than expected.';
+                }
+                
+                showPopup(`Error generating proposal: ${errorMessage}`, 'error');
             } finally {
                 // Reset button
                 submitBtn.disabled = false;
@@ -845,7 +855,7 @@
             
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateBtn" onclick="generateProposal()">Generate Proposal PDF</button>
+                <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
             </div>
         </div>
     </div>
