@@ -665,18 +665,12 @@
 
         // Modal event listeners - set up after DOM is loaded
         window.addEventListener('DOMContentLoaded', function() {
-            // Close modal on overlay click
-            const modalOverlay = document.getElementById('notesModal');
-            if (modalOverlay) {
-                modalOverlay.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        closeNotesModal();
-                    }
-                });
-            }
-
+            // Remove the close on overlay click functionality
+            // Modal should only close with Cancel or Save buttons
+            
             // Close modal on Escape key
             document.addEventListener('keydown', function(e) {
+                const modalOverlay = document.getElementById('notesModal');
                 if (e.key === 'Escape' && modalOverlay && modalOverlay.style.display === 'block') {
                     closeNotesModal();
                 }
@@ -767,9 +761,10 @@
                 if (!isPlaceholder && currentText) {
                     const parts = currentText.split('/');
                     if (parts.length === 3) {
-                        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+                        // MM/DD/YY to YYYY-MM-DD
                         const month = parts[0].padStart(2, '0');
                         const day = parts[1].padStart(2, '0');
+                        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
                         input.value = `${year}-${month}-${day}`;
                     }
                 }
@@ -1105,23 +1100,23 @@
         function formatDate(dateValue) {
             if (!dateValue) return '';
             try {
-                let date;
-                if (typeof dateValue === 'string' && dateValue.includes('-')) {
-                    // For YYYY-MM-DD format from date input
+                // Handle YYYY-MM-DD format from date input
+                if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     const [year, month, day] = dateValue.split('-');
-                    date = new Date(year, month - 1, day); // This creates date in local timezone
-                } else {
-                    date = new Date(dateValue);
+                    // Return formatted date directly without creating Date object
+                    return `${month}/${day}/${year.slice(-2)}`;
                 }
                 
-                if (isNaN(date.getTime())) return '';
+                // For other date formats, parse carefully
+                const date = new Date(dateValue + 'T12:00:00'); // Add noon time to avoid timezone issues
+                if (isNaN(date.getTime())) return dateValue;
                 
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 const day = date.getDate().toString().padStart(2, '0');
                 const year = date.getFullYear().toString().slice(-2);
                 return `${month}/${day}/${year}`;
             } catch (e) {
-                return '';
+                return dateValue || '';
             }
         }
 
