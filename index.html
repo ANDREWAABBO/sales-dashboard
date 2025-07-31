@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -217,7 +216,7 @@
         .dropdown-content a:hover {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding-left: 25px;
+            padding-left: 30px;
         }
 
         .dropdown-content a[style*="cursor: default"]:hover {
@@ -235,8 +234,102 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Company Switcher */
+        .company-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        .company-btn {
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .company-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .company-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .company-icon {
+            font-size: 20px;
+        }
+
+        /* Row Separator */
+        .row-separator {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            margin: 40px 0;
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Single Row Grid */
+        .grid-container.single-row {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 500px));
+            justify-content: center;
+        }
+
+        /* New badge */
+        .new-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            font-size: 0.75em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
     </style>
     <script>
+        // Company switcher function
+        function switchCompany(company) {
+            // Update active button
+            document.querySelectorAll('.company-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.company-btn').classList.add('active');
+            
+            // Update dashboard title
+            const title = document.getElementById('dashboard-title');
+            if (company === 'abbondanza') {
+                title.textContent = 'Abbondanza Sales Dashboard';
+                // In the future, you can update links/content specific to Abbondanza here
+            } else if (company === 'quantum') {
+                title.textContent = 'Quantum Solutions Dashboard';
+                // In the future, you can update links/content specific to Quantum here
+                alert('Quantum Solutions dashboard coming soon!');
+            }
+        }
+
         // Password protection
         const DASHBOARD_PASSWORD = 'abbondanza2024'; // Change this to your desired password
         
@@ -282,25 +375,26 @@
     </script>
 </head>
 <body>
+    <!-- Company Switcher -->
+    <div class="company-switcher">
+        <button class="company-btn active" onclick="switchCompany('abbondanza')">
+            <span class="company-icon">🍕</span>
+            Abbondanza Vending LLC
+        </button>
+        <button class="company-btn" onclick="switchCompany('quantum')">
+            <span class="company-icon">⚡</span>
+            Quantum Solutions
+        </button>
+    </div>
+
     <div class="dashboard-container">
         <div class="header">
-            <h1>Sales Team Dashboard</h1>
+            <h1 id="dashboard-title">Abbondanza Sales Dashboard</h1>
             <p>Access all your sales resources in one place</p>
         </div>
 
+        <!-- Row 1: Marketing & Product List -->
         <div class="grid-container">
-            <!-- First Button: Link to Google Slides Proposal Generator -->
-            <div class="card">
-                <div class="card-icon">📊</div>
-                <h2>Proposal Generator</h2>
-                <p>Create customized proposals using our Google Slides template with automated PDF generation.</p>
-                <p style="font-size: 0.9em; color: #4a5568; margin-top: 10px; background: #f7fafc; padding: 10px; border-radius: 8px;">
-                    <strong>First time?</strong> You may need to authorize the script when the presentation opens. Look for the "Proposal Generator" menu at the top.
-                </p>
-                <a href="https://docs.google.com/presentation/d/1UEqEqT3VFJFAnvgnoOw6HAaRdlxwwwpderyF13ViuoM/edit?usp=sharing" target="_blank" class="btn">Open Proposal Generator</a>
-            </div>
-
-            <!-- Second Button: Abbondanza Marketing -->
             <div class="card">
                 <div class="card-icon">🎯</div>
                 <h2>Abbondanza Marketing</h2>
@@ -320,40 +414,60 @@
                 </div>
             </div>
 
-            <!-- Third Button: Product List -->
             <div class="card">
                 <div class="card-icon">📋</div>
                 <h2>Product List</h2>
                 <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
                 <a href="https://docs.google.com/spreadsheets/d/1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw/edit?usp=sharing" target="_blank" class="btn">View Product List</a>
             </div>
+        </div>
 
-            <!-- Fourth Button: Proposals -->
+        <!-- Row Separator -->
+        <div class="row-separator"></div>
+
+        <!-- Row 2: Proposals Section -->
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h2>Proposal Generator <span class="new-badge">NEW!</span></h2>
+                <p>Create customized PDF proposals instantly with our built-in generator.</p>
+                <div class="btn-group">
+                    <a href="https://andrewaabbo.github.io/proposal-generator.html/proposal-generator.html" target="_blank" class="btn">Open Generator</a>
+                    <div class="dropdown">
+                        <button class="btn btn-dropdown">Legacy ▼</button>
+                        <div class="dropdown-content">
+                            <a href="https://docs.google.com/presentation/d/1UEqEqT3VFJFAnvgnoOw6HAaRdlxwwwpderyF13ViuoM/edit?usp=sharing" target="_blank">Google Slides Version</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-icon">📄</div>
-                <h2>Proposals</h2>
+                <h2>Proposal Copies</h2>
                 <p>Access generated proposals, templates, and proposal resources.</p>
                 <a href="#" target="_blank" class="btn">View Proposals</a>
             </div>
 
-            <!-- Fifth Button: Service Agreement -->
             <div class="card">
                 <div class="card-icon">📑</div>
                 <h2>Service Agreement</h2>
-                <p>Generate subsidy agreements with automated pricing calculations and PDF creation.</p>
-                <a href="https://docs.google.com/presentation/d/1d0q7kzopP_VsLfQDm7wOzOfhzu-rVrFW5sqWefFv4tE/edit?usp=sharing" target="_blank" class="btn">Create Service Agreement</a>
+                <p>Generate subsidy agreements with automated pricing calculations.</p>
+                <a href="https://docs.google.com/presentation/d/1d0q7kzopP_VsLfQDm7wOzOfhzu-rVrFW5sqWefFv4tE/edit?usp=sharing" target="_blank" class="btn">Create Agreement</a>
             </div>
+        </div>
 
-            <!-- Sixth Button: Lead Logger -->
+        <!-- Row Separator -->
+        <div class="row-separator"></div>
+
+        <!-- Row 3: Lead Logger -->
+        <div class="grid-container single-row">
             <div class="card">
                 <div class="card-icon">📝</div>
                 <h2>Lead Logger</h2>
                 <p>Log and track sales leads with follow-up management and status tracking.</p>
                 <a href="lead-logger.html" target="_blank" class="btn">Open Lead Logger</a>
             </div>
-
-            <!-- Placeholder for next button -->
-            <!-- We'll add more cards here as we build them -->
         </div>
     </div>
 </body>
