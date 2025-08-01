@@ -757,3 +757,153 @@
         }
     </script>
 </head>
+<body>
+    <!-- Company Switcher -->
+    <div class="company-switcher">
+        <button class="company-btn active" onclick="switchCompany('abbondanza')">
+            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
+            <span>Abbondanza Vending LLC</span>
+        </button>
+        <button class="company-btn" onclick="switchCompany('quantum')">
+            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
+            <span>Quantum Solutions</span>
+        </button>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <h1 id="dashboard-title">Abbondanza Sales Dashboard</h1>
+            <p>Access all your sales resources in one place</p>
+        </div>
+
+        <!-- Row 1: Marketing & Product List -->
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h2>Abbondanza About Us How We Work</h2>
+                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
+                <a href="https://docs.google.com/presentation/d/13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU/edit?usp=sharing" target="_blank" class="btn">Open Folder</a>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📋</div>
+                <h2>Product List</h2>
+                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
+                <a href="https://docs.google.com/spreadsheets/d/1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw/edit?usp=sharing" target="_blank" class="btn">View Product List</a>
+            </div>
+        </div>
+
+        <!-- Row Separator -->
+        <div class="row-separator"></div>
+
+        <!-- Row 2: Proposals Section -->
+        <div class="grid-container">
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h2>Proposal Generator</h2>
+                <p>Create customized PDF proposals instantly with our built-in generator.</p>
+                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📄</div>
+                <h2>Proposal Copies</h2>
+                <p>Access generated proposals, templates, and proposal resources.</p>
+                <a href="https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3" target="_blank" class="btn">View Proposals</a>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📑</div>
+                <h2>Service Agreement</h2>
+                <p>Generate subsidy agreements with automated pricing calculations.</p>
+                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button>
+            </div>
+        </div>
+
+        <!-- Row Separator -->
+        <div class="row-separator"></div>
+
+        <!-- Row 3: Lead Logger -->
+        <div class="grid-container single-row">
+            <div class="card">
+                <div class="card-icon">📝</div>
+                <h2>Lead Logger</h2>
+                <p>Log and track sales leads with follow-up management and status tracking.</p>
+                <a href="lead-logger.html" target="_blank" class="btn">Open Lead Logger</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proposal Generator Modal -->
+    <div id="proposalModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Fresh Food Solutions Proposal</h3>
+            
+            <div class="form-group">
+                <label for="companyName">Company Name *</label>
+                <input type="text" id="companyName" name="companyName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="contactName">Contact Name (Optional)</label>
+                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="preparedBy">Your Name *</label>
+                    <input type="text" id="preparedBy" name="preparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preparedByPhone">Your Phone *</label>
+                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="preparedByEmail">Your Email *</label>
+                <input type="email" id="preparedByEmail" name="preparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fridgeCount">Number of Fridges *</label>
+                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
+                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
+                        <option value="395">$395/month</option>
+                        <option value="495">$495/month</option>
+                        <option value="595">$595/month</option>
+                        <option value="695">$695/month</option>
+                        <option value="795" selected>$795/month</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- ADDED: Delivery Fee Field -->
+            <div class="form-group">
+                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
+                <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
+                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. This amount will be added to the base setup fee.</small>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Pricing Summary</h4>
+                <div class="pricing-display" id="pricingSummary">
+                    Monthly Total: $795/month<br>
+                    Setup Fee: $295 (one-time)
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
+                <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
