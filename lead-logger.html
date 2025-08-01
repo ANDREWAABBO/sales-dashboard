@@ -131,7 +131,7 @@
         }
 
         th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             padding: 15px;
             text-align: left;
@@ -341,7 +341,12 @@
         <h1>Lead Database</h1>
         
         <div class="controls">
-            <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="window.location.href='index.html'" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                    ← Back to Dashboard
+                </button>
+                <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
+            </div>
             
             <div class="filters">
                 <select id="repFilter" onchange="filterLeads()">
@@ -414,7 +419,7 @@
                     
                     <div class="form-group">
                         <label for="phoneNumber">Phone Number</label>
-                        <input type="tel" id="phoneNumber" name="phoneNumber">
+                        <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12">
                     </div>
                 </div>
                 
@@ -486,6 +491,26 @@
         // Initialize the application
         window.addEventListener('DOMContentLoaded', function() {
             loadLeads();
+            
+            // Add phone number formatting
+            const phoneInput = document.getElementById('phoneNumber');
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
+                if (value.length >= 6) {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                } else if (value.length >= 3) {
+                    value = value.slice(0, 3) + '-' + value.slice(3);
+                }
+                e.target.value = value;
+            });
+            
+            // Prevent non-numeric input
+            phoneInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                if (!char.match(/[0-9-]/)) {
+                    e.preventDefault();
+                }
+            });
         });
 
         // Load leads from Google Sheet
@@ -670,6 +695,13 @@
             
             const formData = new FormData(event.target);
             const leadData = Object.fromEntries(formData.entries());
+            
+            // Ensure notes field is included
+            if (!leadData.notes) {
+                leadData.notes = '';
+            }
+            
+            console.log('Submitting lead data:', leadData);
             
             try {
                 let response;
