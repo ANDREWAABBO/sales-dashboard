@@ -125,19 +125,12 @@
             font-size: 3em;
             font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(180deg, 
-                #009246 0%, 
-                #009246 40%, 
-                #ffffff 40%, 
-                #ffffff 60%, 
-                #ce2b37 60%, 
-                #ce2b37 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            color: white;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
             animation: titleGlow 3s ease-in-out infinite alternate;
-            background-size: 100% 100%;
         }
 
         @keyframes titleGlow {
@@ -507,11 +500,17 @@
 
         /* Logout button */
         .logout-btn {
-            background: #dc2626 !important;
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
         }
 
         .logout-btn:hover {
-            background: #b91c1c !important;
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
         }
 
         /* PDF Modal Styles */
