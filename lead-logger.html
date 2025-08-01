@@ -747,11 +747,13 @@
             const formData = new FormData(event.target);
             const leadData = Object.fromEntries(formData.entries());
             
-            // Log the data being sent
+            // Log ALL form values to debug
             console.log('=== FORM SUBMISSION ===');
-            console.log('Form data being submitted:', leadData);
-            console.log('Status value:', leadData.status);
-            console.log('Appointment Made value:', leadData.appointmentMade);
+            console.log('All form values:');
+            for (const [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            console.log('Lead data object:', leadData);
             console.log('Current Edit ID:', currentEditId);
             
             try {
@@ -765,7 +767,7 @@
                         leadId: currentEditId,
                         updates: leadData
                     };
-                    console.log('Request body:', requestBody);
+                    console.log('Full request body:', JSON.stringify(requestBody));
                     
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
