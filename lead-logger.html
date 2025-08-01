@@ -478,6 +478,19 @@
         </div>
     </div>
 
+    <!-- Notes Modal -->
+    <div id="notesModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeNotesModal()">&times;</span>
+            <h2>Edit Notes</h2>
+            <textarea id="modalNotesInput" style="width: 100%; min-height: 200px; padding: 10px; margin: 10px 0;"></textarea>
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeNotesModal()">Cancel</button>
+                <button type="button" class="btn" onclick="saveNotesModal()">Save Notes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
@@ -487,6 +500,8 @@
         
         let allLeads = [];
         let currentEditId = null;
+        let currentNotesLeadId = null;
+        let currentNotesCell = null;
 
         // Initialize the application
         window.addEventListener('DOMContentLoaded', function() {
@@ -518,7 +533,7 @@
             try {
                 console.log('Fetching leads from:', WEB_APP_URL);
                 
-                const response = await fetch(`${WEB_APP_URL}?action=getLeads`);
+                const response = await fetch(WEB_APP_URL + '?action=getLeads');
                 const data = await response.json();
                 
                 console.log('Response data:', data);
@@ -566,44 +581,35 @@
         // Create a table row for a lead
         function createLeadRow(lead) {
             const row = document.createElement('tr');
-            // Handle both 'id' and 'iD' field names
-            const leadId = lead.id || lead.iD;
+            const leadId = parseInt(lead.id || lead.iD || lead.ID);
             
-            // Format dates
             const dateAdded = formatDate(lead.dateAdded);
             const followUp = formatDate(lead.followUp);
             const appointmentDate = formatDate(lead.appointmentDate);
-            
-            // Get status class
             const statusClass = getStatusClass(lead.status);
-            
-            // Appointment made class
             const appointmentClass = lead.appointmentMade === 'Yes' ? 'appointment-yes' : 'appointment-no';
             
-            // Format notes - show truncated version with tooltip if long
             const notes = lead.notes || '';
             const notesDisplay = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
-            const notesTitle = notes.length > 50 ? `title="${notes.replace(/"/g, '&quot;')}"` : '';
+            const notesTitle = notes.length > 50 ? 'title="' + notes.replace(/"/g, '&quot;') + '"' : '';
             
-            row.innerHTML = `
-                <td>${dateAdded}</td>
-                <td><strong>${lead.companyName || ''}</strong></td>
-                <td>${lead.contactName || ''}</td>
-                <td>${lead.phoneNumber || ''}</td>
-                <td>${lead.emailAddress || ''}</td>
-                <td>${lead.repName || ''}</td>
-                <td><span class="status-badge ${statusClass}">${lead.status || 'Active'}</span></td>
-                <td>${followUp}</td>
-                <td class="${appointmentClass}">${lead.appointmentMade || 'No'}</td>
-                <td>${appointmentDate}</td>
-                <td ${notesTitle}>${notesDisplay || 'Click to add notes'}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn btn-small btn-edit" onclick="editLead(${lead.id})">Edit</button>
-                        <button class="btn btn-small btn-archive" onclick="archiveLead(${lead.id})">Archive</button>
-                    </div>
-                </td>
-            `;
+            row.innerHTML = '<td>' + dateAdded + '</td>' +
+                '<td><strong>' + (lead.companyName || '') + '</strong></td>' +
+                '<td>' + (lead.contactName || '') + '</td>' +
+                '<td>' + (lead.phoneNumber || '') + '</td>' +
+                '<td>' + (lead.emailAddress || '') + '</td>' +
+                '<td>' + (lead.repName || '') + '</td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + (lead.status || 'Active') + '</span></td>' +
+                '<td>' + followUp + '</td>' +
+                '<td class="' + appointmentClass + '">' + (lead.appointmentMade || 'No') + '</td>' +
+                '<td>' + appointmentDate + '</td>' +
+                '<td ' + notesTitle + ' style="cursor: pointer;" onclick="openNotesModal(' + leadId + ', \'' + notes.replace(/'/g, "\\'") + '\', this)">' + (notesDisplay || 'Click to add notes') + '</td>' +
+                '<td>' +
+                    '<div class="action-buttons">' +
+                        '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
+                        '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
+                    '</div>' +
+                '</td>';
             
             return row;
         }
@@ -624,17 +630,17 @@
             if (!dateString) return '';
             
             try {
-                // Handle both date formats
-                if (dateString.includes('T')) {
-                    // ISO format
-                    return new Date(dateString).toLocaleDateString();
-                } else {
-                    // yyyy-MM-dd format
-                    const [year, month, day] = dateString.split('-');
-                    return new Date(year, month - 1, day).toLocaleDateString();
-                }
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear();
+                
+                return month + '/' + day + '/' + year;
             } catch (e) {
-                return dateString;
+                console.error('Error formatting date:', dateString, e);
+                return '';
             }
         }
 
@@ -666,17 +672,62 @@
             
             repFilter.innerHTML = '<option value="">All Reps</option>';
             reps.sort().forEach(rep => {
-                repFilter.innerHTML += `<option value="${rep}">${rep}</option>`;
+                repFilter.innerHTML += '<option value="' + rep + '">' + rep + '</option>';
             });
         }
 
-        // Modal functions
+        // Open add lead modal
         function openAddLeadModal() {
             currentEditId = null;
+            console.log('Opening add modal, currentEditId:', currentEditId);
             document.getElementById('modalTitle').textContent = 'Add New Lead';
             document.getElementById('leadForm').reset();
             document.getElementById('status').value = 'Active';
             document.getElementById('appointmentMade').value = 'No';
+            toggleAppointmentDate();
+            document.getElementById('leadModal').style.display = 'block';
+        }
+
+        // Edit lead
+        function editLead(leadId) {
+            leadId = parseInt(leadId);
+            const lead = allLeads.find(l => parseInt(l.id || l.iD || l.ID) === leadId);
+            if (!lead) {
+                console.error('Lead not found:', leadId);
+                return;
+            }
+            
+            currentEditId = leadId;
+            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            
+            document.getElementById('companyName').value = lead.companyName || '';
+            document.getElementById('contactName').value = lead.contactName || '';
+            document.getElementById('phoneNumber').value = lead.phoneNumber || '';
+            document.getElementById('emailAddress').value = lead.emailAddress || '';
+            document.getElementById('repName').value = lead.repName || '';
+            document.getElementById('status').value = lead.status || 'Active';
+            
+            if (lead.followUp) {
+                const followUpDate = new Date(lead.followUp);
+                if (!isNaN(followUpDate)) {
+                    document.getElementById('followUp').value = followUpDate.toISOString().split('T')[0];
+                }
+            }
+            
+            document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
+            
+            if (lead.appointmentDate) {
+                const apptDate = new Date(lead.appointmentDate);
+                if (!isNaN(apptDate)) {
+                    document.getElementById('appointmentDate').value = apptDate.toISOString().split('T')[0];
+                }
+            }
+            
+            document.getElementById('notes').value = lead.notes || '';
+            
+            console.log('Editing lead:', leadId, 'currentEditId set to:', currentEditId);
+            console.log('Lead data:', lead);
+            
             toggleAppointmentDate();
             document.getElementById('leadModal').style.display = 'block';
         }
@@ -702,19 +753,18 @@
             const formData = new FormData(event.target);
             const leadData = Object.fromEntries(formData.entries());
             
-            // Ensure notes field is included
             if (!leadData.notes) {
                 leadData.notes = '';
             }
             
             console.log('Submitting lead data:', leadData);
+            console.log('Current edit ID:', currentEditId);
             
             try {
                 let response;
                 
-                if (currentEditId) {
-                    // Update existing lead
-                    console.log('Updating lead:', currentEditId, leadData);
+                if (currentEditId !== null && currentEditId !== undefined) {
+                    console.log('Updating existing lead with ID:', currentEditId);
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -724,8 +774,7 @@
                         })
                     });
                 } else {
-                    // Add new lead
-                    console.log('Adding new lead:', leadData);
+                    console.log('Adding new lead');
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -736,49 +785,28 @@
                 }
                 
                 const result = await response.json();
+                console.log('Server response:', result);
                 
                 if (result.status === 'success') {
                     showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
                     closeModal();
-                    loadLeads(); // Reload the leads
+                    loadLeads();
                 } else {
                     console.error('Server returned error:', result);
                     throw new Error(result.message || 'Failed to save lead');
                 }
             } catch (error) {
                 console.error('Error saving lead:', error);
-                console.error('Full error details:', error);
                 showToast('Error saving lead: ' + error.message, 'error');
             }
-        }
-
-        // Edit lead
-        function editLead(leadId) {
-            const lead = allLeads.find(l => l.id == leadId);
-            if (!lead) return;
-            
-            currentEditId = leadId;
-            document.getElementById('modalTitle').textContent = 'Edit Lead';
-            
-            // Populate form
-            document.getElementById('companyName').value = lead.companyName || '';
-            document.getElementById('contactName').value = lead.contactName || '';
-            document.getElementById('phoneNumber').value = lead.phoneNumber || '';
-            document.getElementById('emailAddress').value = lead.emailAddress || '';
-            document.getElementById('repName').value = lead.repName || '';
-            document.getElementById('status').value = lead.status || 'Active';
-            document.getElementById('followUp').value = lead.followUp || '';
-            document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
-            document.getElementById('appointmentDate').value = lead.appointmentDate || '';
-            document.getElementById('notes').value = lead.notes || '';
-            
-            toggleAppointmentDate();
-            document.getElementById('leadModal').style.display = 'block';
         }
 
         // Archive lead
         async function archiveLead(leadId) {
             if (!confirm('Are you sure you want to archive this lead?')) return;
+            
+            leadId = parseInt(leadId);
+            console.log('Archiving lead:', leadId);
             
             try {
                 const response = await fetch(WEB_APP_URL, {
@@ -790,6 +818,7 @@
                 });
                 
                 const result = await response.json();
+                console.log('Archive response:', result);
                 
                 if (result.status === 'success') {
                     showToast('Lead archived successfully!', 'success');
@@ -803,11 +832,96 @@
             }
         }
 
+        // Notes modal functions
+        function openNotesModal(leadId, currentNotes, cell) {
+            console.log('Opening notes modal for lead:', leadId);
+            currentNotesLeadId = leadId;
+            currentNotesCell = cell;
+            const modal = document.getElementById('notesModal');
+            const textarea = document.getElementById('modalNotesInput');
+            
+            textarea.value = currentNotes === 'Click to add notes' ? '' : currentNotes;
+            modal.style.display = 'block';
+            
+            setTimeout(() => {
+                textarea.focus();
+                textarea.select();
+            }, 100);
+        }
+
+        function closeNotesModal() {
+            console.log('Closing notes modal');
+            document.getElementById('notesModal').style.display = 'none';
+            currentNotesLeadId = null;
+            currentNotesCell = null;
+        }
+
+        async function saveNotesModal() {
+            const textarea = document.getElementById('modalNotesInput');
+            const newValue = textarea.value.trim();
+            
+            console.log('Saving notes:', newValue, 'for lead:', currentNotesLeadId);
+            
+            if (currentNotesLeadId && currentNotesCell) {
+                const leadId = parseInt(currentNotesLeadId);
+                await updateLead(leadId, 'notes', newValue);
+                
+                currentNotesCell.textContent = newValue || 'Click to add notes';
+                
+                const lead = allLeads.find(l => parseInt(l.id || l.iD || l.ID) === leadId);
+                if (lead) {
+                    lead.notes = newValue;
+                    console.log('Updated lead notes in memory:', lead);
+                }
+                
+                showToast('Notes updated successfully!', 'success');
+            }
+            
+            closeNotesModal();
+        }
+
+        // Update lead
+        async function updateLead(leadId, field, value) {
+            try {
+                console.log('Updating lead:', leadId, field, '=', value);
+                
+                const updates = {};
+                updates[field] = value;
+                
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'updateLead',
+                        leadId: leadId,
+                        updates: updates
+                    })
+                });
+                
+                const result = await response.json();
+                console.log('Update response:', result);
+                
+                if (result.status === 'success') {
+                    showToast('Lead updated successfully!', 'success');
+                    
+                    const lead = allLeads.find(l => (l.id || l.iD) == leadId);
+                    if (lead) {
+                        lead[field] = value;
+                        console.log('Updated local lead data:', lead);
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to update lead');
+                }
+            } catch (error) {
+                console.error('Error updating lead:', error);
+                showToast('Error updating lead: ' + error.message, 'error');
+            }
+        }
+
         // Show toast notification
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.className = `toast ${type}`;
+            toast.className = 'toast ' + type;
             toast.style.display = 'block';
             
             setTimeout(() => {
@@ -817,9 +931,12 @@
 
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('leadModal');
-            if (event.target === modal) {
+            const leadModal = document.getElementById('leadModal');
+            const notesModal = document.getElementById('notesModal');
+            if (event.target === leadModal) {
                 closeModal();
+            } else if (event.target === notesModal) {
+                closeNotesModal();
             }
         }
     </script>
