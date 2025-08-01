@@ -605,6 +605,14 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
+        /* Specific styling for sheets preview */
+        .sheets-viewer iframe {
+            transform: scale(0.9);
+            transform-origin: top left;
+            width: 111%;
+            height: 111%;
+        }
+
         .close-btn {
             background: #e53e3e;
             color: white;
@@ -684,8 +692,22 @@
                 
                 // Check if should show install prompt
                 checkInstallPrompt();
+                
+                // Force add install button for testing
+                addInstallButton();
             }
         });
+
+        // Force add install button for testing
+        function addInstallButton() {
+            const btn = document.createElement('button');
+            btn.textContent = '📱 Add to Home';
+            btn.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 12px 24px; background: #1e3a8a; color: white; border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+            btn.onclick = () => {
+                showInstallPrompt();
+            };
+            document.body.appendChild(btn);
+        }
 
         // Add to Home Screen functionality
         function checkInstallPrompt() {
@@ -781,7 +803,7 @@
                         <button class="close-btn" onclick="closePDFViewer()">Close</button>
                     </div>
                 </div>
-                <div class="pdf-viewer">
+                <div class="pdf-viewer sheets-viewer">
                     <iframe src="https://docs.google.com/spreadsheets/d/${sheetsId}/preview" 
                             width="100%" 
                             height="100%"
@@ -1206,7 +1228,7 @@
                 <div class="card-icon">📄</div>
                 <h2>Proposal Copies</h2>
                 <p>Access generated proposals, templates, and proposal resources.</p>
-                <button onclick="openProposalViewer()" class="btn">View Proposals</button>
+                <button class="btn" onclick="openProposalViewer()">View Proposals</button>
             </div>
 
             <div class="card">
