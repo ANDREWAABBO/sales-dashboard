@@ -603,7 +603,13 @@
                 '<td>' + followUp + '</td>' +
                 '<td class="' + appointmentClass + '">' + (lead.appointmentMade || 'No') + '</td>' +
                 '<td>' + appointmentDate + '</td>' +
-                '<td ' + notesTitle + ' style="cursor: pointer;" onclick="openNotesModal(' + leadId + ', \'' + notes.replace(/'/g, "\\'") + '\', this)">' + (notesDisplay || 'Click to add notes') + '</td>' +
+                '<td ' + notesTitle + '>' + (notesDisplay || '') + '</td>' +
+                '<td>' +
+                    '<div class="action-buttons">' +
+                        '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
+                        '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
+                    '</div>' +
+                '</td>';\'") + '\', this)">' + (notesDisplay || 'Click to add notes') + '</td>' +
                 '<td>' +
                     '<div class="action-buttons">' +
                         '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
@@ -689,7 +695,7 @@
         }
 
         // Edit lead
-        function editLead(leadId) {
+        window.editLead = function(leadId) {
             leadId = parseInt(leadId);
             const lead = allLeads.find(l => parseInt(l.id || l.iD || l.ID) === leadId);
             if (!lead) {
@@ -697,15 +703,21 @@
                 return;
             }
             
+            // CRITICAL: Set currentEditId BEFORE opening modal
             currentEditId = leadId;
-            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            console.log('EDIT MODE - Setting currentEditId to:', currentEditId);
             
+            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            document.getElementById('leadForm').reset();
+            
+            // Populate all fields including notes
             document.getElementById('companyName').value = lead.companyName || '';
             document.getElementById('contactName').value = lead.contactName || '';
             document.getElementById('phoneNumber').value = lead.phoneNumber || '';
             document.getElementById('emailAddress').value = lead.emailAddress || '';
             document.getElementById('repName').value = lead.repName || '';
             document.getElementById('status').value = lead.status || 'Active';
+            document.getElementById('notes').value = lead.notes || ''; // Make sure notes are populated
             
             if (lead.followUp) {
                 const followUpDate = new Date(lead.followUp);
@@ -723,10 +735,8 @@
                 }
             }
             
-            document.getElementById('notes').value = lead.notes || '';
-            
-            console.log('Editing lead:', leadId, 'currentEditId set to:', currentEditId);
-            console.log('Lead data:', lead);
+            console.log('Lead data being edited:', lead);
+            console.log('Notes value set to:', lead.notes);
             
             toggleAppointmentDate();
             document.getElementById('leadModal').style.display = 'block';
@@ -753,18 +763,21 @@
             const formData = new FormData(event.target);
             const leadData = Object.fromEntries(formData.entries());
             
+            // Ensure notes field is included
             if (!leadData.notes) {
                 leadData.notes = '';
             }
             
-            console.log('Submitting lead data:', leadData);
+            console.log('=== FORM SUBMISSION ===');
+            console.log('Lead data:', leadData);
             console.log('Current edit ID:', currentEditId);
+            console.log('Is this an edit?', currentEditId !== null && currentEditId !== undefined);
             
             try {
                 let response;
                 
                 if (currentEditId !== null && currentEditId !== undefined) {
-                    console.log('Updating existing lead with ID:', currentEditId);
+                    console.log('>>> UPDATING existing lead with ID:', currentEditId);
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -774,7 +787,7 @@
                         })
                     });
                 } else {
-                    console.log('Adding new lead');
+                    console.log('>>> ADDING new lead');
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -790,7 +803,7 @@
                 if (result.status === 'success') {
                     showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
                     closeModal();
-                    loadLeads();
+                    await loadLeads(); // Wait for reload
                 } else {
                     console.error('Server returned error:', result);
                     throw new Error(result.message || 'Failed to save lead');
@@ -802,7 +815,7 @@
         }
 
         // Archive lead
-        async function archiveLead(leadId) {
+        window.archiveLead = async function(leadId) {
             if (!confirm('Are you sure you want to archive this lead?')) return;
             
             leadId = parseInt(leadId);
