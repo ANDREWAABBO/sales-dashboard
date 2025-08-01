@@ -1,4 +1,4 @@
-//index.html 8/1/2025 1140 am<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -251,13 +251,15 @@
             transform: none;
         }
 
-        /* Dropdown Styles */
+        /* Button Group for multiple actions */
         .btn-group {
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
+        /* Dropdown Styles */
         .dropdown {
             position: relative;
             display: inline-block;
@@ -497,10 +499,73 @@
         .logout-btn:hover {
             background: #b91c1c !important;
         }
+
+        /* PDF Modal Styles */
+        .pdf-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            height: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pdf-header {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .pdf-header h3 {
+            margin: 0;
+            color: #2d3748;
+        }
+
+        .pdf-viewer {
+            flex: 1;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .pdf-viewer iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .close-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #c53030;
+            transform: scale(1.05);
+        }
     </style>
     <script>
         // Your deployed Web App URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyLLlYEYtYOmspPpXcqF2jXwjsMkn-76WUJjdavJUZmiS_Ed9CFEXgMdr9LW4gDPF4ojA/exec';
 
         // Company switcher function
         function switchCompany(company) {
@@ -570,6 +635,47 @@
             logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;';
             logoutBtn.onclick = logout;
             header.appendChild(logoutBtn);
+        }
+
+        // Function to open PDF viewer
+        function openPDFViewer() {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            // Create PDF modal
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            // Convert Google Slides URL to PDF export URL
+            const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';
+            const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>Abbondanza About Us - How We Work</h3>
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe src="https://docs.google.com/presentation/d/${slidesId}/preview?rm=minimal" 
+                            allowfullscreen="true" 
+                            mozallowfullscreen="true" 
+                            webkitallowfullscreen="true">
+                    </iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
+        // Function to close PDF viewer
+        function closePDFViewer() {
+            const overlay = document.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
         }
 
         // Proposal Generator Functions
@@ -658,7 +764,7 @@
                     preparedByEmail: document.getElementById('preparedByEmail').value,
                     fridgeCount: document.getElementById('fridgeCount').value,
                     monthlyFee: document.getElementById('monthlyFee').value,
-                    deliveryFee: document.getElementById('deliveryFee').value || '0'
+                    deliveryFee: document.getElementById('deliveryFee').value || '' // ADD THIS LINE
                 };
 
                 console.log('Form data:', formData);
@@ -782,7 +888,9 @@
                 <div class="card-icon">🎯</div>
                 <h2>Abbondanza About Us How We Work</h2>
                 <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
-                <a href="https://docs.google.com/presentation/d/13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU/edit?usp=sharing" target="_blank" class="btn">Open Folder</a>
+                <div class="btn-group">
+                    <button onclick="openPDFViewer()" class="btn">View Presentation</button>
+                </div>
             </div>
 
             <div class="card">
