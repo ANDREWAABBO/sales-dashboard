@@ -692,22 +692,8 @@
                 
                 // Check if should show install prompt
                 checkInstallPrompt();
-                
-                // Force add install button for testing
-                addInstallButton();
             }
         });
-
-        // Force add install button for testing
-        function addInstallButton() {
-            const btn = document.createElement('button');
-            btn.textContent = '📱 Add to Home';
-            btn.style.cssText = 'position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 12px 24px; background: #1e3a8a; color: white; border-radius: 8px; border: none; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
-            btn.onclick = () => {
-                showInstallPrompt();
-            };
-            document.body.appendChild(btn);
-        }
 
         // Add to Home Screen functionality
         function checkInstallPrompt() {
@@ -782,37 +768,38 @@
 
         // Function to open Product List PDF
         function openProductListPDF() {
-            // Create modal overlay
+            // For better compatibility, especially on iPad, use a simpler approach
+            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
+            
+            // Create a simple modal with download/view options
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
             overlay.style.display = 'block';
             
-            // Create PDF modal
-            const pdfModal = document.createElement('div');
-            pdfModal.className = 'pdf-modal';
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.textAlign = 'center';
             
-            // Use Google Sheets ID
-            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            
-            pdfModal.innerHTML = `
-                <div class="pdf-header">
-                    <h3>Abbondanza Product List</h3>
-                    <div>
-                        <button class="btn btn-secondary" onclick="downloadProductListPDF()" style="margin-right: 10px;">📥 Download PDF</button>
-                        <button class="btn btn-secondary" onclick="printProductListPDF()" style="margin-right: 10px;">🖨️ Print</button>
-                        <button class="close-btn" onclick="closePDFViewer()">Close</button>
-                    </div>
-                </div>
-                <div class="pdf-viewer sheets-viewer">
-                    <iframe src="https://docs.google.com/spreadsheets/d/${sheetsId}/preview" 
-                            width="100%" 
-                            height="100%"
-                            style="border: none;">
-                    </iframe>
+            modal.innerHTML = `
+                <h3 style="margin-bottom: 20px; color: #2d3748;">Product List Options</h3>
+                <p style="color: #718096; margin-bottom: 30px;">Choose how to view the product list:</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px; max-width: 300px; margin: 0 auto;">
+                    <button class="btn btn-primary" onclick="window.open('https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=true', '_blank'); closePDFViewer();">
+                        📄 Open as PDF
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="window.open('https://docs.google.com/spreadsheets/d/${sheetsId}/edit', '_blank'); closePDFViewer();">
+                        📊 View Spreadsheet
+                    </button>
+                    
+                    <button class="btn" style="background: #64748b;" onclick="closePDFViewer()">
+                        Cancel
+                    </button>
                 </div>
             `;
             
-            overlay.appendChild(pdfModal);
+            overlay.appendChild(modal);
             document.body.appendChild(overlay);
         }
 
