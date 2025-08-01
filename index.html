@@ -769,9 +769,8 @@
             const pdfModal = document.createElement('div');
             pdfModal.className = 'pdf-modal';
             
-            // Convert Google Sheets URL to PDF export URL
+            // Use Google Sheets ID
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
             
             pdfModal.innerHTML = `
                 <div class="pdf-header">
@@ -783,7 +782,7 @@
                     </div>
                 </div>
                 <div class="pdf-viewer">
-                    <iframe src="${pdfUrl}" 
+                    <iframe src="https://docs.google.com/spreadsheets/d/${sheetsId}/preview" 
                             width="100%" 
                             height="100%"
                             style="border: none;">
@@ -1129,6 +1128,24 @@
                 event.target.style.display = 'none';
             }
         }
+
+        // Make functions globally available
+        window.openProposalGenerator = openProposalGenerator;
+        window.openProposalViewer = openProposalViewer;
+        window.generateServiceAgreement = generateServiceAgreement;
+        window.closeModal = closeModal;
+        window.generateProposal = generateProposal;
+        window.updatePricingSummary = updatePricingSummary;
+        window.openPDFViewer = openPDFViewer;
+        window.openProductListPDF = openProductListPDF;
+        window.downloadProductListPDF = downloadProductListPDF;
+        window.printProductListPDF = printProductListPDF;
+        window.downloadPresentationPDF = downloadPresentationPDF;
+        window.printPresentation = printPresentation;
+        window.closePDFViewer = closePDFViewer;
+        window.dismissInstallPrompt = dismissInstallPrompt;
+        window.switchCompany = switchCompany;
+        window.logout = logout;
     </script>
 </head>
 <body>
