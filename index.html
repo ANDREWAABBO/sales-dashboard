@@ -664,8 +664,8 @@
             
             // Convert Google Sheets URL to PDF export URL with better formatting
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            // PDF export with formatting parameters
-            const pdfViewUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=a4&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false`;
+            // PDF export with formatting parameters - portrait mode with minimal margins
+            const pdfViewUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
             
             pdfModal.innerHTML = `
                 <div class="pdf-header">
@@ -692,15 +692,15 @@
         // Function to download Product List as PDF
         function downloadProductListPDF() {
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            // Enhanced PDF export parameters for better formatting
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=a4&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false`;
+            // Enhanced PDF export parameters for better formatting - portrait with minimal margins
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
             window.open(pdfUrl, '_blank');
         }
 
         // Function to print Product List
         function printProductListPDF() {
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=a4&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false`;
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
             window.open(pdfUrl, '_blank');
         }
 
