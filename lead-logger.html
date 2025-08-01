@@ -333,7 +333,7 @@
         
         <div class="controls">
             <div style="display: flex; gap: 10px;">
-                <button class="btn" onclick="history.back()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                <button class="btn" onclick="goToDashboard()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
                     ← Back to Dashboard
                 </button>
                 <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
@@ -820,6 +820,19 @@
         window.toggleAppointmentDate = toggleAppointmentDate;
         window.handleSubmit = handleSubmit;
         window.filterLeads = filterLeads;
+        
+        // Dashboard navigation
+        window.goToDashboard = function() {
+            // Try to go to the dashboard without losing session
+            if (window.opener) {
+                // If opened in new tab, close this and focus dashboard
+                window.close();
+                window.opener.focus();
+            } else {
+                // Otherwise navigate to dashboard
+                window.location.href = 'index.html';
+            }
+        }
     </script>
 </body>
 </html>
