@@ -676,11 +676,9 @@
                 
                 if (currentEditId) {
                     // Update existing lead
+                    console.log('Updating lead:', currentEditId, leadData);
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: JSON.stringify({
                             action: 'updateLead',
                             leadId: currentEditId,
@@ -689,11 +687,9 @@
                     });
                 } else {
                     // Add new lead
+                    console.log('Adding new lead:', leadData);
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
                         body: JSON.stringify({
                             action: 'addLead',
                             lead: leadData
@@ -708,10 +704,12 @@
                     closeModal();
                     loadLeads(); // Reload the leads
                 } else {
+                    console.error('Server returned error:', result);
                     throw new Error(result.message || 'Failed to save lead');
                 }
             } catch (error) {
                 console.error('Error saving lead:', error);
+                console.error('Full error details:', error);
                 showToast('Error saving lead: ' + error.message, 'error');
             }
         }
@@ -747,9 +745,6 @@
             try {
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify({
                         action: 'archiveLead',
                         leadId: leadId
