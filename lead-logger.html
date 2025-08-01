@@ -13,13 +13,13 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e3a8a; /* Deep blue, no gradient */
             min-height: 100vh;
             padding: 20px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 95%; /* Much wider - uses 95% of screen */
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -45,7 +45,7 @@
 
         .btn {
             padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e3a8a; /* Deep blue to match */
             color: white;
             border: none;
             border-radius: 8px;
@@ -58,7 +58,8 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.4);
+            background: #1e40af; /* Slightly lighter on hover */
         }
 
         .btn-secondary {
@@ -128,7 +129,7 @@
         }
 
         th {
-            background: #667eea;
+            background: #1e3a8a; /* Deep blue header */
             color: white;
             padding: 15px;
             text-align: left;
@@ -136,11 +137,24 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            white-space: nowrap;
         }
 
         td {
             padding: 15px;
             border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px; /* Limit column width */
+        }
+
+        /* Special handling for notes column */
+        td:nth-child(11) {
+            max-width: 300px; /* Slightly wider for notes */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         tr:hover {
@@ -293,7 +307,11 @@
         }
 
         .btn-edit {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            background: #2563eb; /* Nice blue for edit */
+        }
+
+        .btn-edit:hover {
+            background: #1d4ed8;
         }
 
         .btn-archive {
