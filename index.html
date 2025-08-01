@@ -648,8 +648,10 @@
             const pdfModal = document.createElement('div');
             pdfModal.className = 'pdf-modal';
             
-            // Convert Google Sheets URL to PDF export URL
+            // Convert Google Sheets URL to PDF export URL with better formatting
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
+            // PDF export with formatting parameters
+            const pdfViewUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=a4&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false`;
             
             pdfModal.innerHTML = `
                 <div class="pdf-header">
@@ -661,12 +663,11 @@
                     </div>
                 </div>
                 <div class="pdf-viewer">
-                    <iframe id="productListFrame" 
-                            src="https://docs.google.com/spreadsheets/d/${sheetsId}/preview" 
-                            allowfullscreen="true" 
-                            mozallowfullscreen="true" 
-                            webkitallowfullscreen="true">
-                    </iframe>
+                    <embed src="${pdfViewUrl}" 
+                           type="application/pdf" 
+                           width="100%" 
+                           height="100%"
+                           style="border: none;">
                 </div>
             `;
             
@@ -677,14 +678,15 @@
         // Function to download Product List as PDF
         function downloadProductListPDF() {
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=false&size=letter`;
+            // Enhanced PDF export parameters for better formatting
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=a4&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false`;
             window.open(pdfUrl, '_blank');
         }
 
         // Function to print Product List
         function printProductListPDF() {
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=false&size=letter`;
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=a4&portrait=false&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false`;
             window.open(pdfUrl, '_blank');
         }
 
