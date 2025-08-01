@@ -637,6 +637,57 @@
             header.appendChild(logoutBtn);
         }
 
+        // Function to open Product List PDF
+        function openProductListPDF() {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            // Create PDF modal
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            // Convert Google Sheets URL to PDF export URL
+            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>Abbondanza Product List</h3>
+                    <div>
+                        <button class="btn btn-secondary" onclick="downloadProductListPDF()" style="margin-right: 10px;">📥 Download PDF</button>
+                        <button class="btn btn-secondary" onclick="printProductListPDF()" style="margin-right: 10px;">🖨️ Print</button>
+                        <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                    </div>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe id="productListFrame" 
+                            src="https://docs.google.com/spreadsheets/d/${sheetsId}/preview" 
+                            allowfullscreen="true" 
+                            mozallowfullscreen="true" 
+                            webkitallowfullscreen="true">
+                    </iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
+        // Function to download Product List as PDF
+        function downloadProductListPDF() {
+            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=false&size=letter`;
+            window.open(pdfUrl, '_blank');
+        }
+
+        // Function to print Product List
+        function printProductListPDF() {
+            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=false&size=letter`;
+            window.open(pdfUrl, '_blank');
+        }
+
         // Function to open PDF viewer
         function openPDFViewer() {
             // Create modal overlay
@@ -909,7 +960,10 @@
                 <div class="card-icon">📋</div>
                 <h2>Product List</h2>
                 <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
-                <a href="https://docs.google.com/spreadsheets/d/1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw/edit?usp=sharing" target="_blank" class="btn">View Product List</a>
+                <div class="btn-group">
+                    <button onclick="openProductListPDF()" class="btn">View Product List</button>
+                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download PDF</button>
+                </div>
             </div>
         </div>
 
