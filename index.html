@@ -125,9 +125,11 @@
             font-size: 3em;
             font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            background: linear-gradient(90deg, #009246 0%, #009246 33%, #ffffff 33%, #ffffff 66%, #ce2b37 66%, #ce2b37 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
             animation: titleGlow 3s ease-in-out infinite alternate;
         }
 
@@ -584,7 +586,7 @@
             // Update dashboard title
             const title = document.getElementById('dashboard-title');
             if (company === 'abbondanza') {
-                title.textContent = 'Abbondanza Sales Dashboard';
+                title.textContent = 'Abbondanza Sales Force';
                 // In the future, you can update links/content specific to Abbondanza here
             } else if (company === 'quantum') {
                 title.textContent = 'Quantum Solutions Dashboard';
@@ -1031,7 +1033,7 @@
 
     <div class="dashboard-container">
         <div class="header">
-            <h1 id="dashboard-title">Abbondanza Sales Dashboard</h1>
+            <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
         </div>
 
