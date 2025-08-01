@@ -580,6 +580,11 @@
             // Appointment made class
             const appointmentClass = lead.appointmentMade === 'Yes' ? 'appointment-yes' : 'appointment-no';
             
+            // Format notes - show truncated version with tooltip if long
+            const notes = lead.notes || '';
+            const notesDisplay = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
+            const notesTitle = notes.length > 50 ? `title="${notes.replace(/"/g, '&quot;')}"` : '';
+            
             row.innerHTML = `
                 <td>${dateAdded}</td>
                 <td><strong>${lead.companyName || ''}</strong></td>
@@ -591,7 +596,7 @@
                 <td>${followUp}</td>
                 <td class="${appointmentClass}">${lead.appointmentMade || 'No'}</td>
                 <td>${appointmentDate}</td>
-                <td>${lead.notes || ''}</td>
+                <td ${notesTitle}>${notesDisplay || 'Click to add notes'}</td>
                 <td>
                     <div class="action-buttons">
                         <button class="btn btn-small btn-edit" onclick="editLead(${lead.id})">Edit</button>
@@ -680,6 +685,7 @@
             document.getElementById('leadModal').style.display = 'none';
             document.getElementById('leadForm').reset();
             currentEditId = null;
+            console.log('Modal closed, currentEditId reset to:', currentEditId);
         }
 
         // Toggle appointment date field
