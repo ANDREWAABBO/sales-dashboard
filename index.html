@@ -775,17 +775,17 @@
             document.getElementById('proposalModal').style.display = 'block';
             updatePricingSummary();
             
-            // Re-attach event listener when modal opens
-            setTimeout(() => {
-                const generateBtn = document.getElementById('generateBtn');
-                if (generateBtn) {
-                    // Remove any existing listeners
-                    generateBtn.removeEventListener('click', generateProposal);
-                    // Add the listener
-                    generateBtn.addEventListener('click', generateProposal);
-                    console.log('Event listener attached to generate button');
-                }
-            }, 100);
+            // Always ensure event listener is properly attached
+            const generateBtn = document.getElementById('generateBtn');
+            if (generateBtn) {
+                // Remove any existing listeners to avoid duplicates
+                const newBtn = generateBtn.cloneNode(true);
+                generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+                
+                // Add fresh event listener
+                newBtn.addEventListener('click', generateProposal);
+                console.log('Event listener attached to generate button');
+            }
         }
 
         function closeModal(modalId) {
@@ -947,14 +947,16 @@
             document.getElementById('serviceAgreementModal').style.display = 'block';
             updateServiceAgreementPricing();
             
-            // Attach event listener when modal opens
-            setTimeout(() => {
-                const generateBtn = document.getElementById('generateServiceBtn');
-                if (generateBtn) {
-                    generateBtn.removeEventListener('click', generateServiceAgreementPDF);
-                    generateBtn.addEventListener('click', generateServiceAgreementPDF);
-                }
-            }, 100);
+            // Always ensure event listener is properly attached
+            const generateBtn = document.getElementById('generateServiceBtn');
+            if (generateBtn) {
+                // Remove any existing listeners by cloning
+                const newBtn = generateBtn.cloneNode(true);
+                generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+                
+                // Add fresh event listener
+                newBtn.addEventListener('click', generateServiceAgreementPDF);
+            }
         }
 
         function updateServiceAgreementPricing() {
