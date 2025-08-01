@@ -474,7 +474,7 @@
 
     <script>
         // Configuration
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzajzjde529Dvv0UhkzY9_WaAQRkm3TSGqjN_VkzQ9L_OpQHUJuHypmSb92pTZufJsa/exec';
         
         let allLeads = [];
         let currentEditId = null;
@@ -859,15 +859,8 @@
         
         // Dashboard navigation
         window.goToDashboard = function() {
-            // Check if index.html is in parent directory or same directory
-            const currentPath = window.location.pathname;
-            if (currentPath.includes('/lead-logger') || currentPath.includes('lead-logger.html')) {
-                // If in subfolder, go up one level
-                window.location.href = '../index.html';
-            } else {
-                // If in same folder
-                window.location.href = 'index.html';
-            }
+            // Navigate back to dashboard in same window to preserve session
+            window.location.replace('index.html');
         }
     </script>
 </body>
