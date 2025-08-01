@@ -508,7 +508,8 @@
             document.querySelectorAll('.company-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.closest('.company-btn').classList.add('active');
+            const clickedBtn = event.target.closest('.company-btn');
+            clickedBtn.classList.add('active');
             
             // Update dashboard title
             const title = document.getElementById('dashboard-title');
@@ -779,21 +780,9 @@
         <div class="grid-container">
             <div class="card">
                 <div class="card-icon">🎯</div>
-                <h2>Abbondanza Marketing</h2>
+                <h2>Abbondanza About Us How We Work</h2>
                 <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
-                <div class="btn-group">
-                    <a href="https://docs.google.com/presentation/d/13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU/edit?usp=sharing" target="_blank" class="btn">Open Folder</a>
-                    <div class="dropdown">
-                        <button class="btn btn-dropdown">Quick Access ▼</button>
-                        <div class="dropdown-content">
-                            <a href="https://docs.google.com/presentation/d/13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU/edit?usp=sharing" target="_blank">Marketing Presentation</a>
-                            <a href="#" style="color: #a0aec0; cursor: default;">Coming Soon</a>
-                            <a href="#" style="color: #a0aec0; cursor: default;">Coming Soon</a>
-                            <a href="#" style="color: #a0aec0; cursor: default;">Coming Soon</a>
-                            <a href="#" style="color: #a0aec0; cursor: default;">Coming Soon</a>
-                        </div>
-                    </div>
-                </div>
+                <a href="https://docs.google.com/presentation/d/13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU/edit?usp=sharing" target="_blank" class="btn">Open Folder</a>
             </div>
 
             <div class="card">
@@ -811,24 +800,16 @@
         <div class="grid-container">
             <div class="card">
                 <div class="card-icon">📊</div>
-                <h2>Proposal Generator <span class="new-badge">FIXED!</span></h2>
+                <h2>Proposal Generator</h2>
                 <p>Create customized PDF proposals instantly with our built-in generator.</p>
-                <div class="btn-group">
-                    <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>
-                    <div class="dropdown">
-                        <button class="btn btn-dropdown">Legacy ▼</button>
-                        <div class="dropdown-content">
-                            <a href="https://docs.google.com/presentation/d/1UEqEqT3VFJFAnvgnoOw6HAaRdlxwwwpderyF13ViuoM/edit?usp=sharing" target="_blank">Google Slides Version</a>
-                        </div>
-                    </div>
-                </div>
+                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📄</div>
                 <h2>Proposal Copies</h2>
                 <p>Access generated proposals, templates, and proposal resources.</p>
-                <a href="#" target="_blank" class="btn">View Proposals</a>
+                <a href="https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3" target="_blank" class="btn">View Proposals</a>
             </div>
 
             <div class="card">
