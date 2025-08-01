@@ -682,6 +682,12 @@
                     generateBtn.addEventListener('click', generateProposal);
                 }
                 
+                // Ensure view proposals button works
+                const viewProposalsBtn = document.querySelector('button[onclick="openProposalViewer()"]');
+                if (viewProposalsBtn) {
+                    viewProposalsBtn.onclick = openProposalViewer;
+                }
+                
                 // Check if should show install prompt
                 checkInstallPrompt();
             }
@@ -1182,7 +1188,7 @@
                 <div class="card-icon">📝</div>
                 <h2>Lead Logger</h2>
                 <p>Log and track sales leads with follow-up management and status tracking.</p>
-                <a href="lead-logger.html" target="_blank" class="btn">Open Lead Logger</a>
+                <a href="lead-logger.html" class="btn">Open Lead Logger</a>
             </div>
         </div>
     </div>
