@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Team Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -123,11 +126,11 @@
 
         .header h1 {
             font-size: 3em;
-            font-weight: 900;
+            font-weight: 700;
             margin-bottom: 10px;
             color: white;
-            font-family: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
-            letter-spacing: 3px;
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+            letter-spacing: 2px;
             text-transform: uppercase;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
             animation: titleGlow 3s ease-in-out infinite alternate;
@@ -498,19 +501,56 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Logout button */
-        .logout-btn {
-            background: white !important;
-            color: black !important;
-            font-weight: 700 !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        /* Add to Home Screen Prompt */
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 10002;
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.5s ease;
         }
 
-        .logout-btn:hover {
-            background: #f0f0f0 !important;
-            transform: scale(1.05) !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .install-prompt h4 {
+            margin: 0 0 10px 0;
+            color: #2d3748;
+            font-size: 18px;
+        }
+
+        .install-prompt p {
+            margin: 0 0 15px 0;
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .install-prompt-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .install-prompt-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .install-prompt-checkbox input {
+            margin: 0;
         }
 
         /* PDF Modal Styles */
@@ -636,8 +676,76 @@
                 if (generateBtn) {
                     generateBtn.addEventListener('click', generateProposal);
                 }
+                
+                // Check if should show install prompt
+                checkInstallPrompt();
             }
         });
+
+        // Add to Home Screen functionality
+        function checkInstallPrompt() {
+            // Check if on iOS/iPadOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            // Check if already installed (running in standalone mode)
+            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            
+            // Check if user has dismissed the prompt before
+            const isDismissed = localStorage.getItem('installPromptDismissed') === 'true';
+            
+            // Show prompt if on iOS, not standalone, and not dismissed
+            if (isIOS && !isStandalone && !isDismissed) {
+                setTimeout(() => {
+                    showInstallPrompt();
+                }, 2000); // Show after 2 seconds
+            }
+        }
+
+        function showInstallPrompt() {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'install-prompt';
+            promptDiv.innerHTML = `
+                <h4>📱 Add to Home Screen</h4>
+                <p>Install Abbondanza Sales Force on your iPad for quick access:</p>
+                <ol style="margin: 0 0 15px 20px; padding: 0; font-size: 13px; color: #718096;">
+                    <li>Tap the <strong>Share</strong> button <span style="font-size: 16px;">⬆️</span></li>
+                    <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+                    <li>Tap <strong>Add</strong> to install</li>
+                </ol>
+                <div class="install-prompt-buttons">
+                    <button class="btn btn-primary" onclick="dismissInstallPrompt(false)" style="flex: 1;">Got it!</button>
+                    <button class="btn btn-secondary" onclick="window.open('https://support.apple.com/guide/ipad/bookmark-favorite-webpages-ipadb0f2a1cb/ipados', '_blank')" style="flex: 1;">Help</button>
+                </div>
+                <div class="install-prompt-checkbox">
+                    <input type="checkbox" id="dontShowAgain" />
+                    <label for="dontShowAgain">Don't show this again</label>
+                </div>
+            `;
+            
+            document.body.appendChild(promptDiv);
+        }
+
+        function dismissInstallPrompt(permanent) {
+            const prompt = document.querySelector('.install-prompt');
+            if (prompt) {
+                // Check if "don't show again" is checked
+                const dontShowAgain = document.getElementById('dontShowAgain');
+                if (dontShowAgain && dontShowAgain.checked) {
+                    localStorage.setItem('installPromptDismissed', 'true');
+                }
+                
+                // Animate out
+                prompt.style.animation = 'slideDown 0.5s ease';
+                setTimeout(() => {
+                    prompt.remove();
+                }, 500);
+            }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(0); opacity: 1; }
+            to { transform: translateX(-50%) translateY(100px); opacity: 0; }
+        }
 
         // Add logout button to header
         function addLogoutButton() {
