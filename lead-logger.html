@@ -514,7 +514,8 @@
                 const data = await response.json();
                 
                 if (data.status === 'success') {
-                    allLeads = data.leads || [];
+                    // Filter out archived/dead leads
+                    allLeads = (data.leads || []).filter(lead => lead.status !== 'Dead');
                     displayLeads(allLeads);
                     updateRepFilter();
                 } else {
@@ -557,6 +558,11 @@
         function createLeadRow(lead) {
             const row = document.createElement('tr');
             const leadId = parseInt(lead.id || lead.iD || lead.ID);
+            
+            // Log the lead data to debug status and appointmentMade
+            console.log('Lead data:', lead);
+            console.log('Status value:', lead.status);
+            console.log('AppointmentMade value:', lead.appointmentMade);
             
             const dateAdded = formatDate(lead.dateAdded);
             const followUp = formatDate(lead.followUp);
@@ -676,7 +682,8 @@
             
             currentEditId = leadId;
             document.getElementById('modalTitle').textContent = 'Edit Lead';
-            document.getElementById('leadForm').reset();
+            // Don't reset the form here - we're about to populate it!
+            // document.getElementById('leadForm').reset();
             
             console.log('Editing lead:', lead);
             console.log('Current status:', lead.status);
@@ -688,12 +695,19 @@
             document.getElementById('phoneNumber').value = lead.phoneNumber || '';
             document.getElementById('emailAddress').value = lead.emailAddress || '';
             document.getElementById('repName').value = lead.repName || '';
-            document.getElementById('status').value = lead.status || 'Active';
-            document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
+            
+            // Set status AFTER other fields
+            const statusSelect = document.getElementById('status');
+            statusSelect.value = lead.status || 'Active';
+            
+            // Set appointment made AFTER other fields
+            const apptMadeSelect = document.getElementById('appointmentMade');
+            apptMadeSelect.value = lead.appointmentMade || 'No';
+            
             document.getElementById('notes').value = lead.notes || '';
             
-            console.log('Status dropdown value set to:', document.getElementById('status').value);
-            console.log('AppointmentMade dropdown value set to:', document.getElementById('appointmentMade').value);
+            console.log('Status dropdown value set to:', statusSelect.value);
+            console.log('AppointmentMade dropdown value set to:', apptMadeSelect.value);
             
             // Handle dates
             if (lead.followUp) {
@@ -734,24 +748,31 @@
             const leadData = Object.fromEntries(formData.entries());
             
             // Log the data being sent
+            console.log('=== FORM SUBMISSION ===');
             console.log('Form data being submitted:', leadData);
             console.log('Status value:', leadData.status);
             console.log('Appointment Made value:', leadData.appointmentMade);
+            console.log('Current Edit ID:', currentEditId);
             
             try {
                 let response;
+                let requestBody;
                 
                 if (currentEditId) {
-                    console.log('Updating lead ID:', currentEditId);
+                    console.log('>>> UPDATING lead ID:', currentEditId);
+                    requestBody = {
+                        action: 'updateLead',
+                        leadId: currentEditId,
+                        updates: leadData
+                    };
+                    console.log('Request body:', requestBody);
+                    
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
-                        body: JSON.stringify({
-                            action: 'updateLead',
-                            leadId: currentEditId,
-                            updates: leadData
-                        })
+                        body: JSON.stringify(requestBody)
                     });
                 } else {
+                    console.log('>>> ADDING new lead');
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -767,7 +788,7 @@
                 if (result.status === 'success') {
                     showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
                     closeModal();
-                    loadLeads();
+                    await loadLeads();
                 } else {
                     throw new Error(result.message || 'Failed to save lead');
                 }
@@ -836,13 +857,13 @@
         
         // Dashboard navigation
         window.goToDashboard = function() {
-            // Try to go to the dashboard without losing session
-            if (window.opener) {
-                // If opened in new tab, close this and focus dashboard
-                window.close();
-                window.opener.focus();
+            // Check if index.html is in parent directory or same directory
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('/lead-logger') || currentPath.includes('lead-logger.html')) {
+                // If in subfolder, go up one level
+                window.location.href = '../index.html';
             } else {
-                // Otherwise navigate to dashboard
+                // If in same folder
                 window.location.href = 'index.html';
             }
         }
