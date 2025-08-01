@@ -678,6 +678,10 @@
             document.getElementById('modalTitle').textContent = 'Edit Lead';
             document.getElementById('leadForm').reset();
             
+            console.log('Editing lead:', lead);
+            console.log('Current status:', lead.status);
+            console.log('Current appointmentMade:', lead.appointmentMade);
+            
             // Populate form fields
             document.getElementById('companyName').value = lead.companyName || '';
             document.getElementById('contactName').value = lead.contactName || '';
@@ -685,7 +689,11 @@
             document.getElementById('emailAddress').value = lead.emailAddress || '';
             document.getElementById('repName').value = lead.repName || '';
             document.getElementById('status').value = lead.status || 'Active';
+            document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
             document.getElementById('notes').value = lead.notes || '';
+            
+            console.log('Status dropdown value set to:', document.getElementById('status').value);
+            console.log('AppointmentMade dropdown value set to:', document.getElementById('appointmentMade').value);
             
             // Handle dates
             if (lead.followUp) {
@@ -694,8 +702,6 @@
                     document.getElementById('followUp').value = followUpDate.toISOString().split('T')[0];
                 }
             }
-            
-            document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
             
             if (lead.appointmentDate) {
                 const apptDate = new Date(lead.appointmentDate);
@@ -727,10 +733,16 @@
             const formData = new FormData(event.target);
             const leadData = Object.fromEntries(formData.entries());
             
+            // Log the data being sent
+            console.log('Form data being submitted:', leadData);
+            console.log('Status value:', leadData.status);
+            console.log('Appointment Made value:', leadData.appointmentMade);
+            
             try {
                 let response;
                 
                 if (currentEditId) {
+                    console.log('Updating lead ID:', currentEditId);
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -750,6 +762,7 @@
                 }
                 
                 const result = await response.json();
+                console.log('Server response:', result);
                 
                 if (result.status === 'success') {
                     showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
