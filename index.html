@@ -623,11 +623,26 @@
             if (checkAuth()) {
                 addLogoutButton();
                 
-                // Add event listener for the generate button
-                const generateBtn = document.getElementById('generateBtn');
-                if (generateBtn) {
-                    generateBtn.addEventListener('click', generateProposal);
-                }
+                // Add event listeners for all buttons that need them
+                setTimeout(() => {
+                    // Proposal generator button
+                    const proposalBtn = document.querySelector('button[onclick="openProposalGenerator()"]');
+                    if (proposalBtn) {
+                        proposalBtn.onclick = openProposalGenerator;
+                    }
+                    
+                    // Service agreement button
+                    const serviceBtn = document.querySelector('button[onclick="generateServiceAgreement()"]');
+                    if (serviceBtn) {
+                        serviceBtn.onclick = generateServiceAgreement;
+                    }
+                    
+                    // Add event listener for the generate button in modal
+                    const generateBtn = document.getElementById('generateBtn');
+                    if (generateBtn) {
+                        generateBtn.addEventListener('click', generateProposal);
+                    }
+                }, 100);
             }
         });
 
@@ -668,11 +683,11 @@
                     </div>
                 </div>
                 <div class="pdf-viewer">
-                    <embed src="${pdfViewUrl}" 
-                           type="application/pdf" 
+                    <iframe src="https://docs.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(pdfViewUrl)}" 
                            width="100%" 
                            height="100%"
                            style="border: none;">
+                    </iframe>
                 </div>
             `;
             
@@ -720,11 +735,11 @@
                     </div>
                 </div>
                 <div class="pdf-viewer">
-                    <embed src="${pdfUrl}" 
-                           type="application/pdf" 
-                           width="100%" 
-                           height="100%"
-                           style="border: none;">
+                    <iframe src="https://docs.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(pdfUrl)}" 
+                            width="100%" 
+                            height="100%"
+                            style="border: none;">
+                    </iframe>
                 </div>
             `;
             
