@@ -34,7 +34,6 @@
             font-size: 2.5em;
         }
 
-        /* Controls Section */
         .controls {
             display: flex;
             justify-content: space-between;
@@ -87,7 +86,6 @@
             border-color: #667eea;
         }
 
-        /* Status Badge Styles */
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
@@ -117,7 +115,6 @@
             color: #718096;
         }
 
-        /* Table Styles */
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
@@ -159,7 +156,6 @@
             color: #e53e3e;
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -172,7 +168,6 @@
             color: #4a5568;
         }
 
-        /* Loading State */
         .loading {
             text-align: center;
             padding: 40px;
@@ -194,7 +189,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -241,7 +235,6 @@
             color: #000;
         }
 
-        /* Form Styles */
         .form-group {
             margin-bottom: 20px;
         }
@@ -288,7 +281,6 @@
             background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
         }
 
-        /* Action Buttons */
         .action-buttons {
             display: flex;
             gap: 8px;
@@ -308,7 +300,6 @@
             background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
         }
 
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -342,7 +333,7 @@
         
         <div class="controls">
             <div style="display: flex; gap: 10px;">
-                <button class="btn" onclick="window.location.href='index.html'" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                <button class="btn" onclick="history.back()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
                     ← Back to Dashboard
                 </button>
                 <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
@@ -478,19 +469,6 @@
         </div>
     </div>
 
-    <!-- Notes Modal -->
-    <div id="notesModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeNotesModal()">&times;</span>
-            <h2>Edit Notes</h2>
-            <textarea id="modalNotesInput" style="width: 100%; min-height: 200px; padding: 10px; margin: 10px 0;"></textarea>
-            <div class="form-actions">
-                <button type="button" class="btn btn-cancel" onclick="closeNotesModal()">Cancel</button>
-                <button type="button" class="btn" onclick="saveNotesModal()">Save Notes</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
@@ -500,17 +478,18 @@
         
         let allLeads = [];
         let currentEditId = null;
-        let currentNotesLeadId = null;
-        let currentNotesCell = null;
 
         // Initialize the application
         window.addEventListener('DOMContentLoaded', function() {
             loadLeads();
-            
-            // Add phone number formatting
+            setupPhoneFormatting();
+        });
+
+        // Setup phone number formatting
+        function setupPhoneFormatting() {
             const phoneInput = document.getElementById('phoneNumber');
             phoneInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
+                let value = e.target.value.replace(/\D/g, '');
                 if (value.length >= 6) {
                     value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
                 } else if (value.length >= 3) {
@@ -519,24 +498,20 @@
                 e.target.value = value;
             });
             
-            // Prevent non-numeric input
             phoneInput.addEventListener('keypress', function(e) {
                 const char = String.fromCharCode(e.which);
                 if (!char.match(/[0-9-]/)) {
                     e.preventDefault();
                 }
             });
-        });
+        }
 
         // Load leads from Google Sheet
         async function loadLeads() {
             try {
-                console.log('Fetching leads from:', WEB_APP_URL);
-                
+                console.log('Fetching leads...');
                 const response = await fetch(WEB_APP_URL + '?action=getLeads');
                 const data = await response.json();
-                
-                console.log('Response data:', data);
                 
                 if (data.status === 'success') {
                     allLeads = data.leads || [];
@@ -549,7 +524,7 @@
                 console.error('Error loading leads:', error);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'block';
-                showToast('Error loading leads. Please check console.', 'error');
+                showToast('Error loading leads. Please refresh the page.', 'error');
             }
         }
 
@@ -591,31 +566,30 @@
             
             const notes = lead.notes || '';
             const notesDisplay = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
-            const notesTitle = notes.length > 50 ? 'title="' + notes.replace(/"/g, '&quot;') + '"' : '';
             
-            row.innerHTML = '<td>' + dateAdded + '</td>' +
-                '<td><strong>' + (lead.companyName || '') + '</strong></td>' +
-                '<td>' + (lead.contactName || '') + '</td>' +
-                '<td>' + (lead.phoneNumber || '') + '</td>' +
-                '<td>' + (lead.emailAddress || '') + '</td>' +
-                '<td>' + (lead.repName || '') + '</td>' +
-                '<td><span class="status-badge ' + statusClass + '">' + (lead.status || 'Active') + '</span></td>' +
-                '<td>' + followUp + '</td>' +
-                '<td class="' + appointmentClass + '">' + (lead.appointmentMade || 'No') + '</td>' +
-                '<td>' + appointmentDate + '</td>' +
-                '<td ' + notesTitle + '>' + (notesDisplay || '') + '</td>' +
-                '<td>' +
-                    '<div class="action-buttons">' +
-                        '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
-                        '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
-                    '</div>' +
-                '</td>';\'") + '\', this)">' + (notesDisplay || 'Click to add notes') + '</td>' +
-                '<td>' +
-                    '<div class="action-buttons">' +
-                        '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
-                        '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
-                    '</div>' +
-                '</td>';
+            const cells = [
+                dateAdded,
+                '<strong>' + (lead.companyName || '') + '</strong>',
+                lead.contactName || '',
+                lead.phoneNumber || '',
+                lead.emailAddress || '',
+                lead.repName || '',
+                '<span class="status-badge ' + statusClass + '">' + (lead.status || 'Active') + '</span>',
+                followUp,
+                '<span class="' + appointmentClass + '">' + (lead.appointmentMade || 'No') + '</span>',
+                appointmentDate,
+                notesDisplay,
+                '<div class="action-buttons">' +
+                    '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
+                    '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
+                '</div>'
+            ];
+            
+            cells.forEach(cellContent => {
+                const td = document.createElement('td');
+                td.innerHTML = cellContent;
+                row.appendChild(td);
+            });
             
             return row;
         }
@@ -645,7 +619,6 @@
                 
                 return month + '/' + day + '/' + year;
             } catch (e) {
-                console.error('Error formatting date:', dateString, e);
                 return '';
             }
         }
@@ -678,14 +651,16 @@
             
             repFilter.innerHTML = '<option value="">All Reps</option>';
             reps.sort().forEach(rep => {
-                repFilter.innerHTML += '<option value="' + rep + '">' + rep + '</option>';
+                const option = document.createElement('option');
+                option.value = rep;
+                option.textContent = rep;
+                repFilter.appendChild(option);
             });
         }
 
-        // Open add lead modal
+        // Modal functions
         function openAddLeadModal() {
             currentEditId = null;
-            console.log('Opening add modal, currentEditId:', currentEditId);
             document.getElementById('modalTitle').textContent = 'Add New Lead';
             document.getElementById('leadForm').reset();
             document.getElementById('status').value = 'Active';
@@ -694,31 +669,25 @@
             document.getElementById('leadModal').style.display = 'block';
         }
 
-        // Edit lead
-        window.editLead = function(leadId) {
+        function editLead(leadId) {
             leadId = parseInt(leadId);
             const lead = allLeads.find(l => parseInt(l.id || l.iD || l.ID) === leadId);
-            if (!lead) {
-                console.error('Lead not found:', leadId);
-                return;
-            }
+            if (!lead) return;
             
-            // CRITICAL: Set currentEditId BEFORE opening modal
             currentEditId = leadId;
-            console.log('EDIT MODE - Setting currentEditId to:', currentEditId);
-            
             document.getElementById('modalTitle').textContent = 'Edit Lead';
             document.getElementById('leadForm').reset();
             
-            // Populate all fields including notes
+            // Populate form fields
             document.getElementById('companyName').value = lead.companyName || '';
             document.getElementById('contactName').value = lead.contactName || '';
             document.getElementById('phoneNumber').value = lead.phoneNumber || '';
             document.getElementById('emailAddress').value = lead.emailAddress || '';
             document.getElementById('repName').value = lead.repName || '';
             document.getElementById('status').value = lead.status || 'Active';
-            document.getElementById('notes').value = lead.notes || ''; // Make sure notes are populated
+            document.getElementById('notes').value = lead.notes || '';
             
+            // Handle dates
             if (lead.followUp) {
                 const followUpDate = new Date(lead.followUp);
                 if (!isNaN(followUpDate)) {
@@ -735,9 +704,6 @@
                 }
             }
             
-            console.log('Lead data being edited:', lead);
-            console.log('Notes value set to:', lead.notes);
-            
             toggleAppointmentDate();
             document.getElementById('leadModal').style.display = 'block';
         }
@@ -746,10 +712,8 @@
             document.getElementById('leadModal').style.display = 'none';
             document.getElementById('leadForm').reset();
             currentEditId = null;
-            console.log('Modal closed, currentEditId reset to:', currentEditId);
         }
 
-        // Toggle appointment date field
         function toggleAppointmentDate() {
             const appointmentMade = document.getElementById('appointmentMade').value;
             const dateGroup = document.getElementById('appointmentDateGroup');
@@ -763,21 +727,10 @@
             const formData = new FormData(event.target);
             const leadData = Object.fromEntries(formData.entries());
             
-            // Ensure notes field is included
-            if (!leadData.notes) {
-                leadData.notes = '';
-            }
-            
-            console.log('=== FORM SUBMISSION ===');
-            console.log('Lead data:', leadData);
-            console.log('Current edit ID:', currentEditId);
-            console.log('Is this an edit?', currentEditId !== null && currentEditId !== undefined);
-            
             try {
                 let response;
                 
-                if (currentEditId !== null && currentEditId !== undefined) {
-                    console.log('>>> UPDATING existing lead with ID:', currentEditId);
+                if (currentEditId) {
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -787,7 +740,6 @@
                         })
                     });
                 } else {
-                    console.log('>>> ADDING new lead');
                     response = await fetch(WEB_APP_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -798,14 +750,12 @@
                 }
                 
                 const result = await response.json();
-                console.log('Server response:', result);
                 
                 if (result.status === 'success') {
                     showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
                     closeModal();
-                    await loadLeads(); // Wait for reload
+                    loadLeads();
                 } else {
-                    console.error('Server returned error:', result);
                     throw new Error(result.message || 'Failed to save lead');
                 }
             } catch (error) {
@@ -815,119 +765,31 @@
         }
 
         // Archive lead
-        window.archiveLead = async function(leadId) {
+        function archiveLead(leadId) {
             if (!confirm('Are you sure you want to archive this lead?')) return;
             
             leadId = parseInt(leadId);
-            console.log('Archiving lead:', leadId);
             
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'archiveLead',
-                        leadId: leadId
-                    })
-                });
-                
-                const result = await response.json();
-                console.log('Archive response:', result);
-                
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'archiveLead',
+                    leadId: leadId
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
                 if (result.status === 'success') {
                     showToast('Lead archived successfully!', 'success');
                     loadLeads();
                 } else {
                     throw new Error(result.message || 'Failed to archive lead');
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error archiving lead:', error);
                 showToast('Error archiving lead: ' + error.message, 'error');
-            }
-        }
-
-        // Notes modal functions
-        function openNotesModal(leadId, currentNotes, cell) {
-            console.log('Opening notes modal for lead:', leadId);
-            currentNotesLeadId = leadId;
-            currentNotesCell = cell;
-            const modal = document.getElementById('notesModal');
-            const textarea = document.getElementById('modalNotesInput');
-            
-            textarea.value = currentNotes === 'Click to add notes' ? '' : currentNotes;
-            modal.style.display = 'block';
-            
-            setTimeout(() => {
-                textarea.focus();
-                textarea.select();
-            }, 100);
-        }
-
-        function closeNotesModal() {
-            console.log('Closing notes modal');
-            document.getElementById('notesModal').style.display = 'none';
-            currentNotesLeadId = null;
-            currentNotesCell = null;
-        }
-
-        async function saveNotesModal() {
-            const textarea = document.getElementById('modalNotesInput');
-            const newValue = textarea.value.trim();
-            
-            console.log('Saving notes:', newValue, 'for lead:', currentNotesLeadId);
-            
-            if (currentNotesLeadId && currentNotesCell) {
-                const leadId = parseInt(currentNotesLeadId);
-                await updateLead(leadId, 'notes', newValue);
-                
-                currentNotesCell.textContent = newValue || 'Click to add notes';
-                
-                const lead = allLeads.find(l => parseInt(l.id || l.iD || l.ID) === leadId);
-                if (lead) {
-                    lead.notes = newValue;
-                    console.log('Updated lead notes in memory:', lead);
-                }
-                
-                showToast('Notes updated successfully!', 'success');
-            }
-            
-            closeNotesModal();
-        }
-
-        // Update lead
-        async function updateLead(leadId, field, value) {
-            try {
-                console.log('Updating lead:', leadId, field, '=', value);
-                
-                const updates = {};
-                updates[field] = value;
-                
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'updateLead',
-                        leadId: leadId,
-                        updates: updates
-                    })
-                });
-                
-                const result = await response.json();
-                console.log('Update response:', result);
-                
-                if (result.status === 'success') {
-                    showToast('Lead updated successfully!', 'success');
-                    
-                    const lead = allLeads.find(l => (l.id || l.iD) == leadId);
-                    if (lead) {
-                        lead[field] = value;
-                        console.log('Updated local lead data:', lead);
-                    }
-                } else {
-                    throw new Error(result.message || 'Failed to update lead');
-                }
-            } catch (error) {
-                console.error('Error updating lead:', error);
-                showToast('Error updating lead: ' + error.message, 'error');
-            }
+            });
         }
 
         // Show toast notification
@@ -944,14 +806,20 @@
 
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const leadModal = document.getElementById('leadModal');
-            const notesModal = document.getElementById('notesModal');
-            if (event.target === leadModal) {
+            const modal = document.getElementById('leadModal');
+            if (event.target === modal) {
                 closeModal();
-            } else if (event.target === notesModal) {
-                closeNotesModal();
             }
         }
+
+        // Make functions globally available
+        window.editLead = editLead;
+        window.archiveLead = archiveLead;
+        window.openAddLeadModal = openAddLeadModal;
+        window.closeModal = closeModal;
+        window.toggleAppointmentDate = toggleAppointmentDate;
+        window.handleSubmit = handleSubmit;
+        window.filterLeads = filterLeads;
     </script>
 </body>
 </html>
