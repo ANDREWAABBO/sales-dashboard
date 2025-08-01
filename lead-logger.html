@@ -1,4 +1,19 @@
-<!DOCTYPE html>
+/* Logo pattern background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://andrewaabbo.github.io/images/abbondanza-logo.png');
+            background-repeat: repeat;
+            background-size: 150px auto;
+            background-position: 0 0;
+            opacity: 0.1; /* 10% visibility */
+            z-index: -1;
+            transform: rotate(-15deg) scale(1.2);
+        }<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -28,13 +43,13 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image: url('images/abbondanza-logo.png');
+            background-image: url('https://andrewaabbo.github.io/images/abbondanza-logo.png');
             background-repeat: repeat;
-            background-size: 150px auto; /* Adjust size as needed */
+            background-size: 150px auto;
             background-position: 0 0;
-            opacity: 0.05; /* Very subtle - adjust as needed */
+            opacity: 0.1; /* 10% visibility */
             z-index: -1;
-            transform: rotate(-15deg) scale(1.2); /* Slight angle for dynamic look */
+            transform: rotate(-15deg) scale(1.2);
         }
 
         .container {
