@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lead Logging System</title>
+    <title>Lead Logger - Abbondanza Sales</title>
     <style>
         * {
             margin: 0;
@@ -13,65 +13,242 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            color: #333;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Form Section */
-        .form-section {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        h1 {
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        /* Controls Section */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select, input[type="search"] {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input[type="search"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Status Badge Styles */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: #d4f1d4;
+            color: #2d5a2d;
+        }
+
+        .status-followup {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-notqualified {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-dead {
+            background: #e2e8f0;
+            color: #718096;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .appointment-yes {
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .appointment-no {
+            color: #e53e3e;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        /* Form Styles */
+        .form-group {
             margin-bottom: 20px;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
-        }
-
         .form-group label {
-            margin-bottom: 8px;
+            display: block;
+            margin-bottom: 5px;
             color: #4a5568;
             font-weight: 600;
         }
@@ -79,18 +256,12 @@
         .form-group input,
         .form-group select,
         .form-group textarea {
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
             width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
         }
 
         .form-group input:focus,
@@ -98,1344 +269,523 @@
         .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 30px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-            margin-left: 10px;
-        }
-
-        /* Table Section */
-        .table-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
 
-        .filter-controls {
+        .form-actions {
             display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+            justify-content: flex-end;
         }
 
-        .filter-controls select,
-        .filter-controls input {
-            padding: 8px 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
+        .btn-cancel {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
         }
 
-        .table-wrapper {
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
-            margin: -1px;
-            padding: 1px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1200px;
-            table-layout: fixed;
-        }
-
-        th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 8px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            white-space: normal;
-            word-wrap: break-word;
-            z-index: 10;
-            vertical-align: middle;
-        }
-
-        /* Fixed column widths to prevent jumping */
-        th:nth-child(1), td:nth-child(1) { width: 80px; } /* Date Added */
-        th:nth-child(2), td:nth-child(2) { width: 140px; } /* Company Name */
-        th:nth-child(3), td:nth-child(3) { width: 140px; } /* Contact Name */
-        th:nth-child(4), td:nth-child(4) { width: 120px; } /* Phone Number */
-        th:nth-child(5), td:nth-child(5) { width: 160px; } /* Email Address */
-        th:nth-child(6), td:nth-child(6) { width: 100px; } /* Rep Name */
-        th:nth-child(7), td:nth-child(7) { width: 80px; } /* Follow Up */
-        th:nth-child(8), td:nth-child(8) { width: 100px; } /* Status */
-        th:nth-child(9), td:nth-child(9) { width: 80px; } /* Appt Made */
-        th:nth-child(10), td:nth-child(10) { width: 80px; } /* Appt Date */
-        th:nth-child(11), td:nth-child(11) { width: 200px; } /* Notes */
-        th:nth-child(12), td:nth-child(12) { width: 80px; } /* Actions */
-
-        td {
-            padding: 0;
-            border-bottom: 1px solid #e2e8f0;
-            height: 50px;
-            vertical-align: middle;
-        }
-
-        td.notes-cell {
-            overflow: visible;
-        }
-
-        /* Remove old styling */
-        thead {
-            display: table-header-group;
-        }
-
-        tbody {
-            display: table-row-group;
-        }
-
-        tbody tr {
-            display: table-row;
-        }
-
-        tr {
-            height: 50px;
-        }
-
-        tr:hover {
-            background-color: #f7fafc;
-        }
-
-        .editable-cell {
-            cursor: pointer;
-            display: block;
-            padding: 15px 8px;
-            height: 50px;
-            line-height: 20px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        /* Notes hover tooltip - fixed positioning and wrapping */
-        .notes-cell {
-            position: relative;
-        }
-
-        .notes-cell .editable-cell {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            position: relative;
-            max-width: 180px;
-        }
-
-        .notes-tooltip {
-            position: fixed;
-            display: none;
-            background: #2d3748;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.6;
-            max-width: 400px;
-            min-width: 200px;
-            z-index: 10000;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            word-break: break-word;
-        }
-
-        .notes-tooltip::after {
-            content: '';
-            position: absolute;
-            bottom: var(--arrow-bottom, -6px);
-            top: var(--arrow-top, auto);
-            left: 20px;
-            width: 12px;
-            height: 12px;
-            background: #2d3748;
-            transform: var(--arrow-transform, rotate(45deg));
-        }
-
-        /* Show tooltip on hover */
-        .notes-cell:hover .notes-tooltip.has-content {
-            display: block;
-        }
-
-        .editable-cell:hover {
-            background-color: #edf2f7;
-        }
-
-        .edit-input {
-            position: absolute;
-            top: 1px;
-            left: 1px;
-            right: 1px;
-            bottom: 1px;
-            width: calc(100% - 2px);
-            height: calc(100% - 2px);
-            padding: 13px 8px;
-            border: 2px solid #667eea;
-            border-radius: 5px;
-            font-size: 14px;
-            font-family: inherit;
-            background-color: white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            box-sizing: border-box;
-            margin: 0;
-        }
-
-        .edit-input[type="date"] {
-            cursor: pointer;
-            padding: 10px 8px;
-        }
-
-        textarea.edit-input {
-            min-height: 80px;
-            height: auto;
-            resize: vertical;
-            position: relative;
-        }
-
-        .edit-input:focus {
-            outline: none;
-            border-color: #764ba2;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-        }
-
-        .status-select {
-            padding: 5px 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-            max-width: 120px;
-        }
-
-        .status-select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .action-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .action-btn.archive {
-            background-color: #ef4444;
-            color: white;
-        }
-
-        .action-btn.archive:hover {
-            background-color: #dc2626;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
-        }
-
-        .message {
-            padding: 12px 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .message.success {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-
-        .message.error {
-            background-color: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-
-        /* Back button */
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
             gap: 8px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .btn-archive {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2d3748;
             color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: none;
+            animation: slideInRight 0.3s ease;
         }
 
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateX(-5px);
+        .toast.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
         }
 
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #718096;
+        .toast.error {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
         }
 
-        .empty-state h3 {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .table-header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .filter-controls {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .filter-controls select,
-            .filter-controls input {
-                width: 100%;
-            }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container" style="max-width: 100% !important; width: 100% !important; padding: 0 10px !important;">
-        <button onclick="goBack()" class="back-btn">← Back to Dashboard</button>
+    <div class="container">
+        <h1>Lead Database</h1>
         
-        <div class="header">
-            <h1>Lead Logging System</h1>
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
+            
+            <div class="filters">
+                <select id="repFilter" onchange="filterLeads()">
+                    <option value="">All Reps</option>
+                </select>
+                
+                <select id="statusFilter" onchange="filterLeads()">
+                    <option value="">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Follow Up Later">Follow Up Later</option>
+                    <option value="Not Qualified">Not Qualified</option>
+                    <option value="Dead">Dead (Archived)</option>
+                </select>
+                
+                <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()">
+            </div>
         </div>
 
-        <div class="message" id="message"></div>
+        <div class="table-container">
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Loading leads...</p>
+            </div>
+            
+            <table id="leadsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Date Added</th>
+                        <th>Company Name</th>
+                        <th>Contact Name</th>
+                        <th>Phone Number</th>
+                        <th>Email Address</th>
+                        <th>Rep Name</th>
+                        <th>Status</th>
+                        <th>Follow Up</th>
+                        <th>Appt Made</th>
+                        <th>Appt Date</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody">
+                </tbody>
+            </table>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>No leads found</h3>
+                <p>Add your first lead using the form above.</p>
+            </div>
+        </div>
+    </div>
 
-        <!-- Add New Lead Form -->
-        <div class="form-section" style="max-width: 100% !important; margin: 0 0 20px 0 !important;">
-            <h2 style="margin-bottom: 20px; color: #2d3748;">Add New Lead</h2>
-            <form id="leadForm">
-                <div class="form-grid">
+    <!-- Add/Edit Lead Modal -->
+    <div id="leadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add New Lead</h2>
+            
+            <form id="leadForm" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="companyName">Company Name *</label>
+                    <input type="text" id="companyName" name="companyName" required>
+                </div>
+                
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="companyName">Company Name*</label>
-                        <input type="text" id="companyName" name="companyName" required>
+                        <label for="contactName">Contact Name</label>
+                        <input type="text" id="contactName" name="contactName">
                     </div>
+                    
                     <div class="form-group">
-                        <label for="contactName">Contact Name*</label>
-                        <input type="text" id="contactName" name="contactName" required>
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber">
                     </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emailAddress">Email Address</label>
+                    <input type="email" id="emailAddress" name="emailAddress">
+                </div>
+                
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="phoneNumber">Phone Number*</label>
-                        <input type="tel" id="phoneNumber" name="phoneNumber" required>
+                        <label for="repName">Rep Name *</label>
+                        <input type="text" id="repName" name="repName" required>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="emailAddress">Email Address</label>
-                        <input type="email" id="emailAddress" name="emailAddress">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="Active">Active</option>
+                            <option value="Follow Up Later">Follow Up Later</option>
+                            <option value="Not Qualified">Not Qualified</option>
+                            <option value="Dead">Dead (Archived)</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label for="repName">Rep Name*</label>
-                        <input type="text" id="repName" name="repName" placeholder="Enter your name" required>
-                    </div>
+                </div>
+                
+                <div class="form-row">
                     <div class="form-group">
                         <label for="followUp">Follow Up Date</label>
                         <input type="date" id="followUp" name="followUp">
                     </div>
-                    <div class="form-group full-width">
-                        <label for="notes">Notes</label>
-                        <textarea id="notes" name="notes" placeholder="Add any notes about this lead..."></textarea>
+                    
+                    <div class="form-group">
+                        <label for="appointmentMade">Appointment Made?</label>
+                        <select id="appointmentMade" name="appointmentMade" onchange="toggleAppointmentDate()">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
                     </div>
                 </div>
-                <button type="submit" class="btn" id="submitBtn">Add Lead</button>
-                <button type="button" class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
+                
+                <div class="form-group" id="appointmentDateGroup" style="display: none;">
+                    <label for="appointmentDate">Appointment Date</label>
+                    <input type="date" id="appointmentDate" name="appointmentDate">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Lead</button>
+                </div>
             </form>
         </div>
-
-        <!-- Leads Table -->
-        <div class="table-section" style="max-width: 100% !important; margin: 0 !important;">
-            <div class="table-header">
-                <h2 style="color: #2d3748;">Lead Database</h2>
-                <div class="filter-controls">
-                    <select id="repFilter" onchange="filterLeads()">
-                        <option value="">All Reps</option>
-                    </select>
-                    <select id="statusFilter" onchange="filterLeads()">
-                        <option value="">All Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Not Qualified">Not Qualified</option>
-                        <option value="Follow Up Later">Follow Up Later</option>
-                        <option value="Dead">Dead</option>
-                    </select>
-                    <input type="text" id="searchBox" placeholder="Search leads..." onkeyup="filterLeads()">
-                </div>
-            </div>
-            <div class="loading" id="loading">Loading leads...</div>
-            <div class="table-wrapper">
-                <div class="table-scroll">
-                    <table id="leadsTable">
-                        <colgroup>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                            <col>
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th>Date Added</th>
-                                <th>Company Name</th>
-                                <th>Contact Name</th>
-                                <th>Phone Number</th>
-                                <th>Email Address</th>
-                                <th>Rep Name</th>
-                                <th>Status</th>
-                                <th>Follow Up</th>
-                                <th>Appt Made</th>
-                                <th>Appt Date</th>
-                                <th>Notes</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leadsTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- Notes Modal -->
-    <div id="notesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.7); z-index: 99999;">
-        <div onclick="event.stopPropagation();" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 20px; padding: 50px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); width: 80vw; max-width: 800px; min-width: 600px; min-height: 500px;">
-            <h2 style="margin: 0 0 30px 0; color: #2d3748; font-size: 32px; font-weight: 700; text-align: center;">Edit Notes</h2>
-            <textarea id="modalNotesInput" onclick="event.stopPropagation();" style="width: 100%; min-height: 350px; padding: 20px; border: 2px solid #e2e8f0; border-radius: 15px; font-size: 18px; font-family: inherit; resize: vertical; margin-bottom: 30px; line-height: 1.6; box-sizing: border-box;" placeholder="Add your notes here..."></textarea>
-            <div style="display: flex; gap: 20px; justify-content: center;">
-                <button style="padding: 15px 50px; border-radius: 30px; border: none; font-weight: 600; font-size: 18px; cursor: pointer; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.2)'" onmouseout="this.style.transform=''; this.style.boxShadow=''" onclick="closeNotesModal()">Cancel</button>
-                <button style="padding: 15px 50px; border-radius: 30px; border: none; font-weight: 600; font-size: 18px; cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 20px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''" onclick="saveNotesModal()">Save Notes</button>
-            </div>
-        </div>
-    </div>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
     <script>
-        // Force full width on load
-        window.addEventListener('DOMContentLoaded', function() {
-            // Override any inherited styles
-            document.documentElement.style.width = '100%';
-            document.documentElement.style.maxWidth = '100%';
-            document.body.style.width = '100%';
-            document.body.style.maxWidth = '100%';
-            
-            const container = document.querySelector('.container');
-            if (container) {
-                container.style.maxWidth = '100%';
-                container.style.width = '100%';
-                container.style.padding = '0 10px';
-            }
-            
-            const formSection = document.querySelector('.form-section');
-            if (formSection) {
-                formSection.style.maxWidth = '100%';
-                formSection.style.margin = '0 0 20px 0';
-            }
-            
-            const tableSection = document.querySelector('.table-section');
-            if (tableSection) {
-                tableSection.style.maxWidth = '100%';
-                tableSection.style.margin = '0';
-            }
-        });
-
-        // Back button function
-        function goBack() {
-            window.location.replace('index.html');
-        }
+        // Configuration
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyLLlYEYtYOmspPpXcqF2jXwjsMkn-76WUJjdavJUZmiS_Ed9CFEXgMdr9LW4gDPF4ojA/exec';
         
-        // Google Sheets Integration
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhceN7x_YJGrZVVG9nVU6wqb-lJhxxxY7Z-19ZAaimNLQ201XLOWV8zG73L5W6hrh4/exec';
+        let allLeads = [];
+        let currentEditId = null;
 
-        let leadsData = [];
-        let currentEditingCell = null;
-        let currentNotesLeadId = null;
-        let currentNotesCell = null;
-
-        // Modal functions
-        function openNotesModal(leadId, currentNotes, cell) {
-            console.log('Opening notes modal for lead:', leadId, 'Current notes:', currentNotes);
-            currentNotesLeadId = leadId;
-            currentNotesCell = cell;
-            const modal = document.getElementById('notesModal');
-            const textarea = document.getElementById('modalNotesInput');
-            
-            textarea.value = currentNotes === 'Add notes' ? '' : currentNotes;
-            modal.style.display = 'block';
-            
-            setTimeout(() => {
-                textarea.focus();
-                textarea.select();
-            }, 100);
-        }
-
-        function closeNotesModal() {
-            console.log('Closing notes modal');
-            document.getElementById('notesModal').style.display = 'none';
-            currentNotesLeadId = null;
-            currentNotesCell = null;
-        }
-
-        async function saveNotesModal() {
-            const textarea = document.getElementById('modalNotesInput');
-            const newValue = textarea.value.trim();
-            
-            console.log('Saving notes:', newValue, 'for lead:', currentNotesLeadId);
-            
-            if (currentNotesLeadId && currentNotesCell) {
-                await updateLead(currentNotesLeadId, 'notes', newValue);
-                currentNotesCell.innerHTML = newValue || 'Add notes';
-                
-                if (newValue && newValue.length > 20) {
-                    currentNotesCell.setAttribute('title', newValue);
-                } else {
-                    currentNotesCell.removeAttribute('title');
-                }
-                
-                showMessage('Notes updated successfully!', 'success');
-            }
-            
-            closeNotesModal();
-        }
-
-        // Modal event listeners - set up after DOM is loaded
+        // Initialize the application
         window.addEventListener('DOMContentLoaded', function() {
-            // Remove the close on overlay click functionality
-            // Modal should only close with Cancel or Save buttons
-            
-            // Close modal on Escape key
-            document.addEventListener('keydown', function(e) {
-                const modalOverlay = document.getElementById('notesModal');
-                if (e.key === 'Escape' && modalOverlay && modalOverlay.style.display === 'block') {
-                    closeNotesModal();
-                }
-            });
-            
-            // Save on Ctrl+Enter in textarea
-            const textarea = document.getElementById('modalNotesInput');
-            if (textarea) {
-                textarea.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && e.ctrlKey) {
-                        e.preventDefault();
-                        saveNotesModal();
-                    }
-                });
-            }
-        });
-
-        // Define makeEditable function early
-        function makeEditable(cell, leadId, field) {
-            console.log('makeEditable called:', field, leadId);
-            
-            if (cell.querySelector('input, textarea')) {
-                console.log('Already editing, returning');
-                return;
-            }
-            
-            const currentText = cell.textContent.trim();
-            const isPlaceholder = currentText === 'Set date' || currentText === 'Add notes';
-            
-            console.log('Current text:', currentText, 'Is placeholder:', isPlaceholder);
-            
-            if (field === 'notes') {
-                const oldTitle = cell.getAttribute('title');
-                cell.removeAttribute('title');
-                
-                const textarea = document.createElement('textarea');
-                textarea.className = 'edit-input';
-                textarea.value = isPlaceholder ? '' : currentText;
-                textarea.style.width = '100%';
-                textarea.style.minHeight = '60px';
-                textarea.style.position = 'relative';
-                textarea.style.zIndex = '1000';
-                
-                cell.innerHTML = '';
-                cell.appendChild(textarea);
-                
-                const save = async () => {
-                    const newValue = textarea.value.trim();
-                    console.log('Saving notes:', newValue);
-                    
-                    await updateLead(leadId, field, newValue);
-                    cell.innerHTML = newValue || 'Add notes';
-                    
-                    if (newValue && newValue.length > 20) {
-                        cell.setAttribute('title', newValue);
-                    }
-                };
-                
-                textarea.addEventListener('blur', function() {
-                    save();
-                });
-                
-                textarea.addEventListener('keydown', function(e) {
-                    if (e.key === 'Tab' || (e.key === 'Enter' && e.ctrlKey)) {
-                        e.preventDefault();
-                        save();
-                    }
-                });
-                
-                textarea.focus();
-                return;
-            }
-            
-            const cellRect = cell.getBoundingClientRect();
-            cell.style.width = cellRect.width + 'px';
-            cell.style.height = cellRect.height + 'px';
-            cell.style.position = 'relative';
-            
-            cell.innerHTML = '';
-            
-            if (field === 'followUp' || field === 'appointmentDate') {
-                const input = document.createElement('input');
-                input.className = 'edit-input';
-                input.type = 'date';
-                input.style.width = '100%';
-                input.style.height = '100%';
-                
-                if (!isPlaceholder && currentText) {
-                    const parts = currentText.split('/');
-                    if (parts.length === 3) {
-                        // MM/DD/YY to YYYY-MM-DD
-                        const month = parts[0].padStart(2, '0');
-                        const day = parts[1].padStart(2, '0');
-                        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-                        input.value = `${year}-${month}-${day}`;
-                    }
-                }
-                
-                const restore = () => {
-                    cell.innerHTML = currentText;
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.position = '';
-                };
-                
-                const save = async () => {
-                    console.log('Date input value:', input.value);
-                    
-                    // Send exactly what's in the input (YYYY-MM-DD) or empty string
-                    const valueToSave = input.value || '';
-                    
-                    console.log('Saving date value:', valueToSave);
-                    await updateLead(leadId, field, valueToSave);
-                    
-                    // Display the formatted date
-                    if (valueToSave) {
-                        cell.innerHTML = formatDate(valueToSave);
-                    } else {
-                        cell.innerHTML = 'Set date';
-                    }
-                    
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.position = '';
-                };
-                
-                // Save immediately on change to avoid delays
-                input.addEventListener('change', function() {
-                    save();
-                });
-                
-                input.addEventListener('blur', function(e) {
-                    // Only save on blur if value changed
-                    if (input.value !== input.dataset.originalValue) {
-                        save();
-                    }
-                });
-                
-                // Store original value
-                input.dataset.originalValue = input.value;
-                
-                input.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        restore();
-                    }
-                });
-                
-                cell.appendChild(input);
-                input.focus();
-                
-                setTimeout(() => {
-                    try {
-                        input.showPicker();
-                    } catch (e) {}
-                }, 10);
-                
-            } else {
-                const input = document.createElement('input');
-                input.className = 'edit-input';
-                input.type = 'text';
-                input.value = isPlaceholder ? '' : currentText;
-                input.style.width = '100%';
-                input.style.height = '100%';
-                
-                const restore = () => {
-                    cell.innerHTML = currentText;
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.position = '';
-                };
-                
-                const save = async () => {
-                    const newValue = input.value.trim();
-                    console.log('Saving:', field, newValue);
-                    if (newValue !== currentText || (isPlaceholder && newValue)) {
-                        await updateLead(leadId, field, newValue);
-                        cell.innerHTML = newValue || '';
-                    } else {
-                        cell.innerHTML = currentText;
-                    }
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.position = '';
-                };
-                
-                input.addEventListener('blur', save);
-                input.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        save();
-                    }
-                    if (e.key === 'Escape') {
-                        restore();
-                    }
-                });
-                
-                cell.appendChild(input);
-                input.focus();
-                input.select();
-            }
-        }
-        
-        window.makeEditable = makeEditable;
-
-        // Load leads on page load
-        document.addEventListener('DOMContentLoaded', function() {
             loadLeads();
-            
-            // Load saved rep name if exists
-            const savedRepName = localStorage.getItem('leadLoggerRepName');
-            if (savedRepName) {
-                document.getElementById('repName').value = savedRepName;
-            }
         });
 
-        // Form submission
-        document.getElementById('leadForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const repName = formData.get('repName');
-            
-            // Save rep name for next time
-            localStorage.setItem('leadLoggerRepName', repName);
-            
-            const leadData = {
-                companyName: formData.get('companyName').trim(),
-                contactName: formData.get('contactName').trim(),
-                phoneNumber: formData.get('phoneNumber').trim(),
-                emailAddress: formData.get('emailAddress').trim() || '',
-                repName: repName.trim(),
-                followUp: formData.get('followUp') || '', // Keep as string YYYY-MM-DD
-                notes: formData.get('notes').trim() || ''
-            };
-
-            // Show loading
-            document.getElementById('submitBtn').disabled = true;
-            document.getElementById('submitBtn').textContent = 'Adding...';
-
-            try {
-                // Send to Google Sheets
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
-                    body: JSON.stringify({
-                        action: 'addLead',
-                        lead: leadData
-                    })
-                });
-
-                const result = await response.json();
-                if (result.status === 'success') {
-                    showMessage('Lead added successfully!', 'success');
-                    resetForm();
-                    
-                    // Keep rep name filled
-                    document.getElementById('repName').value = repName;
-                    
-                    await loadLeads(); // Reload the leads
-                } else {
-                    throw new Error(result.message || 'Failed to add lead');
-                }
-                
-            } catch (error) {
-                showMessage('Error adding lead. Please try again.', 'error');
-                console.error('Error:', error);
-            } finally {
-                document.getElementById('submitBtn').disabled = false;
-                document.getElementById('submitBtn').textContent = 'Add Lead';
-            }
-        });
-
-        // Load and display leads from Google Sheets
+        // Load leads from Google Sheet
         async function loadLeads() {
-            document.getElementById('loading').style.display = 'block';
-            
             try {
-                const response = await fetch(SCRIPT_URL + '?action=getActiveLeads');
+                console.log('Fetching leads from:', WEB_APP_URL);
+                
+                const response = await fetch(`${WEB_APP_URL}?action=getLeads`);
                 const data = await response.json();
                 
+                console.log('Response data:', data);
+                
                 if (data.status === 'success') {
-                    // Filter out any test data
-                    leadsData = (data.leads || []).filter(lead => {
-                        // Skip if company name starts with TEST or is empty
-                        return lead.companyName && 
-                               !lead.companyName.toUpperCase().startsWith('TEST') &&
-                               lead.companyName.trim() !== '';
-                    });
-                    
-                    displayLeads();
+                    allLeads = data.leads || [];
+                    displayLeads(allLeads);
+                    updateRepFilter();
                 } else {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Failed to load leads');
                 }
             } catch (error) {
                 console.error('Error loading leads:', error);
-                showMessage('Error loading leads. Please refresh the page.', 'error');
-            } finally {
-                document.getElementById('loading').style.display = 'none';
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                showToast('Error loading leads. Please check console.', 'error');
             }
         }
 
-        // Display leads in table
-        function displayLeads() {
+        // Display leads in the table
+        function displayLeads(leads) {
             const tbody = document.getElementById('leadsTableBody');
+            const table = document.getElementById('leadsTable');
+            const loading = document.getElementById('loadingState');
+            const empty = document.getElementById('emptyState');
+            
             tbody.innerHTML = '';
+            loading.style.display = 'none';
             
-            // Get unique rep names for filter
-            const uniqueReps = [...new Set(leadsData.map(lead => lead.repName))].filter(Boolean).sort();
-            updateRepFilter(uniqueReps);
-            
-            if (leadsData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="12" class="empty-state"><h3>No leads found</h3><p>Add your first lead using the form above.</p></td></tr>';
+            if (leads.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
                 return;
             }
             
-            // Add each lead as a row
-            leadsData.forEach(lead => {
-                if (lead.status !== 'Dead') {
-                    const row = createLeadRow(lead);
-                    tbody.appendChild(row);
-                    
-                    // Add click handlers after row is added to DOM
-                    const leadId = lead.id || lead.iD || lead.ID;
-                    
-                    // Add click handlers for editable cells
-                    row.querySelectorAll('.editable-cell').forEach((cell, index) => {
-                        const parent = cell.parentElement;
-                        const cellIndex = parent.cellIndex;
-                        
-                        console.log('Setting up cell:', index, 'Parent cellIndex:', cellIndex, 'Text:', cell.textContent.substring(0, 20));
-                        
-                        if (cellIndex === 1) { // Company Name
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'companyName');
-                        } else if (cellIndex === 2) { // Contact Name
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'contactName');
-                        } else if (cellIndex === 3) { // Phone Number
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'phoneNumber');
-                        } else if (cellIndex === 4) { // Email
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'emailAddress');
-                        } else if (cellIndex === 5) { // Rep Name
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'repName');
-                        } else if (cellIndex === 7) { // Follow Up (now after Status)
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'followUp');
-                        } else if (cellIndex === 9) { // Appt Date
-                            cell.onclick = () => window.makeEditable(cell, leadId, 'appointmentDate');
-                        } else if (cellIndex === 10) { // Notes
-                            console.log('Setting notes click handler for cell:', cell);
-                            cell.onclick = function(e) {
-                                e.stopPropagation();
-                                console.log('Opening notes modal for lead:', leadId);
-                                const currentNotes = cell.textContent.trim();
-                                openNotesModal(leadId, currentNotes, cell);
-                            };
-                        }
-                    });
-                }
+            table.style.display = 'table';
+            empty.style.display = 'none';
+            
+            leads.forEach(lead => {
+                const row = createLeadRow(lead);
+                tbody.appendChild(row);
             });
         }
 
-        // Create table row for a lead
+        // Create a table row for a lead
         function createLeadRow(lead) {
-            const leadId = lead.id || lead.iD || lead.ID;
             const row = document.createElement('tr');
             
-            // Format dates - check for invalid dates
+            // Format dates
             const dateAdded = formatDate(lead.dateAdded);
-            let followUpDate = '';
-            let apptDate = '';
+            const followUp = formatDate(lead.followUp);
+            const appointmentDate = formatDate(lead.appointmentDate);
             
-            // Check for invalid/default dates
-            if (lead.followUp && lead.followUp !== '' && lead.followUp !== '1969-12-31') {
-                followUpDate = formatDate(lead.followUp);
-            }
+            // Get status class
+            const statusClass = getStatusClass(lead.status);
             
-            if (lead.appointmentDate && lead.appointmentDate !== '' && lead.appointmentDate !== '1969-12-31') {
-                apptDate = formatDate(lead.appointmentDate);
-            }
+            // Appointment made class
+            const appointmentClass = lead.appointmentMade === 'Yes' ? 'appointment-yes' : 'appointment-no';
             
             row.innerHTML = `
-                <td style="padding: 8px; text-align: center;">${dateAdded}</td>
-                <td><div class="editable-cell">${sanitizeText(lead.companyName) || ''}</div></td>
-                <td><div class="editable-cell">${sanitizeText(lead.contactName) || ''}</div></td>
-                <td><div class="editable-cell">${sanitizeText(lead.phoneNumber) || ''}</div></td>
-                <td><div class="editable-cell">${sanitizeText(lead.emailAddress) || ''}</div></td>
-                <td><div class="editable-cell">${sanitizeText(lead.repName) || ''}</div></td>
-                <td style="padding: 8px;">
-                    <select class="status-select" onchange="updateStatus(this, ${leadId})">
-                        <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
-                        <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
-                        <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
-                        <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead (Archive)</option>
-                    </select>
-                </td>
-                <td><div class="editable-cell">${followUpDate || 'Set date'}</div></td>
-                <td style="padding: 8px;">
-                    <select class="status-select" onchange="updateAppointmentMade(this, ${leadId})">
-                        <option value="No" ${(lead.appointmentMade || 'No') === 'No' ? 'selected' : ''}>No</option>
-                        <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
-                    </select>
-                </td>
-                <td><div class="editable-cell">${apptDate || 'Set date'}</div></td>
-                <td class="notes-cell">
-                    <div class="editable-cell" 
-                         style="cursor: pointer;"
-                         ${lead.notes && lead.notes.length > 20 ? `title="${sanitizeText(lead.notes)}"` : ''}>
-                        ${sanitizeText(lead.notes) || 'Add notes'}
+                <td>${dateAdded}</td>
+                <td><strong>${lead.companyName || ''}</strong></td>
+                <td>${lead.contactName || ''}</td>
+                <td>${lead.phoneNumber || ''}</td>
+                <td>${lead.emailAddress || ''}</td>
+                <td>${lead.repName || ''}</td>
+                <td><span class="status-badge ${statusClass}">${lead.status || 'Active'}</span></td>
+                <td>${followUp}</td>
+                <td class="${appointmentClass}">${lead.appointmentMade || 'No'}</td>
+                <td>${appointmentDate}</td>
+                <td>${lead.notes || ''}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-small btn-edit" onclick="editLead(${lead.id})">Edit</button>
+                        <button class="btn btn-small btn-archive" onclick="archiveLead(${lead.id})">Archive</button>
                     </div>
-                </td>
-                <td style="padding: 8px;">
-                    <button class="action-btn archive" onclick="archiveLead(${leadId})">Archive</button>
                 </td>
             `;
             
             return row;
         }
 
-        // Sanitize text to remove newlines and trim
-        function sanitizeText(text) {
-            if (!text) return '';
-            return String(text).replace(/[\r\n]+/g, ' ').trim();
+        // Get status badge class
+        function getStatusClass(status) {
+            const statusMap = {
+                'Active': 'status-active',
+                'Follow Up Later': 'status-followup',
+                'Not Qualified': 'status-notqualified',
+                'Dead': 'status-dead'
+            };
+            return statusMap[status] || 'status-active';
         }
 
-        // Update rep filter dropdown
-        function updateRepFilter(reps) {
-            const repFilter = document.getElementById('repFilter');
-            repFilter.innerHTML = '<option value="">All Reps</option>';
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return '';
             
-            reps.forEach(rep => {
-                const option = document.createElement('option');
-                option.value = rep;
-                option.textContent = rep;
-                repFilter.appendChild(option);
-            });
-        }
-
-        // Format date to MM/DD/YY - Keep it simple, no timezone conversion
-        function formatDate(dateValue) {
-            if (!dateValue || dateValue === '') return '';
-            
-            // Handle YYYY-MM-DD format directly (from date picker)
-            if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-                const parts = dateValue.split('-');
-                const month = parseInt(parts[1], 10);
-                const day = parseInt(parts[2], 10);
-                const year = parts[0].substring(2);
-                return `${month}/${day}/${year}`;
-            }
-            
-            // Handle MM/DD/YY or MM/DD/YYYY format (already formatted)
-            if (typeof dateValue === 'string' && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(dateValue)) {
-                return dateValue;
-            }
-            
-            // Don't try to parse invalid dates
-            return '';
-        }
-
-        // Make cell editable - final stable approach
-        function makeEditable(cell, leadId, field) {
-            // Check if already editing
-            if (cell.querySelector('input, textarea')) return;
-            
-            const currentText = cell.textContent.trim();
-            const isPlaceholder = currentText === 'Set date' || currentText === 'Add notes';
-            
-            // Save dimensions
-            const cellRect = cell.getBoundingClientRect();
-            cell.style.width = cellRect.width + 'px';
-            cell.style.height = cellRect.height + 'px';
-            cell.style.position = 'relative';
-            
-            // Hide text but keep it for spacing
-            const textSpan = document.createElement('span');
-            textSpan.textContent = currentText;
-            textSpan.style.visibility = 'hidden';
-            
-            if (field === 'followUp' || field === 'appointmentDate') {
-                const input = document.createElement('input');
-                input.className = 'edit-input';
-                input.type = 'date';
-                
-                if (!isPlaceholder && currentText) {
-                    const parts = currentText.split('/');
-                    if (parts.length === 3) {
-                        const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
-                        const month = parts[0].padStart(2, '0');
-                        const day = parts[1].padStart(2, '0');
-                        input.value = `${year}-${month}-${day}`;
-                    }
-                }
-                
-                const restore = () => {
-                    if (input.value === '') {
-                        // If cleared, show "Set date"
-                        cell.textContent = 'Set date';
-                    } else {
-                        cell.textContent = currentText;
-                    }
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.position = '';
-                };
-                
-                const save = async () => {
-                    // Always save the value, even if empty
-                    await updateLead(leadId, field, input.value);
-                    if (input.value) {
-                        cell.textContent = formatDate(input.value);
-                    } else {
-                        cell.textContent = 'Set date';
-                    }
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.position = '';
-                };
-                
-                // Listen for both change and input events to catch clearing
-                input.addEventListener('change', function() {
-                    save();
-                });
-                
-                input.addEventListener('input', function() {
-                    if (input.value === '') {
-                        save();
-                    }
-                });
-                input.addEventListener('blur', function(e) {
-                    setTimeout(() => {
-                        if (!cell.contains(document.activeElement)) {
-                            restore();
-                        }
-                    }, 200);
-                });
-                
-                input.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        restore();
-                    }
-                });
-                
-                cell.innerHTML = '';
-                cell.appendChild(textSpan);
-                cell.appendChild(input);
-                input.focus();
-                
-                // Open picker
-                setTimeout(() => {
-                    try {
-                        input.showPicker();
-                    } catch (e) {}
-                }, 10);
-                
-            } else {
-                const isNotes = field === 'notes';
-                const input = document.createElement(isNotes ? 'textarea' : 'input');
-                input.className = 'edit-input';
-                input.value = isPlaceholder ? '' : currentText;
-                
-                if (isNotes) {
-                    input.style.position = 'relative';
-                    cell.style.height = 'auto';
-                    cell.style.minHeight = cellRect.height + 'px';
-                }
-                
-                const restore = () => {
-                    cell.textContent = currentText;
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.minHeight = '';
-                    cell.style.position = '';
-                };
-                
-                const save = async () => {
-                    const newValue = input.value.trim();
-                    if (newValue !== currentText || (isPlaceholder && newValue)) {
-                        await updateLead(leadId, field, newValue);
-                        // Update cell with new content including tooltip if needed
-                        if (isNotes) {
-                            cell.textContent = newValue || 'Add notes';
-                            
-                            // Update parent td with tooltip
-                            const parentTd = cell.parentElement;
-                            parentTd.setAttribute('data-notes', newValue);
-                            
-                            // Remove old tooltip if exists
-                            const oldTooltip = parentTd.querySelector('.notes-tooltip');
-                            if (oldTooltip) oldTooltip.remove();
-                            
-                            // Add new tooltip
-                            const tooltip = document.createElement('div');
-                            tooltip.className = 'notes-tooltip';
-                            if (newValue && newValue.length > 20) {
-                                tooltip.classList.add('has-content');
-                                tooltip.textContent = newValue;
-                            }
-                            parentTd.appendChild(tooltip);
-                        } else {
-                            cell.textContent = newValue || '';
-                        }
-                    } else {
-                        cell.textContent = currentText;
-                    }
-                    cell.style.width = '';
-                    cell.style.height = '';
-                    cell.style.minHeight = '';
-                    cell.style.position = '';
-                };
-                
-                input.addEventListener('blur', save);
-                input.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' && (!isNotes || e.ctrlKey)) {
-                        e.preventDefault();
-                        save();
-                    }
-                    if (e.key === 'Escape') {
-                        restore();
-                    }
-                });
-                
-                cell.innerHTML = '';
-                cell.appendChild(textSpan);
-                cell.appendChild(input);
-                input.focus();
-                if (!isNotes) {
-                    input.select();
-                }
-            }
-        }
-
-        // Update status
-        async function updateStatus(selectElement, leadId) {
-            const newStatus = selectElement.value;
-            
-            if (newStatus === 'Dead') {
-                if (confirm('Setting status to "Dead" will archive this lead. Continue?')) {
-                    await updateLead(leadId, 'status', newStatus);
-                } else {
-                    // Reset to previous value
-                    const lead = leadsData.find(l => (l.id || l.iD) === leadId);
-                    if (lead) {
-                        selectElement.value = lead.status;
-                    }
-                }
-            } else {
-                await updateLead(leadId, 'status', newStatus);
-            }
-        }
-
-        // Update appointment made status
-        async function updateAppointmentMade(selectElement, leadId) {
-            await updateLead(leadId, 'appointmentMade', selectElement.value);
-        }
-
-        // Update lead data
-        async function updateLead(leadId, field, value) {
             try {
-                const updates = {};
-                // Explicitly handle empty strings for dates
-                updates[field] = value === '' ? '' : value;
-                
-                console.log('Updating lead:', leadId, field, value); // Debug log
-                
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
-                    body: JSON.stringify({
-                        action: 'updateLead',
-                        leadId: leadId,
-                        updates: updates
-                    })
-                });
-                
-                const result = await response.json();
-                if (result.status === 'success') {
-                    showMessage('Lead updated successfully!', 'success');
-                    
-                    // Update local data
-                    const lead = leadsData.find(l => (l.id || l.iD) === leadId);
-                    if (lead) {
-                        lead[field] = value;
-                    }
-                    
-                    // If status changed to Dead, reload to remove from list
-                    if (field === 'status' && value === 'Dead') {
-                        setTimeout(() => loadLeads(), 500);
-                    }
+                // Handle both date formats
+                if (dateString.includes('T')) {
+                    // ISO format
+                    return new Date(dateString).toLocaleDateString();
                 } else {
-                    throw new Error(result.message || 'Failed to update lead');
+                    // yyyy-MM-dd format
+                    const [year, month, day] = dateString.split('-');
+                    return new Date(year, month - 1, day).toLocaleDateString();
                 }
-            } catch (error) {
-                console.error('Error updating lead:', error);
-                showMessage('Error updating lead. Please try again.', 'error');
-                // Reload to restore original state
-                setTimeout(() => loadLeads(), 1000);
-            }
-        }
-
-        // Archive lead
-        async function archiveLead(leadId) {
-            if (confirm('Archive this lead? This will remove it from the active list.')) {
-                await updateLead(leadId, 'status', 'Dead');
+            } catch (e) {
+                return dateString;
             }
         }
 
         // Filter leads
         function filterLeads() {
             const repFilter = document.getElementById('repFilter').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
-            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchInput').value.toLowerCase();
             
-            const rows = document.querySelectorAll('#leadsTableBody tr');
+            const filteredLeads = allLeads.filter(lead => {
+                const matchRep = !repFilter || (lead.repName && lead.repName.toLowerCase().includes(repFilter));
+                const matchStatus = !statusFilter || lead.status === statusFilter;
+                const matchSearch = !searchFilter || 
+                    (lead.companyName && lead.companyName.toLowerCase().includes(searchFilter)) ||
+                    (lead.contactName && lead.contactName.toLowerCase().includes(searchFilter)) ||
+                    (lead.phoneNumber && lead.phoneNumber.includes(searchFilter)) ||
+                    (lead.emailAddress && lead.emailAddress.toLowerCase().includes(searchFilter));
+                
+                return matchRep && matchStatus && matchSearch;
+            });
             
-            rows.forEach(row => {
-                // Skip empty state row
-                if (row.querySelector('.empty-state')) return;
-                
-                const cells = row.querySelectorAll('td');
-                const repName = cells[5]?.textContent.toLowerCase() || '';
-                const status = row.querySelector('.status-select')?.value.toLowerCase() || '';
-                
-                let showRow = true;
-                
-                // Apply filters
-                if (repFilter && repName !== repFilter) showRow = false;
-                if (statusFilter && status !== statusFilter) showRow = false;
-                
-                // Search filter
-                if (searchTerm && showRow) {
-                    let matchFound = false;
-                    cells.forEach(cell => {
-                        if (cell.textContent.toLowerCase().includes(searchTerm)) {
-                            matchFound = true;
-                        }
-                    });
-                    if (!matchFound) showRow = false;
-                }
-                
-                row.style.display = showRow ? '' : 'none';
+            displayLeads(filteredLeads);
+        }
+
+        // Update rep filter dropdown
+        function updateRepFilter() {
+            const repFilter = document.getElementById('repFilter');
+            const reps = [...new Set(allLeads.map(lead => lead.repName).filter(Boolean))];
+            
+            repFilter.innerHTML = '<option value="">All Reps</option>';
+            reps.sort().forEach(rep => {
+                repFilter.innerHTML += `<option value="${rep}">${rep}</option>`;
             });
         }
 
-        // Reset form
-        function resetForm() {
+        // Modal functions
+        function openAddLeadModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Lead';
             document.getElementById('leadForm').reset();
-            // Keep rep name
-            const savedRepName = localStorage.getItem('leadLoggerRepName');
-            if (savedRepName) {
-                document.getElementById('repName').value = savedRepName;
+            document.getElementById('status').value = 'Active';
+            document.getElementById('appointmentMade').value = 'No';
+            toggleAppointmentDate();
+            document.getElementById('leadModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('leadModal').style.display = 'none';
+            document.getElementById('leadForm').reset();
+            currentEditId = null;
+        }
+
+        // Toggle appointment date field
+        function toggleAppointmentDate() {
+            const appointmentMade = document.getElementById('appointmentMade').value;
+            const dateGroup = document.getElementById('appointmentDateGroup');
+            dateGroup.style.display = appointmentMade === 'Yes' ? 'block' : 'none';
+        }
+
+        // Handle form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const leadData = Object.fromEntries(formData.entries());
+            
+            try {
+                let response;
+                
+                if (currentEditId) {
+                    // Update existing lead
+                    response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'updateLead',
+                            leadId: currentEditId,
+                            updates: leadData
+                        })
+                    });
+                } else {
+                    // Add new lead
+                    response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addLead',
+                            lead: leadData
+                        })
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
+                    closeModal();
+                    loadLeads(); // Reload the leads
+                } else {
+                    throw new Error(result.message || 'Failed to save lead');
+                }
+            } catch (error) {
+                console.error('Error saving lead:', error);
+                showToast('Error saving lead: ' + error.message, 'error');
             }
         }
 
-        // Show message
-        function showMessage(text, type) {
-            const messageEl = document.getElementById('message');
-            messageEl.textContent = text;
-            messageEl.className = `message ${type}`;
-            messageEl.style.display = 'block';
+        // Edit lead
+        function editLead(leadId) {
+            const lead = allLeads.find(l => l.id == leadId);
+            if (!lead) return;
+            
+            currentEditId = leadId;
+            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            
+            // Populate form
+            document.getElementById('companyName').value = lead.companyName || '';
+            document.getElementById('contactName').value = lead.contactName || '';
+            document.getElementById('phoneNumber').value = lead.phoneNumber || '';
+            document.getElementById('emailAddress').value = lead.emailAddress || '';
+            document.getElementById('repName').value = lead.repName || '';
+            document.getElementById('status').value = lead.status || 'Active';
+            document.getElementById('followUp').value = lead.followUp || '';
+            document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
+            document.getElementById('appointmentDate').value = lead.appointmentDate || '';
+            document.getElementById('notes').value = lead.notes || '';
+            
+            toggleAppointmentDate();
+            document.getElementById('leadModal').style.display = 'block';
+        }
+
+        // Archive lead
+        async function archiveLead(leadId) {
+            if (!confirm('Are you sure you want to archive this lead?')) return;
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'archiveLead',
+                        leadId: leadId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast('Lead archived successfully!', 'success');
+                    loadLeads();
+                } else {
+                    throw new Error(result.message || 'Failed to archive lead');
+                }
+            } catch (error) {
+                console.error('Error archiving lead:', error);
+                showToast('Error archiving lead: ' + error.message, 'error');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
             
             setTimeout(() => {
-                messageEl.style.display = 'none';
+                toast.style.display = 'none';
             }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('leadModal');
+            if (event.target === modal) {
+                closeModal();
+            }
         }
     </script>
 </body>
