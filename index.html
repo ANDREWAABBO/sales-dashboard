@@ -655,10 +655,14 @@
             pdfModal.innerHTML = `
                 <div class="pdf-header">
                     <h3>Abbondanza About Us - How We Work</h3>
-                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                    <div>
+                        <button class="btn btn-secondary" onclick="printPresentation()" style="margin-right: 10px;">🖨️ Print</button>
+                        <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                    </div>
                 </div>
                 <div class="pdf-viewer">
-                    <iframe src="https://docs.google.com/presentation/d/${slidesId}/preview?rm=minimal" 
+                    <iframe id="presentationFrame" 
+                            src="https://docs.google.com/presentation/d/${slidesId}/preview?rm=minimal" 
                             allowfullscreen="true" 
                             mozallowfullscreen="true" 
                             webkitallowfullscreen="true">
@@ -668,6 +672,14 @@
             
             overlay.appendChild(pdfModal);
             document.body.appendChild(overlay);
+        }
+
+        // Function to print presentation
+        function printPresentation() {
+            // Open the PDF export URL in a new window for printing
+            const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';
+            const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;
+            window.open(pdfUrl, '_blank');
         }
 
         // Function to close PDF viewer
