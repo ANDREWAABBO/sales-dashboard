@@ -13,13 +13,13 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            background: #1e3a8a; /* Deep blue to match lead logger */
             min-height: 100vh;
             padding: 20px;
             color: #333;
         }
 
-        /* Company Switcher */
+        /* Company Switcher - keeping vibrant with glow */
         .company-switcher {
             display: flex;
             justify-content: center;
@@ -51,9 +51,16 @@
         }
 
         .company-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             border-color: transparent;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5),
+                        0 0 60px rgba(59, 130, 246, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); }
+            to { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); }
         }
 
         .company-logo {
@@ -74,7 +81,7 @@
         /* Row Separator */
         .row-separator {
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
             margin: 40px 0;
             animation: shimmer 3s infinite;
         }
@@ -113,13 +120,13 @@
             font-size: 3em;
             font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: glow 3s ease-in-out infinite alternate;
+            animation: titleGlow 3s ease-in-out infinite alternate;
         }
 
-        @keyframes glow {
+        @keyframes titleGlow {
             from { filter: brightness(1); }
             to { filter: brightness(1.3); }
         }
@@ -153,7 +160,7 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
             transform: scaleX(0);
             transform-origin: left;
             transition: transform 0.3s ease;
@@ -171,7 +178,7 @@
         .card-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
             border-radius: 15px;
             display: flex;
             align-items: center;
@@ -202,7 +209,7 @@
         .btn {
             display: inline-block;
             padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e3a8a;
             color: white;
             text-decoration: none;
             border-radius: 30px;
@@ -234,7 +241,8 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px rgba(30, 58, 138, 0.4);
+            background: #1e40af;
         }
 
         .btn:disabled {
@@ -256,9 +264,13 @@
         }
 
         .btn-dropdown {
-            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            background: #2563eb;
             padding: 12px 20px;
             min-width: 140px;
+        }
+
+        .btn-dropdown:hover {
+            background: #1d4ed8;
         }
 
         .dropdown-content {
@@ -292,7 +304,7 @@
         }
 
         .dropdown-content a:hover {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
             color: white;
             padding-left: 30px;
         }
@@ -385,7 +397,7 @@
         .form-group input:focus,
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #1e3a8a;
         }
 
         .form-group small {
@@ -402,11 +414,11 @@
         }
 
         .pricing-summary {
-            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             padding: 15px;
             border-radius: 10px;
             margin: 15px 0;
-            border: 2px solid #667eea;
+            border: 2px solid #1e3a8a;
         }
 
         .pricing-summary h4 {
@@ -416,7 +428,7 @@
 
         .pricing-display {
             font-size: 16px;
-            color: #667eea;
+            color: #1e3a8a;
             font-weight: 600;
         }
 
@@ -427,13 +439,21 @@
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            background: #64748b;
             flex: 1;
         }
 
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1e3a8a;
             flex: 2;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
         }
 
         .success-popup {
@@ -459,7 +479,7 @@
             width: 20px;
             height: 20px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #1e3a8a;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -467,6 +487,15 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Logout button */
+        .logout-btn {
+            background: #dc2626 !important;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c !important;
         }
     </style>
     <script>
@@ -536,8 +565,8 @@
             const header = document.querySelector('.header');
             const logoutBtn = document.createElement('button');
             logoutBtn.textContent = 'Logout';
-            logoutBtn.className = 'btn';
-            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 10px 20px;';
+            logoutBtn.className = 'btn logout-btn';
+            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;';
             logoutBtn.onclick = logout;
             header.appendChild(logoutBtn);
         }
@@ -594,7 +623,7 @@
             pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
             
             if (additionalDeliveryFee > 0) {
-                pricingText += `<br><small style="color: #667eea;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee}</small>`;
+                pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee}</small>`;
             }
             
             document.getElementById('pricingSummary').innerHTML = pricingText;
