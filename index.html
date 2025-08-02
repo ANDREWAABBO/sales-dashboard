@@ -1515,4 +1515,108 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="fridgeCount">Number of Fridges *</label>
-                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="update
+                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
+                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
+                        <option value="395">$395/month</option>
+                        <option value="495">$495/month</option>
+                        <option value="595">$595/month</option>
+                        <option value="695">$695/month</option>
+                        <option value="795" selected>$795/month</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Delivery Fee Field -->
+            <div class="form-group">
+                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
+                <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
+                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. This amount will be added to the base setup fee.</small>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Pricing Summary</h4>
+                <div class="pricing-display" id="pricingSummary">
+                    Monthly Total: $795/month<br>
+                    Setup Fee: $295 (one-time)
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
+                <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Agreement Modal -->
+    <div id="serviceAgreementModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Service Agreement</h3>
+            
+            <div class="form-group">
+                <label for="serviceCompanyName">Company Name *</label>
+                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="serviceContactName">Contact Name (Optional)</label>
+                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="servicePreparedBy">Your Name *</label>
+                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="servicePreparedByPhone">Your Phone *</label>
+                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="servicePreparedByEmail">Your Email *</label>
+                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="serviceFridgeCount">Number of Fridges *</label>
+                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="subsidyAmount">Company Subsidy Per Item *</label>
+                    <input type="number" id="subsidyAmount" name="subsidyAmount" min="0" step="0.50" value="0" required onchange="updateServiceAgreementPricing()">
+                    <small>Amount company pays per item</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="employeePrice">Employee Price Per Item *</label>
+                <input type="number" id="employeePrice" name="employeePrice" min="0" step="0.50" value="3.50" required onchange="updateServiceAgreementPricing()">
+                <small>Price employees pay per item (after subsidy)</small>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Agreement Summary</h4>
+                <div class="pricing-display" id="servicePricingSummary">
+                    Number of Fridges: 1<br>
+                    Employee Price per Item: $3.50<br>
+                    Company Subsidy per Item: $0.00
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
+                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
