@@ -377,6 +377,35 @@
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             z-index: 10001;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        }
+        
+        /* Mobile-specific modal adjustments */
+        @media (max-width: 768px) {
+            .modal {
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                transform: none;
+                width: auto;
+                max-height: none;
+                height: calc(100vh - 20px);
+                padding: 20px;
+                overflow-y: auto;
+            }
+            
+            .modal-buttons {
+                position: sticky;
+                bottom: -20px;
+                background: white;
+                padding: 20px 0 0 0;
+                margin: 0 -20px -20px -20px;
+                padding-left: 20px;
+                padding-right: 20px;
+                box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+            }
         }
 
         .modal h3 {
