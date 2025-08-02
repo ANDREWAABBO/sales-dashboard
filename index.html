@@ -1,39 +1,4 @@
-// Function to view a specific proposal PDF
-        function viewProposalPDF(fileId, fileName) {
-            // Close the proposals list modal first
-            closePDFViewer();
-            
-            // Create a new modal for viewing the PDF
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
-            overlay.style.display = 'block';
-            
-            const pdfModal = document.createElement('div');
-            pdfModal.className = 'pdf-modal';
-            
-            // Use Google's viewer for the PDF
-            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-            
-            pdfModal.innerHTML = `
-                <div class="pdf-header">
-                    <h3>${fileName}</h3>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button class="btn btn-primary" 
-                                onclick="location.reload();" 
-                                style="padding: 10px 20px;">
-                            ← Back to Dashboard
-                        </button>
-                        <button class="btn btn-secondary" 
-                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
-                                style="padding: 10px 20px;">
-                            📥 Download
-                        </button>
-                    </div>
-                </div>
-                <div class="pdf-viewer">
-                    <iframe src="${viewerUrl}" 
-                            width="100%" 
-                            height<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1403,18 +1368,11 @@
         
         // Function to filter proposals based on search
         function filterProposals() {
-            const searchTerm = document.getElementById('proposalSearch').value.toLowerCase().trim();
+            const searchTerm = document.getElementById('proposalSearch').value.toLowerCase();
             const proposalsList = document.getElementById('proposalsList');
             
             if (!window.allProposals || window.allProposals.length === 0) return;
             
-            // If search is empty, show all proposals
-            if (searchTerm === '') {
-                displayProposals(window.allProposals);
-                return;
-            }
-            
-            // Filter proposals based on search term
             const filteredProposals = window.allProposals.filter(proposal => 
                 proposal.name.toLowerCase().includes(searchTerm)
             );
