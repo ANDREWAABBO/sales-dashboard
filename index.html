@@ -1144,8 +1144,14 @@
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             
-            // Try to load proposals
-            loadProposalsFromDrive();
+            // Check if we already have proposals loaded
+            if (window.allProposals && window.allProposals.length > 0) {
+                // Use existing proposals
+                displayProposals(window.allProposals);
+            } else {
+                // Load proposals from scratch
+                loadProposalsFromDrive();
+            }
         }
         
         // Function to load proposals from Google Drive using JSONP
@@ -1310,7 +1316,7 @@
                     <h3>${fileName}</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <button class="btn btn-primary" 
-                                onclick="closePDFViewer(); openProposalViewer();" 
+                                onclick="closePDFViewer(); setTimeout(() => openProposalViewer(), 100);" 
                                 style="padding: 10px 20px;">
                             ← Back to Library
                         </button>
@@ -1319,7 +1325,6 @@
                                 style="padding: 10px 20px;">
                             📥 Download
                         </button>
-                        <button class="close-btn" onclick="closePDFViewer()">✕</button>
                     </div>
                 </div>
                 <div class="pdf-viewer">
