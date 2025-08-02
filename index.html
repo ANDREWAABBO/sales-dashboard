@@ -370,22 +370,22 @@
             transform: translate(-50%, -50%);
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            max-width: 600px; /* Increased from 500px */
-            width: 90%;
-            max-height: 90vh; /* Increased from 80vh */
+            padding: 25px 35px; /* Reduced vertical padding */
+            max-width: 750px; /* Increased from 600px */
+            width: 95%;
+            max-height: 98vh; /* Nearly full height */
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             z-index: 10001;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
         }
         
         /* Make modal even larger on bigger screens */
         @media (min-width: 1200px) {
             .modal {
-                max-width: 700px;
-                max-height: 95vh;
-                padding: 40px;
+                max-width: 800px;
+                max-height: 98vh;
+                padding: 30px 40px;
             }
         }
         
@@ -534,7 +534,7 @@
         .modal-buttons {
             display: flex;
             gap: 15px;
-            margin-top: 25px;
+            margin-top: 20px; /* Reduced from 25px */
         }
 
         .btn-secondary {
@@ -1015,6 +1015,8 @@
             if (overlay) {
                 overlay.remove();
             }
+            // Clear the proposals cache when closing
+            window.allProposals = null;
         }
 
         // Proposal Generator Functions
@@ -1191,6 +1193,9 @@
 
         // Function to open Proposal Viewer
         function openProposalViewer() {
+            // Clear any existing proposals cache
+            window.allProposals = null;
+            
             // Create modal overlay
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
@@ -1227,14 +1232,10 @@
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             
-            // Check if we already have proposals loaded
-            if (window.allProposals && window.allProposals.length > 0) {
-                // Use existing proposals
-                displayProposals(window.allProposals);
-            } else {
-                // Load proposals from scratch
+            // Always load fresh proposals
+            setTimeout(() => {
                 loadProposalsFromDrive();
-            }
+            }, 100);
         }
         
         // Function to load proposals from Google Drive using JSONP
