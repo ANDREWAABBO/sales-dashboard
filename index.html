@@ -1145,6 +1145,9 @@
         // Make functions globally available
         window.openProposalGenerator = openProposalGenerator;
         window.openProposalViewer = openProposalViewer;
+        window.loadProposalsFromDrive = loadProposalsFromDrive;
+        window.displayProposals = displayProposals;
+        window.viewProposalPDF = viewProposalPDF;
         window.generateServiceAgreement = generateServiceAgreement;
         window.closeModal = closeModal;
         window.generateProposal = generateProposal;
@@ -1219,7 +1222,7 @@
                 <div class="card-icon">📄</div>
                 <h2>Proposal Copies</h2>
                 <p>Access generated proposals, templates, and proposal resources.</p>
-                <button class="btn" onclick="window.open('https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3', '_blank')">View Proposals</button>
+                <button class="btn" onclick="openProposalViewer()">View Proposals</button>
             </div>
 
             <div class="card">
