@@ -934,17 +934,22 @@
             document.getElementById('proposalModal').style.display = 'block';
             updatePricingSummary();
             
-            // Re-attach event listener when modal opens
-            setTimeout(() => {
-                const generateBtn = document.getElementById('generateBtn');
-                if (generateBtn) {
-                    // Remove any existing listeners
-                    generateBtn.removeEventListener('click', generateProposal);
-                    // Add the listener
-                    generateBtn.addEventListener('click', generateProposal);
-                    console.log('Event listener attached to generate button');
-                }
-            }, 100);
+            // Ensure event listener is attached
+            const generateBtn = document.getElementById('generateBtn');
+            if (generateBtn) {
+                // Clone the button to remove all existing event listeners
+                const newBtn = generateBtn.cloneNode(true);
+                generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+                
+                // Add fresh event listener
+                newBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    generateProposal();
+                });
+                
+                console.log('Fresh event listener attached to generate button');
+            }
         }
 
         function closeModal(modalId) {
@@ -1570,7 +1575,7 @@
             
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
+                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>
             </div>
         </div>
     </div>
