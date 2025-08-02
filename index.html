@@ -810,12 +810,6 @@
             if (checkAuth()) {
                 addLogoutButton();
                 
-                // Add event listener for the generate button
-                const generateBtn = document.getElementById('generateBtn');
-                if (generateBtn) {
-                    generateBtn.addEventListener('click', generateProposal);
-                }
-                
                 // Check if should show install prompt
                 checkInstallPrompt();
             }
@@ -1021,8 +1015,14 @@
 
         // Proposal Generator Functions
         function openProposalGenerator() {
-            document.getElementById('proposalModal').style.display = 'block';
-            updatePricingSummary();
+            const modal = document.getElementById('proposalModal');
+            if (modal) {
+                modal.style.display = 'block';
+                updatePricingSummary();
+            } else {
+                console.error('Proposal modal not found');
+                alert('Error: Could not open proposal generator. Please refresh the page.');
+            }
         }
 
         function closeModal(modalId) {
