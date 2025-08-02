@@ -558,6 +558,101 @@
             margin: 0;
         }
 
+        /* Logout button */
+        .logout-btn {
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Add to Home Screen Prompt - Updated styling */
+        .install-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10002;
+            max-width: 450px;
+            width: 90%;
+            animation: fadeInScale 0.3s ease;
+        }
+
+        @keyframes fadeInScale {
+            from { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .install-prompt h4 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .install-prompt p {
+            margin: 0 0 20px 0;
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .install-prompt ol {
+            margin: 0 0 25px 20px;
+            padding: 0;
+            font-size: 15px;
+            color: #4a5568;
+            text-align: left;
+        }
+
+        .install-prompt ol li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .install-prompt-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .install-prompt-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #718096;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .install-prompt-checkbox input {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
         /* PDF Modal Styles */
         .pdf-modal {
             position: fixed;
@@ -697,20 +792,29 @@
 
         // Add to Home Screen functionality
         function checkInstallPrompt() {
-            // Check if on iOS/iPadOS
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            // Simplified iPad detection
+            const isIPad = navigator.userAgent.match(/iPad/i) || 
+                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             
             // Check if already installed (running in standalone mode)
-            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+            const isStandalone = window.navigator.standalone === true;
             
             // Check if user has dismissed the prompt before
             const isDismissed = localStorage.getItem('installPromptDismissed') === 'true';
             
-            // Show prompt if on iOS, not standalone, and not dismissed
-            if (isIOS && !isStandalone && !isDismissed) {
+            console.log('Install prompt check:', { 
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                isIPad, 
+                isStandalone, 
+                isDismissed 
+            });
+            
+            // Show prompt if on iPad, not standalone, and not dismissed
+            if (isIPad && !isStandalone && !isDismissed) {
                 setTimeout(() => {
                     showInstallPrompt();
-                }, 2000); // Show after 2 seconds
+                }, 2000);
             }
         }
 
@@ -1054,6 +1158,174 @@
             }
         }
 
+        // Function to open Proposal Viewer
+        function openProposalViewer() {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'pdf-modal';
+            
+            // This is a static list for now - you'll need to update this with a dynamic solution
+            const proposals = [
+                { name: 'Loading proposals...', id: 'loading' }
+            ];
+            
+            modal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>Proposal Library</h3>
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                </div>
+                <div class="pdf-viewer" style="padding: 20px;">
+                    <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
+                        <div style="text-align: center; padding: 40px;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 20px; background: #f7fafc; border-radius: 10px; border: 2px solid #e2e8f0;">
+                        <h4 style="margin: 0 0 10px 0; color: #2d3748;">📁 Manual Access</h4>
+                        <p style="color: #718096; margin: 0 0 15px 0; font-size: 14px;">
+                            If proposals don't load automatically, you can access them directly:
+                        </p>
+                        <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3', '_blank')">
+                            Open Google Drive Folder
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Try to load proposals
+            loadProposalsFromDrive();
+        }
+        
+        // Function to load proposals from Google Drive
+        async function loadProposalsFromDrive() {
+            // UPDATE THIS WITH YOUR NEW DEPLOYMENT URL
+            const proposalsUrl = 'YOUR_NEW_DEPLOYMENT_URL_HERE';
+            
+            try {
+                const response = await fetch(proposalsUrl + '?action=getProposals');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Sort proposals by modified date (newest first)
+                    const sortedProposals = (data.proposals || []).sort((a, b) => {
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                    });
+                    displayProposals(sortedProposals);
+                } else {
+                    throw new Error(data.message || 'Failed to load proposals');
+                }
+            } catch (error) {
+                console.error('Error loading proposals:', error);
+                
+                // Show error message with fallback
+                const proposalsList = document.getElementById('proposalsList');
+                if (proposalsList) {
+                    proposalsList.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #e53e3e; margin-bottom: 20px;">Unable to load proposals automatically.</p>
+                            <button class="btn btn-primary" onclick="window.open('https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3', '_blank')">
+                                Open Google Drive Folder
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Function to display proposals in the modal
+        function displayProposals(proposals) {
+            const proposalsList = document.getElementById('proposalsList');
+            if (!proposalsList) return;
+            
+            if (proposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p>No proposals found in the folder.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            proposalsList.innerHTML = proposals.map(proposal => `
+                <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'"
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #2d3748;">${proposal.name}</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">
+                                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-small btn-primary" 
+                                    onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')"
+                                    style="padding: 8px 16px; font-size: 14px;">
+                                👁️ View
+                            </button>
+                            <button class="btn btn-small btn-secondary" 
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')"
+                                    style="padding: 8px 16px; font-size: 14px;">
+                                📥 Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Function to view a specific proposal PDF
+        function viewProposalPDF(fileId, fileName) {
+            // Close the proposals list modal first
+            closePDFViewer();
+            
+            // Create a new modal for viewing the PDF
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            // Use Google's viewer for the PDF
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>${fileName}</h3>
+                    <div>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="margin-right: 10px;">
+                            📥 Download
+                        </button>
+                        <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                    </div>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe src="${viewerUrl}" 
+                            width="100%" 
+                            height="100%"
+                            style="border: none;"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
         // Service Agreement Generator
         function generateServiceAgreement() {
             document.getElementById('serviceAgreementModal').style.display = 'block';
@@ -1315,6 +1587,73 @@
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
                 <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Agreement Modal -->
+    <div id="serviceAgreementModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Service Agreement</h3>
+            
+            <div class="form-group">
+                <label for="serviceCompanyName">Company Name *</label>
+                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="serviceContactName">Contact Name (Optional)</label>
+                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="servicePreparedBy">Your Name *</label>
+                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="servicePreparedByPhone">Your Phone *</label>
+                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="servicePreparedByEmail">Your Email *</label>
+                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="serviceFridgeCount">Number of Fridges *</label>
+                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="subsidyAmount">Company Subsidy Per Item *</label>
+                    <input type="number" id="subsidyAmount" name="subsidyAmount" min="0" step="0.50" value="0" required onchange="updateServiceAgreementPricing()">
+                    <small>Amount company pays per item</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="employeePrice">Employee Price Per Item *</label>
+                <input type="number" id="employeePrice" name="employeePrice" min="0" step="0.50" value="3.50" required onchange="updateServiceAgreementPricing()">
+                <small>Price employees pay per item (after subsidy)</small>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Agreement Summary</h4>
+                <div class="pricing-display" id="servicePricingSummary">
+                    Number of Fridges: 1<br>
+                    Employee Price per Item: $3.50<br>
+                    Company Subsidy per Item: $0.00
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
+                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>
             </div>
         </div>
     </div>
