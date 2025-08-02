@@ -668,8 +668,9 @@
         }
     </style>
     <script>
-        // Your deployed Web App URL - UPDATE THIS WITH YOUR NEW URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
+        // Your deployed Web App URLs - KEEP THEM SEPARATE
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec'; // For proposal generation
+        const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec'; // For viewing proposals
 
         // Company switcher function
         function switchCompany(company) {
@@ -1156,7 +1157,7 @@
         
         // Function to load proposals from Google Drive using JSONP
         async function loadProposalsFromDrive() {
-            const proposalsUrl = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
+            const proposalsUrl = PROPOSALS_API_URL; // Use the separate API for proposals
             
             console.log('Starting to load proposals...');
             
