@@ -1206,17 +1206,41 @@
             loadProposalsFromDrive();
         }
         
-        // Function to load proposals from Google Drive
+         // Function to load proposals from Google Drive
         async function loadProposalsFromDrive() {
             // UPDATE THIS WITH YOUR NEW DEPLOYMENT URL
             const proposalsUrl = 'https://script.google.com/macros/s/AKfycbxbTcwiIdIluNRcpjDkQJr1EQLKbl0En8P1_v2uWrekKgakFQoQTCeKm0I4UccKDNQ6rQ/exec';
             
             try {
-                const response = await fetch(proposalsUrl + '?action=getProposals');
-                const data = await response.json();
+                // Create a callback function name
+                const callbackName = 'proposalsCallback_' + Date.now();
+                
+                // Create a promise to handle the JSONP response
+                const promise = new Promise((resolve, reject) => {
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        resolve(data);
+                    };
+                    
+                    // Set a timeout
+                    setTimeout(() => {
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }, 10000);
+                });
+                
+                // Create and append the script tag
+                const script = document.createElement('script');
+                script.src = `${proposalsUrl}?action=getProposals&callback=${callbackName}`;
+                document.body.appendChild(script);
+                
+                // Wait for the response
+                const data = await promise;
+                
+                // Remove the script tag
+                document.body.removeChild(script);
                 
                 if (data.status === 'success') {
-                    // Sort proposals by modified date (newest first)
                     const sortedProposals = (data.proposals || []).sort((a, b) => {
                         return new Date(b.modifiedTime) - new Date(a.modifiedTime);
                     });
