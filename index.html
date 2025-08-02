@@ -1206,28 +1206,29 @@
             loadProposalsFromDrive();
         }
         
-         // Function to load proposals from Google Drive
+       // Function to load proposals from Google Drive
         async function loadProposalsFromDrive() {
             // UPDATE THIS WITH YOUR NEW DEPLOYMENT URL
-            const proposalsUrl = 'https://script.google.com/macros/s/AKfycbxbTcwiIdIluNRcpjDkQJr1EQLKbl0En8P1_v2uWrekKgakFQoQTCeKm0I4UccKDNQ6rQ/exec';
+            const proposalsUrl = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
+            
+            console.log('Starting to load proposals...');
             
             try {
                 // Create a callback function name
                 const callbackName = 'proposalsCallback_' + Date.now();
+                console.log('Callback name:', callbackName);
                 
                 // Create a promise to handle the JSONP response
                 const promise = new Promise((resolve, reject) => {
                     window[callbackName] = (data) => {
+                        console.log('Received data:', data);
                         delete window[callbackName];
                         resolve(data);
                     };
                     
-                    // Set a timeout
+                    // Set a timeout - increased to 20 seconds
                     setTimeout(() => {
-                        delete window[callbackName];
-                        reject(new Error('Request timeout'));
-                    }, 10000);
-                });
+                        console.log('Request timed out');
                 
                 // Create and append the script tag
                 const script = document.createElement('script');
