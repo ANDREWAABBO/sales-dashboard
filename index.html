@@ -1303,13 +1303,18 @@
             pdfModal.innerHTML = `
                 <div class="pdf-header">
                     <h3>${fileName}</h3>
-                    <div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closePDFViewer(); openProposalViewer();" 
+                                style="padding: 10px 20px;">
+                            ← Back to Library
+                        </button>
                         <button class="btn btn-secondary" 
                                 onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
-                                style="margin-right: 10px;">
+                                style="padding: 10px 20px;">
                             📥 Download
                         </button>
-                        <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                        <button class="close-btn" onclick="closePDFViewer()">✕</button>
                     </div>
                 </div>
                 <div class="pdf-viewer">
