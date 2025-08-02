@@ -1160,6 +1160,7 @@
             const proposalsUrl = PROPOSALS_API_URL; // Use the separate API for proposals
             
             console.log('Starting to load proposals...');
+            console.log('Using URL:', proposalsUrl);
             
             try {
                 // Create a callback function name
@@ -1191,7 +1192,15 @@
                 script.onerror = () => {
                     console.error('Failed to load script');
                     delete window[callbackName];
-                    reject(new Error('Failed to load script'));
+                    const proposalsList = document.getElementById('proposalsList');
+                    if (proposalsList) {
+                        proposalsList.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
+                            </div>
+                        `;
+                    }
                 };
                 
                 document.body.appendChild(script);
