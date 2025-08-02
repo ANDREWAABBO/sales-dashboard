@@ -504,78 +504,6 @@
         /* Add to Home Screen Prompt */
         .install-prompt {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            z-index: 10002;
-            max-width: 400px;
-            width: 90%;
-            animation: slideUp 0.5s ease;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
-
-        @keyframes slideDownOut {
-            from { transform: translateX(-50%) translateY(0); opacity: 1; }
-            to { transform: translateX(-50%) translateY(100px); opacity: 0; }
-        }
-
-        .install-prompt h4 {
-            margin: 0 0 10px 0;
-            color: #2d3748;
-            font-size: 18px;
-        }
-
-        .install-prompt p {
-            margin: 0 0 15px 0;
-            color: #718096;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .install-prompt-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .install-prompt-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: #718096;
-        }
-
-        .install-prompt-checkbox input {
-            margin: 0;
-        }
-
-        /* Logout button */
-        .logout-btn {
-            background: white !important;
-            color: black !important;
-            font-weight: 700 !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
-        }
-
-        .logout-btn:hover {
-            background: #f0f0f0 !important;
-            transform: scale(1.05) !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
-        }
-
-        /* Add to Home Screen Prompt - Updated styling */
-        .install-prompt {
-            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -723,17 +651,25 @@
             background: #c53030;
             transform: scale(1.05);
         }
+
+        /* Logout button */
+        .logout-btn {
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
     </style>
     <script>
-            console.log('Script loading started');
-    
-    // Test if functions are being defined
-    window.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded');
-        console.log('openProposalViewer exists?', typeof window.openProposalViewer);
-    });
-        // Your deployed Web App URL - UPDATE THIS IF YOUR DEPLOYMENT CHANGED
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
+        // Your deployed Web App URL - UPDATE THIS WITH YOUR NEW URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
 
         // Company switcher function
         function switchCompany(company) {
@@ -859,10 +795,10 @@
                 }
                 
                 // Animate out
-                prompt.style.animation = 'slideDownOut 0.5s ease';
+                prompt.style.animation = 'fadeInScale 0.3s ease reverse';
                 setTimeout(() => {
                     prompt.remove();
-                }, 500);
+                }, 300);
             }
         }
 
@@ -1213,9 +1149,8 @@
             loadProposalsFromDrive();
         }
         
-       // Function to load proposals from Google Drive
+        // Function to load proposals from Google Drive using JSONP
         async function loadProposalsFromDrive() {
-            // UPDATE THIS WITH YOUR NEW DEPLOYMENT URL
             const proposalsUrl = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
             
             console.log('Starting to load proposals...');
@@ -1236,14 +1171,29 @@
                     // Set a timeout - increased to 20 seconds
                     setTimeout(() => {
                         console.log('Request timed out');
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }, 20000);
+                });
                 
                 // Create and append the script tag
                 const script = document.createElement('script');
-                script.src = `${proposalsUrl}?action=getProposals&callback=${callbackName}`;
+                const url = `${proposalsUrl}?action=getProposals&callback=${callbackName}`;
+                console.log('Request URL:', url);
+                script.src = url;
+                
+                script.onerror = () => {
+                    console.error('Failed to load script');
+                    delete window[callbackName];
+                    reject(new Error('Failed to load script'));
+                };
+                
                 document.body.appendChild(script);
                 
                 // Wait for the response
                 const data = await promise;
+                
+                console.log('Got response data:', data);
                 
                 // Remove the script tag
                 document.body.removeChild(script);
@@ -1381,8 +1331,8 @@
             const employeePrice = parseInt(document.getElementById('employeePrice').value) || 3.50;
             
             let pricingText = `Number of Fridges: ${fridgeCount}<br>`;
-            pricingText += `Employee Price per Item: ${employeePrice.toFixed(2)}<br>`;
-            pricingText += `Company Subsidy per Item: ${subsidyAmount.toFixed(2)}`;
+            pricingText += `Employee Price per Item: $${employeePrice.toFixed(2)}<br>`;
+            pricingText += `Company Subsidy per Item: $${subsidyAmount.toFixed(2)}`;
             
             document.getElementById('servicePricingSummary').innerHTML = pricingText;
         }
@@ -1445,27 +1395,6 @@
                 event.target.style.display = 'none';
             }
         }
-
-        // Make functions globally available
-        window.openProposalGenerator = openProposalGenerator;
-        window.openProposalViewer = openProposalViewer;
-        window.loadProposalsFromDrive = loadProposalsFromDrive;
-        window.displayProposals = displayProposals;
-        window.viewProposalPDF = viewProposalPDF;
-        window.generateServiceAgreement = generateServiceAgreement;
-        window.closeModal = closeModal;
-        window.generateProposal = generateProposal;
-        window.updatePricingSummary = updatePricingSummary;
-        window.openPDFViewer = openPDFViewer;
-        window.openProductListPDF = openProductListPDF;
-        window.downloadProductListPDF = downloadProductListPDF;
-        window.printProductListPDF = printProductListPDF;
-        window.downloadPresentationPDF = downloadPresentationPDF;
-        window.printPresentation = printPresentation;
-        window.closePDFViewer = closePDFViewer;
-        window.dismissInstallPrompt = dismissInstallPrompt;
-        window.switchCompany = switchCompany;
-        window.logout = logout;
     </script>
 </head>
 <body>
@@ -1586,108 +1515,4 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="fridgeCount">Number of Fridges *</label>
-                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
-                </div>
-                
-                <div class="form-group">
-                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
-                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
-                        <option value="395">$395/month</option>
-                        <option value="495">$495/month</option>
-                        <option value="595">$595/month</option>
-                        <option value="695">$695/month</option>
-                        <option value="795" selected>$795/month</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- ADDED: Delivery Fee Field -->
-            <div class="form-group">
-                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
-                <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
-                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. This amount will be added to the base setup fee.</small>
-            </div>
-            
-            <div class="pricing-summary">
-                <h4>Pricing Summary</h4>
-                <div class="pricing-display" id="pricingSummary">
-                    Monthly Total: $795/month<br>
-                    Setup Fee: $295 (one-time)
-                </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Service Agreement Modal -->
-    <div id="serviceAgreementModal" class="modal-overlay">
-        <div class="modal">
-            <h3>Generate Service Agreement</h3>
-            
-            <div class="form-group">
-                <label for="serviceCompanyName">Company Name *</label>
-                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="serviceContactName">Contact Name (Optional)</label>
-                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="servicePreparedBy">Your Name *</label>
-                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="servicePreparedByPhone">Your Phone *</label>
-                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="servicePreparedByEmail">Your Email *</label>
-                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="serviceFridgeCount">Number of Fridges *</label>
-                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
-                </div>
-                
-                <div class="form-group">
-                    <label for="subsidyAmount">Company Subsidy Per Item *</label>
-                    <input type="number" id="subsidyAmount" name="subsidyAmount" min="0" step="0.50" value="0" required onchange="updateServiceAgreementPricing()">
-                    <small>Amount company pays per item</small>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="employeePrice">Employee Price Per Item *</label>
-                <input type="number" id="employeePrice" name="employeePrice" min="0" step="0.50" value="3.50" required onchange="updateServiceAgreementPricing()">
-                <small>Price employees pay per item (after subsidy)</small>
-            </div>
-            
-            <div class="pricing-summary">
-                <h4>Agreement Summary</h4>
-                <div class="pricing-display" id="servicePricingSummary">
-                    Number of Fridges: 1<br>
-                    Employee Price per Item: $3.50<br>
-                    Company Subsidy per Item: $0.00
-                </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="update
