@@ -1112,32 +1112,26 @@
             const modal = document.createElement('div');
             modal.className = 'pdf-modal';
             
-            // This is a static list for now - you'll need to update this with a dynamic solution
-            const proposals = [
-                { name: 'Loading proposals...', id: 'loading' }
-            ];
-            
             modal.innerHTML = `
                 <div class="pdf-header">
                     <h3>Proposal Library</h3>
                     <button class="close-btn" onclick="closePDFViewer()">Close</button>
                 </div>
                 <div class="pdf-viewer" style="padding: 20px;">
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="proposalSearch" placeholder="🔍 Search by company name..." 
+                               style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #e2e8f0; 
+                                      border-radius: 10px; transition: all 0.3s ease;"
+                               onkeyup="filterProposals()"
+                               onfocus="this.style.borderColor='#1e3a8a'"
+                               onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    
                     <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
                         <div style="text-align: center; padding: 40px;">
                             <div class="loading-spinner"></div>
                             <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>
                         </div>
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding: 20px; background: #f7fafc; border-radius: 10px; border: 2px solid #e2e8f0;">
-                        <h4 style="margin: 0 0 10px 0; color: #2d3748;">📁 Manual Access</h4>
-                        <p style="color: #718096; margin: 0 0 15px 0; font-size: 14px;">
-                            If proposals don't load automatically, you can access them directly:
-                        </p>
-                        <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3', '_blank')">
-                            Open Google Drive Folder
-                        </button>
                     </div>
                 </div>
             `;
@@ -1214,10 +1208,8 @@
                 if (proposalsList) {
                     proposalsList.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
-                            <p style="color: #e53e3e; margin-bottom: 20px;">Unable to load proposals automatically.</p>
-                            <button class="btn btn-primary" onclick="window.open('https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3', '_blank')">
-                                Open Google Drive Folder
-                            </button>
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals automatically.</p>
+                            <p style="color: #718096;">Please check your connection and try again.</p>
                         </div>
                     `;
                 }
@@ -1229,6 +1221,9 @@
             const proposalsList = document.getElementById('proposalsList');
             if (!proposalsList) return;
             
+            // Store proposals globally for filtering
+            window.allProposals = proposals;
+            
             if (proposals.length === 0) {
                 proposalsList.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: #718096;">
@@ -1239,31 +1234,54 @@
             }
             
             proposalsList.innerHTML = proposals.map(proposal => `
-                <div style="background: white; padding: 20px; border-radius: 10px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"
-                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'"
-                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h4 style="margin: 0 0 5px 0; color: #2d3748;">${proposal.name}</h4>
-                            <p style="margin: 0; color: #718096; font-size: 12px;">
-                                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.name}</h4>
+                            <p style="margin: 0; color: #718096; font-size: 14px;">
+                                📅 Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
                             </p>
                         </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-small btn-primary" 
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" 
                                     onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')"
-                                    style="padding: 8px 16px; font-size: 14px;">
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
                                 👁️ View
                             </button>
-                            <button class="btn btn-small btn-secondary" 
+                            <button class="btn btn-secondary" 
                                     onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')"
-                                    style="padding: 8px 16px; font-size: 14px;">
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
                                 📥 Download
                             </button>
                         </div>
                     </div>
                 </div>
             `).join('');
+        }
+        
+        // Function to filter proposals based on search
+        function filterProposals() {
+            const searchTerm = document.getElementById('proposalSearch').value.toLowerCase();
+            const proposalsList = document.getElementById('proposalsList');
+            
+            if (!window.allProposals || window.allProposals.length === 0) return;
+            
+            const filteredProposals = window.allProposals.filter(proposal => 
+                proposal.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredProposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>
+                    </div>
+                `;
+            } else {
+                displayProposals(filteredProposals);
+            }
         }
         
         // Function to view a specific proposal PDF
