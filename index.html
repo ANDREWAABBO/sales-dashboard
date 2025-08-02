@@ -1011,23 +1011,6 @@
         function openProposalGenerator() {
             document.getElementById('proposalModal').style.display = 'block';
             updatePricingSummary();
-            
-            // Ensure event listener is attached
-            const generateBtn = document.getElementById('generateBtn');
-            if (generateBtn) {
-                // Clone the button to remove all existing event listeners
-                const newBtn = generateBtn.cloneNode(true);
-                generateBtn.parentNode.replaceChild(newBtn, generateBtn);
-                
-                // Add fresh event listener
-                newBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    generateProposal();
-                });
-                
-                console.log('Fresh event listener attached to generate button');
-            }
         }
 
         function closeModal(modalId) {
@@ -1078,11 +1061,23 @@
             }
         }
 
-        async function generateProposal() {
+        async function generateProposal(event) {
+            // Prevent any default behavior
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             console.log('Generate Proposal function called!');
             
             const submitBtn = document.getElementById('generateBtn');
             const originalText = submitBtn.innerHTML;
+            
+            // Check if already processing
+            if (submitBtn.disabled) {
+                console.log('Already processing, ignoring click');
+                return;
+            }
             
             // Disable button and show loading
             submitBtn.disabled = true;
