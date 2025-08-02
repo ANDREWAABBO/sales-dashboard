@@ -725,6 +725,13 @@
         }
     </style>
     <script>
+            console.log('Script loading started');
+    
+    // Test if functions are being defined
+    window.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded');
+        console.log('openProposalViewer exists?', typeof window.openProposalViewer);
+    });
         // Your deployed Web App URL - UPDATE THIS IF YOUR DEPLOYMENT CHANGED
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
 
