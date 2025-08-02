@@ -1312,8 +1312,9 @@
                 if (proposalsList) {
                     proposalsList.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
-                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals automatically.</p>
-                            <p style="color: #718096;">Please check your connection and try again.</p>
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
                         </div>
                     `;
                 }
@@ -1409,7 +1410,7 @@
                     <h3>${fileName}</h3>
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <button class="btn btn-primary" 
-                                onclick="closePDFViewer(); setTimeout(() => openProposalViewer(), 100);" 
+                                onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);" 
                                 style="padding: 10px 20px;">
                             ← Back to Library
                         </button>
