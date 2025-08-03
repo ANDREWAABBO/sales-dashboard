@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Team Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,7 +16,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #1e3a8a; /* Deep blue to match lead logger */
+            background: #1e3a8a;
             min-height: 100vh;
             padding: 20px;
             color: #333;
@@ -125,19 +128,12 @@
             font-size: 3em;
             font-weight: 700;
             margin-bottom: 10px;
-            background: linear-gradient(180deg, 
-                #009246 0%, 
-                #009246 40%, 
-                #ffffff 40%, 
-                #ffffff 60%, 
-                #ce2b37 60%, 
-                #ce2b37 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            color: white;
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
             animation: titleGlow 3s ease-in-out infinite alternate;
-            background-size: 100% 100%;
         }
 
         @keyframes titleGlow {
@@ -374,19 +370,103 @@
             transform: translate(-50%, -50%);
             background: white;
             border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
+            padding: 25px 35px;
+            max-width: 750px;
+            width: 95%;
+            max-height: 98vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             z-index: 10001;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        @media (min-width: 1200px) {
+            .modal {
+                max-width: 800px;
+                max-height: 98vh;
+                padding: 30px 40px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                transform: none;
+                width: 100%;
+                max-width: none;
+                max-height: 100vh;
+                height: 100vh;
+                padding: 20px;
+                padding-bottom: 100px;
+                overflow-y: auto;
+                border-radius: 0;
+            }
+            
+            .modal h3 {
+                font-size: 24px;
+                margin-bottom: 25px;
+            }
+            
+            .form-group label {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+            
+            .form-group input,
+            .form-group select {
+                font-size: 18px;
+                padding: 15px;
+                height: 50px;
+            }
+            
+            .form-group small {
+                font-size: 14px;
+            }
+            
+            .pricing-summary {
+                padding: 20px;
+                margin: 20px 0;
+            }
+            
+            .pricing-display {
+                font-size: 18px;
+                line-height: 1.6;
+            }
+            
+            .modal-buttons {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+                padding: 15px;
+                margin: 0;
+                box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
+                display: flex;
+                gap: 10px;
+                border-top: 1px solid #e2e8f0;
+            }
+            
+            .modal-buttons .btn {
+                font-size: 18px;
+                padding: 15px;
+                height: 50px;
+            }
+            
+            .modal-overlay {
+                -webkit-tap-highlight-color: transparent;
+            }
         }
 
         .modal h3 {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #2d3748;
             text-align: center;
+            font-size: 22px;
         }
 
         .form-group {
@@ -451,7 +531,7 @@
         .modal-buttons {
             display: flex;
             gap: 15px;
-            margin-top: 25px;
+            margin-top: 20px;
         }
 
         .btn-secondary {
@@ -505,13 +585,84 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Logout button */
-        .logout-btn {
-            background: #dc2626 !important;
+        /* Add to Home Screen Prompt */
+        .install-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10002;
+            max-width: 450px;
+            width: 90%;
+            animation: fadeInScale 0.3s ease;
         }
 
-        .logout-btn:hover {
-            background: #b91c1c !important;
+        @keyframes fadeInScale {
+            from { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.9);
+            }
+            to { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .install-prompt h4 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        .install-prompt p {
+            margin: 0 0 20px 0;
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .install-prompt ol {
+            margin: 0 0 25px 20px;
+            padding: 0;
+            font-size: 15px;
+            color: #4a5568;
+            text-align: left;
+        }
+
+        .install-prompt ol li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .install-prompt-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .install-prompt-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #718096;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .install-prompt-checkbox input {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         /* PDF Modal Styles */
@@ -561,6 +712,13 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
+        .sheets-viewer iframe {
+            transform: scale(0.9);
+            transform-origin: top left;
+            width: 111%;
+            height: 111%;
+        }
+
         .close-btn {
             background: #e53e3e;
             color: white;
@@ -576,36 +734,97 @@
             background: #c53030;
             transform: scale(1.05);
         }
+
+        /* Logout button */
+        .logout-btn {
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Search Container Styles */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 15px 50px 15px 15px;
+            font-size: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input-wrapper input:focus {
+            border-color: #1e3a8a;
+            outline: none;
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e2e8f0;
+            border: none;
+            color: #718096;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: none;
+        }
+
+        .clear-search-btn:hover {
+            background: #cbd5e0;
+            color: #4a5568;
+        }
+
+        .clear-search-btn.visible {
+            display: block;
+        }
     </style>
     <script>
-        // Your deployed Web App URL - UPDATE THIS IF YOUR DEPLOYMENT CHANGED
+        // Your deployed Web App URLs - KEEP THEM SEPARATE
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
+        const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
 
         // Company switcher function
         function switchCompany(company) {
-            // Update active button
             document.querySelectorAll('.company-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             const clickedBtn = event.target.closest('.company-btn');
             clickedBtn.classList.add('active');
             
-            // Update dashboard title
             const title = document.getElementById('dashboard-title');
             if (company === 'abbondanza') {
                 title.textContent = 'Abbondanza Sales Force';
-                // In the future, you can update links/content specific to Abbondanza here
             } else if (company === 'quantum') {
                 title.textContent = 'Quantum Solutions Dashboard';
-                // In the future, you can update links/content specific to Quantum here
                 alert('Quantum Solutions dashboard coming soon!');
             }
         }
 
         // Password protection
-        const DASHBOARD_PASSWORD = 'abbondanza2024'; // Change this to your desired password
+        const DASHBOARD_PASSWORD = 'abbondanza2024';
         
-        // Check if user is logged in
         function checkAuth() {
             const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
             if (!isLoggedIn) {
@@ -621,26 +840,70 @@
             return true;
         }
 
-        // Logout function
         function logout() {
             sessionStorage.removeItem('dashboardAuth');
             location.reload();
         }
 
-        // Initialize on page load
         window.addEventListener('DOMContentLoaded', function() {
             if (checkAuth()) {
                 addLogoutButton();
-                
-                // Add event listener for the generate button
-                const generateBtn = document.getElementById('generateBtn');
-                if (generateBtn) {
-                    generateBtn.addEventListener('click', generateProposal);
-                }
+                checkInstallPrompt();
             }
         });
 
-        // Add logout button to header
+        function checkInstallPrompt() {
+            const isIPad = navigator.userAgent.match(/iPad/i) || 
+                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isStandalone = window.navigator.standalone === true;
+            const isDismissed = localStorage.getItem('installPromptDismissed') === 'true';
+            
+            if (isIPad && !isStandalone && !isDismissed) {
+                setTimeout(() => {
+                    showInstallPrompt();
+                }, 2000);
+            }
+        }
+
+        function showInstallPrompt() {
+            const promptDiv = document.createElement('div');
+            promptDiv.className = 'install-prompt';
+            promptDiv.innerHTML = `
+                <h4>📱 Add to Home Screen</h4>
+                <p>Install Abbondanza Sales Force on your iPad for quick access:</p>
+                <ol style="margin: 0 0 15px 20px; padding: 0; font-size: 13px; color: #718096;">
+                    <li>Tap the <strong>Share</strong> button <span style="font-size: 16px;">⬆️</span></li>
+                    <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+                    <li>Tap <strong>Add</strong> to install</li>
+                </ol>
+                <div class="install-prompt-buttons">
+                    <button class="btn btn-primary" onclick="dismissInstallPrompt(false)" style="flex: 1;">Got it!</button>
+                    <button class="btn btn-secondary" onclick="window.open('https://support.apple.com/guide/ipad/bookmark-favorite-webpages-ipadb0f2a1cb/ipados', '_blank')" style="flex: 1;">Help</button>
+                </div>
+                <div class="install-prompt-checkbox">
+                    <input type="checkbox" id="dontShowAgain" />
+                    <label for="dontShowAgain">Don't show this again</label>
+                </div>
+            `;
+            
+            document.body.appendChild(promptDiv);
+        }
+
+        function dismissInstallPrompt(permanent) {
+            const prompt = document.querySelector('.install-prompt');
+            if (prompt) {
+                const dontShowAgain = document.getElementById('dontShowAgain');
+                if (dontShowAgain && dontShowAgain.checked) {
+                    localStorage.setItem('installPromptDismissed', 'true');
+                }
+                
+                prompt.style.animation = 'fadeInScale 0.3s ease reverse';
+                setTimeout(() => {
+                    prompt.remove();
+                }, 300);
+            }
+        }
+
         function addLogoutButton() {
             const header = document.querySelector('.header');
             const logoutBtn = document.createElement('button');
@@ -651,36 +914,33 @@
             header.appendChild(logoutBtn);
         }
 
-        // Function to open Product List PDF
         function openProductListPDF() {
-            // Create modal overlay
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
             overlay.style.display = 'block';
             
-            // Create PDF modal
             const pdfModal = document.createElement('div');
             pdfModal.className = 'pdf-modal';
             
-            // Convert Google Sheets URL to PDF export URL with better formatting
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            // PDF export with formatting parameters - portrait mode with minimal margins
-            const pdfViewUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=true&fitw=true&gridlines=true`;
+            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
             
             pdfModal.innerHTML = `
                 <div class="pdf-header">
                     <h3>Abbondanza Product List</h3>
                     <div>
-                        <button class="btn btn-secondary" onclick="downloadProductListPDF()" style="margin-right: 10px;">📥 Download PDF</button>
-                        <button class="btn btn-secondary" onclick="printProductListPDF()" style="margin-right: 10px;">🖨️ Print</button>
+                        <button class="btn btn-secondary" onclick="window.open('${pdfUrl}', '_blank')" style="margin-right: 10px;">📥 Download PDF</button>
+                        <button class="btn btn-secondary" onclick="const w = window.open('${pdfUrl}', '_blank'); w.print();" style="margin-right: 10px;">🖨️ Print</button>
                         <button class="close-btn" onclick="closePDFViewer()">Close</button>
                     </div>
                 </div>
                 <div class="pdf-viewer">
-                    <iframe src="https://docs.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(pdfViewUrl)}" 
-                           width="100%" 
-                           height="100%"
-                           style="border: none;">
+                    <iframe src="${viewerUrl}" 
+                            width="100%" 
+                            height="100%"
+                            style="border: none;"
+                            allowfullscreen>
                     </iframe>
                 </div>
             `;
@@ -689,33 +949,26 @@
             document.body.appendChild(overlay);
         }
 
-        // Function to download Product List as PDF
         function downloadProductListPDF() {
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-            // Enhanced PDF export parameters for better formatting - portrait with minimal margins
             const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
             window.open(pdfUrl, '_blank');
         }
 
-        // Function to print Product List
         function printProductListPDF() {
             const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
             const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true&fzr=false&top_margin=0.01&bottom_margin=0.01&left_margin=0.01&right_margin=0.01`;
             window.open(pdfUrl, '_blank');
         }
 
-        // Function to open PDF viewer
         function openPDFViewer() {
-            // Create modal overlay
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
             overlay.style.display = 'block';
             
-            // Create PDF modal
             const pdfModal = document.createElement('div');
             pdfModal.className = 'pdf-modal';
             
-            // Convert Google Slides URL to PDF export URL
             const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';
             const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;
             
@@ -741,45 +994,35 @@
             document.body.appendChild(overlay);
         }
 
-        // Function to download presentation as PDF
         function downloadPresentationPDF() {
             const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';
             const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;
             window.open(pdfUrl, '_blank');
         }
 
-        // Function to print presentation
         function printPresentation() {
-            // Open the PDF export URL in a new window for printing
             const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';
             const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;
             window.open(pdfUrl, '_blank');
         }
 
-        // Function to close PDF viewer
         function closePDFViewer() {
             const overlay = document.querySelector('.modal-overlay');
             if (overlay) {
                 overlay.remove();
             }
+            window.allProposals = null;
         }
 
-        // Proposal Generator Functions
         function openProposalGenerator() {
-            document.getElementById('proposalModal').style.display = 'block';
-            updatePricingSummary();
-            
-            // Re-attach event listener when modal opens
-            setTimeout(() => {
-                const generateBtn = document.getElementById('generateBtn');
-                if (generateBtn) {
-                    // Remove any existing listeners
-                    generateBtn.removeEventListener('click', generateProposal);
-                    // Add the listener
-                    generateBtn.addEventListener('click', generateProposal);
-                    console.log('Event listener attached to generate button');
-                }
-            }, 100);
+            const modal = document.getElementById('proposalModal');
+            if (modal) {
+                modal.style.display = 'block';
+                updatePricingSummary();
+            } else {
+                console.error('Proposal modal not found');
+                alert('Error: Could not open proposal generator. Please refresh the page.');
+            }
         }
 
         function closeModal(modalId) {
@@ -801,7 +1044,6 @@
                 baseSetupFee = 295 + (79 * additionalUnits);
             }
             
-            // Total setup fee = base + additional
             const totalSetupFee = baseSetupFee + additionalDeliveryFee;
             
             let pricingText = `Monthly Total: $${monthlyTotal}/month`;
@@ -821,7 +1063,6 @@
             
             document.getElementById('pricingSummary').innerHTML = pricingText;
             
-            // Validation - ensure delivery fee is not negative
             const deliveryInput = document.getElementById('deliveryFee');
             if (additionalDeliveryFee < 0) {
                 deliveryInput.setCustomValidity('Additional delivery charges cannot be negative');
@@ -830,18 +1071,26 @@
             }
         }
 
-        async function generateProposal() {
+        async function generateProposal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
             console.log('Generate Proposal function called!');
             
             const submitBtn = document.getElementById('generateBtn');
             const originalText = submitBtn.innerHTML;
             
-            // Disable button and show loading
+            if (submitBtn.disabled) {
+                console.log('Already processing, ignoring click');
+                return;
+            }
+            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
             
             try {
-                // Get form data - INCLUDING DELIVERY FEE
                 const formData = {
                     companyName: document.getElementById('companyName').value,
                     contactName: document.getElementById('contactName').value || '',
@@ -850,32 +1099,27 @@
                     preparedByEmail: document.getElementById('preparedByEmail').value,
                     fridgeCount: document.getElementById('fridgeCount').value,
                     monthlyFee: document.getElementById('monthlyFee').value,
-                    deliveryFee: document.getElementById('deliveryFee').value || '' // ADD THIS LINE
+                    deliveryFee: document.getElementById('deliveryFee').value || ''
                 };
 
                 console.log('Form data:', formData);
 
-                // Validate required fields
                 if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
                     throw new Error('Please fill in all required fields.');
                 }
 
                 console.log('Using URL parameters method to avoid JSON parsing');
 
-                // Create URL with parameters instead of form submission
                 const params = new URLSearchParams();
                 Object.keys(formData).forEach(key => {
                     params.append(key, formData[key]);
                 });
 
-                // Open URL directly with parameters
                 const url = `${WEB_APP_URL}?${params.toString()}`;
                 console.log('Opening URL:', url);
                 
-                // Open in new tab
                 window.open(url, '_blank');
 
-                // Show success message immediately
                 closeModal('proposalModal');
                 showPopup(`
                     <div class="success-popup">
@@ -890,7 +1134,6 @@
                 console.error('Error generating proposal:', error);
                 showPopup(`Error generating proposal: ${error.message}`, 'error');
             } finally {
-                // Reset button
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             }
@@ -926,7 +1169,6 @@
             `;
             document.body.appendChild(popup);
             
-            // Auto-remove after 10 seconds for success messages
             if (type === 'success') {
                 setTimeout(() => {
                     if (popup.parentNode) {
@@ -936,19 +1178,276 @@
             }
         }
 
-        // Service Agreement Generator
+        // Function to open Proposal Viewer with fixed search
+        function openProposalViewer() {
+            window.allProposals = null;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const modal = document.createElement('div');
+            modal.className = 'pdf-modal';
+            
+            modal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>Proposal Library</h3>
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                </div>
+                <div class="pdf-viewer" style="padding: 20px;">
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="proposalSearch" placeholder="🔍 Search by company name..." 
+                                   oninput="handleSearchInput(this)"
+                                   onfocus="this.style.borderColor='#1e3a8a'"
+                                   onblur="this.style.borderColor='#e2e8f0'">
+                            <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
+                        <div style="text-align: center; padding: 40px;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                loadProposalsFromDrive();
+            }, 100);
+        }
+
+        // Fixed search input handler
+        function handleSearchInput(input) {
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            // Show/hide clear button based on input content
+            if (input.value.trim()) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+            
+            // Perform the search
+            filterProposals();
+        }
+
+        // Clear search function
+        function clearSearch() {
+            const searchInput = document.getElementById('proposalSearch');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            searchInput.value = '';
+            clearBtn.classList.remove('visible');
+            
+            // Show all proposals
+            if (window.allProposals && window.allProposals.length > 0) {
+                displayProposals(window.allProposals);
+            }
+        }
+        
+        async function loadProposalsFromDrive() {
+            const proposalsUrl = PROPOSALS_API_URL;
+            
+            console.log('Starting to load proposals...');
+            console.log('Using URL:', proposalsUrl);
+            
+            try {
+                const callbackName = 'proposalsCallback_' + Date.now();
+                console.log('Callback name:', callbackName);
+                
+                const promise = new Promise((resolve, reject) => {
+                    window[callbackName] = (data) => {
+                        console.log('Received data:', data);
+                        delete window[callbackName];
+                        resolve(data);
+                    };
+                    
+                    setTimeout(() => {
+                        console.log('Request timed out');
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }, 20000);
+                });
+                
+                const script = document.createElement('script');
+                const url = `${proposalsUrl}?action=getProposals&callback=${callbackName}`;
+                console.log('Request URL:', url);
+                script.src = url;
+                
+                script.onerror = () => {
+                    console.error('Failed to load script');
+                    delete window[callbackName];
+                    const proposalsList = document.getElementById('proposalsList');
+                    if (proposalsList) {
+                        proposalsList.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
+                            </div>
+                        `;
+                    }
+                };
+                
+                document.body.appendChild(script);
+                
+                const data = await promise;
+                
+                console.log('Got response data:', data);
+                
+                document.body.removeChild(script);
+                
+                if (data.status === 'success') {
+                    const sortedProposals = (data.proposals || []).sort((a, b) => {
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                    });
+                    displayProposals(sortedProposals);
+                } else {
+                    throw new Error(data.message || 'Failed to load proposals');
+                }
+            } catch (error) {
+                console.error('Error loading proposals:', error);
+                
+                const proposalsList = document.getElementById('proposalsList');
+                if (proposalsList) {
+                    proposalsList.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        function displayProposals(proposals) {
+            const proposalsList = document.getElementById('proposalsList');
+            if (!proposalsList) return;
+            
+            window.allProposals = proposals;
+            
+            if (proposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p>No proposals found in the folder.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            proposalsList.innerHTML = proposals.map(proposal => `
+                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.name}</h4>
+                            <p style="margin: 0; color: #718096; font-size: 14px;">
+                                📅 Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" 
+                                    onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')"
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
+                                👁️ View
+                            </button>
+                            <button class="btn btn-secondary" 
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')"
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
+                                📥 Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Fixed filter function
+        function filterProposals() {
+            const searchTerm = document.getElementById('proposalSearch').value.toLowerCase().trim();
+            const proposalsList = document.getElementById('proposalsList');
+            
+            if (!window.allProposals || window.allProposals.length === 0) return;
+            
+            // If search is empty, show all proposals
+            if (!searchTerm) {
+                displayProposals(window.allProposals);
+                return;
+            }
+            
+            const filteredProposals = window.allProposals.filter(proposal => 
+                proposal.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredProposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>
+                    </div>
+                `;
+            } else {
+                displayProposals(filteredProposals);
+            }
+        }
+        
+        function viewProposalPDF(fileId, fileName) {
+            closePDFViewer();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>${fileName}</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);" 
+                                style="padding: 10px 20px;">
+                            ← Back to Library
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="padding: 10px 20px;">
+                            📥 Download
+                        </button>
+                    </div>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe src="${viewerUrl}" 
+                            width="100%" 
+                            height="100%"
+                            style="border: none;"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
         function generateServiceAgreement() {
             document.getElementById('serviceAgreementModal').style.display = 'block';
             updateServiceAgreementPricing();
             
-            // Always ensure event listener is properly attached
             const generateBtn = document.getElementById('generateServiceBtn');
             if (generateBtn) {
-                // Remove any existing listeners by cloning
                 const newBtn = generateBtn.cloneNode(true);
                 generateBtn.parentNode.replaceChild(newBtn, generateBtn);
-                
-                // Add fresh event listener
                 newBtn.addEventListener('click', generateServiceAgreementPDF);
             }
         }
@@ -959,8 +1458,8 @@
             const employeePrice = parseInt(document.getElementById('employeePrice').value) || 3.50;
             
             let pricingText = `Number of Fridges: ${fridgeCount}<br>`;
-            pricingText += `Employee Price per Item: ${employeePrice.toFixed(2)}<br>`;
-            pricingText += `Company Subsidy per Item: ${subsidyAmount.toFixed(2)}`;
+            pricingText += `Employee Price per Item: $${employeePrice.toFixed(2)}<br>`;
+            pricingText += `Company Subsidy per Item: $${subsidyAmount.toFixed(2)}`;
             
             document.getElementById('servicePricingSummary').innerHTML = pricingText;
         }
@@ -988,7 +1487,6 @@
                     throw new Error('Please fill in all required fields.');
                 }
 
-                // For now, use the same URL but add a parameter to indicate it's a service agreement
                 const params = new URLSearchParams();
                 params.append('type', 'serviceAgreement');
                 Object.keys(formData).forEach(key => {
@@ -1017,7 +1515,6 @@
             }
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
                 event.target.style.display = 'none';
@@ -1083,7 +1580,7 @@
                 <div class="card-icon">📄</div>
                 <h2>Proposal Copies</h2>
                 <p>Access generated proposals, templates, and proposal resources.</p>
-                <a href="https://drive.google.com/drive/u/0/folders/1SpS3_h7FMkNiH_wrhdjMFvEeVEGRvkF3" target="_blank" class="btn">View Proposals</a>
+                <button class="btn" onclick="openProposalViewer()">View Proposals</button>
             </div>
 
             <div class="card">
@@ -1103,7 +1600,7 @@
                 <div class="card-icon">📝</div>
                 <h2>Lead Logger</h2>
                 <p>Log and track sales leads with follow-up management and status tracking.</p>
-                <a href="lead-logger.html" target="_blank" class="btn">Open Lead Logger</a>
+                <a href="lead-logger.html" class="btn">Open Lead Logger</a>
             </div>
         </div>
     </div>
@@ -1158,7 +1655,7 @@
                 </div>
             </div>
             
-            <!-- ADDED: Delivery Fee Field -->
+            <!-- Delivery Fee Field -->
             <div class="form-group">
                 <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
                 <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
@@ -1175,9 +1672,74 @@
             
             <div class="modal-buttons">
                 <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateBtn" type="button">Generate Proposal PDF</button>
+                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Service Agreement Modal -->
+    <div id="serviceAgreementModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Service Agreement</h3>
+            
+            <div class="form-group">
+                <label for="serviceCompanyName">Company Name *</label>
+                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="serviceContactName">Contact Name (Optional)</label>
+                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="servicePreparedBy">Your Name *</label>
+                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="servicePreparedByPhone">Your Phone *</label>
+                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="servicePreparedByEmail">Your Email *</label>
+                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="serviceFridgeCount">Number of Fridges *</label>
+                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="subsidyAmount">Company Subsidy Per Item *</label>
+                    <input type="number" id="subsidyAmount" name="subsidyAmount" min="0" step="0.50" value="0" required onchange="updateServiceAgreementPricing()">
+                    <small>Amount company pays per item</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="employeePrice">Employee Price Per Item *</label>
+                <input type="number" id="employeePrice" name="employeePrice" min="0" step="0.50" value="3.50" required onchange="updateServiceAgreementPricing()">
+                <small>Price employees pay per item (after subsidy)</small>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Agreement Summary</h4>
+                <div class="pricing-display" id="servicePricingSummary">
+                    Number of Fridges: 1<br>
+                    Employee Price per Item: $3.50<br>
+                    Company Subsidy per Item: $0.00
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
+                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>
+            </div>
+        </div>
+    </div>
