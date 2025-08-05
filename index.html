@@ -1211,13 +1211,22 @@
                     <button class="close-btn" onclick="closePDFViewer()">Close</button>
                 </div>
                 <div class="pdf-viewer" style="padding: 20px;">
-                    <div style="margin-bottom: 20px;">
+                    <div style="margin-bottom: 20px; position: relative;">
                         <input type="text" id="proposalSearch" placeholder="🔍 Search by company name..." 
-                               style="width: 100%; padding: 15px; font-size: 16px; border: 2px solid #e2e8f0; 
+                               style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0; 
                                       border-radius: 10px; transition: all 0.3s ease;"
                                onkeyup="filterProposals()"
                                onfocus="this.style.borderColor='#1e3a8a'"
                                onblur="this.style.borderColor='#e2e8f0'">
+                        <button id="clearSearchBtn" onclick="clearProposalSearch()" 
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
+                                       cursor: pointer; display: none; transition: all 0.3s ease; 
+                                       font-size: 18px; color: #4a5568;"
+                                onmouseover="this.style.background='#cbd5e0'"
+                                onmouseout="this.style.background='#e2e8f0'">
+                            ×
+                        </button>
                     </div>
                     
                     <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
@@ -1368,8 +1377,17 @@
         
         // Function to filter proposals based on search
         function filterProposals() {
-            const searchTerm = document.getElementById('proposalSearch').value.toLowerCase();
+            const searchInput = document.getElementById('proposalSearch');
+            const searchTerm = searchInput.value.toLowerCase();
             const proposalsList = document.getElementById('proposalsList');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            // Show/hide clear button based on search input
+            if (searchTerm.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
             
             if (!window.allProposals || window.allProposals.length === 0) return;
             
@@ -1387,6 +1405,26 @@
             } else {
                 displayProposals(filteredProposals);
             }
+        }
+        
+        // Function to clear proposal search
+        function clearProposalSearch() {
+            const searchInput = document.getElementById('proposalSearch');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            // Clear the search input
+            searchInput.value = '';
+            
+            // Hide the clear button
+            clearBtn.style.display = 'none';
+            
+            // Reset to show all proposals
+            if (window.allProposals && window.allProposals.length > 0) {
+                displayProposals(window.allProposals);
+            }
+            
+            // Refocus on search input for convenience
+            searchInput.focus();
         }
         
         // Function to view a specific proposal PDF
