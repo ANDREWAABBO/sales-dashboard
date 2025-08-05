@@ -739,6 +739,11 @@
             transform: scale(1.05);
         }
 
+        /* Clear button styles */
+        #clearSearchBtn:hover {
+            background: #cbd5e0 !important;
+        }
+
         /* Logout button */
         .logout-btn {
             background: white !important;
@@ -814,14 +819,32 @@
                 checkInstallPrompt();
             }
             
-            // Add event delegation for dynamically created clear button
+            // Global click handler for all dynamically created elements
             document.addEventListener('click', function(e) {
-                if (e.target && e.target.id === 'clearSearchBtn') {
+                // Check if clicked element is the clear search button
+                if (e.target && (e.target.id === 'clearSearchBtn' || e.target.closest('#clearSearchBtn'))) {
                     e.preventDefault();
                     e.stopPropagation();
-                    clearProposalSearch();
+                    
+                    console.log('Clear button clicked!');
+                    
+                    const searchInput = document.getElementById('proposalSearch');
+                    const clearBtn = document.getElementById('clearSearchBtn');
+                    
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+                    
+                    if (clearBtn) {
+                        clearBtn.style.display = 'none';
+                    }
+                    
+                    // Call filterProposals if it exists
+                    if (typeof filterProposals === 'function') {
+                        filterProposals();
+                    }
                 }
-            });
+            }, true); // Use capture phase
         });
 
         // Add to Home Screen functionality
@@ -1231,9 +1254,7 @@
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
                                        background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
                                        cursor: pointer; display: none; transition: all 0.3s ease; 
-                                       font-size: 18px; color: #4a5568;"
-                                onmouseover="this.style.background='#cbd5e0'"
-                                onmouseout="this.style.background='#e2e8f0'">
+                                       font-size: 18px; color: #4a5568;">
                             ×
                         </button>
                     </div>
@@ -1250,24 +1271,8 @@
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             
-            // Attach clear button event listener after modal is created
+            // Load proposals after a short delay
             setTimeout(() => {
-                const clearBtn = document.getElementById('clearSearchBtn');
-                if (clearBtn) {
-                    clearBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const searchInput = document.getElementById('proposalSearch');
-                        if (searchInput) {
-                            searchInput.value = '';
-                            this.style.display = 'none';
-                            filterProposals();
-                        }
-                    });
-                }
-                
-                // Load proposals
                 loadProposalsFromDrive();
             }, 100);
         }
@@ -1608,7 +1613,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v1.6 - Event Listener After Creation</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.7 - Global Click Handler</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
