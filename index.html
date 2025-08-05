@@ -1228,6 +1228,7 @@
                                onfocus="this.style.borderColor='#1e3a8a'"
                                onblur="this.style.borderColor='#e2e8f0'">
                         <button id="clearSearchBtn" 
+                                onclick="document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
                                        background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
                                        cursor: pointer; display: none; transition: all 0.3s ease; 
@@ -1592,7 +1593,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v1.3 - Event Delegation Fix</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.4 - Direct Inline Fix</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
