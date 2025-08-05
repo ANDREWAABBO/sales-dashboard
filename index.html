@@ -813,6 +813,15 @@
                 // Check if should show install prompt
                 checkInstallPrompt();
             }
+            
+            // Add event delegation for dynamically created clear button
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'clearSearchBtn') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    clearProposalSearch();
+                }
+            });
         });
 
         // Add to Home Screen functionality
@@ -1218,7 +1227,7 @@
                                onkeyup="filterProposals()"
                                onfocus="this.style.borderColor='#1e3a8a'"
                                onblur="this.style.borderColor='#e2e8f0'">
-                        <button id="clearSearchBtn" onclick="event.stopPropagation(); clearProposalSearch(); return false;" 
+                        <button id="clearSearchBtn" 
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
                                        background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
                                        cursor: pointer; display: none; transition: all 0.3s ease; 
@@ -1583,6 +1592,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.3 - Event Delegation Fix</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
