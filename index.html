@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Team Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <style>
         * {
             margin: 0;
@@ -278,11 +276,251 @@
             color: #999;
         }
 
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .popup-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .popup-close:hover {
+            color: #333;
+        }
+
         .footer {
             text-align: center;
             color: white;
             margin-top: 3rem;
             opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+        }
+
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .document-list {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .document-item:hover {
+            background: #f3f4f6;
+        }
+
+        .document-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .document-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .pricing-form {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .pricing-result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .pricing-result h3 {
+            color: #1e3c72;
+            margin-bottom: 1rem;
+        }
+
+        .price-breakdown {
+            display: grid;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .price-item:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #1e3c72;
+        }
+
+        .training-section {
+            margin-bottom: 2rem;
+        }
+
+        .training-section h3 {
+            color: #1e3c72;
+            margin-bottom: 1rem;
+        }
+
+        .training-modules {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .training-module {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .training-module:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+        }
+
+        .training-module h4 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .training-module p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .crm-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #1e3c72;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            color: #666;
+        }
+
+        .support-options {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .support-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .support-option:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .support-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .support-info h4 {
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-info p {
+            color: #666;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -298,63 +536,63 @@
                 <div class="card-icon">📊</div>
                 <h2>Presentations</h2>
                 <p>Access all sales presentations and pitch decks to showcase our services effectively.</p>
-                <button class="btn" onclick="showPresentations()">View Presentations</button>
+                <button class="btn" onclick="showPopup('presentationsPopup')">View Presentations</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📋</div>
                 <h2>Proposal Generator</h2>
                 <p>Create professional proposals quickly with our automated template system.</p>
-                <button class="btn" onclick="showProposalGenerator()">Create Proposal</button>
+                <button class="btn" onclick="showPopup('proposalPopup')">Create Proposal</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">💰</div>
                 <h2>Pricing Calculator</h2>
                 <p>Calculate accurate quotes instantly based on our current pricing structure.</p>
-                <button class="btn" onclick="showPricingCalculator()">Calculate Price</button>
+                <button class="btn" onclick="showPopup('pricingPopup')">Calculate Price</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📄</div>
                 <h2>Service Agreements</h2>
                 <p>Generate and customize service agreements for new client contracts.</p>
-                <button class="btn" onclick="showServiceAgreements()">Create Agreement</button>
+                <button class="btn" onclick="showPopup('agreementPopup')">Create Agreement</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📚</div>
                 <h2>Product Catalog</h2>
                 <p>Browse our complete product and service offerings with detailed specifications.</p>
-                <button class="btn" onclick="showProductCatalog()">View Catalog</button>
+                <button class="btn" onclick="showPopup('catalogPopup')">View Catalog</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">🎯</div>
                 <h2>Sales Training</h2>
                 <p>Access training materials, best practices, and sales techniques.</p>
-                <button class="btn" onclick="showSalesTraining()">Start Training</button>
+                <button class="btn" onclick="showPopup('trainingPopup')">Start Training</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📈</div>
                 <h2>CRM Integration</h2>
                 <p>Quick access to customer relationship management tools and data.</p>
-                <button class="btn" onclick="showCRM()">Open CRM</button>
+                <button class="btn" onclick="showPopup('crmPopup')">Open CRM</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📞</div>
                 <h2>Contact Support</h2>
                 <p>Get help from the sales support team for any questions or issues.</p>
-                <button class="btn" onclick="showSupport()">Get Support</button>
+                <button class="btn" onclick="showPopup('supportPopup')">Get Support</button>
             </div>
 
             <div class="card">
                 <div class="card-icon">📂</div>
                 <h2>Proposal Copies</h2>
                 <p>Access and search through previous proposals for reference and reuse.</p>
-                <button class="btn" onclick="showProposalCopies()">View Proposals</button>
+                <button class="btn" onclick="showPopup('proposalCopiesPopup')">View Proposals</button>
             </div>
         </div>
 
@@ -363,10 +601,49 @@
         </footer>
     </div>
 
-    <!-- Modals -->
-    <div id="proposalModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('proposalModal')">&times;</span>
+    <!-- Popups -->
+    <div id="presentationsPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('presentationsPopup')">&times;</span>
+            <h2>Sales Presentations</h2>
+            <div class="document-list">
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📊</div>
+                        <div>
+                            <h4>Company Overview 2024</h4>
+                            <p>Updated: January 15, 2024</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewPresentation('company-overview')">View</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📊</div>
+                        <div>
+                            <h4>Product Demo Deck</h4>
+                            <p>Updated: February 1, 2024</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewPresentation('product-demo')">View</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📊</div>
+                        <div>
+                            <h4>Case Studies Collection</h4>
+                            <p>Updated: January 20, 2024</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewPresentation('case-studies')">View</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="proposalPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('proposalPopup')">&times;</span>
             <h2>Create New Proposal</h2>
             <form id="proposalForm">
                 <div class="form-group">
@@ -401,51 +678,319 @@
                     <textarea id="description" name="description" required></textarea>
                 </div>
                 <button type="submit" class="btn">Generate Proposal</button>
-                <button type="button" class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
+                <button type="button" class="btn btn-secondary" onclick="closePopup('proposalPopup')">Cancel</button>
             </form>
         </div>
     </div>
 
-    <div id="serviceAgreementModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('serviceAgreementModal')">&times;</span>
-            <h2>Generate Service Agreement</h2>
-            <form id="serviceAgreementForm">
+    <div id="pricingPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('pricingPopup')">&times;</span>
+            <h2>Pricing Calculator</h2>
+            <form id="pricingForm" class="pricing-form">
                 <div class="form-group">
-                    <label for="saClientName">Client Name</label>
-                    <input type="text" id="saClientName" name="saClientName" required>
-                </div>
-                <div class="form-group">
-                    <label for="saServiceType">Service Type</label>
-                    <select id="saServiceType" name="saServiceType" required>
-                        <option value="">Select service type</option>
-                        <option value="monthly-retainer">Monthly Retainer</option>
-                        <option value="project-based">Project Based</option>
-                        <option value="hourly-consulting">Hourly Consulting</option>
-                        <option value="support-maintenance">Support & Maintenance</option>
+                    <label for="serviceType">Service Type</label>
+                    <select id="serviceType" onchange="updatePricingOptions()">
+                        <option value="">Select service</option>
+                        <option value="web-development">Web Development</option>
+                        <option value="mobile-app">Mobile App Development</option>
+                        <option value="consulting">Consulting Services</option>
+                        <option value="marketing">Digital Marketing</option>
+                        <option value="maintenance">Maintenance & Support</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="saStartDate">Start Date</label>
-                    <input type="date" id="saStartDate" name="saStartDate" required>
+                    <label for="projectSize">Project Size</label>
+                    <select id="projectSize">
+                        <option value="small">Small (1-3 months)</option>
+                        <option value="medium">Medium (3-6 months)</option>
+                        <option value="large">Large (6+ months)</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="saEndDate">End Date</label>
-                    <input type="date" id="saEndDate" name="saEndDate">
+                    <label for="teamSize">Team Size Required</label>
+                    <input type="number" id="teamSize" min="1" max="20" value="1">
                 </div>
                 <div class="form-group">
-                    <label for="saTerms">Additional Terms</label>
-                    <textarea id="saTerms" name="saTerms" placeholder="Any special terms or conditions..."></textarea>
+                    <label for="urgency">Urgency</label>
+                    <select id="urgency">
+                        <option value="standard">Standard Timeline</option>
+                        <option value="rush">Rush Delivery (+25%)</option>
+                        <option value="emergency">Emergency (+50%)</option>
+                    </select>
+                </div>
+                <button type="button" class="btn" onclick="calculatePrice()">Calculate Price</button>
+            </form>
+            
+            <div id="pricingResult" class="pricing-result">
+                <h3>Estimated Project Cost</h3>
+                <div class="price-breakdown">
+                    <div class="price-item">
+                        <span>Base Price:</span>
+                        <span id="basePrice">$0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Team Cost:</span>
+                        <span id="teamCost">$0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Urgency Fee:</span>
+                        <span id="urgencyFee">$0</span>
+                    </div>
+                    <div class="price-item">
+                        <span>Total Estimate:</span>
+                        <span id="totalPrice">$0</span>
+                    </div>
+                </div>
+                <button class="btn" onclick="savePricingQuote()">Save Quote</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="agreementPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('agreementPopup')">&times;</span>
+            <h2>Generate Service Agreement</h2>
+            <form id="agreementForm">
+                <div class="form-group">
+                    <label for="agreementClient">Client Name</label>
+                    <input type="text" id="agreementClient" required>
+                </div>
+                <div class="form-group">
+                    <label for="agreementType">Agreement Type</label>
+                    <select id="agreementType" required>
+                        <option value="">Select type</option>
+                        <option value="retainer">Monthly Retainer</option>
+                        <option value="project">Project-Based</option>
+                        <option value="hourly">Hourly Consulting</option>
+                        <option value="maintenance">Maintenance Agreement</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div class="form-group">
+                    <label for="paymentTerms">Payment Terms</label>
+                    <select id="paymentTerms">
+                        <option value="net30">Net 30</option>
+                        <option value="net15">Net 15</option>
+                        <option value="upfront">Upfront Payment</option>
+                        <option value="milestone">Milestone-Based</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="additionalTerms">Additional Terms</label>
+                    <textarea id="additionalTerms" placeholder="Any special terms or conditions..."></textarea>
                 </div>
                 <button type="submit" class="btn">Generate Agreement</button>
-                <button type="button" class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
+                <button type="button" class="btn btn-secondary" onclick="closePopup('agreementPopup')">Cancel</button>
             </form>
         </div>
     </div>
 
-    <div id="proposalCopiesModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('proposalCopiesModal')">&times;</span>
+    <div id="catalogPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('catalogPopup')">&times;</span>
+            <h2>Product & Service Catalog</h2>
+            <div class="document-list">
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📚</div>
+                        <div>
+                            <h4>Web Development Services</h4>
+                            <p>Full-stack development solutions</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewCatalogItem('web-dev')">View Details</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📚</div>
+                        <div>
+                            <h4>Mobile App Development</h4>
+                            <p>iOS & Android applications</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewCatalogItem('mobile')">View Details</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📚</div>
+                        <div>
+                            <h4>Digital Marketing Services</h4>
+                            <p>SEO, SEM, Social Media Marketing</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewCatalogItem('marketing')">View Details</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📚</div>
+                        <div>
+                            <h4>UI/UX Design Services</h4>
+                            <p>User interface and experience design</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="viewCatalogItem('design')">View Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="trainingPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('trainingPopup')">&times;</span>
+            <h2>Sales Training Resources</h2>
+            
+            <div class="training-section">
+                <h3>🎯 Getting Started</h3>
+                <div class="training-modules">
+                    <div class="training-module" onclick="startTraining('basics')">
+                        <h4>Sales Fundamentals</h4>
+                        <p>Learn the basics of consultative selling and our sales methodology.</p>
+                    </div>
+                    <div class="training-module" onclick="startTraining('product')">
+                        <h4>Product Knowledge</h4>
+                        <p>Deep dive into our products and services portfolio.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="training-section">
+                <h3>📈 Advanced Techniques</h3>
+                <div class="training-modules">
+                    <div class="training-module" onclick="startTraining('negotiation')">
+                        <h4>Negotiation Strategies</h4>
+                        <p>Master the art of win-win negotiations.</p>
+                    </div>
+                    <div class="training-module" onclick="startTraining('closing')">
+                        <h4>Closing Techniques</h4>
+                        <p>Learn proven methods to close deals effectively.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="training-section">
+                <h3>🛠️ Tools & Resources</h3>
+                <div class="training-modules">
+                    <div class="training-module" onclick="startTraining('crm')">
+                        <h4>CRM Best Practices</h4>
+                        <p>Maximize your effectiveness with our CRM system.</p>
+                    </div>
+                    <div class="training-module" onclick="startTraining('demos')">
+                        <h4>Demo Excellence</h4>
+                        <p>Deliver compelling product demonstrations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="crmPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('crmPopup')">&times;</span>
+            <h2>CRM Dashboard</h2>
+            
+            <div class="crm-stats">
+                <div class="stat-card">
+                    <h3>42</h3>
+                    <p>Active Leads</p>
+                </div>
+                <div class="stat-card">
+                    <h3>18</h3>
+                    <p>Opportunities</p>
+                </div>
+                <div class="stat-card">
+                    <h3>$285K</h3>
+                    <p>Pipeline Value</p>
+                </div>
+                <div class="stat-card">
+                    <h3>73%</h3>
+                    <p>Conversion Rate</p>
+                </div>
+            </div>
+
+            <div class="document-list">
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">👤</div>
+                        <div>
+                            <h4>My Contacts</h4>
+                            <p>Manage your contact database</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="openCRMSection('contacts')">Open</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">🎯</div>
+                        <div>
+                            <h4>Opportunities</h4>
+                            <p>Track and manage sales opportunities</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="openCRMSection('opportunities')">Open</button>
+                </div>
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-icon">📊</div>
+                        <div>
+                            <h4>Reports & Analytics</h4>
+                            <p>View performance metrics and insights</p>
+                        </div>
+                    </div>
+                    <button class="btn" onclick="openCRMSection('reports')">Open</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="supportPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('supportPopup')">&times;</span>
+            <h2>Sales Support Center</h2>
+            
+            <div class="support-options">
+                <div class="support-option" onclick="contactSupport('phone')">
+                    <div class="support-icon">📞</div>
+                    <div class="support-info">
+                        <h4>Call Support</h4>
+                        <p>Direct line: 1-800-SALES-99 (Available 24/7)</p>
+                    </div>
+                </div>
+                <div class="support-option" onclick="contactSupport('email')">
+                    <div class="support-icon">📧</div>
+                    <div class="support-info">
+                        <h4>Email Support</h4>
+                        <p>sales-support@company.com (Response within 2 hours)</p>
+                    </div>
+                </div>
+                <div class="support-option" onclick="contactSupport('chat')">
+                    <div class="support-icon">💬</div>
+                    <div class="support-info">
+                        <h4>Live Chat</h4>
+                        <p>Instant messaging with support team</p>
+                    </div>
+                </div>
+                <div class="support-option" onclick="contactSupport('knowledge')">
+                    <div class="support-icon">📚</div>
+                    <div class="support-info">
+                        <h4>Knowledge Base</h4>
+                        <p>Self-service articles and FAQs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="proposalCopiesPopup" class="popup">
+        <div class="popup-content">
+            <span class="popup-close" onclick="closePopup('proposalCopiesPopup')">&times;</span>
             <h2>Previous Proposals</h2>
             <div class="search-container">
                 <input type="text" id="proposalSearch" class="search-box" placeholder="Search proposals..." onkeyup="searchProposals()">
@@ -499,28 +1044,45 @@
                 date: "2024-02-05",
                 value: "$85,000",
                 status: "Accepted"
+            },
+            {
+                id: 6,
+                client: "FinanceFlow Corp",
+                project: "Banking App Security Audit",
+                date: "2024-02-10",
+                value: "$35,000",
+                status: "Pending"
+            },
+            {
+                id: 7,
+                client: "EduTech Innovations",
+                project: "Learning Management System",
+                date: "2024-02-15",
+                value: "$55,000",
+                status: "Accepted"
+            },
+            {
+                id: 8,
+                client: "RetailMax",
+                project: "Inventory Management System",
+                date: "2024-02-20",
+                value: "$40,000",
+                status: "In Progress"
             }
         ];
 
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
+        function showPopup(popupId) {
+            const popup = document.getElementById(popupId);
+            popup.style.display = 'block';
+            
+            // Special handling for proposal copies popup
+            if (popupId === 'proposalCopiesPopup') {
+                displayProposals(proposals);
+            }
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function showProposalGenerator() {
-            showModal('proposalModal');
-        }
-
-        function showServiceAgreements() {
-            showModal('serviceAgreementModal');
-        }
-
-        function showProposalCopies() {
-            showModal('proposalCopiesModal');
-            displayProposals(proposals);
+        function closePopup(popupId) {
+            document.getElementById(popupId).style.display = 'none';
         }
 
         function displayProposals(proposalsToShow) {
@@ -558,51 +1120,93 @@
         function selectProposal(id) {
             const proposal = proposals.find(p => p.id === id);
             alert(`Opening proposal for ${proposal.client} - ${proposal.project}`);
-            closeModal('proposalCopiesModal');
+            closePopup('proposalCopiesPopup');
         }
 
-        function showPresentations() {
-            alert('Opening presentations library...');
+        // Pricing Calculator Functions
+        function updatePricingOptions() {
+            const serviceType = document.getElementById('serviceType').value;
+            // Update options based on service type if needed
         }
 
-        function showPricingCalculator() {
-            alert('Opening pricing calculator...');
+        function calculatePrice() {
+            const serviceType = document.getElementById('serviceType').value;
+            const projectSize = document.getElementById('projectSize').value;
+            const teamSize = parseInt(document.getElementById('teamSize').value);
+            const urgency = document.getElementById('urgency').value;
+
+            // Base prices
+            const basePrices = {
+                'web-development': { small: 15000, medium: 35000, large: 75000 },
+                'mobile-app': { small: 25000, medium: 50000, large: 100000 },
+                'consulting': { small: 5000, medium: 15000, large: 30000 },
+                'marketing': { small: 8000, medium: 20000, large: 40000 },
+                'maintenance': { small: 3000, medium: 8000, large: 15000 }
+            };
+
+            if (!serviceType) {
+                alert('Please select a service type');
+                return;
+            }
+
+            let basePrice = basePrices[serviceType][projectSize];
+            let teamCost = (teamSize - 1) * 5000;
+            let urgencyMultiplier = urgency === 'rush' ? 0.25 : urgency === 'emergency' ? 0.5 : 0;
+            let urgencyFee = basePrice * urgencyMultiplier;
+            let totalPrice = basePrice + teamCost + urgencyFee;
+
+            document.getElementById('basePrice').textContent = `$${basePrice.toLocaleString()}`;
+            document.getElementById('teamCost').textContent = `$${teamCost.toLocaleString()}`;
+            document.getElementById('urgencyFee').textContent = `$${urgencyFee.toLocaleString()}`;
+            document.getElementById('totalPrice').textContent = `$${totalPrice.toLocaleString()}`;
+            
+            document.getElementById('pricingResult').style.display = 'block';
         }
 
-        function showProductCatalog() {
-            alert('Opening product catalog...');
+        function savePricingQuote() {
+            alert('Quote saved successfully!');
+            closePopup('pricingPopup');
         }
 
-        function showSalesTraining() {
-            alert('Opening sales training portal...');
+        // Other functions
+        function viewPresentation(type) {
+            alert(`Opening ${type} presentation...`);
         }
 
-        function showCRM() {
-            alert('Opening CRM system...');
+        function viewCatalogItem(item) {
+            alert(`Opening ${item} catalog details...`);
         }
 
-        function showSupport() {
-            alert('Connecting to sales support team...');
+        function startTraining(module) {
+            alert(`Starting ${module} training module...`);
+        }
+
+        function openCRMSection(section) {
+            alert(`Opening CRM ${section}...`);
+        }
+
+        function contactSupport(method) {
+            alert(`Initiating ${method} support...`);
         }
 
         // Form submissions
         document.getElementById('proposalForm').addEventListener('submit', function(e) {
             e.preventDefault();
             alert('Proposal generated successfully!');
-            closeModal('proposalModal');
+            closePopup('proposalPopup');
             this.reset();
         });
 
-        document.getElementById('serviceAgreementForm').addEventListener('submit', function(e) {
+        document.getElementById('agreementForm').addEventListener('submit', function(e) {
             e.preventDefault();
             alert('Service agreement generated successfully!');
-            closeModal('serviceAgreementModal');
+            closePopup('agreementPopup');
             this.reset();
         });
 
-        // Close modal when clicking outside
+        // Close popup when clicking outside
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
+            if (event.target.classList.contains('popup')) {
                 event.target.style.display = 'none';
             }
         }
