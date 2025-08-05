@@ -1045,25 +1045,27 @@
                 baseSetupFee = 295 + (79 * additionalUnits);
             }
             
+            // Total setup fee = base + additional
             const totalSetupFee = baseSetupFee + additionalDeliveryFee;
             
-            let pricingText = `Monthly Total: $${monthlyTotal}/month`;
+            let pricingText = `Monthly Total: ${monthlyTotal}/month`;
             if (fridgeCount > 1) {
                 pricingText += ` (${fridgeCount} fridges)<br>`;
-                pricingText += `First unit: $${basePrice}/month<br>`;
-                pricingText += `Additional units: $${basePrice - 100}/month each<br>`;
+                pricingText += `First unit: ${basePrice}/month<br>`;
+                pricingText += `Additional units: ${basePrice - 100}/month each<br>`;
             } else {
                 pricingText += '<br>';
             }
             
-            pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
+            pricingText += `Setup & Delivery Fee: ${totalSetupFee} (one-time)`;
             
             if (additionalDeliveryFee > 0) {
-                pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee}</small>`;
+                pricingText += `<br><small style="color: #1e3a8a;">Base: ${baseSetupFee} + Additional: ${additionalDeliveryFee}</small>`;
             }
             
             document.getElementById('pricingSummary').innerHTML = pricingText;
             
+            // Validation - ensure delivery fee is not negative
             const deliveryInput = document.getElementById('deliveryFee');
             if (additionalDeliveryFee < 0) {
                 deliveryInput.setCustomValidity('Additional delivery charges cannot be negative');
@@ -1073,6 +1075,7 @@
         }
 
         async function generateProposal(event) {
+            // Prevent any default behavior
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1083,15 +1086,18 @@
             const submitBtn = document.getElementById('generateBtn');
             const originalText = submitBtn.innerHTML;
             
+            // Check if already processing
             if (submitBtn.disabled) {
                 console.log('Already processing, ignoring click');
                 return;
             }
             
+            // Disable button and show loading
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
             
             try {
+                // Get form data - INCLUDING DELIVERY FEE
                 const formData = {
                     companyName: document.getElementById('companyName').value,
                     contactName: document.getElementById('contactName').value || '',
@@ -1100,27 +1106,32 @@
                     preparedByEmail: document.getElementById('preparedByEmail').value,
                     fridgeCount: document.getElementById('fridgeCount').value,
                     monthlyFee: document.getElementById('monthlyFee').value,
-                    deliveryFee: document.getElementById('deliveryFee').value || ''
+                    deliveryFee: document.getElementById('deliveryFee').value || '' // ADD THIS LINE
                 };
 
                 console.log('Form data:', formData);
 
+                // Validate required fields
                 if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
                     throw new Error('Please fill in all required fields.');
                 }
 
                 console.log('Using URL parameters method to avoid JSON parsing');
 
+                // Create URL with parameters instead of form submission
                 const params = new URLSearchParams();
                 Object.keys(formData).forEach(key => {
                     params.append(key, formData[key]);
                 });
 
+                // Open URL directly with parameters
                 const url = `${WEB_APP_URL}?${params.toString()}`;
                 console.log('Opening URL:', url);
                 
+                // Open in new tab
                 window.open(url, '_blank');
 
+                // Show success message immediately
                 closeModal('proposalModal');
                 showPopup(`
                     <div class="success-popup">
@@ -1135,9 +1146,325 @@
                 console.error('Error generating proposal:', error);
                 showPopup(`Error generating proposal: ${error.message}`, 'error');
             } finally {
+                // Reset button
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             }
+        }
+
+        function showProposalSuccess(result) {
+            const successHtml = `
+                <div class="success-popup">
+                    <h3>🎉 Proposal Generated Successfully!</h3>
+                    <p><strong>File:</strong> ${result.fileName}</p>
+                    <p><strong>Monthly Total:</strong> ${result.monthlyTotal}/month</p>
+                    <p><strong>Setup Fee:</strong> ${result.setupTotal}</p>
+                    <div style="margin-top: 20px;">
+                        <a href="${result.url}" target="_blank" class="btn btn-primary">Open Proposal PDF</a>
+                    </div>
+                </div>
+            `;
+            showPopup(successHtml, 'success');
+        }
+
+        function showPopup(content, type) {
+            const popup = document.createElement('div');
+            popup.className = 'modal-overlay';
+            popup.innerHTML = `
+                <div class="modal">
+                    <div class="${type === 'error' ? 'error-popup' : 'success-popup'}">
+                        ${content}
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(popup);
+            
+            // Auto-remove after 10 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.remove();
+                    }
+                }, 10000);
+            }
+        }
+
+        // Function to open Proposal Viewer with improved search
+        function openProposalViewer() {
+            // Clear any existing proposals cache
+            window.allProposals = null;
+            
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'pdf-modal';
+            
+            modal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>Proposal Library</h3>
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                </div>
+                <div class="pdf-viewer" style="padding: 20px;">
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="proposalSearch" placeholder="🔍 Search by company name..." 
+                                   autocomplete="off"
+                                   onkeyup="filterProposals()"
+                                   onfocus="this.style.borderColor='#1e3a8a'"
+                                   onblur="this.style.borderColor='#e2e8f0'">
+                            <button class="clear-search-btn" id="clearSearchBtn" onclick="clearProposalSearch()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
+                        <div style="text-align: center; padding: 40px;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Always load fresh proposals
+            setTimeout(() => {
+                loadProposalsFromDrive();
+            }, 100);
+        }
+
+        // Clear search function
+        function clearProposalSearch() {
+            const searchInput = document.getElementById('proposalSearch');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            searchInput.value = '';
+            clearBtn.classList.remove('visible');
+            
+            // Show all proposals
+            if (window.allProposals && window.allProposals.length > 0) {
+                displayProposals(window.allProposals);
+            }
+        }
+        
+        // Function to load proposals from Google Drive using JSONP
+        async function loadProposalsFromDrive() {
+            const proposalsUrl = PROPOSALS_API_URL; // Use the separate API for proposals
+            
+            console.log('Starting to load proposals...');
+            console.log('Using URL:', proposalsUrl);
+            
+            try {
+                // Create a callback function name
+                const callbackName = 'proposalsCallback_' + Date.now();
+                console.log('Callback name:', callbackName);
+                
+                // Create a promise to handle the JSONP response
+                const promise = new Promise((resolve, reject) => {
+                    window[callbackName] = (data) => {
+                        console.log('Received data:', data);
+                        delete window[callbackName];
+                        resolve(data);
+                    };
+                    
+                    // Set a timeout - increased to 20 seconds
+                    setTimeout(() => {
+                        console.log('Request timed out');
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }, 20000);
+                });
+                
+                // Create and append the script tag
+                const script = document.createElement('script');
+                const url = `${proposalsUrl}?action=getProposals&callback=${callbackName}`;
+                console.log('Request URL:', url);
+                script.src = url;
+                
+                script.onerror = () => {
+                    console.error('Failed to load script');
+                    delete window[callbackName];
+                    const proposalsList = document.getElementById('proposalsList');
+                    if (proposalsList) {
+                        proposalsList.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
+                            </div>
+                        `;
+                    }
+                };
+                
+                document.body.appendChild(script);
+                
+                // Wait for the response
+                const data = await promise;
+                
+                console.log('Got response data:', data);
+                
+                // Remove the script tag
+                document.body.removeChild(script);
+                
+                if (data.status === 'success') {
+                    const sortedProposals = (data.proposals || []).sort((a, b) => {
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                    });
+                    displayProposals(sortedProposals);
+                } else {
+                    throw new Error(data.message || 'Failed to load proposals');
+                }
+            } catch (error) {
+                console.error('Error loading proposals:', error);
+                
+                // Show error message with fallback
+                const proposalsList = document.getElementById('proposalsList');
+                if (proposalsList) {
+                    proposalsList.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Function to display proposals in the modal
+        function displayProposals(proposals) {
+            const proposalsList = document.getElementById('proposalsList');
+            if (!proposalsList) return;
+            
+            // Store proposals globally for filtering
+            window.allProposals = proposals;
+            
+            if (proposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p>No proposals found in the folder.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            proposalsList.innerHTML = proposals.map(proposal => `
+                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.name}</h4>
+                            <p style="margin: 0; color: #718096; font-size: 14px;">
+                                📅 Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" 
+                                    onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')"
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
+                                👁️ View
+                            </button>
+                            <button class="btn btn-secondary" 
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')"
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
+                                📥 Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Function to filter proposals based on search - FIXED to handle empty search
+        function filterProposals() {
+            const searchInput = document.getElementById('proposalSearch');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const proposalsList = document.getElementById('proposalsList');
+            
+            // Show/hide clear button
+            if (searchTerm) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+            
+            if (!window.allProposals || window.allProposals.length === 0) return;
+            
+            // If search is empty, show all proposals
+            if (!searchTerm) {
+                displayProposals(window.allProposals);
+                return;
+            }
+            
+            const filteredProposals = window.allProposals.filter(proposal => 
+                proposal.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredProposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>
+                    </div>
+                `;
+            } else {
+                displayProposals(filteredProposals);
+            }
+        }
+        
+        // Function to view a specific proposal PDF
+        function viewProposalPDF(fileId, fileName) {
+            // Close the proposals list modal first
+            closePDFViewer();
+            
+            // Create a new modal for viewing the PDF
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            // Use Google's viewer for the PDF
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>${fileName}</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);" 
+                                style="padding: 10px 20px;">
+                            ← Back to Library
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="padding: 10px 20px;">
+                            📥 Download
+                        </button>
+                    </div>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe src="${viewerUrl}" 
+                            width="100%" 
+                            height="100%"
+                            style="border: none;"
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
         }
 
         function showProposalSuccess(result) {
@@ -1179,14 +1506,17 @@
             }
         }
 
-        // Function to open Proposal Viewer
+        // Function to open Proposal Viewer with improved search
         function openProposalViewer() {
+            // Clear any existing proposals cache
             window.allProposals = null;
             
+            // Create modal overlay
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
             overlay.style.display = 'block';
             
+            // Create modal
             const modal = document.createElement('div');
             modal.className = 'pdf-modal';
             
@@ -1198,9 +1528,7 @@
                 <div class="pdf-viewer" style="padding: 20px;">
                     <div class="search-container">
                         <div class="search-input-wrapper">
-                            <input type="text" 
-                                   id="proposalSearch" 
-                                   placeholder="🔍 Search by company name..." 
+                            <input type="text" id="proposalSearch" placeholder="🔍 Search by company name..." 
                                    autocomplete="off"
                                    onkeyup="handleProposalSearch()"
                                    onfocus="this.style.borderColor='#1e3a8a'"
@@ -1221,6 +1549,7 @@
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             
+            // Always load fresh proposals
             setTimeout(() => {
                 loadProposalsFromDrive();
             }, 100);
@@ -1257,16 +1586,19 @@
             }
         }
         
+        // Function to load proposals from Google Drive using JSONP
         async function loadProposalsFromDrive() {
-            const proposalsUrl = PROPOSALS_API_URL;
+            const proposalsUrl = PROPOSALS_API_URL; // Use the separate API for proposals
             
             console.log('Starting to load proposals...');
             console.log('Using URL:', proposalsUrl);
             
             try {
+                // Create a callback function name
                 const callbackName = 'proposalsCallback_' + Date.now();
                 console.log('Callback name:', callbackName);
                 
+                // Create a promise to handle the JSONP response
                 const promise = new Promise((resolve, reject) => {
                     window[callbackName] = (data) => {
                         console.log('Received data:', data);
@@ -1274,6 +1606,7 @@
                         resolve(data);
                     };
                     
+                    // Set a timeout - increased to 20 seconds
                     setTimeout(() => {
                         console.log('Request timed out');
                         delete window[callbackName];
@@ -1281,6 +1614,7 @@
                     }, 20000);
                 });
                 
+                // Create and append the script tag
                 const script = document.createElement('script');
                 const url = `${proposalsUrl}?action=getProposals&callback=${callbackName}`;
                 console.log('Request URL:', url);
@@ -1302,16 +1636,19 @@
                 
                 document.body.appendChild(script);
                 
+                // Wait for the response
                 const data = await promise;
                 
                 console.log('Got response data:', data);
                 
+                // Remove the script tag
                 document.body.removeChild(script);
                 
                 if (data.status === 'success') {
                     const sortedProposals = (data.proposals || []).sort((a, b) => {
                         return new Date(b.modifiedTime) - new Date(a.modifiedTime);
                     });
+                    // Store globally and display
                     window.allProposals = sortedProposals;
                     displayProposals(sortedProposals);
                 } else {
@@ -1320,6 +1657,7 @@
             } catch (error) {
                 console.error('Error loading proposals:', error);
                 
+                // Show error message with fallback
                 const proposalsList = document.getElementById('proposalsList');
                 if (proposalsList) {
                     proposalsList.innerHTML = `
@@ -1333,6 +1671,7 @@
             }
         }
         
+        // Function to display proposals in the modal
         function displayProposals(proposals) {
             const proposalsList = document.getElementById('proposalsList');
             if (!proposalsList) return;
@@ -1376,6 +1715,31 @@
         
         // Updated filter function that takes search term as parameter
         function filterProposals(searchTerm) {
+            const proposalsList = document.getElementById('proposalsList');
+            
+            if (!window.allProposals || window.allProposals.length === 0) return;
+            
+            // If search is empty, show all proposals
+            if (!searchTerm) {
+                displayProposals(window.allProposals);
+                return;
+            }
+            
+            const filteredProposals = window.allProposals.filter(proposal => 
+                proposal.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            if (filteredProposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>
+                    </div>
+                `;
+            } else {
+                displayProposals(filteredProposals);
+            }
+        }(searchTerm) {
             const proposalsList = document.getElementById('proposalsList');
             
             if (!window.allProposals || window.allProposals.length === 0) return;
