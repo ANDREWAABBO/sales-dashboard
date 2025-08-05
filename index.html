@@ -1228,7 +1228,6 @@
                                onfocus="this.style.borderColor='#1e3a8a'"
                                onblur="this.style.borderColor='#e2e8f0'">
                         <button id="clearSearchBtn" 
-                                onclick="document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
                                        background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
                                        cursor: pointer; display: none; transition: all 0.3s ease; 
@@ -1251,8 +1250,24 @@
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
             
-            // Always load fresh proposals
+            // Attach clear button event listener after modal is created
             setTimeout(() => {
+                const clearBtn = document.getElementById('clearSearchBtn');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const searchInput = document.getElementById('proposalSearch');
+                        if (searchInput) {
+                            searchInput.value = '';
+                            this.style.display = 'none';
+                            filterProposals();
+                        }
+                    });
+                }
+                
+                // Load proposals
                 loadProposalsFromDrive();
             }, 100);
         }
@@ -1593,7 +1608,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v1.5 - Debug Alert Test</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.6 - Event Listener After Creation</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
