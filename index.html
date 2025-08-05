@@ -1411,6 +1411,7 @@
         function clearProposalSearch() {
             const searchInput = document.getElementById('proposalSearch');
             const clearBtn = document.getElementById('clearSearchBtn');
+            const proposalsList = document.getElementById('proposalsList');
             
             // Clear the search input
             searchInput.value = '';
@@ -1420,7 +1421,21 @@
             
             // Reset to show all proposals
             if (window.allProposals && window.allProposals.length > 0) {
-                displayProposals(window.allProposals);
+                // Sort proposals by modified time (most recent first)
+                const sortedProposals = window.allProposals.sort((a, b) => {
+                    return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                });
+                displayProposals(sortedProposals);
+            } else {
+                // If no proposals are loaded, show the loading message
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>
+                    </div>
+                `;
+                // Reload proposals
+                loadProposalsFromDrive();
             }
             
             // Refocus on search input for convenience
