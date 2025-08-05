@@ -8,212 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        </div>
-
-        <!-- Row 1: Marketing & Product List -->
-        <div class="grid-container">
-            <div class="card">
-                <div class="card-icon">🎯</div>
-                <h2>Abbondanza About Us How We Work</h2>
-                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
-                <div class="btn-group">
-                    <button onclick="openPDFViewer()" class="btn">View Presentation</button>
-                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary">Download PDF</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-icon">📋</div>
-                <h2>Product List</h2>
-                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
-                <div class="btn-group">
-                    <button onclick="openProductListPDF()" class="btn">View Product List</button>
-                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download PDF</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Row Separator -->
-        <div class="row-separator"></div>
-
-        <!-- Row 2: Proposals Section -->
-        <div class="grid-container">
-            <div class="card">
-                <div class="card-icon">📊</div>
-                <h2>Proposal Generator</h2>
-                <p>Create customized PDF proposals instantly with our built-in generator.</p>
-                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>
-            </div>
-
-            <div class="card">
-                <div class="card-icon">📄</div>
-                <h2>Proposal Copies</h2>
-                <p>Access generated proposals, templates, and proposal resources.</p>
-                <button class="btn" onclick="openProposalViewer()">View Proposals</button>
-            </div>
-
-            <div class="card">
-                <div class="card-icon">📑</div>
-                <h2>Service Agreement</h2>
-                <p>Generate subsidy agreements with automated pricing calculations.</p>
-                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button>
-            </div>
-        </div>
-
-        <!-- Row Separator -->
-        <div class="row-separator"></div>
-
-        <!-- Row 3: Lead Logger -->
-        <div class="grid-container single-row">
-            <div class="card">
-                <div class="card-icon">📝</div>
-                <h2>Lead Logger</h2>
-                <p>Log and track sales leads with follow-up management and status tracking.</p>
-                <a href="lead-logger.html" class="btn">Open Lead Logger</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Proposal Generator Modal -->
-    <div id="proposalModal" class="modal-overlay">
-        <div class="modal">
-            <h3>Generate Fresh Food Solutions Proposal</h3>
-            
-            <div class="form-group">
-                <label for="companyName">Company Name *</label>
-                <input type="text" id="companyName" name="companyName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="contactName">Contact Name (Optional)</label>
-                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="preparedBy">Your Name *</label>
-                    <input type="text" id="preparedBy" name="preparedBy" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="preparedByPhone">Your Phone *</label>
-                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="preparedByEmail">Your Email *</label>
-                <input type="email" id="preparedByEmail" name="preparedByEmail" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="fridgeCount">Number of Fridges *</label>
-                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
-                </div>
-                
-                <div class="form-group">
-                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
-                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
-                        <option value="395">$395/month</option>
-                        <option value="495">$495/month</option>
-                        <option value="595">$595/month</option>
-                        <option value="695">$695/month</option>
-                        <option value="795" selected>$795/month</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- Delivery Fee Field -->
-            <div class="form-group">
-                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
-                <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
-                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. This amount will be added to the base setup fee.</small>
-            </div>
-            
-            <div class="pricing-summary">
-                <h4>Pricing Summary</h4>
-                <div class="pricing-display" id="pricingSummary">
-                    Monthly Total: $795/month<br>
-                    Setup Fee: $295 (one-time)
-                </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Service Agreement Modal -->
-    <div id="serviceAgreementModal" class="modal-overlay">
-        <div class="modal">
-            <h3>Generate Service Agreement</h3>
-            
-            <div class="form-group">
-                <label for="serviceCompanyName">Company Name *</label>
-                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="serviceContactName">Contact Name (Optional)</label>
-                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="servicePreparedBy">Your Name *</label>
-                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="servicePreparedByPhone">Your Phone *</label>
-                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="servicePreparedByEmail">Your Email *</label>
-                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="serviceFridgeCount">Number of Fridges *</label>
-                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
-                </div>
-                
-                <div class="form-group">
-                    <label for="subsidyAmount">Company Subsidy Per Item *</label>
-                    <input type="number" id="subsidyAmount" name="subsidyAmount" min="0" step="0.50" value="0" required onchange="updateServiceAgreementPricing()">
-                    <small>Amount company pays per item</small>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="employeePrice">Employee Price Per Item *</label>
-                <input type="number" id="employeePrice" name="employeePrice" min="0" step="0.50" value="3.50" required onchange="updateServiceAgreementPricing()">
-                <small>Price employees pay per item (after subsidy)</small>
-            </div>
-            
-            <div class="pricing-summary">
-                <h4>Agreement Summary</h4>
-                <div class="pricing-display" id="servicePricingSummary">
-                    Number of Fridges: 1<br>
-                    Employee Price per Item: $3.50<br>
-                    Company Subsidy per Item: $0.00
-                </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
-                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>
-            </div>
-        </div>
-    </div>
-</body>
-</html>* {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -971,7 +766,7 @@
 
         .search-input-wrapper input {
             width: 100%;
-            padding: 15px 50px 15px 15px;
+            padding: 15px 45px 15px 15px;
             font-size: 16px;
             border: 2px solid #e2e8f0;
             border-radius: 10px;
@@ -983,25 +778,32 @@
             right: 10px;
             top: 50%;
             transform: translateY(-50%);
-            background: #e2e8f0;
+            background: transparent;
             border: none;
             color: #718096;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 5px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 20px;
+            line-height: 1;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
             transition: all 0.2s ease;
-            display: none;
+            opacity: 0;
+            visibility: hidden;
         }
 
         .clear-search-btn:hover {
-            background: #cbd5e0;
-            color: #4a5568;
+            background: #e2e8f0;
+            color: #2d3748;
         }
 
-        .clear-search-btn.visible {
-            display: block;
+        .search-input-wrapper.has-value .clear-search-btn {
+            opacity: 1;
+            visibility: visible;
         }
     </style>
     <script>
@@ -1419,7 +1221,7 @@
         function showPopup(content, type) {
             const popup = document.createElement('div');
             popup.className = 'modal-overlay';
-            popup.style.display = 'block';  // IMPORTANT: Set display to block
+            popup.style.display = 'block';  // IMPORTANT: This was missing!
             popup.innerHTML = `
                 <div class="modal">
                     <div class="${type === 'error' ? 'error-popup' : 'success-popup'}">
@@ -1442,7 +1244,7 @@
             }
         }
 
-        // Function to open Proposal Viewer with improved search
+        // Function to open Proposal Viewer
         function openProposalViewer() {
             // Clear any existing proposals cache
             window.allProposals = null;
@@ -1463,13 +1265,13 @@
                 </div>
                 <div class="pdf-viewer" style="padding: 20px;">
                     <div class="search-container">
-                        <div class="search-input-wrapper">
+                        <div class="search-input-wrapper" id="searchWrapper">
                             <input type="text" id="proposalSearch" placeholder="🔍 Search by company name..." 
-                                   autocomplete="off"
                                    onkeyup="filterProposals()"
+                                   oninput="toggleClearButton()"
                                    onfocus="this.style.borderColor='#1e3a8a'"
                                    onblur="this.style.borderColor='#e2e8f0'">
-                            <button class="clear-search-btn" id="clearSearchBtn" onclick="clearProposalSearch()">Clear</button>
+                            <button class="clear-search-btn" onclick="clearSearch()">×</button>
                         </div>
                     </div>
                     
@@ -1491,16 +1293,28 @@
             }, 100);
         }
 
-        // Clear search function
-        function clearProposalSearch() {
+        // Toggle clear button visibility
+        function toggleClearButton() {
             const searchInput = document.getElementById('proposalSearch');
-            const clearBtn = document.getElementById('clearSearchBtn');
+            const searchWrapper = document.getElementById('searchWrapper');
+            
+            if (searchInput.value.trim()) {
+                searchWrapper.classList.add('has-value');
+            } else {
+                searchWrapper.classList.remove('has-value');
+            }
+        }
+
+        // Clear search
+        function clearSearch() {
+            const searchInput = document.getElementById('proposalSearch');
+            const searchWrapper = document.getElementById('searchWrapper');
             
             searchInput.value = '';
-            clearBtn.classList.remove('visible');
+            searchWrapper.classList.remove('has-value');
             
             // Show all proposals
-            if (window.allProposals && window.allProposals.length > 0) {
+            if (window.allProposals) {
                 displayProposals(window.allProposals);
             }
         }
@@ -1633,19 +1447,10 @@
             `).join('');
         }
         
-        // Function to filter proposals based on search - FIXED to handle empty search
+        // Function to filter proposals based on search - FIXED
         function filterProposals() {
-            const searchInput = document.getElementById('proposalSearch');
-            const clearBtn = document.getElementById('clearSearchBtn');
-            const searchTerm = searchInput.value.toLowerCase().trim();
+            const searchTerm = document.getElementById('proposalSearch').value.toLowerCase();
             const proposalsList = document.getElementById('proposalsList');
-            
-            // Show/hide clear button
-            if (searchTerm) {
-                clearBtn.classList.add('visible');
-            } else {
-                clearBtn.classList.remove('visible');
-            }
             
             if (!window.allProposals || window.allProposals.length === 0) return;
             
@@ -1819,7 +1624,4 @@
         </button>
     </div>
 
-    <div class="dashboard-container">
-        <div class="header">
-            <h1 id="dashboard-title">Abbondanza Sales Force</h1>
-            <p>Access all your sales resources in one place</p>
+    <div class="
