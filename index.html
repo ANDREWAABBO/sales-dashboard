@@ -1260,6 +1260,18 @@
                         </button>
                     </div>
                     
+                    <!-- Debug info -->
+                    <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
+                        <button onclick="console.log('window.allProposals:', window.allProposals); alert('Check console for allProposals data');" 
+                                style="background: #805ad5; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                            Debug: Check allProposals
+                        </button>
+                        <button onclick="if(window.allProposals) displayProposals(window.allProposals); else alert('No proposals loaded');" 
+                                style="background: #38a169; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; margin-left: 5px;">
+                            Debug: Force Show All
+                        </button>
+                    </div>
+                    
                     <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
                         <div style="text-align: center; padding: 40px;">
                             <div class="loading-spinner"></div>
@@ -1363,8 +1375,13 @@
         
         // Function to display proposals in the modal
         function displayProposals(proposals) {
+            console.log('displayProposals called with', proposals.length, 'proposals');
+            
             const proposalsList = document.getElementById('proposalsList');
-            if (!proposalsList) return;
+            if (!proposalsList) {
+                console.error('proposalsList element not found!');
+                return;
+            }
             
             // Store proposals globally for filtering
             window.allProposals = proposals;
@@ -1377,6 +1394,8 @@
                 `;
                 return;
             }
+            
+            console.log('Rendering proposals HTML...');
             
             proposalsList.innerHTML = proposals.map(proposal => `
                 <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
@@ -1404,6 +1423,8 @@
                     </div>
                 </div>
             `).join('');
+            
+            console.log('Proposals displayed successfully');
         }
         
         // Function to filter proposals based on search
@@ -1614,7 +1635,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.0 - Fixed Filter Logic</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.1 - Debug Mode</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
