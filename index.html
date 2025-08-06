@@ -1092,23 +1092,33 @@
                 return;
             }
             
-            const install = new Date(installDate);
-            const installDay = install.getDate();
+            // Parse the date string directly (YYYY-MM-DD)
+            const [year, month, day] = installDate.split('-').map(Number);
+            const installDay = day;
             
-            let firstBillDate = new Date(install);
+            let billYear = year;
+            let billMonth = month; // JavaScript months are 0-based, but we're working with 1-based
             
-            // If installed after the 15th, don't count that partial month as free
+            // If installed after the 15th, move to next month
             if (installDay > 15) {
-                firstBillDate.setMonth(firstBillDate.getMonth() + 1);
+                billMonth += 1;
+                if (billMonth > 12) {
+                    billMonth = 1;
+                    billYear += 1;
+                }
             }
             
-            // Add the free months
-            firstBillDate.setMonth(firstBillDate.getMonth() + freeMonths);
+            // Add free months
+            billMonth += freeMonths;
+            while (billMonth > 12) {
+                billMonth -= 12;
+                billYear += 1;
+            }
             
-            // Always set to the 1st of the month for billing
-            firstBillDate.setDate(1);
+            // Format as YYYY-MM-01 (always the 1st)
+            const formattedMonth = String(billMonth).padStart(2, '0');
+            firstBillDateInput.value = `${billYear}-${formattedMonth}-01`;
             
-            firstBillDateInput.value = firstBillDate.toISOString().split('T')[0];
             updateServiceAgreementPricing();
         }
 
