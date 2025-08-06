@@ -773,9 +773,10 @@
         }
     </style>
     <script>
-        // Your deployed Web App URLs - KEEP THEM SEPARATE
+        // Your deployed Web App URLs
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec'; // For proposal generation
         const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec'; // For viewing proposals
+        const SERVICE_AGREEMENT_URL = 'https://script.google.com/macros/s/AKfycbyJ0DLErQzyIVWWbLwRXnLWESJtWq0n4FYKsa3oGXC0_0pOn4fNlnWxp11FLbPXalPihg/exec'; // For service agreements
 
         // Company switcher function
         function switchCompany(company) {
@@ -1610,8 +1611,8 @@
             const employeePrice = parseInt(document.getElementById('employeePrice').value) || 3.50;
             
             let pricingText = `Number of Fridges: ${fridgeCount}<br>`;
-            pricingText += `Employee Price per Item: $${employeePrice.toFixed(2)}<br>`;
-            pricingText += `Company Subsidy per Item: $${subsidyAmount.toFixed(2)}`;
+            pricingText += `Employee Price per Item: ${employeePrice.toFixed(2)}<br>`;
+            pricingText += `Company Subsidy per Item: ${subsidyAmount.toFixed(2)}`;
             
             document.getElementById('servicePricingSummary').innerHTML = pricingText;
         }
@@ -1620,33 +1621,51 @@
             const submitBtn = document.getElementById('generateServiceBtn');
             const originalText = submitBtn.innerHTML;
             
+            // Check if already processing
+            if (submitBtn.disabled) {
+                console.log('Already processing, ignoring click');
+                return;
+            }
+            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
             
             try {
                 const formData = {
-                    companyName: document.getElementById('serviceCompanyName').value,
+                    type: 'serviceAgreement',
+                    customer: document.getElementById('serviceCompanyName').value,
+                    street: '123 Main Street', // You'll need to add these fields to the modal
+                    city: 'Boston',
+                    state: 'MA',
+                    zip: '02101',
+                    serviceFee: '795', // Default service fee
+                    subsidyPercentage: document.getElementById('subsidyAmount').value || '0',
+                    totalKiosks: document.getElementById('serviceFridgeCount').value,
+                    installDate: '',
+                    firstBillDate: '',
+                    freeMonths: '0',
                     contactName: document.getElementById('serviceContactName').value || '',
                     preparedBy: document.getElementById('servicePreparedBy').value,
                     preparedByPhone: document.getElementById('servicePreparedByPhone').value,
-                    preparedByEmail: document.getElementById('servicePreparedByEmail').value,
-                    fridgeCount: document.getElementById('serviceFridgeCount').value,
-                    subsidyAmount: document.getElementById('subsidyAmount').value,
-                    employeePrice: document.getElementById('employeePrice').value
+                    preparedByEmail: document.getElementById('servicePreparedByEmail').value
                 };
 
-                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
+                console.log('Service Agreement form data:', formData);
+
+                if (!formData.customer || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
                     throw new Error('Please fill in all required fields.');
                 }
 
-                // For now, use the same URL but add a parameter to indicate it's a service agreement
+                // Create URL with parameters
                 const params = new URLSearchParams();
-                params.append('type', 'serviceAgreement');
                 Object.keys(formData).forEach(key => {
                     params.append(key, formData[key]);
                 });
 
-                const url = `${WEB_APP_URL}?${params.toString()}`;
+                const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
+                console.log('Opening URL:', url);
+                
+                // Open in new tab
                 window.open(url, '_blank');
 
                 closeModal('serviceAgreementModal');
@@ -1654,7 +1673,7 @@
                     <div class="success-popup">
                         <h3>🚀 Service Agreement Generation Started!</h3>
                         <p>Your service agreement is being generated. A new tab has opened with the results.</p>
-                        <p><strong>Company:</strong> ${formData.companyName}</p>
+                        <p><strong>Company:</strong> ${formData.customer}</p>
                         <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
                     </div>
                 `, 'success');
@@ -1696,7 +1715,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.5 - Delivery Fee Validation</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.6 - Service Agreement Integration</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
