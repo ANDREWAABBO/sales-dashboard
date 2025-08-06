@@ -1260,18 +1260,6 @@
                         </button>
                     </div>
                     
-                    <!-- Debug info -->
-                    <div style="margin-bottom: 10px; font-size: 12px; color: #666;">
-                        <button onclick="console.log('window.allProposals:', window.allProposals); alert('Check console for allProposals data');" 
-                                style="background: #805ad5; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">
-                            Debug: Check allProposals
-                        </button>
-                        <button onclick="if(window.allProposals) displayProposals(window.allProposals); else alert('No proposals loaded');" 
-                                style="background: #38a169; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; margin-left: 5px;">
-                            Debug: Force Show All
-                        </button>
-                    </div>
-                    
                     <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
                         <div style="text-align: center; padding: 40px;">
                             <div class="loading-spinner"></div>
@@ -1352,6 +1340,8 @@
                     const sortedProposals = (data.proposals || []).sort((a, b) => {
                         return new Date(b.modifiedTime) - new Date(a.modifiedTime);
                     });
+                    // Store ALL proposals globally ONLY here when loading from drive
+                    window.allProposals = sortedProposals;
                     displayProposals(sortedProposals);
                 } else {
                     throw new Error(data.message || 'Failed to load proposals');
@@ -1383,8 +1373,8 @@
                 return;
             }
             
-            // Store proposals globally for filtering
-            window.allProposals = proposals;
+            // DON'T overwrite allProposals here - it should only be set when loading from drive!
+            // window.allProposals = proposals;  // REMOVED THIS LINE - THIS WAS THE BUG!
             
             if (proposals.length === 0) {
                 proposalsList.innerHTML = `
@@ -1635,7 +1625,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.1 - Debug Mode</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.2 - Fixed Critical Bug!</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
