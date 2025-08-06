@@ -1251,24 +1251,12 @@
                                onfocus="this.style.borderColor='#1e3a8a'"
                                onblur="this.style.borderColor='#e2e8f0'">
                         <button id="clearSearchBtn" 
-                                onclick="alert('Clear clicked!'); document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"
+                                onclick="console.log('Clear clicked'); document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
                                        background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
                                        cursor: pointer; display: none; transition: all 0.3s ease; 
                                        font-size: 18px; color: #4a5568;">
                             ×
-                        </button>
-                    </div>
-                    
-                    <!-- TEST BUTTON -->
-                    <div style="margin-bottom: 10px;">
-                        <button onclick="alert('Test button works!'); document.getElementById('proposalSearch').value='test'; filterProposals();" 
-                                style="background: #f56565; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
-                            TEST: Set Search to "test"
-                        </button>
-                        <button onclick="document.getElementById('proposalSearch').value=''; filterProposals();" 
-                                style="background: #48bb78; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
-                            TEST: Clear Search
                         </button>
                     </div>
                     
@@ -1626,7 +1614,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v1.9 - Debug Test Buttons</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.0 - Fixed Filter Logic</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
