@@ -739,6 +739,19 @@
             transform: scale(1.05);
         }
 
+        /* Number input styling for delivery fee */
+        #deliveryFee::-webkit-inner-spin-button,
+        #deliveryFee::-webkit-outer-spin-button {
+            opacity: 1;
+            height: 40px;
+        }
+        
+        #deliveryFee {
+            -moz-appearance: textfield;
+            text-align: right;
+            padding-right: 35px;
+        }
+        
         /* Clear button styles */
         #clearSearchBtn:hover, .clear-search-btn:hover {
             background: #cbd5e0 !important;
@@ -1100,6 +1113,27 @@
             }
         }
 
+        function validateDeliveryFee() {
+            const deliveryInput = document.getElementById('deliveryFee');
+            const value = parseInt(deliveryInput.value) || 0;
+            
+            // Round to nearest $50
+            const roundedValue = Math.round(value / 50) * 50;
+            
+            // Ensure it's within bounds
+            const finalValue = Math.min(Math.max(roundedValue, 0), 5000);
+            
+            // Update the input if the value changed
+            if (value !== finalValue) {
+                deliveryInput.value = finalValue;
+            }
+            
+            // Format display with .00
+            if (deliveryInput.value === '') {
+                deliveryInput.placeholder = '$0.00';
+            }
+        }
+
         function updatePricingSummary() {
             const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1;
             const basePrice = parseInt(document.getElementById('monthlyFee').value) || 795;
@@ -1118,30 +1152,22 @@
             // Total setup fee = base + additional
             const totalSetupFee = baseSetupFee + additionalDeliveryFee;
             
-            let pricingText = `Monthly Total: $${monthlyTotal}/month`;
+            let pricingText = `Monthly Total: ${monthlyTotal}/month`;
             if (fridgeCount > 1) {
                 pricingText += ` (${fridgeCount} fridges)<br>`;
-                pricingText += `First unit: $${basePrice}/month<br>`;
-                pricingText += `Additional units: $${basePrice - 100}/month each<br>`;
+                pricingText += `First unit: ${basePrice}/month<br>`;
+                pricingText += `Additional units: ${basePrice - 100}/month each<br>`;
             } else {
                 pricingText += '<br>';
             }
             
-            pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
+            pricingText += `Setup & Delivery Fee: ${totalSetupFee} (one-time)`;
             
             if (additionalDeliveryFee > 0) {
-                pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee}</small>`;
+                pricingText += `<br><small style="color: #1e3a8a;">Base: ${baseSetupFee} + Additional: ${additionalDeliveryFee.toFixed(2)}</small>`;
             }
             
             document.getElementById('pricingSummary').innerHTML = pricingText;
-            
-            // Validation - ensure delivery fee is not negative
-            const deliveryInput = document.getElementById('deliveryFee');
-            if (additionalDeliveryFee < 0) {
-                deliveryInput.setCustomValidity('Additional delivery charges cannot be negative');
-            } else {
-                deliveryInput.setCustomValidity('');
-            }
         }
 
         async function generateProposal(event) {
@@ -1673,7 +1699,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.4 - Fixed Proposal Generator</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.5 - Delivery Fee Validation</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
@@ -1793,8 +1819,12 @@
             <!-- Delivery Fee Field -->
             <div class="form-group">
                 <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
-                <input type="number" id="deliveryFee" name="deliveryFee" min="0" placeholder="$0" onchange="updatePricingSummary()">
-                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. This amount will be added to the base setup fee.</small>
+                <input type="number" id="deliveryFee" name="deliveryFee" 
+                       min="0" max="5000" step="50" 
+                       placeholder="$0.00" 
+                       onchange="validateDeliveryFee(); updatePricingSummary();"
+                       oninput="validateDeliveryFee();">
+                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments (e.g., $50, $100, $150... up to $5,000).</small>
             </div>
             
             <div class="pricing-summary">
