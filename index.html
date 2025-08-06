@@ -1037,10 +1037,11 @@
 
         // Function to close PDF viewer
         function closePDFViewer() {
-            // Remove ALL modal overlays to ensure complete cleanup
+            // Remove only PDF modal overlays, not other modals
             const overlays = document.querySelectorAll('.modal-overlay');
             overlays.forEach(overlay => {
-                if (overlay && overlay.parentNode) {
+                // Check if it contains a pdf-modal before removing
+                if (overlay && overlay.querySelector('.pdf-modal')) {
                     overlay.remove();
                 }
             });
@@ -1048,28 +1049,55 @@
             // Clear the proposals cache when closing
             window.allProposals = null;
             
-            // Remove any lingering event listeners by using a small delay
+            // Remove any lingering PDF modals by using a small delay
             setTimeout(() => {
-                // Double-check no overlays remain
+                // Double-check no PDF overlays remain
                 const remainingOverlays = document.querySelectorAll('.modal-overlay');
-                remainingOverlays.forEach(overlay => overlay.remove());
+                remainingOverlays.forEach(overlay => {
+                    if (overlay.querySelector('.pdf-modal')) {
+                        overlay.remove();
+                    }
+                });
             }, 100);
         }
 
         // Proposal Generator Functions
         function openProposalGenerator() {
+            // First, close any open modals
+            const existingOverlays = document.querySelectorAll('.modal-overlay');
+            existingOverlays.forEach(overlay => overlay.remove());
+            
             const modal = document.getElementById('proposalModal');
             if (modal) {
                 modal.style.display = 'block';
                 updatePricingSummary();
             } else {
-                console.error('Proposal modal not found');
-                alert('Error: Could not open proposal generator. Please refresh the page.');
+                console.error('Proposal modal not found in DOM');
+                // Try to find the modal by class if ID fails
+                const modalByClass = document.querySelector('#proposalModal');
+                if (modalByClass) {
+                    modalByClass.style.display = 'block';
+                    updatePricingSummary();
+                } else {
+                    // If still not found, wait a bit and try again
+                    setTimeout(() => {
+                        const retryModal = document.getElementById('proposalModal');
+                        if (retryModal) {
+                            retryModal.style.display = 'block';
+                            updatePricingSummary();
+                        } else {
+                            alert('Error: Could not open proposal generator. Please try again or refresh the page if the issue persists.');
+                        }
+                    }, 100);
+                }
             }
         }
 
         function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         function updatePricingSummary() {
@@ -1645,7 +1673,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.3 - Fixed Close Button</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.4 - Fixed Proposal Generator</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
