@@ -1037,12 +1037,23 @@
 
         // Function to close PDF viewer
         function closePDFViewer() {
-            const overlay = document.querySelector('.modal-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
+            // Remove ALL modal overlays to ensure complete cleanup
+            const overlays = document.querySelectorAll('.modal-overlay');
+            overlays.forEach(overlay => {
+                if (overlay && overlay.parentNode) {
+                    overlay.remove();
+                }
+            });
+            
             // Clear the proposals cache when closing
             window.allProposals = null;
+            
+            // Remove any lingering event listeners by using a small delay
+            setTimeout(() => {
+                // Double-check no overlays remain
+                const remainingOverlays = document.querySelectorAll('.modal-overlay');
+                remainingOverlays.forEach(overlay => overlay.remove());
+            }, 100);
         }
 
         // Proposal Generator Functions
@@ -1225,6 +1236,12 @@
 
         // Function to open Proposal Viewer
         function openProposalViewer() {
+            // Check if a modal is already open and remove it
+            const existingOverlay = document.querySelector('.modal-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
             // Clear any existing proposals cache
             window.allProposals = null;
             
@@ -1603,7 +1620,10 @@
         // Close modal when clicking outside
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
+                // Only close if clicking directly on the overlay background
+                if (event.target === event.currentTarget) {
+                    event.target.style.display = 'none';
+                }
             }
         }
     </script>
@@ -1625,7 +1645,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.2 - Fixed Critical Bug!</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.3 - Fixed Close Button</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
