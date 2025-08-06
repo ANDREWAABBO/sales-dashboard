@@ -773,9 +773,10 @@
         }
     </style>
     <script>
-        // Your deployed Web App URLs - KEEP THEM SEPARATE
+        // Your deployed Web App URLs
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec'; // For proposal generation
         const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec'; // For viewing proposals
+        const SERVICE_AGREEMENT_URL = 'https://script.google.com/macros/s/AKfycbyJ0DLErQzyIVWWbLwRXnLWESJtWq0n4FYKsa3oGXC0_0pOn4fNlnWxp11FLbPXalPihg/exec'; // For service agreements
 
         // Company switcher function
         function switchCompany(company) {
@@ -1149,19 +1150,19 @@
             // Total setup fee = base + additional
             const totalSetupFee = baseSetupFee + additionalDeliveryFee;
             
-            let pricingText = `Monthly Total: ${monthlyTotal}/month`;
+            let pricingText = `Monthly Total: $${monthlyTotal}/month`;
             if (fridgeCount > 1) {
                 pricingText += ` (${fridgeCount} fridges)<br>`;
-                pricingText += `First unit: ${basePrice}/month<br>`;
-                pricingText += `Additional units: ${basePrice - 100}/month each<br>`;
+                pricingText += `First unit: $${basePrice}/month<br>`;
+                pricingText += `Additional units: $${basePrice - 100}/month each<br>`;
             } else {
                 pricingText += '<br>';
             }
             
-            pricingText += `Setup & Delivery Fee: ${totalSetupFee} (one-time)`;
+            pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
             
             if (additionalDeliveryFee > 0) {
-                pricingText += `<br><small style="color: #1e3a8a;">Base: ${baseSetupFee} + Additional: ${additionalDeliveryFee.toFixed(2)}</small>`;
+                pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee.toFixed(2)}</small>`;
             }
             
             document.getElementById('pricingSummary').innerHTML = pricingText;
@@ -1587,7 +1588,7 @@
             document.body.appendChild(overlay);
         }
 
-        // Service Agreement Generator
+        // Service Agreement Generator Functions
         function generateServiceAgreement() {
             document.getElementById('serviceAgreementModal').style.display = 'block';
             updateServiceAgreementPricing();
@@ -1606,47 +1607,118 @@
 
         function updateServiceAgreementPricing() {
             const fridgeCount = parseInt(document.getElementById('serviceFridgeCount').value) || 1;
-            const subsidyAmount = parseInt(document.getElementById('subsidyAmount').value) || 0;
-            const employeePrice = parseInt(document.getElementById('employeePrice').value) || 3.50;
+            const serviceFee = parseInt(document.getElementById('serviceMonthlyFee').value) || 795;
+            const subsidyPercentage = parseInt(document.getElementById('subsidyPercentage').value) || 0;
+            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;
             
-            let pricingText = `Number of Fridges: ${fridgeCount}<br>`;
-            pricingText += `Employee Price per Item: $${employeePrice.toFixed(2)}<br>`;
-            pricingText += `Company Subsidy per Item: $${subsidyAmount.toFixed(2)}`;
+            // Calculate total monthly fee with discount
+            let totalMonthlyFee = serviceFee;
+            if (fridgeCount > 1) {
+                const additionalUnits = fridgeCount - 1;
+                const discountedPrice = Math.max(0, serviceFee - 100);
+                totalMonthlyFee = serviceFee + (discountedPrice * additionalUnits);
+            }
+            
+            // Calculate subsidy amount
+            const subsidyAmount = (totalMonthlyFee * subsidyPercentage / 100).toFixed(2);
+            
+            let pricingText = `Total Kiosks: ${fridgeCount}<br>`;
+            pricingText += `Monthly Service Fee: ${totalMonthlyFee.toFixed(2)}`;
+            if (fridgeCount > 1) {
+                pricingText += ` (1st: ${serviceFee}, Additional: ${serviceFee - 100} each)`;
+            }
+            pricingText += `<br>Subsidy: ${subsidyPercentage}% discount<br>`;
+            pricingText += `Monthly Subsidy Amount: ${subsidyAmount}`;
+            if (freeMonths > 0) {
+                pricingText += `<br>Free Months: ${freeMonths}`;
+            }
             
             document.getElementById('servicePricingSummary').innerHTML = pricingText;
+        }
+
+        function calculateFirstBillDate() {
+            const installDate = document.getElementById('installDate').value;
+            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;
+            const firstBillDateInput = document.getElementById('firstBillDate');
+            
+            if (!installDate) {
+                firstBillDateInput.value = '';
+                return;
+            }
+            
+            const install = new Date(installDate);
+            const installDay = install.getDate();
+            
+            let firstBillDate = new Date(install);
+            
+            // If installed after the 15th, don't count that partial month as free
+            if (installDay > 15) {
+                firstBillDate.setMonth(firstBillDate.getMonth() + 1);
+            }
+            
+            // Add the free months
+            firstBillDate.setMonth(firstBillDate.getMonth() + freeMonths);
+            
+            // Always set to the 1st of the month for billing
+            firstBillDate.setDate(1);
+            
+            firstBillDateInput.value = firstBillDate.toISOString().split('T')[0];
+            
+            // Update pricing display to show free months
+            updateServiceAgreementPricing();
         }
 
         async function generateServiceAgreementPDF() {
             const submitBtn = document.getElementById('generateServiceBtn');
             const originalText = submitBtn.innerHTML;
             
+            // Check if already processing
+            if (submitBtn.disabled) {
+                console.log('Already processing, ignoring click');
+                return;
+            }
+            
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
             
             try {
                 const formData = {
-                    companyName: document.getElementById('serviceCompanyName').value,
+                    type: 'serviceAgreement',
+                    customer: document.getElementById('serviceCompanyName').value,
+                    street: document.getElementById('serviceStreet').value,
+                    city: document.getElementById('serviceCity').value,
+                    state: document.getElementById('serviceState').value,
+                    zip: document.getElementById('serviceZip').value,
+                    serviceFee: document.getElementById('serviceMonthlyFee').value,
+                    subsidyPercentage: document.getElementById('subsidyPercentage').value,
+                    totalKiosks: document.getElementById('serviceFridgeCount').value,
+                    installDate: document.getElementById('installDate').value || '',
+                    firstBillDate: document.getElementById('firstBillDate').value || '',
+                    freeMonths: document.getElementById('freeMonths').value || '0',
                     contactName: document.getElementById('serviceContactName').value || '',
                     preparedBy: document.getElementById('servicePreparedBy').value,
                     preparedByPhone: document.getElementById('servicePreparedByPhone').value,
-                    preparedByEmail: document.getElementById('servicePreparedByEmail').value,
-                    fridgeCount: document.getElementById('serviceFridgeCount').value,
-                    subsidyAmount: document.getElementById('subsidyAmount').value,
-                    employeePrice: document.getElementById('employeePrice').value
+                    preparedByEmail: document.getElementById('servicePreparedByEmail').value
                 };
 
-                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
+                console.log('Service Agreement form data:', formData);
+
+                // Validate required fields
+                if (!formData.customer || !formData.street || !formData.city || !formData.state || 
+                    !formData.zip || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
                     throw new Error('Please fill in all required fields.');
                 }
 
-                // For now, use the same URL but add a parameter to indicate it's a service agreement
+                // Create URL with parameters
                 const params = new URLSearchParams();
-                params.append('type', 'serviceAgreement');
                 Object.keys(formData).forEach(key => {
                     params.append(key, formData[key]);
                 });
 
-                const url = `${WEB_APP_URL}?${params.toString()}`;
+                const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
+                console.log('Opening URL:', url);
+                
+                // Open in new tab
                 window.open(url, '_blank');
 
                 closeModal('serviceAgreementModal');
@@ -1654,7 +1726,8 @@
                     <div class="success-popup">
                         <h3>🚀 Service Agreement Generation Started!</h3>
                         <p>Your service agreement is being generated. A new tab has opened with the results.</p>
-                        <p><strong>Company:</strong> ${formData.companyName}</p>
+                        <p><strong>Company:</strong> ${formData.customer}</p>
+                        <p><strong>Address:</strong> ${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}</p>
                         <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
                     </div>
                 `, 'success');
@@ -1696,7 +1769,7 @@
         <div class="header">
             <h1 id="dashboard-title">Abbondanza Sales Force</h1>
             <p>Access all your sales resources in one place</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.5 - Delivery Fee Validation</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.7 - Service Agreement Complete</p>
         </div>
 
         <!-- Row 1: Marketing & Product List -->
@@ -1854,6 +1927,36 @@
                 <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
             </div>
             
+            <div class="form-group">
+                <label for="serviceStreet">Street Address *</label>
+                <input type="text" id="serviceStreet" name="serviceStreet" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="serviceCity">City *</label>
+                    <input type="text" id="serviceCity" name="serviceCity" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="serviceState">State *</label>
+                    <select id="serviceState" name="serviceState" required>
+                        <option value="">Select State</option>
+                        <option value="MA" selected>MA</option>
+                        <option value="NH">NH</option>
+                        <option value="ME">ME</option>
+                        <option value="VT">VT</option>
+                        <option value="RI">RI</option>
+                        <option value="CT">CT</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="serviceZip">Zip Code *</label>
+                <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>
+            </div>
+            
             <div class="form-row">
                 <div class="form-group">
                     <label for="servicePreparedBy">Your Name *</label>
@@ -1873,29 +1976,79 @@
             
             <div class="form-row">
                 <div class="form-group">
-                    <label for="serviceFridgeCount">Number of Fridges *</label>
+                    <label for="serviceFridgeCount">Total Kiosks to Install *</label>
                     <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
                 </div>
                 
                 <div class="form-group">
-                    <label for="subsidyAmount">Company Subsidy Per Item *</label>
-                    <input type="number" id="subsidyAmount" name="subsidyAmount" min="0" step="0.50" value="0" required onchange="updateServiceAgreementPricing()">
-                    <small>Amount company pays per item</small>
+                    <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>
+                    <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">
+                        <option value="395">$395/month</option>
+                        <option value="495">$495/month</option>
+                        <option value="595">$595/month</option>
+                        <option value="695">$695/month</option>
+                        <option value="795" selected>$795/month</option>
+                    </select>
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="employeePrice">Employee Price Per Item *</label>
-                <input type="number" id="employeePrice" name="employeePrice" min="0" step="0.50" value="3.50" required onchange="updateServiceAgreementPricing()">
-                <small>Price employees pay per item (after subsidy)</small>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="subsidyPercentage">Subsidy Percentage *</label>
+                    <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">
+                        <option value="0" selected>0%</option>
+                        <option value="10">10%</option>
+                        <option value="20">20%</option>
+                        <option value="25">25%</option>
+                        <option value="30">30%</option>
+                        <option value="40">40%</option>
+                        <option value="50">50%</option>
+                        <option value="60">60%</option>
+                        <option value="70">70%</option>
+                        <option value="75">75%</option>
+                        <option value="80">80%</option>
+                        <option value="90">90%</option>
+                        <option value="100">100%</option>
+                    </select>
+                    <small>Discount on purchases billed back to company</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="freeMonths">Free Months</label>
+                    <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">
+                        <option value="0" selected>No free months</option>
+                        <option value="1">1 month free</option>
+                        <option value="2">2 months free</option>
+                        <option value="3">3 months free</option>
+                        <option value="4">4 months free</option>
+                        <option value="5">5 months free</option>
+                        <option value="6">6 months free</option>
+                    </select>
+                    <small>Service fee waived for initial months</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="installDate">Install Date</label>
+                    <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">
+                    <small>Leave blank for TBD</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="firstBillDate">First Bill Date</label>
+                    <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">
+                    <small>Auto-calculated based on install date and free months</small>
+                </div>
             </div>
             
             <div class="pricing-summary">
                 <h4>Agreement Summary</h4>
                 <div class="pricing-display" id="servicePricingSummary">
-                    Number of Fridges: 1<br>
-                    Employee Price per Item: $3.50<br>
-                    Company Subsidy per Item: $0.00
+                    Total Kiosks: 1<br>
+                    Monthly Service Fee: $795.00<br>
+                    Subsidy: 0% discount<br>
+                    Monthly Subsidy Amount: $0.00
                 </div>
             </div>
             
