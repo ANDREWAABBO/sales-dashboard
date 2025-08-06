@@ -1,4 +1,16 @@
-<!DOCTYPE html>
+.logout-btn {
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -486,7 +498,39 @@
             100% { transform: rotate(360deg); }
         }
 
-        .logout-btn {
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin: 30px 0 20px 0;
+            color: white;
+        }
+
+        .section-header h2 {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 0;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: inline-block;
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: headerGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerGlow {
+            from { 
+                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+                filter: brightness(1); 
+            }
+            to { 
+                box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+                filter: brightness(1.1); 
+            }
+        }
             background: white !important;
             color: black !important;
             font-weight: 700 !important;
@@ -1396,6 +1440,11 @@
             <p style="font-size: 0.8em; opacity: 0.5;">v2.8 - Compact Layout with Service Agreement Copies</p>
         </div>
 
+        <!-- MARKETING Section -->
+        <div class="section-header">
+            <h2>MARKETING</h2>
+        </div>
+
         <!-- Row 1: Marketing & Product List -->
         <div class="grid-container">
             <div class="card">
@@ -1422,6 +1471,11 @@
         <!-- Row Separator -->
         <div class="row-separator"></div>
 
+        <!-- PROPOSALS Section -->
+        <div class="section-header">
+            <h2>PROPOSALS</h2>
+        </div>
+
         <!-- Row 2: Proposals Section -->
         <div class="grid-container">
             <div class="card">
@@ -1442,6 +1496,11 @@
         <!-- Row Separator -->
         <div class="row-separator"></div>
 
+        <!-- SERVICE AGREEMENTS Section -->
+        <div class="section-header">
+            <h2>SERVICE AGREEMENTS</h2>
+        </div>
+
         <!-- Row 3: Service Agreements Section -->
         <div class="grid-container">
             <div class="card">
@@ -1461,6 +1520,11 @@
 
         <!-- Row Separator -->
         <div class="row-separator"></div>
+
+        <!-- LEADS Section -->
+        <div class="section-header">
+            <h2>LEADS</h2>
+        </div>
 
         <!-- Row 4: Lead Logger (Single Row) -->
         <div class="grid-container single-row">
