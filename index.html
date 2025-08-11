@@ -512,14 +512,14 @@
     </style>
     <script>
         // Password protection
-        const DASHBOARD_PASSWORD = 'quantum2024';
+        const DASHBOARD_PASSWORD = 'abbondanza2024';
         
         function checkAuth() {
-            const isLoggedIn = sessionStorage.getItem('quantumAuth') === 'true';
+            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
             if (!isLoggedIn) {
-                const password = prompt('Please enter the Quantum Solutions dashboard password:');
+                const password = prompt('Please enter the dashboard password:');
                 if (password === DASHBOARD_PASSWORD) {
-                    sessionStorage.setItem('quantumAuth', 'true');
+                    sessionStorage.setItem('dashboardAuth', 'true');
                 } else {
                     alert('Incorrect password. Access denied.');
                     document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>';
@@ -530,7 +530,7 @@
         }
 
         function logout() {
-            sessionStorage.removeItem('quantumAuth');
+            sessionStorage.removeItem('dashboardAuth');
             location.reload();
         }
 
