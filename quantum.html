@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -298,12 +297,168 @@
             transform: scale(1.05);
         }
 
-        .btn-secondary {
-            background: #10b981;
+        .success-popup {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.05em;
         }
 
-        .btn-secondary:hover {
-            background: #059669;
+        .error-popup {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.05em;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1e3a8a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 25px 35px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            text-align: center;
+            font-size: 1.4em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.05em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1e3a8a;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #718096;
+            font-size: 0.95em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .form-checkbox:hover {
+            border-color: #1e3a8a;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .pricing-summary {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #1e3a8a;
+        }
+
+        .pricing-summary h4 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-primary {
+            background: #1e3a8a;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
         }
     </style>
     <script>
@@ -477,9 +632,244 @@
             document.body.appendChild(overlay);
         }
 
-        // Placeholder functions for other Quantum features
+        // Quantum Proposal Generator
         function openQuantumProposalGenerator() {
-            alert('Quantum Proposal Generator coming soon!');
+            document.getElementById('quantumProposalModal').style.display = 'block';
+            updateQuantumPricingSummary();
+        }
+
+        function closeQuantumModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function updateCustomerType() {
+            const customerType = document.getElementById('customerType').value;
+            const scannerGroup = document.getElementById('scannerGroup');
+            const scannerCount = document.getElementById('scannerCount');
+            
+            if (customerType === 'new') {
+                scannerCount.value = 1;
+                scannerGroup.style.display = 'block';
+            } else {
+                scannerCount.value = 0;
+                scannerGroup.style.display = 'block';
+            }
+            updateQuantumPricingSummary();
+        }
+
+        function calculateFreight() {
+            const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
+            const customerZip = document.getElementById('customerZip').value;
+            
+            let baseFreight;
+            
+            // Quantity-based freight calculation
+            if (fridgeCount === 1) {
+                baseFreight = 895;
+            } else if (fridgeCount === 2) {
+                baseFreight = 1400; // $700 each
+            } else if (fridgeCount === 3) {
+                baseFreight = 1800; // $600 each
+            } else {
+                baseFreight = fridgeCount * 550; // $550 each for 4+
+            }
+            
+            // Distance multiplier (simplified - you can enhance with real zip code logic)
+            let distanceMultiplier = 1.0;
+            if (customerZip) {
+                const zipCode = parseInt(customerZip);
+                // Simple logic - you can replace with real distance calculation
+                if (zipCode < 10000 || zipCode > 99999) {
+                    distanceMultiplier = 1.0; // Local/unknown
+                } else if (zipCode >= 10000 && zipCode <= 19999) {
+                    distanceMultiplier = 1.0; // Northeast
+                } else if (zipCode >= 20000 && zipCode <= 39999) {
+                    distanceMultiplier = 1.2; // Southeast/Mid-Atlantic
+                } else {
+                    distanceMultiplier = 1.5; // West/Far
+                }
+            }
+            
+            return Math.round(baseFreight * distanceMultiplier);
+        }
+
+        function updateQuantumPricingSummary() {
+            const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
+            const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
+            const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
+            const vinylWrap = document.getElementById('vinylWrap').checked;
+            const goldSupport = document.getElementById('goldSupport').checked;
+            
+            // Base pricing
+            const fridgePrice = 7500;
+            const scannerPrice = 455;
+            const rfidRollPrice = 180; // 1000 tags × $0.18
+            const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50); // Bulk pricing
+            const freight = calculateFreight();
+            
+            // One-time costs
+            const fridgeTotal = fridgeCount * fridgePrice;
+            const scannerTotal = scannerCount * scannerPrice;
+            const rfidTotal = rfidRolls * rfidRollPrice;
+            const wrapTotal = vinylWrap ? wrapPrice : 0;
+            
+            const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + freight;
+            
+            // Monthly costs
+            const monthlyLicense = fridgeCount * 175; // $175 per fridge
+            const monthlyLTE = fridgeCount * 25; // $25 per fridge
+            const monthlyGold = goldSupport ? (fridgeCount * 39) : 0; // $39 per fridge
+            
+            const monthlyTotal = monthlyLicense + monthlyLTE + monthlyGold;
+            
+            // Update display
+            let summaryHTML = `
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">One-Time Costs</h4>
+                    <div>Food Fridges (${fridgeCount}): ${fridgeTotal.toLocaleString()}</div>
+            `;
+            
+            if (scannerCount > 0) {
+                summaryHTML += `<div>RFID Scanners (${scannerCount}): ${scannerTotal.toLocaleString()}</div>`;
+            }
+            
+            if (rfidRolls > 0) {
+                summaryHTML += `<div>RFID Tags (${rfidRolls} rolls): ${rfidTotal.toLocaleString()}</div>`;
+            }
+            
+            if (vinylWrap) {
+                summaryHTML += `<div>Vinyl Wrap: ${wrapTotal.toLocaleString()}</div>`;
+            }
+            
+            summaryHTML += `
+                    <div>Freight: ${freight.toLocaleString()}</div>
+                    <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                        One-Time Total: ${oneTimeTotal.toLocaleString()}
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">Monthly Recurring</h4>
+                    <div>License Fees: ${monthlyLicense.toLocaleString()}/month</div>
+                    <div>LTE Service: ${monthlyLTE.toLocaleString()}/month</div>
+            `;
+            
+            if (goldSupport) {
+                summaryHTML += `<div>Gold Support: ${monthlyGold.toLocaleString()}/month</div>`;
+            }
+            
+            summaryHTML += `
+                    <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                        Monthly Total: ${monthlyTotal.toLocaleString()}/month
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #64748b;">
+                        Plus $0.15 per transaction (min. $100/month)
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('quantumPricingSummary').innerHTML = summaryHTML;
+        }
+
+        async function generateQuantumProposal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            const submitBtn = document.getElementById('generateQuantumBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            if (submitBtn.disabled) {
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+            
+            try {
+                const formData = {
+                    // Customer info
+                    companyName: document.getElementById('quantumCompanyName').value,
+                    contactName: document.getElementById('quantumContactName').value || '',
+                    customerAddress: document.getElementById('customerAddress').value,
+                    customerZip: document.getElementById('customerZip').value,
+                    
+                    // Prepared by
+                    preparedBy: document.getElementById('quantumPreparedBy').value,
+                    preparedByPhone: document.getElementById('quantumPreparedByPhone').value,
+                    preparedByEmail: document.getElementById('quantumPreparedByEmail').value,
+                    
+                    // Configuration
+                    customerType: document.getElementById('customerType').value,
+                    fridgeCount: document.getElementById('quantumFridgeCount').value,
+                    scannerCount: document.getElementById('scannerCount').value,
+                    rfidRolls: document.getElementById('rfidRolls').value || '0',
+                    vinylWrap: document.getElementById('vinylWrap').checked ? 'Yes' : 'No',
+                    goldSupport: document.getElementById('goldSupport').checked ? 'Yes' : 'No'
+                };
+
+                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
+                    throw new Error('Please fill in all required fields.');
+                }
+
+                // For now, we'll create a URL with parameters (you'll need to create the Google Apps Script)
+                const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/YOUR_QUANTUM_SCRIPT_ID/exec';
+                
+                const params = new URLSearchParams();
+                Object.keys(formData).forEach(key => {
+                    params.append(key, formData[key]);
+                });
+
+                // For demo purposes, show success message
+                // const url = `${QUANTUM_PROPOSAL_URL}?${params.toString()}`;
+                // window.open(url, '_blank');
+
+                closeQuantumModal('quantumProposalModal');
+                showQuantumPopup(`
+                    <div class="success-popup">
+                        <h3>Quantum Proposal Generation Started!</h3>
+                        <p>Your Smart Food Fridge proposal is being generated.</p>
+                        <p><strong>Company:</strong> ${formData.companyName}</p>
+                        <p><strong>Configuration:</strong> ${formData.fridgeCount} fridges</p>
+                        <p><strong>Customer Type:</strong> ${formData.customerType === 'new' ? 'New Customer' : 'Existing Customer'}</p>
+                        <p><em>Note: Google Apps Script integration needed for full functionality.</em></p>
+                    </div>
+                `, 'success');
+
+            } catch (error) {
+                showQuantumPopup(`Error generating proposal: ${error.message}`, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        function showQuantumPopup(content, type) {
+            const popup = document.createElement('div');
+            popup.className = 'quantum-materials-overlay';
+            popup.innerHTML = `
+                <div class="quantum-materials-modal" style="max-width: 600px;">
+                    <div class="${type === 'error' ? 'error-popup' : 'success-popup'}" style="padding: 30px; text-align: center;">
+                        ${content}
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-secondary" onclick="this.closest('.quantum-materials-overlay').remove()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(popup);
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.remove();
+                    }
+                }, 15000);
+            }
         }
 
         function openQuantumMasterAgreement() {
@@ -553,6 +943,119 @@
                 <h2>Lead Logger</h2>
                 <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
                 <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quantum Proposal Generator Modal -->
+    <div id="quantumProposalModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Smart Food Fridge Proposal</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantumCompanyName">Company Name *</label>
+                    <input type="text" id="quantumCompanyName" name="quantumCompanyName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantumContactName">Contact Name (Optional)</label>
+                    <input type="text" id="quantumContactName" name="quantumContactName" placeholder="Leave blank if unknown">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customerAddress">Customer Address *</label>
+                    <input type="text" id="customerAddress" name="customerAddress" placeholder="City, State" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerZip">Customer Zip Code *</label>
+                    <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345" required onchange="updateQuantumPricingSummary()">
+                    <small>Used for freight calculation</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantumPreparedBy">Your Name *</label>
+                    <input type="text" id="quantumPreparedBy" name="quantumPreparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantumPreparedByPhone">Your Phone *</label>
+                    <input type="tel" id="quantumPreparedByPhone" name="quantumPreparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="quantumPreparedByEmail">Your Email *</label>
+                <input type="email" id="quantumPreparedByEmail" name="quantumPreparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customerType">Customer Type *</label>
+                    <select id="customerType" name="customerType" required onchange="updateCustomerType()">
+                        <option value="new" selected>New Customer (includes scanner)</option>
+                        <option value="existing">Existing Customer (has scanner)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantumFridgeCount">Number of Fridges *</label>
+                    <input type="number" id="quantumFridgeCount" name="quantumFridgeCount" min="1" value="1" required onchange="updateQuantumPricingSummary()">
+                </div>
+            </div>
+            
+            <div class="form-group" id="scannerGroup">
+                <label for="scannerCount">RFID Scanners Needed</label>
+                <select id="scannerCount" name="scannerCount" onchange="updateQuantumPricingSummary()">
+                    <option value="0">0 scanners</option>
+                    <option value="1" selected>1 scanner</option>
+                    <option value="2">2 scanners</option>
+                    <option value="3">3 scanners</option>
+                    <option value="4">4 scanners</option>
+                    <option value="5">5+ scanners</option>
+                </select>
+                <small>New customers typically need 1 scanner per location. Additional scanners for backup or multiple sites.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="rfidRolls">RFID Tag Rolls (1,000 tags per roll)</label>
+                <input type="number" id="rfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricingSummary()">
+                <small>Recommended starting quantity: 5 rolls. $0.18 per tag ($180 per roll).</small>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="vinylWrap" name="vinylWrap" onchange="updateQuantumPricingSummary()">
+                        <span>Include Vinyl Wrap (2 sides)</span>
+                    </label>
+                    <small>Custom branding for the fridge exterior</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="goldSupport" name="goldSupport" onchange="updateQuantumPricingSummary()">
+                        <span>Add Gold Level Support</span>
+                    </label>
+                    <small>On-site service, priority support (+$39/month per fridge)</small>
+                </div>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Proposal Summary</h4>
+                <div id="quantumPricingSummary">
+                    <!-- Pricing will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeQuantumModal('quantumProposalModal')" style="flex: 1; background: #64748b;">Cancel</button>
+                <button class="btn btn-primary" id="generateQuantumBtn" type="button" onclick="generateQuantumProposal()">Generate Proposal PDF</button>
             </div>
         </div>
     </div>
