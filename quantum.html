@@ -817,16 +817,15 @@
                 }
 
                 // For now, we'll create a URL with parameters (you'll need to create the Google Apps Script)
-                const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/YOUR_QUANTUM_SCRIPT_ID/exec';
+                const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
                 
                 const params = new URLSearchParams();
                 Object.keys(formData).forEach(key => {
                     params.append(key, formData[key]);
                 });
 
-                // For demo purposes, show success message
-                // const url = `${QUANTUM_PROPOSAL_URL}?${params.toString()}`;
-                // window.open(url, '_blank');
+                const url = `${QUANTUM_PROPOSAL_URL}?${params.toString()}`;
+                window.open(url, '_blank');
 
                 closeQuantumModal('quantumProposalModal');
                 showQuantumPopup(`
