@@ -1,7055 +1,3527 @@
-<!DOCTYPE html>  
+<!DOCTYPE html> 
 
-  
+<html lang="en"> 
 
-<html lang="en">  
+<head> 
 
-  
+    <meta charset="UTF-8"> 
 
-<head>  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 
-  
+    <title>Sales Team Dashboard</title> 
 
-    <meta charset="UTF-8">  
+    <link rel="preconnect" href="https://fonts.googleapis.com"> 
 
-  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"> 
 
-  
+    <style> 
 
-    <title>Sales Team Dashboard</title>  
+        * { 
 
-  
+            margin: 0; 
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">  
+            padding: 0; 
 
-  
+            box-sizing: border-box; 
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
+        } 
 
   
 
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet">  
+        body { 
 
-  
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
 
-    <style>  
+            background: #1e3a8a; 
 
-  
+            min-height: 100vh; 
 
-        * {  
+            padding: 20px; 
 
-  
+            color: #333; 
 
-            margin: 0;  
+            font-size: 18px; /* INCREASED FROM DEFAULT */ 
 
+        } 
+
   
 
-            padding: 0;  
+        /* Company Switcher */ 
 
-  
+        .company-switcher { 
 
-            box-sizing: border-box;  
+            display: flex; 
 
-  
+            justify-content: center; 
 
-        }  
+            gap: 20px; 
 
-  
+            padding: 20px; 
 
-   
+            position: sticky; 
 
-  
+            top: 0; 
 
-        body {  
+            z-index: 1000; 
 
-  
+            background: #000000; 
 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;  
+            margin: -20px -20px 30px -20px; 
 
-  
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
 
-            background: #1e3a8a;  
+        } 
 
   
 
-            min-height: 100vh;  
+        .company-btn { 
 
-  
+            padding: 12px 25px; 
 
-            padding: 20px;  
+            background: rgba(255, 255, 255, 0.1); 
 
-  
+            border: 2px solid rgba(255, 255, 255, 0.2); 
 
-            color: #333;  
+            color: white; 
 
-  
+            font-size: 18px; /* INCREASED FROM 16px */ 
 
-            font-size: 18px; /* INCREASED FROM DEFAULT */  
+            font-weight: 600; 
 
-  
+            border-radius: 50px; 
 
-        }  
+            cursor: pointer; 
 
-  
+            transition: all 0.3s ease; 
 
-   
+            display: flex; 
 
-  
+            align-items: center; 
 
-        /* Company Switcher */  
+            gap: 12px; 
 
-  
+            backdrop-filter: blur(10px); 
 
-        .company-switcher {  
+        } 
 
   
 
-            display: flex;  
+        .company-btn:hover { 
 
-  
+            background: rgba(255, 255, 255, 0.2); 
 
-            justify-content: center;  
+            transform: translateY(-2px); 
 
-  
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
 
-            gap: 20px;  
+        } 
 
   
 
-            padding: 20px;  
+        .company-btn.active { 
 
-  
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); 
 
-            position: sticky;  
+            border-color: transparent; 
 
-  
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 
 
-            top: 0;  
+                        0 0 60px rgba(59, 130, 246, 0.3); 
 
-  
+            animation: glow 2s ease-in-out infinite alternate; 
 
-            z-index: 1000;  
+        } 
 
   
 
-            background: #000000;  
+        @keyframes glow { 
 
-  
+            from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); } 
 
-            margin: -20px -20px 30px -20px;  
+            to { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); } 
 
+        } 
+
   
 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);  
+        .company-logo { 
 
-  
+            height: 35px; 
 
-        }  
+            width: auto; 
 
-  
+            filter: brightness(0) invert(1); 
+
+            transition: all 0.3s ease; 
 
-   
+        } 
 
   
 
-        .company-btn {  
+        .abbondanza-logo { 
 
-  
+            height: 40px; 
 
-            padding: 12px 25px;  
+        } 
 
   
 
-            background: rgba(255, 255, 255, 0.1);  
+        .company-btn:hover .company-logo { 
 
-  
+            transform: scale(1.05); 
 
-            border: 2px solid rgba(255, 255, 255, 0.2);  
+        } 
 
   
 
-            color: white;  
+        /* Row Separator */ 
 
-  
+        .row-separator { 
 
-            font-size: 18px; /* INCREASED FROM 16px */  
+            height: 2px; 
 
-  
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent); 
 
-            font-weight: 600;  
+            margin: 25px 0; 
 
-  
+            animation: shimmer 3s infinite; 
 
-            border-radius: 50px;  
+        } 
 
   
 
-            cursor: pointer;  
+        @keyframes shimmer { 
 
-  
+            0% { opacity: 0.5; } 
 
-            transition: all 0.3s ease;  
+            50% { opacity: 1; } 
 
-  
+            100% { opacity: 0.5; } 
 
-            display: flex;  
+        } 
 
   
 
-            align-items: center;  
+        /* Section Headers */ 
 
-  
+        .section-header { 
 
-            gap: 12px;  
+            text-align: center; 
 
-  
+            margin: 30px 0 20px 0; 
+
+            color: white; 
 
-            backdrop-filter: blur(10px);  
+        } 
 
   
 
-        }  
+        .section-header h2 { 
 
-  
+            font-size: 2.0em; /* INCREASED FROM 1.8em */ 
 
-   
+            font-weight: 700; 
 
-  
+            margin: 0; 
 
-        .company-btn:hover {  
+            padding: 12px 30px; 
 
-  
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%); 
 
-            background: rgba(255, 255, 255, 0.2);  
+            border-radius: 50px; 
 
-  
+            backdrop-filter: blur(10px); 
 
-            transform: translateY(-2px);  
+            border: 2px solid rgba(255, 255, 255, 0.2); 
 
-  
+            display: inline-block; 
 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);  
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif; 
 
-  
+            letter-spacing: 1.5px; 
 
-        }  
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); 
 
-  
+            animation: headerGlow 3s ease-in-out infinite alternate; 
 
-   
+        } 
 
   
 
-        .company-btn.active {  
+        @keyframes headerGlow { 
 
-  
+            from {  
 
-            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);  
+                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1); 
 
-  
+                filter: brightness(1);  
 
-            border-color: transparent;  
+            } 
 
-  
+            to {  
 
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5),  
+                box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2); 
 
-  
+                filter: brightness(1.1);  
+
+            } 
 
-                        0 0 60px rgba(59, 130, 246, 0.3);  
+        } 
 
   
 
-            animation: glow 2s ease-in-out infinite alternate;  
+        .dashboard-container { 
 
-  
+            max-width: 1400px; 
 
-        }  
+            margin: 0 auto; 
 
-  
+            animation: fadeIn 0.8s ease-out; 
 
-   
+        } 
 
   
 
-        @keyframes glow {  
+        @keyframes fadeIn { 
 
-  
+            from { opacity: 0; transform: translateY(20px); } 
+
+            to { opacity: 1; transform: translateY(0); } 
 
-            from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); }  
+        } 
 
   
 
-            to { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); }  
+        .header { 
 
-  
+            text-align: center; 
 
-        }  
+            margin-bottom: 35px; 
 
-  
+            color: white; 
 
-   
+            position: relative; 
 
+        } 
+
   
 
-        .company-logo {  
+        .header h1 { 
 
-  
+            font-size: 3.2em; /* INCREASED FROM 3em */ 
 
-            height: 35px;  
+            font-weight: 700; 
 
-  
+            margin-bottom: 10px; 
 
-            width: auto;  
+            color: white; 
 
-  
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif; 
 
-            filter: brightness(0) invert(1);  
+            letter-spacing: 2px; 
 
-  
+            text-transform: uppercase; 
 
-            transition: all 0.3s ease;  
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5); 
 
-  
+            animation: titleGlow 3s ease-in-out infinite alternate; 
 
-        }  
+        } 
 
   
 
-   
+        @keyframes titleGlow { 
 
-  
+            from { filter: brightness(1); } 
+
+            to { filter: brightness(1.3); } 
 
-        .abbondanza-logo {  
+        } 
 
   
 
-            height: 40px;  
+        .header p { 
 
-  
+            font-size: 1.3em; /* INCREASED FROM 1.2em */ 
+
+            opacity: 0.9; 
 
-        }  
+        } 
 
   
 
-   
+        .grid-container { 
 
-  
+            display: grid; 
 
-        .company-btn:hover .company-logo {  
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
 
-  
+            gap: 20px; 
 
-            transform: scale(1.05);  
+            margin-bottom: 30px; 
 
+        } 
+
   
 
-        }  
+        /* Single Row Grid */ 
 
-  
+        .grid-container.single-row { 
 
-   
+            grid-template-columns: repeat(auto-fit, minmax(300px, 500px)); 
 
-  
+            justify-content: center; 
 
-        /* Row Separator */  
+        } 
 
   
 
-        .row-separator {  
+        .card { 
 
-  
+            background: rgba(255, 255, 255, 0.95); 
 
-            height: 2px;  
+            border-radius: 15px; 
 
-  
+            padding: 20px; 
 
-            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);  
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); 
 
-  
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
 
-            margin: 25px 0;  
+            position: relative; 
 
-  
+            overflow: hidden; 
 
-            animation: shimmer 3s infinite;  
+        } 
 
   
 
-        }  
+        .card::before { 
 
-  
+            content: ''; 
 
-   
+            position: absolute; 
 
-  
+            top: 0; 
 
-        @keyframes shimmer {  
+            left: 0; 
 
-  
+            right: 0; 
 
-            0% { opacity: 0.5; }  
+            height: 4px; 
 
-  
+            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%); 
 
-            50% { opacity: 1; }  
+            transform: scaleX(0); 
 
-  
+            transform-origin: left; 
 
-            100% { opacity: 0.5; }  
+            transition: transform 0.3s ease; 
 
+        } 
+
   
 
-        }  
+        .card:hover::before { 
 
-  
+            transform: scaleX(1); 
 
-   
+        } 
 
   
 
-        /* Section Headers */  
+        .card:hover { 
 
-  
+            transform: translateY(-3px); 
+
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35); 
 
-        .section-header {  
+        } 
 
   
 
-            text-align: center;  
+        .card-icon { 
 
-  
+            display: none; /* HIDE THE ICONS COMPLETELY */ 
 
-            margin: 30px 0 20px 0;  
+        } 
 
   
 
-            color: white;  
+        @keyframes pulse { 
 
-  
+            0% { transform: scale(1); } 
 
-        }  
+            50% { transform: scale(1.05); } 
 
-  
+            100% { transform: scale(1); } 
 
-   
+        } 
 
   
 
-        .section-header h2 {  
+        .card h2 { 
 
-  
+            font-size: 1.5em; /* INCREASED FROM 1.3em */ 
 
-            font-size: 2.0em; /* INCREASED FROM 1.8em */  
+            margin-bottom: 10px; 
 
-  
+            color: #2d3748; 
 
-            font-weight: 700;  
+        } 
 
   
 
-            margin: 0;  
+        .card p { 
 
-  
+            color: #718096; 
 
-            padding: 12px 30px;  
+            margin-bottom: 18px; 
 
-  
+            line-height: 1.5; 
+
+            font-size: 1.1em; /* INCREASED FROM 0.95em */ 
 
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);  
+        } 
 
   
 
-            border-radius: 50px;  
+        .btn { 
 
-  
+            display: inline-block; 
 
-            backdrop-filter: blur(10px);  
+            padding: 12px 26px; /* INCREASED PADDING */ 
 
-  
+            background: #1e3a8a; 
 
-            border: 2px solid rgba(255, 255, 255, 0.2);  
+            color: white; 
 
-  
+            text-decoration: none; 
 
-            display: inline-block;  
+            border-radius: 25px; 
 
-  
+            font-weight: 600; 
 
-            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;  
+            transition: all 0.3s ease; 
 
-  
+            position: relative; 
 
-            letter-spacing: 1.5px;  
+            overflow: hidden; 
 
-  
+            border: none; 
 
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);  
+            cursor: pointer; 
 
-  
+            font-size: 1.05em; /* INCREASED FROM 0.95em */ 
 
-            animation: headerGlow 3s ease-in-out infinite alternate;  
+        } 
 
   
 
-        }  
+        .btn::after { 
 
-  
+            content: ''; 
 
-   
+            position: absolute; 
 
-  
+            top: 50%; 
 
-        @keyframes headerGlow {  
+            left: 50%; 
 
-  
+            width: 0; 
 
-            from {   
+            height: 0; 
 
-  
+            border-radius: 50%; 
 
-                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);  
+            background: rgba(255, 255, 255, 0.3); 
 
-  
+            transform: translate(-50%, -50%); 
 
-                filter: brightness(1);   
+            transition: width 0.6s, height 0.6s; 
 
+        } 
+
   
 
-            }  
+        .btn:hover::after { 
 
-  
+            width: 300px; 
 
-            to {   
+            height: 300px; 
 
+        } 
+
   
 
-                box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);  
+        .btn:hover { 
 
-  
+            transform: translateY(-2px); 
 
-                filter: brightness(1.1);   
+            box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4); 
 
-  
+            background: #1e40af; 
 
-            }  
+        } 
 
   
 
-        }  
+        .btn:disabled { 
 
-  
+            opacity: 0.6; 
 
-   
+            cursor: not-allowed; 
 
-  
+            transform: none; 
 
-        .dashboard-container {  
+        } 
 
   
 
-            max-width: 1400px;  
+        /* Button Group */ 
 
-  
+        .btn-group { 
 
-            margin: 0 auto;  
+            display: flex; 
 
-  
+            gap: 8px; 
 
-            animation: fadeIn 0.8s ease-out;  
+            align-items: center; 
 
-  
+            flex-wrap: wrap; 
 
-        }  
+        } 
 
   
 
-   
+        /* Modal Styles */ 
 
-  
+        .modal-overlay { 
 
-        @keyframes fadeIn {  
+            display: none; 
 
-  
+            position: fixed; 
 
-            from { opacity: 0; transform: translateY(20px); }  
+            top: 0; 
 
-  
+            left: 0; 
 
-            to { opacity: 1; transform: translateY(0); }  
+            width: 100%; 
 
-  
+            height: 100%; 
 
-        }  
+            background: rgba(0, 0, 0, 0.7); 
 
-  
+            z-index: 10000; 
+
+            backdrop-filter: blur(5px); 
 
-   
+        } 
 
   
 
-        .header {  
+        .modal { 
 
-  
+            position: fixed; 
 
-            text-align: center;  
+            top: 50%; 
 
-  
+            left: 50%; 
 
-            margin-bottom: 35px;  
+            transform: translate(-50%, -50%); 
 
-  
+            background: white; 
 
-            color: white;  
+            border-radius: 20px; 
 
-  
+            padding: 25px 35px; 
 
-            position: relative;  
+            max-width: 750px; 
 
-  
+            width: 95%; 
 
-        }  
+            max-height: 98vh; 
 
-  
+            overflow-y: auto; 
 
-   
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); 
 
-  
+            z-index: 10001; 
 
-        .header h1 {  
+        } 
 
   
 
-            font-size: 3.2em; /* INCREASED FROM 3em */  
+        /* PDF Modal Styles */ 
 
-  
+        .pdf-modal { 
 
-            font-weight: 700;  
+            position: fixed; 
 
-  
+            top: 50%; 
 
-            margin-bottom: 10px;  
+            left: 50%; 
 
-  
+            transform: translate(-50%, -50%); 
 
-            color: white;  
+            background: white; 
 
-  
+            border-radius: 20px; 
 
-            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;  
+            width: 90%; 
 
-  
+            height: 90%; 
 
-            letter-spacing: 2px;  
+            max-width: 1200px; 
 
-  
+            max-height: 90vh; 
 
-            text-transform: uppercase;  
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); 
 
-  
+            z-index: 10001; 
 
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);  
+            display: flex; 
 
-  
+            flex-direction: column; 
 
-            animation: titleGlow 3s ease-in-out infinite alternate;  
+        } 
 
   
 
-        }  
+        .pdf-header { 
 
-  
+            padding: 20px; 
 
-   
+            background: #f7fafc; 
 
-  
+            border-radius: 20px 20px 0 0; 
 
-        @keyframes titleGlow {  
+            display: flex; 
 
-  
+            justify-content: space-between; 
 
-            from { filter: brightness(1); }  
+            align-items: center; 
 
-  
+            border-bottom: 1px solid #e2e8f0; 
 
-            to { filter: brightness(1.3); }  
+        } 
 
   
 
-        }  
+        .pdf-header h3 { 
 
-  
+            margin: 0; 
 
-   
+            color: #2d3748; 
 
-  
+            font-size: 1.3em; /* INCREASED */ 
 
-        .header p {  
+        } 
 
   
 
-            font-size: 1.3em; /* INCREASED FROM 1.2em */  
+        .pdf-viewer { 
 
-  
+            flex: 1; 
 
-            opacity: 0.9;  
+            padding: 20px; 
 
-  
+            overflow: hidden; 
 
-        }  
+        } 
 
   
 
-   
+        .pdf-viewer iframe { 
 
-  
+            width: 100%; 
 
-        .grid-container {  
+            height: 100%; 
 
-  
+            border: none; 
 
-            display: grid;  
+            border-radius: 10px; 
 
-  
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
 
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));  
+        } 
 
   
 
-            gap: 20px;  
+        .close-btn { 
 
-  
+            background: #e53e3e; 
 
-            margin-bottom: 30px;  
+            color: white; 
 
-  
+            border: none; 
 
-        }  
+            padding: 10px 22px; /* INCREASED PADDING */ 
 
-  
+            border-radius: 20px; 
 
-   
+            cursor: pointer; 
 
-  
+            font-weight: 600; 
 
-        /* Single Row Grid */  
+            transition: all 0.3s ease; 
 
-  
+            font-size: 1.05em; /* INCREASED */ 
 
-        .grid-container.single-row {  
+        } 
 
   
 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 500px));  
+        .close-btn:hover { 
 
-  
+            background: #c53030; 
 
-            justify-content: center;  
+            transform: scale(1.05); 
 
+        } 
+
   
 
-        }  
+        .modal h3 { 
 
-  
+            margin-bottom: 15px; 
 
-   
+            color: #2d3748; 
 
-  
+            text-align: center; 
+
+            font-size: 1.4em; /* INCREASED FROM 22px */ 
 
-        .card {  
+        } 
 
   
 
-            background: rgba(255, 255, 255, 0.95);  
+        .form-group { 
 
-  
+            margin-bottom: 20px; 
 
-            border-radius: 15px;  
+        } 
 
   
 
-            padding: 20px;  
+        .form-group label { 
 
-  
+            display: block; 
 
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);  
+            margin-bottom: 5px; 
 
-  
+            color: #4a5568; 
 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);  
+            font-weight: 600; 
 
-  
+            font-size: 1.05em; /* INCREASED */ 
 
-            position: relative;  
+        } 
 
   
 
-            overflow: hidden;  
+        .form-group input, 
 
-  
+        .form-group select { 
 
-        }  
+            width: 100%; 
 
-  
+            padding: 14px; /* INCREASED FROM 12px */ 
 
-   
+            border: 2px solid #e2e8f0; 
 
-  
+            border-radius: 10px; 
 
-        .card::before {  
+            font-size: 1.05em; /* INCREASED FROM 16px */ 
 
-  
+            transition: border-color 0.3s ease; 
 
-            content: '';  
+        } 
 
   
 
-            position: absolute;  
+        .form-group input:focus, 
 
-  
+        .form-group select:focus { 
 
-            top: 0;  
+            outline: none; 
 
-  
+            border-color: #1e3a8a; 
 
-            left: 0;  
+        } 
 
   
 
-            right: 0;  
+        .form-group small { 
 
-  
+            display: block; 
 
-            height: 4px;  
+            margin-top: 5px; 
 
-  
+            color: #718096; 
 
-            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);  
+            font-size: 0.95em; /* INCREASED FROM 0.875em */ 
 
+        } 
+
   
 
-            transform: scaleX(0);  
+        .form-row { 
 
-  
+            display: grid; 
 
-            transform-origin: left;  
+            grid-template-columns: 1fr 1fr; 
 
-  
+            gap: 15px; 
 
-            transition: transform 0.3s ease;  
+        } 
 
   
 
-        }  
+        .pricing-summary { 
 
-  
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
 
-   
+            padding: 15px; 
 
-  
+            border-radius: 10px; 
 
-        .card:hover::before {  
+            margin: 15px 0; 
 
-  
+            border: 2px solid #1e3a8a; 
 
-            transform: scaleX(1);  
+        } 
 
   
 
-        }  
+        .pricing-summary h4 { 
 
-  
+            margin: 0 0 10px 0; 
 
-   
+            color: #2d3748; 
 
-  
+            font-size: 1.2em; /* INCREASED */ 
 
-        .card:hover {  
+        } 
 
   
 
-            transform: translateY(-3px);  
+        .pricing-display { 
 
-  
+            font-size: 1.1em; /* INCREASED FROM 16px */ 
 
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);  
+            color: #1e3a8a; 
 
-  
+            font-weight: 600; 
 
-        }  
+        } 
 
   
 
-   
+        .modal-buttons { 
 
-  
+            display: flex; 
 
-        .card-icon {  
+            gap: 15px; 
 
-  
+            margin-top: 20px; 
 
-            display: none; /* HIDE THE ICONS COMPLETELY */  
+        } 
 
   
 
-        }  
+        .btn-secondary { 
 
-  
+            background: #64748b; 
+
+            flex: 1; 
 
-   
+        } 
 
   
 
-        @keyframes pulse {  
+        .btn-secondary:hover { 
 
-  
+            background: #475569; 
 
-            0% { transform: scale(1); }  
+        } 
 
   
 
-            50% { transform: scale(1.05); }  
+        .btn-primary { 
 
-  
+            background: #1e3a8a; 
 
-            100% { transform: scale(1); }  
+            flex: 2; 
 
+        } 
+
   
 
-        }  
+        .btn-primary:hover { 
 
-  
+            background: #1e40af; 
 
-   
+        } 
 
   
 
-        .card h2 {  
+        .success-popup { 
 
-  
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
 
-            font-size: 1.5em; /* INCREASED FROM 1.3em */  
+            border: 2px solid #28a745; 
 
-  
+            color: #155724; 
 
-            margin-bottom: 10px;  
+            padding: 20px; 
 
-  
+            border-radius: 15px; 
 
-            color: #2d3748;  
+            text-align: center; 
 
-  
+            font-size: 1.05em; /* INCREASED */ 
 
-        }  
+        } 
 
   
 
-   
+        .error-popup { 
 
-  
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
 
-        .card p {  
+            border: 2px solid #dc3545; 
 
-  
+            color: #721c24; 
 
-            color: #718096;  
+            padding: 20px; 
 
-  
+            border-radius: 15px; 
 
-            margin-bottom: 18px;  
+            text-align: center; 
 
-  
+            font-size: 1.05em; /* INCREASED */ 
 
-            line-height: 1.5;  
+        } 
 
   
 
-            font-size: 1.1em; /* INCREASED FROM 0.95em */  
+        .loading-spinner { 
 
-  
+            display: inline-block; 
 
-        }  
+            width: 20px; 
 
-  
+            height: 20px; 
 
-   
+            border: 3px solid #f3f3f3; 
 
-  
+            border-top: 3px solid #1e3a8a; 
 
-        .btn {  
+            border-radius: 50%; 
 
-  
+            animation: spin 1s linear infinite; 
 
-            display: inline-block;  
+        } 
 
   
 
-            padding: 12px 26px; /* INCREASED PADDING */  
+        @keyframes spin { 
 
-  
+            0% { transform: rotate(0deg); } 
+
+            100% { transform: rotate(360deg); } 
 
-            background: #1e3a8a;  
+        } 
 
   
 
-            color: white;  
+        .logout-btn { 
 
-  
+            background: white !important; 
 
-            text-decoration: none;  
+            color: black !important; 
 
-  
+            font-weight: 700 !important; 
 
-            border-radius: 25px;  
+            border: 2px solid rgba(255, 255, 255, 0.3) !important; 
 
-  
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important; 
 
-            font-weight: 600;  
+        } 
 
   
 
-            transition: all 0.3s ease;  
+        .logout-btn:hover { 
 
-  
+            background: #f0f0f0 !important; 
 
-            position: relative;  
+            transform: scale(1.05) !important; 
 
-  
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important; 
 
-            overflow: hidden;  
+        } 
 
-  
+    </style> 
 
-            border: none;  
+    <script> 
 
-  
+        // Your deployed Web App URLs 
 
-            cursor: pointer;  
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec'; 
 
-  
+        const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec'; 
 
-            font-size: 1.05em; /* INCREASED FROM 0.95em */  
+        const SERVICE_AGREEMENT_URL = 'https://script.google.com/macros/s/AKfycbyJ0DLErQzyIVWWbLwRXnLWESJtWq0n4FYKsa3oGXC0_0pOn4fNlnWxp11FLbPXalPihg/exec'; 
 
+        const SERVICE_AGREEMENTS_API_URL = 'https://script.google.com/macros/s/AKfycbyZDkhdIwynj2JAA1S07b6a1G9IBuUZXcn3AyJrX7s6cQm65g-ZX8fd4FXH7oCp2pe3/exec'; 
+
   
 
-        }  
+        // Password protection 
 
-  
+        const DASHBOARD_PASSWORD = 'abbondanza2025'; 
 
-   
+         
 
-  
+        function checkAuth() { 
 
-        .btn::after {  
+            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true'; 
 
-  
+            if (!isLoggedIn) { 
 
-            content: '';  
+                const password = prompt('Please enter the dashboard password:'); 
 
-  
+                if (password === DASHBOARD_PASSWORD) { 
 
-            position: absolute;  
+                    sessionStorage.setItem('dashboardAuth', 'true'); 
 
-  
+                } else { 
 
-            top: 50%;  
+                    alert('Incorrect password. Access denied.'); 
 
-  
+                    document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>'; 
 
-            left: 50%;  
+                    return false; 
 
-  
+                } 
 
-            width: 0;  
+            } 
 
-  
+            return true; 
 
-            height: 0;  
+        } 
 
   
 
-            border-radius: 50%;  
+        function logout() { 
 
-  
+            sessionStorage.removeItem('dashboardAuth'); 
 
-            background: rgba(255, 255, 255, 0.3);  
+            location.reload(); 
 
+        } 
+
   
 
-            transform: translate(-50%, -50%);  
+        function addLogoutButton() { 
 
-  
+            const header = document.querySelector('.header'); 
 
-            transition: width 0.6s, height 0.6s;  
+            const logoutBtn = document.createElement('button'); 
 
-  
+            logoutBtn.textContent = 'Logout'; 
 
-        }  
+            logoutBtn.className = 'btn logout-btn'; 
 
-  
+            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;'; 
 
-   
+            logoutBtn.onclick = logout; 
 
-  
+            header.appendChild(logoutBtn); 
 
-        .btn:hover::after {  
+        } 
 
   
 
-            width: 300px;  
+        window.addEventListener('DOMContentLoaded', function() { 
 
-  
+            if (checkAuth()) { 
 
-            height: 300px;  
+                addLogoutButton(); 
 
-  
+            } 
 
-        }  
+        }); 
 
   
 
-   
+        function switchCompany(company) { 
 
-  
+            document.querySelectorAll('.company-btn').forEach(btn => { 
 
-        .btn:hover {  
+                btn.classList.remove('active'); 
 
-  
+            }); 
 
-            transform: translateY(-2px);  
+            const clickedBtn = event.target.closest('.company-btn'); 
 
-  
+            clickedBtn.classList.add('active'); 
 
-            box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4);  
+             
 
-  
+            const title = document.getElementById('dashboard-title'); 
 
-            background: #1e40af;  
+            if (company === 'abbondanza') { 
 
-  
+                title.textContent = 'Abbondanza Sales Force'; 
 
-        }  
+            } else if (company === 'quantum') { 
 
-  
+                title.textContent = 'Quantum Solutions Dashboard'; 
 
-   
+                window.location.href = 'quantum.html'; 
 
-  
+            } 
 
-        .btn:disabled {  
+        } 
 
   
 
-            opacity: 0.6;  
+        // PDF Functions 
 
-  
+        function openProductListPDF() { 
 
-            cursor: not-allowed;  
+            const overlay = document.createElement('div'); 
 
-  
+            overlay.className = 'modal-overlay'; 
 
-            transform: none;  
+            overlay.style.display = 'block'; 
 
-  
+             
 
-        }  
+            const pdfModal = document.createElement('div'); 
 
-  
+            pdfModal.className = 'pdf-modal'; 
 
-   
+             
 
-  
+            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw'; 
 
-        /* Button Group */  
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=true&fitw=true&gridlines=true`; 
 
-  
+            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`; 
 
-        .btn-group {  
+             
 
-  
+            pdfModal.innerHTML = ` 
 
-            display: flex;  
+                <div class="pdf-header"> 
 
-  
+                    <h3>Abbondanza Product List</h3> 
 
-            gap: 8px;  
+                    <div> 
 
-  
+                        <button class="btn btn-secondary" onclick="window.open('${pdfUrl}', '_blank')" style="margin-right: 10px;">Download PDF</button> 
 
-            align-items: center;  
+                        <button class="close-btn" onclick="closePDFViewer()">Close</button> 
 
-  
+                    </div> 
 
-            flex-wrap: wrap;  
+                </div> 
 
-  
+                <div class="pdf-viewer"> 
 
-        }  
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe> 
 
-  
+                </div> 
 
-   
+            `; 
 
-  
+             
 
-        /* Modal Styles */  
+            overlay.appendChild(pdfModal); 
 
-  
+            document.body.appendChild(overlay); 
 
-        .modal-overlay {  
+        } 
 
   
 
-            display: none;  
+        function downloadProductListPDF() { 
 
-  
+            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw'; 
 
-            position: fixed;  
+            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true`; 
 
-  
+            window.open(pdfUrl, '_blank'); 
 
-            top: 0;  
+        } 
 
   
 
-            left: 0;  
+        function openPDFViewer() { 
 
-  
+            const overlay = document.createElement('div'); 
 
-            width: 100%;  
+            overlay.className = 'modal-overlay'; 
 
-  
+            overlay.style.display = 'block'; 
 
-            height: 100%;  
+             
 
-  
+            const pdfModal = document.createElement('div'); 
 
-            background: rgba(0, 0, 0, 0.7);  
+            pdfModal.className = 'pdf-modal'; 
 
-  
+             
 
-            z-index: 10000;  
+            const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU'; 
 
-  
+            const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`; 
 
-            backdrop-filter: blur(5px);  
+             
 
-  
+            pdfModal.innerHTML = ` 
 
-        }  
+                <div class="pdf-header"> 
 
-  
+                    <h3>Abbondanza About Us - How We Work</h3> 
 
-   
+                    <div> 
 
-  
+                        <button class="btn btn-secondary" onclick="downloadPresentationPDF()" style="margin-right: 10px;">Download PDF</button> 
 
-        .modal {  
+                        <button class="close-btn" onclick="closePDFViewer()">Close</button> 
 
-  
+                    </div> 
 
-            position: fixed;  
+                </div> 
 
-  
+                <div class="pdf-viewer"> 
 
-            top: 50%;  
+                    <iframe src="https://docs.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(pdfUrl)}" width="100%" height="100%" style="border: none;"></iframe> 
 
-  
+                </div> 
 
-            left: 50%;  
+            `; 
 
-  
+             
 
-            transform: translate(-50%, -50%);  
+            overlay.appendChild(pdfModal); 
 
-  
+            document.body.appendChild(overlay); 
 
-            background: white;  
+        } 
 
   
 
-            border-radius: 20px;  
+        function downloadPresentationPDF() { 
 
-  
+            const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU'; 
 
-            padding: 25px 35px;  
+            const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`; 
 
-  
+            window.open(pdfUrl, '_blank'); 
 
-            max-width: 750px;  
+        } 
 
   
 
-            width: 95%;  
+        function closePDFViewer() { 
 
-  
+            const overlays = document.querySelectorAll('.modal-overlay'); 
 
-            max-height: 98vh;  
+            overlays.forEach(overlay => { 
 
-  
+                if (overlay && overlay.querySelector('.pdf-modal')) { 
 
-            overflow-y: auto;  
+                    overlay.remove(); 
 
-  
+                } 
 
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);  
+            }); 
 
-  
+             
 
-            z-index: 10001;  
+            window.allProposals = null; 
 
-  
+            window.allServiceAgreements = null; 
 
-        }  
+        } 
 
   
 
-   
+        // Proposal Generator 
 
-  
+        function openProposalGenerator() { 
 
-        /* PDF Modal Styles */  
+            const proposalModal = document.getElementById('proposalModal'); 
 
-  
+            if (proposalModal) { 
 
-        .pdf-modal {  
+                proposalModal.style.display = 'block'; 
 
-  
+                updatePricingSummary(); 
 
-            position: fixed;  
+            } 
 
+        } 
+
   
 
-            top: 50%;  
+        function closeModal(modalId) { 
 
-  
+            const modal = document.getElementById(modalId); 
 
-            left: 50%;  
+            if (modal) { 
 
-  
+                modal.style.display = 'none'; 
+
+            } 
 
-            transform: translate(-50%, -50%);  
+        } 
 
   
 
-            background: white;  
+        function updatePricingSummary() { 
 
-  
+            const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1; 
 
-            border-radius: 20px;  
+            const basePrice = parseInt(document.getElementById('monthlyFee').value) || 795; 
 
-  
+            const additionalDeliveryFee = parseInt(document.getElementById('deliveryFee').value) || 0; 
 
-            width: 90%;  
+             
 
-  
+            let monthlyTotal = basePrice; 
 
-            height: 90%;  
+            let baseSetupFee = 295; 
 
-  
+             
 
-            max-width: 1200px;  
+            if (fridgeCount > 1) { 
 
-  
+                const additionalUnits = fridgeCount - 1; 
 
-            max-height: 90vh;  
+                const discountedPrice = basePrice - 100; 
 
-  
+                monthlyTotal = basePrice + (discountedPrice * additionalUnits); 
 
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);  
+                baseSetupFee = 295 + (79 * additionalUnits); 
 
-  
+            } 
 
-            z-index: 10001;  
+             
 
-  
+            const totalSetupFee = baseSetupFee + additionalDeliveryFee; 
 
-            display: flex;  
+             
 
-  
+            let pricingText = `Monthly Total: $${monthlyTotal}/month`; 
 
-            flex-direction: column;  
+            if (fridgeCount > 1) { 
 
-  
+                pricingText += ` (${fridgeCount} fridges)<br>`; 
 
-        }  
+                pricingText += `First unit: $${basePrice}/month<br>`; 
 
-  
+                pricingText += `Additional units: $${basePrice - 100}/month each<br>`; 
 
-   
+            } else { 
 
-  
+                pricingText += '<br>'; 
 
-        .pdf-header {  
+            } 
 
-  
+             
 
-            padding: 20px;  
+            pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`; 
 
-  
+             
 
-            background: #f7fafc;  
+            if (additionalDeliveryFee > 0) { 
 
-  
+                pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee.toFixed(2)}</small>`; 
 
-            border-radius: 20px 20px 0 0;  
+            } 
 
-  
+             
 
-            display: flex;  
+            document.getElementById('pricingSummary').innerHTML = pricingText; 
 
+        } 
+
   
 
-            justify-content: space-between;  
+        async function generateProposal(event) { 
 
-  
+            if (event) { 
 
-            align-items: center;  
+                event.preventDefault(); 
 
-  
+                event.stopPropagation(); 
 
-            border-bottom: 1px solid #e2e8f0;  
+            } 
 
-  
+             
 
-        }  
+            const submitBtn = document.getElementById('generateBtn'); 
 
-  
+            const originalText = submitBtn.innerHTML; 
 
-   
+             
 
-  
+            if (submitBtn.disabled) { 
 
-        .pdf-header h3 {  
+                return; 
 
-  
+            } 
 
-            margin: 0;  
+             
 
-  
+            submitBtn.disabled = true; 
 
-            color: #2d3748;  
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...'; 
 
-  
+             
 
-            font-size: 1.3em; /* INCREASED */  
+            try { 
 
-  
+                const formData = { 
 
-        }  
+                    companyName: document.getElementById('companyName').value, 
 
-  
+                    contactName: document.getElementById('contactName').value || '', 
 
-   
+                    preparedBy: document.getElementById('preparedBy').value, 
 
-  
+                    preparedByPhone: document.getElementById('preparedByPhone').value, 
 
-        .pdf-viewer {  
+                    preparedByEmail: document.getElementById('preparedByEmail').value, 
 
-  
+                    fridgeCount: document.getElementById('fridgeCount').value, 
 
-            flex: 1;  
+                    monthlyFee: document.getElementById('monthlyFee').value, 
 
-  
+                    deliveryFee: document.getElementById('deliveryFee').value || '' 
 
-            padding: 20px;  
+                }; 
 
   
 
-            overflow: hidden;  
+                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) { 
 
-  
+                    throw new Error('Please fill in all required fields.'); 
 
-        }  
+                } 
 
   
 
-   
+                const params = new URLSearchParams(); 
 
-  
+                Object.keys(formData).forEach(key => { 
 
-        .pdf-viewer iframe {  
+                    params.append(key, formData[key]); 
 
+                }); 
+
   
+
+                const url = `${WEB_APP_URL}?${params.toString()}`; 
 
-            width: 100%;  
+                window.open(url, '_blank'); 
 
   
 
-            height: 100%;  
+                closeModal('proposalModal'); 
 
-  
+                showPopup(` 
 
-            border: none;  
+                    <div class="success-popup"> 
 
-  
+                        <h3>Proposal Generation Started!</h3> 
 
-            border-radius: 10px;  
+                        <p>Your proposal is being generated. A new tab has opened with the results.</p> 
 
-  
+                        <p><strong>Company:</strong> ${formData.companyName}</p> 
 
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);  
+                        <p><strong>Prepared by:</strong> ${formData.preparedBy}</p> 
 
-  
+                    </div> 
 
-        }  
+                `, 'success'); 
 
   
 
-   
+            } catch (error) { 
 
-  
+                showPopup(`Error generating proposal: ${error.message}`, 'error'); 
 
-        .close-btn {  
+            } finally { 
 
-  
+                submitBtn.disabled = false; 
 
-            background: #e53e3e;  
+                submitBtn.innerHTML = originalText; 
 
-  
+            } 
 
-            color: white;  
+        } 
 
   
 
-            border: none;  
+        function showPopup(content, type) { 
 
-  
+            const popup = document.createElement('div'); 
 
-            padding: 10px 22px; /* INCREASED PADDING */  
+            popup.className = 'modal-overlay'; 
 
-  
+            popup.innerHTML = ` 
 
-            border-radius: 20px;  
+                <div class="modal"> 
 
-  
+                    <div class="${type === 'error' ? 'error-popup' : 'success-popup'}"> 
 
-            cursor: pointer;  
+                        ${content} 
 
-  
+                        <div style="margin-top: 20px;"> 
 
-            font-weight: 600;  
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button> 
 
-  
+                        </div> 
 
-            transition: all 0.3s ease;  
+                    </div> 
 
-  
+                </div> 
 
-            font-size: 1.05em; /* INCREASED */  
+            `; 
 
-  
+            document.body.appendChild(popup); 
 
-        }  
+             
 
-  
+            if (type === 'success') { 
 
-   
+                setTimeout(() => { 
 
-  
+                    if (popup.parentNode) { 
 
-        .close-btn:hover {  
+                        popup.remove(); 
 
-  
+                    } 
 
-            background: #c53030;  
+                }, 10000); 
 
-  
+            } 
 
-            transform: scale(1.05);  
+        } 
 
   
 
-        }  
+        // Proposal Viewer 
 
-  
+        function openProposalViewer() { 
 
-   
+            const existingOverlay = document.querySelector('.modal-overlay'); 
 
-  
+            if (existingOverlay) { 
 
-        .modal h3 {  
+                existingOverlay.remove(); 
 
-  
+            } 
 
-            margin-bottom: 15px;  
+             
 
-  
+            window.allProposals = null; 
 
-            color: #2d3748;  
+             
 
-  
+            const overlay = document.createElement('div'); 
 
-            text-align: center;  
+            overlay.className = 'modal-overlay'; 
 
-  
+            overlay.style.display = 'block'; 
 
-            font-size: 1.4em; /* INCREASED FROM 22px */  
+             
 
-  
+            const modal = document.createElement('div'); 
 
-        }  
+            modal.className = 'pdf-modal'; 
 
-  
+             
 
-   
+            modal.innerHTML = ` 
 
-  
+                <div class="pdf-header"> 
 
-        .form-group {  
+                    <h3>Proposal Library</h3> 
 
-  
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button> 
 
-            margin-bottom: 20px;  
+                </div> 
 
-  
+                <div class="pdf-viewer" style="padding: 20px;"> 
 
-        }  
+                    <div style="margin-bottom: 20px; position: relative;"> 
 
-  
+                        <input type="text" id="proposalSearch" placeholder="Search by company name..."  
 
-   
+                               style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;  
 
-  
+                                      border-radius: 10px; transition: all 0.3s ease;" 
 
-        .form-group label {  
+                               onkeyup="filterProposals()" 
 
-  
+                               onfocus="this.style.borderColor='#1e3a8a'" 
 
-            display: block;  
+                               onblur="this.style.borderColor='#e2e8f0'"> 
 
-  
+                        <button id="clearSearchBtn"  
 
-            margin-bottom: 5px;  
+                                onclick="document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();" 
 
-  
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);  
 
-            color: #4a5568;  
+                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;  
 
-  
+                                       cursor: pointer; display: none; transition: all 0.3s ease;  
 
-            font-weight: 600;  
+                                       font-size: 18px; color: #4a5568;"> 
 
-  
+                            × 
 
-            font-size: 1.05em; /* INCREASED */  
+                        </button> 
 
-  
+                    </div> 
 
-        }  
+                     
 
-  
+                    <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;"> 
 
-   
+                        <div style="text-align: center; padding: 40px;"> 
 
-  
+                            <div class="loading-spinner"></div> 
 
-        .form-group input,  
+                            <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p> 
 
-  
+                        </div> 
 
-        .form-group select {  
+                    </div> 
 
-  
+                </div> 
 
-            width: 100%;  
+            `; 
 
-  
+             
 
-            padding: 14px; /* INCREASED FROM 12px */  
+            overlay.appendChild(modal); 
 
-  
+            document.body.appendChild(overlay); 
 
-            border: 2px solid #e2e8f0;  
+             
 
-  
+            setTimeout(() => { 
 
-            border-radius: 10px;  
+                loadProposalsFromDrive(); 
 
-  
+            }, 100); 
 
-            font-size: 1.05em; /* INCREASED FROM 16px */  
+        } 
 
   
 
-            transition: border-color 0.3s ease;  
+        async function loadProposalsFromDrive() { 
 
-  
+            try { 
 
-        }  
+                const callbackName = 'proposalsCallback_' + Date.now(); 
 
-  
+                 
 
-   
+                const promise = new Promise((resolve, reject) => { 
 
-  
+                    window[callbackName] = (data) => { 
 
-        .form-group input:focus,  
+                        delete window[callbackName]; 
 
-  
+                        resolve(data); 
 
-        .form-group select:focus {  
+                    }; 
 
-  
+                     
 
-            outline: none;  
+                    setTimeout(() => { 
 
-  
+                        delete window[callbackName]; 
 
-            border-color: #1e3a8a;  
+                        reject(new Error('Request timeout')); 
 
-  
+                    }, 20000); 
 
-        }  
+                }); 
 
-  
+                 
 
-   
+                const script = document.createElement('script'); 
 
-  
+                const url = `${PROPOSALS_API_URL}?action=getProposals&callback=${callbackName}`; 
 
-        .form-group small {  
+                script.src = url; 
 
-  
+                 
 
-            display: block;  
+                script.onerror = () => { 
 
-  
+                    delete window[callbackName]; 
 
-            margin-top: 5px;  
+                    const proposalsList = document.getElementById('proposalsList'); 
 
-  
+                    if (proposalsList) { 
 
-            color: #718096;  
+                        proposalsList.innerHTML = ` 
 
-  
+                            <div style="text-align: center; padding: 40px;"> 
 
-            font-size: 0.95em; /* INCREASED FROM 0.875em */  
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p> 
 
-  
+                                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button> 
 
-        }  
+                            </div> 
 
-  
+                        `; 
 
-   
+                    } 
 
-  
+                }; 
 
-        .form-row {  
+                 
 
-  
+                document.body.appendChild(script); 
 
-            display: grid;  
+                const data = await promise; 
 
-  
+                document.body.removeChild(script); 
 
-            grid-template-columns: 1fr 1fr;  
+                 
 
-  
+                if (data.status === 'success') { 
 
-            gap: 15px;  
+                    const sortedProposals = (data.proposals || []).sort((a, b) => { 
 
-  
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime); 
 
-        }  
+                    }); 
 
-  
+                    window.allProposals = sortedProposals; 
 
-   
+                    displayProposals(sortedProposals); 
 
-  
+                } else { 
 
-        .pricing-summary {  
+                    throw new Error(data.message || 'Failed to load proposals'); 
 
-  
+                } 
 
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);  
+            } catch (error) { 
 
-  
+                const proposalsList = document.getElementById('proposalsList'); 
 
-            padding: 15px;  
+                if (proposalsList) { 
 
-  
+                    proposalsList.innerHTML = ` 
 
-            border-radius: 10px;  
+                        <div style="text-align: center; padding: 40px;"> 
 
-  
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p> 
 
-            margin: 15px 0;  
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p> 
 
-  
+                            <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button> 
 
-            border: 2px solid #1e3a8a;  
+                        </div> 
 
-  
+                    `; 
 
-        }  
+                } 
 
-  
+            } 
 
-   
+        } 
 
   
 
-        .pricing-summary h4 {  
+        function displayProposals(proposals) { 
 
-  
+            const proposalsList = document.getElementById('proposalsList'); 
 
-            margin: 0 0 10px 0;  
+            if (!proposalsList) return; 
 
-  
+             
 
-            color: #2d3748;  
+            if (proposals.length === 0) { 
 
-  
+                proposalsList.innerHTML = ` 
 
-            font-size: 1.2em; /* INCREASED */  
+                    <div style="text-align: center; padding: 40px; color: #718096;"> 
 
-  
+                        <p>No proposals found in the folder.</p> 
 
-        }  
+                    </div> 
 
-  
+                `; 
 
-   
+                return; 
 
-  
+            } 
 
-        .pricing-display {  
+             
 
-  
+            proposalsList.innerHTML = proposals.map(proposal => ` 
 
-            font-size: 1.1em; /* INCREASED FROM 16px */  
+                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" 
 
-  
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'" 
 
-            color: #1e3a8a;  
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'"> 
 
-  
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;"> 
 
-            font-weight: 600;  
+                        <div style="flex: 1; min-width: 200px;"> 
 
-  
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.name}</h4> 
 
-        }  
+                            <p style="margin: 0; color: #718096; font-size: 14px;"> 
 
-  
+                                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'} 
 
-   
+                            </p> 
 
-  
+                        </div> 
 
-        .modal-buttons {  
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;"> 
 
-  
+                            <button class="btn btn-primary"  
 
-            display: flex;  
+                                    onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')" 
 
-  
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;"> 
 
-            gap: 15px;  
+                                View 
 
-  
+                            </button> 
 
-            margin-top: 20px;  
+                            <button class="btn btn-secondary"  
 
-  
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')" 
 
-        }  
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;"> 
 
-  
+                                Download 
 
-   
+                            </button> 
 
-  
+                        </div> 
 
-        .btn-secondary {  
+                    </div> 
 
-  
+                </div> 
+
+            `).join(''); 
 
-            background: #64748b;  
+        } 
 
   
 
-            flex: 1;  
+        function filterProposals() { 
 
-  
+            const searchInput = document.getElementById('proposalSearch'); 
 
-        }  
+            const searchTerm = searchInput.value.toLowerCase(); 
 
-  
+            const proposalsList = document.getElementById('proposalsList'); 
 
-   
+            const clearBtn = document.getElementById('clearSearchBtn'); 
 
-  
+             
 
-        .btn-secondary:hover {  
+            if (searchTerm.length > 0) { 
 
-  
+                clearBtn.style.display = 'block'; 
 
-            background: #475569;  
+            } else { 
 
-  
+                clearBtn.style.display = 'none'; 
 
-        }  
+            } 
 
-  
+             
 
-   
+            if (!window.allProposals || window.allProposals.length === 0) return; 
 
-  
+             
 
-        .btn-primary {  
+            if (searchTerm === '') { 
 
-  
+                displayProposals(window.allProposals); 
 
-            background: #1e3a8a;  
+                return; 
 
-  
+            } 
 
-            flex: 2;  
+             
 
-  
+            const filteredProposals = window.allProposals.filter(proposal =>  
 
-        }  
+                proposal.name.toLowerCase().includes(searchTerm) 
 
-  
+            ); 
 
-   
+             
 
-  
+            if (filteredProposals.length === 0) { 
 
-        .btn-primary:hover {  
+                proposalsList.innerHTML = ` 
 
-  
+                    <div style="text-align: center; padding: 40px; color: #718096;"> 
 
-            background: #1e40af;  
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p> 
 
-  
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p> 
 
-        }  
+                    </div> 
 
-  
+                `; 
 
-   
+            } else { 
 
-  
+                displayProposals(filteredProposals); 
 
-        .success-popup {  
+            } 
 
+        } 
+
   
 
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);  
+        function viewProposalPDF(fileId, fileName) { 
 
-  
+            closePDFViewer(); 
 
-            border: 2px solid #28a745;  
+             
 
-  
+            const overlay = document.createElement('div'); 
 
-            color: #155724;  
+            overlay.className = 'modal-overlay'; 
 
-  
+            overlay.style.display = 'block'; 
 
-            padding: 20px;  
+             
 
-  
+            const pdfModal = document.createElement('div'); 
 
-            border-radius: 15px;  
+            pdfModal.className = 'pdf-modal'; 
 
-  
+             
 
-            text-align: center;  
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`; 
 
-  
+             
 
-            font-size: 1.05em; /* INCREASED */  
+            pdfModal.innerHTML = ` 
 
-  
+                <div class="pdf-header"> 
 
-        }  
+                    <h3>${fileName}</h3> 
 
-  
+                    <div style="display: flex; gap: 10px; align-items: center;"> 
 
-   
+                        <button class="btn btn-primary"  
 
-  
+                                onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);"  
 
-        .error-popup {  
+                                style="padding: 10px 20px;"> 
 
-  
+                            Back to Library 
 
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);  
+                        </button> 
 
-  
+                        <button class="btn btn-secondary"  
 
-            border: 2px solid #dc3545;  
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"  
 
-  
+                                style="padding: 10px 20px;"> 
 
-            color: #721c24;  
+                            Download 
 
-  
+                        </button> 
 
-            padding: 20px;  
+                    </div> 
 
-  
+                </div> 
 
-            border-radius: 15px;  
+                <div class="pdf-viewer"> 
 
-  
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe> 
 
-            text-align: center;  
+                </div> 
 
-  
+            `; 
 
-            font-size: 1.05em; /* INCREASED */  
+             
 
-  
+            overlay.appendChild(pdfModal); 
 
-        }  
+            document.body.appendChild(overlay); 
 
+        } 
+
   
 
-   
+        // Service Agreement Generator 
 
-  
+        function generateServiceAgreement() { 
 
-        .loading-spinner {  
+            document.getElementById('serviceAgreementModal').style.display = 'block'; 
 
-  
+            updateServiceAgreementPricing(); 
 
-            display: inline-block;  
+             
 
-  
+            const generateBtn = document.getElementById('generateServiceBtn'); 
 
-            width: 20px;  
+            if (generateBtn) { 
 
-  
+                const newBtn = generateBtn.cloneNode(true); 
 
-            height: 20px;  
+                generateBtn.parentNode.replaceChild(newBtn, generateBtn); 
 
-  
+                newBtn.addEventListener('click', generateServiceAgreementPDF); 
 
-            border: 3px solid #f3f3f3;  
+            } 
 
+        } 
+
   
 
-            border-top: 3px solid #1e3a8a;  
+        function updateServiceAgreementPricing() { 
 
-  
+            const fridgeCount = parseInt(document.getElementById('serviceFridgeCount').value) || 1; 
 
-            border-radius: 50%;  
+            const serviceFee = parseInt(document.getElementById('serviceMonthlyFee').value) || 795; 
 
-  
+            const subsidyPercentage = parseInt(document.getElementById('subsidyPercentage').value) || 0; 
 
-            animation: spin 1s linear infinite;  
+            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0; 
 
-  
+             
 
-        }  
+            let totalMonthlyFee = serviceFee; 
 
-  
+            if (fridgeCount > 1) { 
 
-   
+                const additionalUnits = fridgeCount - 1; 
 
-  
+                const discountedPrice = Math.max(0, serviceFee - 100); 
 
-        @keyframes spin {  
+                totalMonthlyFee = serviceFee + (discountedPrice * additionalUnits); 
 
-  
+            } 
 
-            0% { transform: rotate(0deg); }  
+             
 
-  
+            const subsidyAmount = (totalMonthlyFee * subsidyPercentage / 100).toFixed(2); 
 
-            100% { transform: rotate(360deg); }  
+             
 
-  
+            let pricingText = `Total Kiosks: ${fridgeCount}<br>`; 
 
-        }  
+            pricingText += `Monthly Service Fee: ${totalMonthlyFee.toFixed(2)}`; 
 
-  
+            if (fridgeCount > 1) { 
 
-   
+                pricingText += ` (1st: ${serviceFee}, Additional: ${serviceFee - 100} each)`; 
 
-  
+            } 
 
-        .logout-btn {  
+            pricingText += `<br>Subsidy: ${subsidyPercentage}% discount<br>`; 
 
-  
+            pricingText += `Monthly Subsidy Amount: ${subsidyAmount}`; 
 
-            background: white !important;  
+            if (freeMonths > 0) { 
 
-  
+                pricingText += `<br>Free Months: ${freeMonths}`; 
 
-            color: black !important;  
+            } 
 
-  
+             
 
-            font-weight: 700 !important;  
+            document.getElementById('servicePricingSummary').innerHTML = pricingText; 
 
+        } 
+
   
 
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;  
+        function calculateFirstBillDate() { 
 
-  
+            const installDate = document.getElementById('installDate').value; 
 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;  
+            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0; 
 
-  
+            const firstBillDateInput = document.getElementById('firstBillDate'); 
 
-        }  
+             
 
-  
+            if (!installDate) { 
 
-   
+                firstBillDateInput.value = ''; 
 
-  
+                return; 
 
-        .logout-btn:hover {  
+            } 
 
-  
+             
 
-            background: #f0f0f0 !important;  
+            // Parse the date string directly (YYYY-MM-DD) 
 
-  
+            const [year, month, day] = installDate.split('-').map(Number); 
 
-            transform: scale(1.05) !important;  
+            const installDay = day; 
 
-  
+             
 
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;  
+            let billYear = year; 
 
-  
+            let billMonth = month; // JavaScript months are 0-based, but we're working with 1-based 
 
-        }  
+             
 
-  
+            // If installed after the 15th, move to next month 
 
-    </style>  
+            if (installDay > 15) { 
 
-  
+                billMonth += 1; 
 
-    <script>  
+                if (billMonth > 12) { 
 
-  
+                    billMonth = 1; 
 
-        // Your deployed Web App URLs  
+                    billYear += 1; 
 
-  
+                } 
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';  
+            } 
 
-  
+             
 
-        const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';  
+            // Add free months 
 
-  
+            billMonth += freeMonths; 
 
-        const SERVICE_AGREEMENT_URL = 'https://script.google.com/macros/s/AKfycbyJ0DLErQzyIVWWbLwRXnLWESJtWq0n4FYKsa3oGXC0_0pOn4fNlnWxp11FLbPXalPihg/exec';  
+            while (billMonth > 12) { 
 
-  
+                billMonth -= 12; 
 
-        const SERVICE_AGREEMENTS_API_URL = 'https://script.google.com/macros/s/AKfycbyZDkhdIwynj2JAA1S07b6a1G9IBuUZXcn3AyJrX7s6cQm65g-ZX8fd4FXH7oCp2pe3/exec';  
+                billYear += 1; 
 
-  
+            } 
 
-   
+             
 
-  
+            // Format as YYYY-MM-01 (always the 1st) 
 
-        // Password protection  
+            const formattedMonth = String(billMonth).padStart(2, '0'); 
 
-  
+            firstBillDateInput.value = `${billYear}-${formattedMonth}-01`; 
 
-        const DASHBOARD_PASSWORD = 'abbondanza2025';  
+             
 
-  
+            updateServiceAgreementPricing(); 
 
-          
+        } 
 
   
 
-        function checkAuth() {  
+        async function generateServiceAgreementPDF() { 
 
-  
+            const submitBtn = document.getElementById('generateServiceBtn'); 
 
-            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';  
+            const originalText = submitBtn.innerHTML; 
 
-  
+             
 
-            if (!isLoggedIn) {  
+            if (submitBtn.disabled) { 
 
-  
+                return; 
 
-                const password = prompt('Please enter the dashboard password:');  
+            } 
 
-  
+             
 
-                if (password === DASHBOARD_PASSWORD) {  
+            submitBtn.disabled = true; 
 
-  
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...'; 
 
-                    sessionStorage.setItem('dashboardAuth', 'true');  
+             
 
-  
+            try { 
 
-                } else {  
+                const formData = { 
 
-  
+                    type: 'serviceAgreement', 
 
-                    alert('Incorrect password. Access denied.');  
+                    customer: document.getElementById('serviceCompanyName').value, 
 
-  
+                    street: document.getElementById('serviceStreet').value, 
 
-                    document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>';  
+                    city: document.getElementById('serviceCity').value, 
 
-  
+                    state: document.getElementById('serviceState').value, 
 
-                    return false;  
+                    zip: document.getElementById('serviceZip').value, 
 
-  
+                    serviceFee: document.getElementById('serviceMonthlyFee').value, 
 
-                }  
+                    subsidyPercentage: document.getElementById('subsidyPercentage').value, 
 
-  
+                    totalKiosks: document.getElementById('serviceFridgeCount').value, 
 
-            }  
+                    installDate: document.getElementById('installDate').value || '', 
 
-  
+                    firstBillDate: document.getElementById('firstBillDate').value || '', 
 
-            return true;  
+                    freeMonths: document.getElementById('freeMonths').value || '0', 
 
-  
+                    contactName: document.getElementById('serviceContactName').value || '', 
 
-        }  
+                    preparedBy: document.getElementById('servicePreparedBy').value, 
 
-  
+                    preparedByPhone: document.getElementById('servicePreparedByPhone').value, 
 
-   
+                    preparedByEmail: document.getElementById('servicePreparedByEmail').value 
 
+                }; 
+
   
 
-        function logout() {  
+                if (!formData.customer || !formData.street || !formData.city || !formData.state ||  
 
-  
+                    !formData.zip || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) { 
 
-            sessionStorage.removeItem('dashboardAuth');  
+                    throw new Error('Please fill in all required fields.'); 
 
+                } 
+
   
 
-            location.reload();  
+                const params = new URLSearchParams(); 
 
-  
+                Object.keys(formData).forEach(key => { 
 
-        }  
+                    params.append(key, formData[key]); 
 
+                }); 
+
   
+
+                const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`; 
 
-   
+                window.open(url, '_blank'); 
 
   
 
-        function addLogoutButton() {  
+                closeModal('serviceAgreementModal'); 
 
-  
+                showPopup(` 
 
-            const header = document.querySelector('.header');  
+                    <div class="success-popup"> 
 
-  
+                        <h3>Service Agreement Generation Started!</h3> 
 
-            const logoutBtn = document.createElement('button');  
+                        <p>Your service agreement is being generated. A new tab has opened with the results.</p> 
 
-  
+                        <p><strong>Company:</strong> ${formData.customer}</p> 
 
-            logoutBtn.textContent = 'Logout';  
+                        <p><strong>Address:</strong> ${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}</p> 
 
-  
+                        <p><strong>Prepared by:</strong> ${formData.preparedBy}</p> 
 
-            logoutBtn.className = 'btn logout-btn';  
+                    </div> 
 
+                `, 'success'); 
+
   
 
-            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;';  
+            } catch (error) { 
 
-  
+                showPopup(`Error generating service agreement: ${error.message}`, 'error'); 
 
-            logoutBtn.onclick = logout;  
+            } finally { 
 
-  
+                submitBtn.disabled = false; 
 
-            header.appendChild(logoutBtn);  
+                submitBtn.innerHTML = originalText; 
 
-  
+            } 
 
-        }  
+        } 
 
   
 
-   
+        // Service Agreement Viewer 
 
-  
+        function openServiceAgreementViewer() { 
 
-        window.addEventListener('DOMContentLoaded', function() {  
+            const existingOverlay = document.querySelector('.modal-overlay'); 
 
-  
+            if (existingOverlay) { 
 
-            if (checkAuth()) {  
+                existingOverlay.remove(); 
 
-  
+            } 
 
-                addLogoutButton();  
+             
 
-  
+            window.allServiceAgreements = null; 
 
-            }  
+             
 
-  
+            const overlay = document.createElement('div'); 
 
-        });  
+            overlay.className = 'modal-overlay'; 
 
-  
+            overlay.style.display = 'block'; 
 
-   
+             
 
-  
+            const modal = document.createElement('div'); 
 
-        function switchCompany(company) {  
+            modal.className = 'pdf-modal'; 
 
-  
+             
 
-            document.querySelectorAll('.company-btn').forEach(btn => {  
+            modal.innerHTML = ` 
 
-  
+                <div class="pdf-header"> 
 
-                btn.classList.remove('active');  
+                    <h3>Service Agreement Library</h3> 
 
-  
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button> 
 
-            });  
+                </div> 
 
-  
+                <div class="pdf-viewer" style="padding: 20px;"> 
 
-            const clickedBtn = event.target.closest('.company-btn');  
+                    <div style="margin-bottom: 20px; position: relative;"> 
 
-  
+                        <input type="text" id="serviceAgreementSearch" placeholder="Search by company name..."  
 
-            clickedBtn.classList.add('active');  
+                               style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;  
 
-  
+                                      border-radius: 10px; transition: all 0.3s ease;" 
 
-              
+                               onkeyup="filterServiceAgreements()" 
 
-  
+                               onfocus="this.style.borderColor='#1e3a8a'" 
 
-            const title = document.getElementById('dashboard-title');  
+                               onblur="this.style.borderColor='#e2e8f0'"> 
 
-  
+                        <button id="clearServiceSearchBtn"  
 
-            if (company === 'abbondanza') {  
+                                onclick="document.getElementById('serviceAgreementSearch').value=''; this.style.display='none'; filterServiceAgreements();" 
 
-  
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);  
 
-                title.textContent = 'Abbondanza Sales Force';  
+                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;  
 
-  
+                                       cursor: pointer; display: none; transition: all 0.3s ease;  
 
-            } else if (company === 'quantum') {  
+                                       font-size: 18px; color: #4a5568;"> 
 
-  
+                            × 
 
-                title.textContent = 'Quantum Solutions Dashboard';  
+                        </button> 
 
-  
+                    </div> 
 
-                window.location.href = 'quantum.html';  
+                     
 
-  
+                    <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;"> 
 
-            }  
+                        <div style="text-align: center; padding: 40px;"> 
 
-  
+                            <div class="loading-spinner"></div> 
 
-        }  
+                            <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p> 
 
-  
+                        </div> 
 
-   
+                    </div> 
 
-  
+                </div> 
 
-        // PDF Functions  
+            `; 
 
-  
+             
 
-        function openProductListPDF() {  
+            overlay.appendChild(modal); 
 
-  
+            document.body.appendChild(overlay); 
 
-            const overlay = document.createElement('div');  
+             
 
-  
+            setTimeout(() => { 
 
-            overlay.className = 'modal-overlay';  
+                loadServiceAgreementsFromDrive(); 
 
-  
+            }, 100); 
 
-            overlay.style.display = 'block';  
+        } 
 
   
 
-              
+        async function loadServiceAgreementsFromDrive() { 
 
-  
+            try { 
 
-            const pdfModal = document.createElement('div');  
+                const callbackName = 'serviceAgreementsCallback_' + Date.now(); 
 
-  
+                 
 
-            pdfModal.className = 'pdf-modal';  
+                const promise = new Promise((resolve, reject) => { 
 
-  
+                    window[callbackName] = (data) => { 
 
-              
+                        delete window[callbackName]; 
 
-  
+                        resolve(data); 
 
-            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';  
+                    }; 
 
-  
+                     
 
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=true&fitw=true&gridlines=true`;  
+                    setTimeout(() => { 
 
-  
+                        delete window[callbackName]; 
 
-            const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`;  
+                        reject(new Error('Request timeout')); 
 
-  
+                    }, 20000); 
 
-              
+                }); 
 
-  
+                 
 
-            pdfModal.innerHTML = `  
+                const script = document.createElement('script'); 
 
-  
+                const url = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`; 
 
-                <div class="pdf-header">  
+                script.src = url; 
 
-  
+                 
 
-                    <h3>Abbondanza Product List</h3>  
+                script.onerror = () => { 
 
-  
+                    delete window[callbackName]; 
 
-                    <div>  
+                    const serviceAgreementsList = document.getElementById('serviceAgreementsList'); 
 
-  
+                    if (serviceAgreementsList) { 
 
-                        <button class="btn btn-secondary" onclick="window.open('${pdfUrl}', '_blank')" style="margin-right: 10px;">Download PDF</button>  
+                        serviceAgreementsList.innerHTML = ` 
 
-  
+                            <div style="text-align: center; padding: 40px;"> 
 
-                        <button class="close-btn" onclick="closePDFViewer()">Close</button>  
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p> 
 
-  
+                                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button> 
 
-                    </div>  
+                            </div> 
 
-  
+                        `; 
 
-                </div>  
+                    } 
 
-  
+                }; 
 
-                <div class="pdf-viewer">  
+                 
 
-  
+                document.body.appendChild(script); 
 
-                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>  
+                const data = await promise; 
 
-  
+                document.body.removeChild(script); 
 
-                </div>  
+                 
 
-  
+                if (data.status === 'success') { 
 
-            `;  
+                    const sortedAgreements = (data.serviceAgreements || []).sort((a, b) => { 
 
-  
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime); 
 
-              
+                    }); 
 
-  
+                    window.allServiceAgreements = sortedAgreements; 
 
-            overlay.appendChild(pdfModal);  
+                    displayServiceAgreements(sortedAgreements); 
 
-  
+                } else { 
 
-            document.body.appendChild(overlay);  
+                    throw new Error(data.message || 'Failed to load service agreements'); 
 
-  
+                } 
 
-        }  
+            } catch (error) { 
 
-  
+                const serviceAgreementsList = document.getElementById('serviceAgreementsList'); 
 
-   
+                if (serviceAgreementsList) { 
 
-  
+                    serviceAgreementsList.innerHTML = ` 
 
-        function downloadProductListPDF() {  
+                        <div style="text-align: center; padding: 40px;"> 
 
-  
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p> 
 
-            const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';  
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p> 
 
-  
+                            <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button> 
 
-            const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true`;  
+                        </div> 
 
-  
+                    `; 
 
-            window.open(pdfUrl, '_blank');  
+                } 
 
-  
+            } 
 
-        }  
+        } 
 
   
 
-   
+        function displayServiceAgreements(agreements) { 
 
-  
+            const serviceAgreementsList = document.getElementById('serviceAgreementsList'); 
 
-        function openPDFViewer() {  
+            if (!serviceAgreementsList) return; 
 
-  
+             
 
-            const overlay = document.createElement('div');  
+            if (agreements.length === 0) { 
 
-  
+                serviceAgreementsList.innerHTML = ` 
 
-            overlay.className = 'modal-overlay';  
+                    <div style="text-align: center; padding: 40px; color: #718096;"> 
 
-  
+                        <p>No service agreements found in the folder.</p> 
 
-            overlay.style.display = 'block';  
+                    </div> 
 
-  
+                `; 
 
-              
+                return; 
 
-  
+            } 
 
-            const pdfModal = document.createElement('div');  
+             
 
-  
+            serviceAgreementsList.innerHTML = agreements.map(agreement => ` 
 
-            pdfModal.className = 'pdf-modal';  
+                <div class="agreement-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" 
 
-  
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'" 
 
-              
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'"> 
 
-  
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;"> 
 
-            const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';  
+                        <div style="flex: 1; min-width: 200px;"> 
 
-  
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${agreement.name}</h4> 
 
-            const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;  
+                            <p style="margin: 0; color: #718096; font-size: 14px;"> 
 
-  
+                                Modified: ${agreement.modifiedTime ? new Date(agreement.modifiedTime).toLocaleDateString() : 'Unknown'} 
 
-              
+                            </p> 
 
-  
+                        </div> 
 
-            pdfModal.innerHTML = `  
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;"> 
 
-  
+                            <button class="btn btn-primary"  
 
-                <div class="pdf-header">  
+                                    onclick="viewServiceAgreementPDF('${agreement.id}', '${agreement.name}')" 
 
-  
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;"> 
 
-                    <h3>Abbondanza About Us - How We Work</h3>  
+                                View 
 
-  
+                            </button> 
 
-                    <div>  
+                            <button class="btn btn-secondary"  
 
-  
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${agreement.id}', '_blank')" 
 
-                        <button class="btn btn-secondary" onclick="downloadPresentationPDF()" style="margin-right: 10px;">Download PDF</button>  
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;"> 
 
-  
+                                Download 
 
-                        <button class="close-btn" onclick="closePDFViewer()">Close</button>  
+                            </button> 
 
-  
+                        </div> 
 
-                    </div>  
+                    </div> 
 
-  
+                </div> 
 
-                </div>  
+            `).join(''); 
 
+        } 
+
   
 
-                <div class="pdf-viewer">  
+        function filterServiceAgreements() { 
 
-  
+            const searchInput = document.getElementById('serviceAgreementSearch'); 
 
-                    <iframe src="https://docs.google.com/viewerng/viewer?embedded=true&url=${encodeURIComponent(pdfUrl)}" width="100%" height="100%" style="border: none;"></iframe>  
+            const searchTerm = searchInput.value.toLowerCase(); 
 
-  
+            const serviceAgreementsList = document.getElementById('serviceAgreementsList'); 
 
-                </div>  
+            const clearBtn = document.getElementById('clearServiceSearchBtn'); 
 
-  
+             
 
-            `;  
+            if (searchTerm.length > 0) { 
 
-  
+                clearBtn.style.display = 'block'; 
 
-              
+            } else { 
 
-  
+                clearBtn.style.display = 'none'; 
 
-            overlay.appendChild(pdfModal);  
+            } 
 
-  
+             
 
-            document.body.appendChild(overlay);  
+            if (!window.allServiceAgreements || window.allServiceAgreements.length === 0) return; 
 
-  
+             
 
-        }  
+            if (searchTerm === '') { 
 
-  
+                displayServiceAgreements(window.allServiceAgreements); 
 
-   
+                return; 
 
-  
+            } 
 
-        function downloadPresentationPDF() {  
+             
 
-  
+            const filteredAgreements = window.allServiceAgreements.filter(agreement =>  
 
-            const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';  
+                agreement.name.toLowerCase().includes(searchTerm) 
 
-  
+            ); 
 
-            const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;  
+             
 
-  
+            if (filteredAgreements.length === 0) { 
 
-            window.open(pdfUrl, '_blank');  
+                serviceAgreementsList.innerHTML = ` 
 
-  
+                    <div style="text-align: center; padding: 40px; color: #718096;"> 
 
-        }  
+                        <p style="font-size: 18px;">No service agreements found matching "<strong>${searchTerm}</strong>"</p> 
 
-  
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p> 
 
-   
+                    </div> 
 
-  
+                `; 
 
-        function closePDFViewer() {  
+            } else { 
 
-  
+                displayServiceAgreements(filteredAgreements); 
+
+            } 
 
-            const overlays = document.querySelectorAll('.modal-overlay');  
+        } 
 
   
 
-            overlays.forEach(overlay => {  
+        function viewServiceAgreementPDF(fileId, fileName) { 
 
-  
+            closePDFViewer(); 
 
-                if (overlay && overlay.querySelector('.pdf-modal')) {  
+             
 
-  
+            const overlay = document.createElement('div'); 
 
-                    overlay.remove();  
+            overlay.className = 'modal-overlay'; 
 
-  
+            overlay.style.display = 'block'; 
 
-                }  
+             
 
-  
+            const pdfModal = document.createElement('div'); 
 
-            });  
+            pdfModal.className = 'pdf-modal'; 
 
-  
+             
 
-              
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`; 
 
-  
+             
 
-            window.allProposals = null;  
+            pdfModal.innerHTML = ` 
 
-  
+                <div class="pdf-header"> 
 
-            window.allServiceAgreements = null;  
+                    <h3>${fileName}</h3> 
 
-  
+                    <div style="display: flex; gap: 10px; align-items: center;"> 
 
-        }  
+                        <button class="btn btn-primary"  
 
-  
+                                onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);"  
 
-   
+                                style="padding: 10px 20px;"> 
 
-  
+                            Back to Library 
 
-        // Proposal Generator  
+                        </button> 
 
-  
+                        <button class="btn btn-secondary"  
 
-        function openProposalGenerator() {  
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"  
 
-  
+                                style="padding: 10px 20px;"> 
 
-            const proposalModal = document.getElementById('proposalModal');  
+                            Download 
 
-  
+                        </button> 
 
-            if (proposalModal) {  
+                    </div> 
 
-  
+                </div> 
 
-                proposalModal.style.display = 'block';  
+                <div class="pdf-viewer"> 
 
-  
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe> 
 
-                updatePricingSummary();  
+                </div> 
 
-  
+            `; 
 
-            }  
+             
 
-  
+            overlay.appendChild(pdfModal); 
+
+            document.body.appendChild(overlay); 
 
-        }  
+        } 
 
   
 
-   
+        // Close modal when clicking outside 
 
-  
+        window.onclick = function(event) { 
 
-        function closeModal(modalId) {  
+            if (event.target.classList.contains('modal-overlay')) { 
 
-  
+                if (event.target === event.currentTarget) { 
 
-            const modal = document.getElementById(modalId);  
+                    event.target.style.display = 'none'; 
 
-  
+                } 
 
-            if (modal) {  
+            } 
 
-  
+        } 
 
-                modal.style.display = 'none';  
+    </script> 
 
-  
+</head> 
 
-            }  
+<body> 
 
-  
+    <!-- Company Switcher --> 
 
-        }  
+    <div class="company-switcher"> 
 
-  
+        <button class="company-btn active" onclick="switchCompany('abbondanza')"> 
 
-   
+            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo"> 
 
-  
+            <span>Abbondanza Vending LLC</span> 
 
-        function updatePricingSummary() {  
+        </button> 
 
-  
+        <button class="company-btn" onclick="switchCompany('quantum')"> 
 
-            const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1;  
+            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo"> 
 
-  
+            <span>Quantum Solutions</span> 
 
-            const basePrice = parseInt(document.getElementById('monthlyFee').value) || 795;  
+        </button> 
 
+    </div> 
+
   
 
-            const additionalDeliveryFee = parseInt(document.getElementById('deliveryFee').value) || 0;  
+    <div class="dashboard-container"> 
 
-  
+        <div class="header"> 
 
-              
+            <h1 id="dashboard-title">Abbondanza Sales Force</h1> 
 
-  
+            <p>Access all your sales resources in one place</p> 
+
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.8 - Compact Layout with Service Agreement Copies</p> 
 
-            let monthlyTotal = basePrice;  
+        </div> 
 
   
 
-            let baseSetupFee = 295;  
+        <!-- MARKETING Section --> 
 
-  
+        <div class="section-header"> 
+
+            <h2>MARKETING</h2> 
 
-              
+        </div> 
 
   
 
-            if (fridgeCount > 1) {  
+        <!-- Row 1: Marketing & Product List --> 
 
-  
+        <div class="grid-container"> 
 
-                const additionalUnits = fridgeCount - 1;  
+            <div class="card"> 
 
-  
+                <div class="card-icon">TARGET</div> 
 
-                const discountedPrice = basePrice - 100;  
+                <h2>About Us - How We Work</h2> 
 
-  
+                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p> 
 
-                monthlyTotal = basePrice + (discountedPrice * additionalUnits);  
+                <div class="btn-group"> 
 
-  
+                    <button onclick="openPDFViewer()" class="btn">View</button> 
 
-                baseSetupFee = 295 + (79 * additionalUnits);  
+                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary">Download</button> 
 
-  
+                </div> 
 
-            }  
+            </div> 
 
   
 
-              
+            <div class="card"> 
 
-  
+                <div class="card-icon">LIST</div> 
 
-            const totalSetupFee = baseSetupFee + additionalDeliveryFee;  
+                <h2>Product List</h2> 
 
-  
+                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p> 
 
-              
+                <div class="btn-group"> 
 
-  
+                    <button onclick="openProductListPDF()" class="btn">View</button> 
 
-            let pricingText = `Monthly Total: $${monthlyTotal}/month`;  
+                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download</button> 
 
-  
+                </div> 
+
+            </div> 
 
-            if (fridgeCount > 1) {  
+        </div> 
 
   
 
-                pricingText += ` (${fridgeCount} fridges)<br>`;  
+        <!-- Row Separator --> 
 
+        <div class="row-separator"></div> 
+
   
 
-                pricingText += `First unit: $${basePrice}/month<br>`;  
+        <!-- PROPOSALS Section --> 
 
-  
+        <div class="section-header"> 
 
-                pricingText += `Additional units: $${basePrice - 100}/month each<br>`;  
+            <h2>PROPOSALS</h2> 
 
+        </div> 
+
   
 
-            } else {  
+        <!-- Row 2: Proposals Section --> 
 
-  
+        <div class="grid-container"> 
 
-                pricingText += '<br>';  
+            <div class="card"> 
 
-  
+                <div class="card-icon">CHART</div> 
 
-            }  
+                <h2>Proposal Generator</h2> 
 
-  
+                <p>Create customized PDF proposals instantly with our built-in generator.</p> 
 
-              
+                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button> 
 
+            </div> 
+
   
 
-            pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;  
+            <div class="card"> 
 
-  
+                <div class="card-icon">DOCS</div> 
 
-              
+                <h2>Proposal Copies</h2> 
 
-  
+                <p>Access generated proposals, templates, and proposal resources.</p> 
 
-            if (additionalDeliveryFee > 0) {  
+                <button class="btn" onclick="openProposalViewer()">View Proposals</button> 
 
-  
+            </div> 
 
-                pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: $${additionalDeliveryFee.toFixed(2)}</small>`;  
+        </div> 
 
   
 
-            }  
+        <!-- Row Separator --> 
 
+        <div class="row-separator"></div> 
+
   
 
-              
+        <!-- SERVICE AGREEMENTS Section --> 
 
-  
+        <div class="section-header"> 
 
-            document.getElementById('pricingSummary').innerHTML = pricingText;  
+            <h2>SERVICE AGREEMENTS</h2> 
 
+        </div> 
+
   
 
-        }  
+        <!-- Row 3: Service Agreements Section --> 
 
-  
+        <div class="grid-container"> 
 
-   
+            <div class="card"> 
 
-  
+                <div class="card-icon">FORMS</div> 
 
-        async function generateProposal(event) {  
+                <h2>Service Agreement Generator</h2> 
 
-  
+                <p>Generate subsidy agreements with automated pricing calculations.</p> 
 
-            if (event) {  
+                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button> 
 
+            </div> 
+
   
 
-                event.preventDefault();  
+            <div class="card"> 
 
-  
+                <div class="card-icon">FILES</div> 
 
-                event.stopPropagation();  
+                <h2>Service Agreement Copies</h2> 
 
-  
+                <p>Access all generated service agreements and subsidy contracts with searchable library.</p> 
 
-            }  
+                <button class="btn" onclick="openServiceAgreementViewer()">View Service Agreements</button> 
 
-  
+            </div> 
 
-              
+        </div> 
 
   
 
-            const submitBtn = document.getElementById('generateBtn');  
+        <!-- Row Separator --> 
 
+        <div class="row-separator"></div> 
+
   
 
-            const originalText = submitBtn.innerHTML;  
+        <!-- LEADS Section --> 
 
-  
+        <div class="section-header"> 
 
-              
+            <h2>LEADS</h2> 
 
+        </div> 
+
   
 
-            if (submitBtn.disabled) {  
+        <!-- Row 4: Lead Logger (Single Row) --> 
 
-  
+        <div class="grid-container single-row"> 
 
-                return;  
+            <div class="card"> 
 
-  
+                <div class="card-icon">NOTES</div> 
 
-            }  
+                <h2>Lead Logger</h2> 
 
-  
+                <p>Log and track sales leads with follow-up management and status tracking.</p> 
 
-              
+                <a href="lead-logger.html" class="btn">Open Lead Logger</a> 
 
-  
+            </div> 
+
+        </div> 
 
-            submitBtn.disabled = true;  
+    </div> 
 
   
 
-            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';  
+    <!-- Proposal Generator Modal --> 
 
-  
+    <div id="proposalModal" class="modal-overlay"> 
 
-              
+        <div class="modal"> 
 
-  
+            <h3>Generate Fresh Food Solutions Proposal</h3> 
 
-            try {  
+             
 
-  
+            <div class="form-group"> 
 
-                const formData = {  
+                <label for="companyName">Company Name *</label> 
 
-  
+                <input type="text" id="companyName" name="companyName" required> 
 
-                    companyName: document.getElementById('companyName').value,  
+            </div> 
 
-  
+             
 
-                    contactName: document.getElementById('contactName').value || '',  
+            <div class="form-group"> 
 
-  
+                <label for="contactName">Contact Name (Optional)</label> 
 
-                    preparedBy: document.getElementById('preparedBy').value,  
+                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown"> 
 
-  
+            </div> 
 
-                    preparedByPhone: document.getElementById('preparedByPhone').value,  
+             
 
-  
+            <div class="form-row"> 
 
-                    preparedByEmail: document.getElementById('preparedByEmail').value,  
+                <div class="form-group"> 
 
-  
+                    <label for="preparedBy">Your Name *</label> 
 
-                    fridgeCount: document.getElementById('fridgeCount').value,  
+                    <input type="text" id="preparedBy" name="preparedBy" required> 
 
-  
+                </div> 
 
-                    monthlyFee: document.getElementById('monthlyFee').value,  
+                 
 
-  
+                <div class="form-group"> 
 
-                    deliveryFee: document.getElementById('deliveryFee').value || ''  
+                    <label for="preparedByPhone">Your Phone *</label> 
 
-  
+                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required> 
 
-                };  
+                </div> 
 
-  
+            </div> 
 
-   
+             
 
-  
+            <div class="form-group"> 
 
-                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {  
+                <label for="preparedByEmail">Your Email *</label> 
 
-  
+                <input type="email" id="preparedByEmail" name="preparedByEmail" required> 
 
-                    throw new Error('Please fill in all required fields.');  
+            </div> 
 
-  
+             
 
-                }  
+            <div class="form-row"> 
 
-  
+                <div class="form-group"> 
 
-   
+                    <label for="fridgeCount">Number of Fridges *</label> 
 
-  
+                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()"> 
 
-                const params = new URLSearchParams();  
+                </div> 
 
-  
+                 
 
-                Object.keys(formData).forEach(key => {  
+                <div class="form-group"> 
 
-  
+                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label> 
 
-                    params.append(key, formData[key]);  
+                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()"> 
 
-  
+                        <option value="395">$395/month</option> 
 
-                });  
+                        <option value="495">$495/month</option> 
 
-  
+                        <option value="595">$595/month</option> 
 
-   
+                        <option value="695">$695/month</option> 
 
-  
+                        <option value="795" selected>$795/month</option> 
 
-                const url = `${WEB_APP_URL}?${params.toString()}`;  
+                    </select> 
 
-  
+                </div> 
 
-                window.open(url, '_blank');  
+            </div> 
 
-  
+             
 
-   
+            <div class="form-group"> 
 
-  
+                <label for="deliveryFee">Additional Delivery Charges (Optional)</label> 
 
-                closeModal('proposalModal');  
+                <input type="number" id="deliveryFee" name="deliveryFee"  
 
-  
+                       min="0" max="5000" step="50"  
 
-                showPopup(`  
+                       placeholder="$0.00"  
 
-  
+                       onchange="updatePricingSummary();"> 
 
-                    <div class="success-popup">  
+                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small> 
 
-  
+            </div> 
 
-                        <h3>Proposal Generation Started!</h3>  
+             
 
-  
+            <div class="pricing-summary"> 
 
-                        <p>Your proposal is being generated. A new tab has opened with the results.</p>  
+                <h4>Pricing Summary</h4> 
 
-  
+                <div class="pricing-display" id="pricingSummary"> 
 
-                        <p><strong>Company:</strong> ${formData.companyName}</p>  
+                    Monthly Total: $795/month<br> 
 
-  
+                    Setup Fee: $295 (one-time) 
 
-                        <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>  
+                </div> 
 
-  
+            </div> 
 
-                    </div>  
+             
 
-  
+            <div class="modal-buttons"> 
 
-                `, 'success');  
+                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button> 
 
-  
+                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button> 
 
-   
+            </div> 
 
-  
+        </div> 
 
-            } catch (error) {  
+    </div> 
 
   
 
-                showPopup(`Error generating proposal: ${error.message}`, 'error');  
+    <!-- Service Agreement Modal --> 
 
-  
+    <div id="serviceAgreementModal" class="modal-overlay"> 
 
-            } finally {  
+        <div class="modal"> 
 
-  
+            <h3>Generate Service Agreement</h3> 
 
-                submitBtn.disabled = false;  
+             
 
-  
+            <div class="form-group"> 
 
-                submitBtn.innerHTML = originalText;  
+                <label for="serviceCompanyName">Company Name *</label> 
 
-  
+                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required> 
 
-            }  
+            </div> 
 
-  
+             
 
-        }  
+            <div class="form-group"> 
 
-  
+                <label for="serviceContactName">Contact Name (Optional)</label> 
 
-   
+                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown"> 
 
-  
+            </div> 
 
-        function showPopup(content, type) {  
+             
 
-  
+            <div class="form-group"> 
 
-            const popup = document.createElement('div');  
+                <label for="serviceStreet">Street Address *</label> 
 
-  
+                <input type="text" id="serviceStreet" name="serviceStreet" required> 
 
-            popup.className = 'modal-overlay';  
+            </div> 
 
-  
+             
 
-            popup.innerHTML = `  
+            <div class="form-row"> 
 
-  
+                <div class="form-group"> 
 
-                <div class="modal">  
+                    <label for="serviceCity">City *</label> 
 
-  
+                    <input type="text" id="serviceCity" name="serviceCity" required> 
 
-                    <div class="${type === 'error' ? 'error-popup' : 'success-popup'}">  
+                </div> 
 
-  
+                 
 
-                        ${content}  
+                <div class="form-group"> 
 
-  
+                    <label for="serviceState">State *</label> 
 
-                        <div style="margin-top: 20px;">  
+                    <select id="serviceState" name="serviceState" required> 
 
-  
+                        <option value="">Select State</option> 
 
-                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>  
+                        <option value="MA" selected>MA</option> 
 
-  
+                        <option value="NH">NH</option> 
 
-                        </div>  
+                        <option value="ME">ME</option> 
 
-  
+                        <option value="VT">VT</option> 
 
-                    </div>  
+                        <option value="RI">RI</option> 
 
-  
+                        <option value="CT">CT</option> 
 
-                </div>  
+                    </select> 
 
-  
+                </div> 
 
-            `;  
+            </div> 
 
-  
+             
 
-            document.body.appendChild(popup);  
+            <div class="form-group"> 
 
-  
+                <label for="serviceZip">Zip Code *</label> 
 
-              
+                <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required> 
 
-  
+            </div> 
 
-            if (type === 'success') {  
+             
 
-  
+            <div class="form-row"> 
 
-                setTimeout(() => {  
+                <div class="form-group"> 
 
-  
+                    <label for="servicePreparedBy">Your Name *</label> 
 
-                    if (popup.parentNode) {  
+                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required> 
 
-  
+                </div> 
 
-                        popup.remove();  
+                 
 
-  
+                <div class="form-group"> 
 
-                    }  
+                    <label for="servicePreparedByPhone">Your Phone *</label> 
 
-  
+                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required> 
 
-                }, 10000);  
+                </div> 
 
-  
+            </div> 
 
-            }  
+             
 
-  
+            <div class="form-group"> 
 
-        }  
+                <label for="servicePreparedByEmail">Your Email *</label> 
 
-  
+                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required> 
 
-   
+            </div> 
 
-  
+             
 
-        // Proposal Viewer  
+            <div class="form-row"> 
 
-  
+                <div class="form-group"> 
 
-        function openProposalViewer() {  
+                    <label for="serviceFridgeCount">Total Kiosks to Install *</label> 
 
-  
+                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()"> 
 
-            const existingOverlay = document.querySelector('.modal-overlay');  
+                </div> 
 
-  
+                 
 
-            if (existingOverlay) {  
+                <div class="form-group"> 
 
-  
+                    <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label> 
 
-                existingOverlay.remove();  
+                    <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()"> 
 
-  
+                        <option value="395">$395/month</option> 
 
-            }  
+                        <option value="495">$495/month</option> 
 
-  
+                        <option value="595">$595/month</option> 
 
-              
+                        <option value="695">$695/month</option> 
 
-  
+                        <option value="795" selected>$795/month</option> 
 
-            window.allProposals = null;  
+                    </select> 
 
-  
+                </div> 
 
-              
+            </div> 
 
-  
+             
 
-            const overlay = document.createElement('div');  
+            <div class="form-row"> 
 
-  
+                <div class="form-group"> 
 
-            overlay.className = 'modal-overlay';  
+                    <label for="subsidyPercentage">Subsidy Percentage *</label> 
 
-  
+                    <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()"> 
 
-            overlay.style.display = 'block';  
+                        <option value="0" selected>0%</option> 
 
-  
+                        <option value="10">10%</option> 
 
-              
+                        <option value="20">20%</option> 
 
-  
+                        <option value="25">25%</option> 
 
-            const modal = document.createElement('div');  
+                        <option value="30">30%</option> 
 
-  
+                        <option value="40">40%</option> 
 
-            modal.className = 'pdf-modal';  
+                        <option value="50">50%</option> 
 
-  
+                        <option value="60">60%</option> 
 
-              
+                        <option value="70">70%</option> 
 
-  
+                        <option value="75">75%</option> 
 
-            modal.innerHTML = `  
+                        <option value="80">80%</option> 
 
-  
+                        <option value="90">90%</option> 
 
-                <div class="pdf-header">  
+                        <option value="100">100%</option> 
 
-  
+                    </select> 
 
-                    <h3>Proposal Library</h3>  
+                    <small>Discount on purchases billed back to company</small> 
 
-  
+                </div> 
 
-                    <button class="close-btn" onclick="closePDFViewer()">Close</button>  
+                 
 
-  
+                <div class="form-group"> 
 
-                </div>  
+                    <label for="freeMonths">Free Months</label> 
 
-  
+                    <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()"> 
 
-                <div class="pdf-viewer" style="padding: 20px;">  
+                        <option value="0" selected>No free months</option> 
 
-  
+                        <option value="1">1 month free</option> 
 
-                    <div style="margin-bottom: 20px; position: relative;">  
+                        <option value="2">2 months free</option> 
 
-  
+                        <option value="3">3 months free</option> 
 
-                        <input type="text" id="proposalSearch" placeholder="Search by company name..."   
+                        <option value="4">4 months free</option> 
 
-  
+                        <option value="5">5 months free</option> 
 
-                               style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;   
+                        <option value="6">6 months free</option> 
 
-  
+                    </select> 
 
-                                      border-radius: 10px; transition: all 0.3s ease;"  
+                    <small>Service fee waived for initial months</small> 
 
-  
+                </div> 
 
-                               onkeyup="filterProposals()"  
+            </div> 
 
-  
+             
 
-                               onfocus="this.style.borderColor='#1e3a8a'"  
+            <div class="form-row"> 
 
-  
+                <div class="form-group"> 
 
-                               onblur="this.style.borderColor='#e2e8f0'">  
+                    <label for="installDate">Install Date</label> 
 
-  
-
-                        <button id="clearSearchBtn"   
-
-  
-
-                                onclick="document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"  
-
-  
-
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);   
-
-  
-
-                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;   
-
-  
-
-                                       cursor: pointer; display: none; transition: all 0.3s ease;   
-
-  
-
-                                       font-size: 18px; color: #4a5568;">  
-
-  
-
-                            ×  
-
-  
-
-                        </button>  
-
-  
-
-                    </div>  
-
-  
-
-                      
-
-  
-
-                    <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">  
-
-  
-
-                        <div style="text-align: center; padding: 40px;">  
-
-  
-
-                            <div class="loading-spinner"></div>  
-
-  
-
-                            <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>  
-
-  
-
-                        </div>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-            `;  
-
-  
-
-              
-
-  
-
-            overlay.appendChild(modal);  
-
-  
-
-            document.body.appendChild(overlay);  
-
-  
-
-              
-
-  
-
-            setTimeout(() => {  
-
-  
-
-                loadProposalsFromDrive();  
-
-  
-
-            }, 100);  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        async function loadProposalsFromDrive() {  
-
-  
-
-            try {  
-
-  
-
-                const callbackName = 'proposalsCallback_' + Date.now();  
-
-  
-
-                  
-
-  
-
-                const promise = new Promise((resolve, reject) => {  
-
-  
-
-                    window[callbackName] = (data) => {  
-
-  
-
-                        delete window[callbackName];  
-
-  
-
-                        resolve(data);  
-
-  
-
-                    };  
-
-  
-
-                      
-
-  
-
-                    setTimeout(() => {  
-
-  
-
-                        delete window[callbackName];  
-
-  
-
-                        reject(new Error('Request timeout'));  
-
-  
-
-                    }, 20000);  
-
-  
-
-                });  
-
-  
-
-                  
-
-  
-
-                const script = document.createElement('script');  
-
-  
-
-                const url = `${PROPOSALS_API_URL}?action=getProposals&callback=${callbackName}`;  
-
-  
-
-                script.src = url;  
-
-  
-
-                  
-
-  
-
-                script.onerror = () => {  
-
-  
-
-                    delete window[callbackName];  
-
-  
-
-                    const proposalsList = document.getElementById('proposalsList');  
-
-  
-
-                    if (proposalsList) {  
-
-  
-
-                        proposalsList.innerHTML = `  
-
-  
-
-                            <div style="text-align: center; padding: 40px;">  
-
-  
-
-                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>  
-
-  
-
-                                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>  
-
-  
-
-                            </div>  
-
-  
-
-                        `;  
-
-  
-
-                    }  
-
-  
-
-                };  
-
-  
-
-                  
-
-  
-
-                document.body.appendChild(script);  
-
-  
-
-                const data = await promise;  
-
-  
-
-                document.body.removeChild(script);  
-
-  
-
-                  
-
-  
-
-                if (data.status === 'success') {  
-
-  
-
-                    const sortedProposals = (data.proposals || []).sort((a, b) => {  
-
-  
-
-                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);  
-
-  
-
-                    });  
-
-  
-
-                    window.allProposals = sortedProposals;  
-
-  
-
-                    displayProposals(sortedProposals);  
-
-  
-
-                } else {  
-
-  
-
-                    throw new Error(data.message || 'Failed to load proposals');  
-
-  
-
-                }  
-
-  
-
-            } catch (error) {  
-
-  
-
-                const proposalsList = document.getElementById('proposalsList');  
-
-  
-
-                if (proposalsList) {  
-
-  
-
-                    proposalsList.innerHTML = `  
-
-  
-
-                        <div style="text-align: center; padding: 40px;">  
-
-  
-
-                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>  
-
-  
-
-                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>  
-
-  
-
-                            <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>  
-
-  
-
-                        </div>  
-
-  
-
-                    `;  
-
-  
-
-                }  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function displayProposals(proposals) {  
-
-  
-
-            const proposalsList = document.getElementById('proposalsList');  
-
-  
-
-            if (!proposalsList) return;  
-
-  
-
-              
-
-  
-
-            if (proposals.length === 0) {  
-
-  
-
-                proposalsList.innerHTML = `  
-
-  
-
-                    <div style="text-align: center; padding: 40px; color: #718096;">  
-
-  
-
-                        <p>No proposals found in the folder.</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `;  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            proposalsList.innerHTML = proposals.map(proposal => `  
-
-  
-
-                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"  
-
-  
-
-                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"  
-
-  
-
-                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">  
-
-  
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">  
-
-  
-
-                        <div style="flex: 1; min-width: 200px;">  
-
-  
-
-                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.name}</h4>  
-
-  
-
-                            <p style="margin: 0; color: #718096; font-size: 14px;">  
-
-  
-
-                                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}  
-
-  
-
-                            </p>  
-
-  
-
-                        </div>  
-
-  
-
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">  
-
-  
-
-                            <button class="btn btn-primary"   
-
-  
-
-                                    onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')"  
-
-  
-
-                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
-
-  
-
-                                View  
-
-  
-
-                            </button>  
-
-  
-
-                            <button class="btn btn-secondary"   
-
-  
-
-                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')"  
-
-  
-
-                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
-
-  
-
-                                Download  
-
-  
-
-                            </button>  
-
-  
-
-                        </div>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-            `).join('');  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function filterProposals() {  
-
-  
-
-            const searchInput = document.getElementById('proposalSearch');  
-
-  
-
-            const searchTerm = searchInput.value.toLowerCase();  
-
-  
-
-            const proposalsList = document.getElementById('proposalsList');  
-
-  
-
-            const clearBtn = document.getElementById('clearSearchBtn');  
-
-  
-
-              
-
-  
-
-            if (searchTerm.length > 0) {  
-
-  
-
-                clearBtn.style.display = 'block';  
-
-  
-
-            } else {  
-
-  
-
-                clearBtn.style.display = 'none';  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            if (!window.allProposals || window.allProposals.length === 0) return;  
-
-  
-
-              
-
-  
-
-            if (searchTerm === '') {  
-
-  
-
-                displayProposals(window.allProposals);  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            const filteredProposals = window.allProposals.filter(proposal =>   
-
-  
-
-                proposal.name.toLowerCase().includes(searchTerm)  
-
-  
-
-            );  
-
-  
-
-              
-
-  
-
-            if (filteredProposals.length === 0) {  
-
-  
-
-                proposalsList.innerHTML = `  
-
-  
-
-                    <div style="text-align: center; padding: 40px; color: #718096;">  
-
-  
-
-                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>  
-
-  
-
-                        <p style="margin-top: 10px;">Try searching for a different company name.</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `;  
-
-  
-
-            } else {  
-
-  
-
-                displayProposals(filteredProposals);  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function viewProposalPDF(fileId, fileName) {  
-
-  
-
-            closePDFViewer();  
-
-  
-
-              
-
-  
-
-            const overlay = document.createElement('div');  
-
-  
-
-            overlay.className = 'modal-overlay';  
-
-  
-
-            overlay.style.display = 'block';  
-
-  
-
-              
-
-  
-
-            const pdfModal = document.createElement('div');  
-
-  
-
-            pdfModal.className = 'pdf-modal';  
-
-  
-
-              
-
-  
-
-            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;  
-
-  
-
-              
-
-  
-
-            pdfModal.innerHTML = `  
-
-  
-
-                <div class="pdf-header">  
-
-  
-
-                    <h3>${fileName}</h3>  
-
-  
-
-                    <div style="display: flex; gap: 10px; align-items: center;">  
-
-  
-
-                        <button class="btn btn-primary"   
-
-  
-
-                                onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);"   
-
-  
-
-                                style="padding: 10px 20px;">  
-
-  
-
-                            Back to Library  
-
-  
-
-                        </button>  
-
-  
-
-                        <button class="btn btn-secondary"   
-
-  
-
-                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"   
-
-  
-
-                                style="padding: 10px 20px;">  
-
-  
-
-                            Download  
-
-  
-
-                        </button>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-                <div class="pdf-viewer">  
-
-  
-
-                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>  
-
-  
-
-                </div>  
-
-  
-
-            `;  
-
-  
-
-              
-
-  
-
-            overlay.appendChild(pdfModal);  
-
-  
-
-            document.body.appendChild(overlay);  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        // Service Agreement Generator  
-
-  
-
-        function generateServiceAgreement() {  
-
-  
-
-            document.getElementById('serviceAgreementModal').style.display = 'block';  
-
-  
-
-            updateServiceAgreementPricing();  
-
-  
-
-              
-
-  
-
-            const generateBtn = document.getElementById('generateServiceBtn');  
-
-  
-
-            if (generateBtn) {  
-
-  
-
-                const newBtn = generateBtn.cloneNode(true);  
-
-  
-
-                generateBtn.parentNode.replaceChild(newBtn, generateBtn);  
-
-  
-
-                newBtn.addEventListener('click', generateServiceAgreementPDF);  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function updateServiceAgreementPricing() {  
-
-  
-
-            const fridgeCount = parseInt(document.getElementById('serviceFridgeCount').value) || 1;  
-
-  
-
-            const serviceFee = parseInt(document.getElementById('serviceMonthlyFee').value) || 795;  
-
-  
-
-            const subsidyPercentage = parseInt(document.getElementById('subsidyPercentage').value) || 0;  
-
-  
-
-            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;  
-
-  
-
-              
-
-  
-
-            let totalMonthlyFee = serviceFee;  
-
-  
-
-            if (fridgeCount > 1) {  
-
-  
-
-                const additionalUnits = fridgeCount - 1;  
-
-  
-
-                const discountedPrice = Math.max(0, serviceFee - 100);  
-
-  
-
-                totalMonthlyFee = serviceFee + (discountedPrice * additionalUnits);  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            const subsidyAmount = (totalMonthlyFee * subsidyPercentage / 100).toFixed(2);  
-
-  
-
-              
-
-  
-
-            let pricingText = `Total Kiosks: ${fridgeCount}<br>`;  
-
-  
-
-            pricingText += `Monthly Service Fee: ${totalMonthlyFee.toFixed(2)}`;  
-
-  
-
-            if (fridgeCount > 1) {  
-
-  
-
-                pricingText += ` (1st: ${serviceFee}, Additional: ${serviceFee - 100} each)`;  
-
-  
-
-            }  
-
-  
-
-            pricingText += `<br>Subsidy: ${subsidyPercentage}% discount<br>`;  
-
-  
-
-            pricingText += `Monthly Subsidy Amount: ${subsidyAmount}`;  
-
-  
-
-            if (freeMonths > 0) {  
-
-  
-
-                pricingText += `<br>Free Months: ${freeMonths}`;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            document.getElementById('servicePricingSummary').innerHTML = pricingText;  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function calculateFirstBillDate() {  
-
-  
-
-            const installDate = document.getElementById('installDate').value;  
-
-  
-
-            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;  
-
-  
-
-            const firstBillDateInput = document.getElementById('firstBillDate');  
-
-  
-
-              
-
-  
-
-            if (!installDate) {  
-
-  
-
-                firstBillDateInput.value = '';  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            // Parse the date string directly (YYYY-MM-DD)  
-
-  
-
-            const [year, month, day] = installDate.split('-').map(Number);  
-
-  
-
-            const installDay = day;  
-
-  
-
-              
-
-  
-
-            let billYear = year;  
-
-  
-
-            let billMonth = month; // JavaScript months are 0-based, but we're working with 1-based  
-
-  
-
-              
-
-  
-
-            // If installed after the 15th, move to next month  
-
-  
-
-            if (installDay > 15) {  
-
-  
-
-                billMonth += 1;  
-
-  
-
-                if (billMonth > 12) {  
-
-  
-
-                    billMonth = 1;  
-
-  
-
-                    billYear += 1;  
-
-  
-
-                }  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            // Add free months  
-
-  
-
-            billMonth += freeMonths;  
-
-  
-
-            while (billMonth > 12) {  
-
-  
-
-                billMonth -= 12;  
-
-  
-
-                billYear += 1;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            // Format as YYYY-MM-01 (always the 1st)  
-
-  
-
-            const formattedMonth = String(billMonth).padStart(2, '0');  
-
-  
-
-            firstBillDateInput.value = `${billYear}-${formattedMonth}-01`;  
-
-  
-
-              
-
-  
-
-            updateServiceAgreementPricing();  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        async function generateServiceAgreementPDF() {  
-
-  
-
-            const submitBtn = document.getElementById('generateServiceBtn');  
-
-  
-
-            const originalText = submitBtn.innerHTML;  
-
-  
-
-              
-
-  
-
-            if (submitBtn.disabled) {  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            submitBtn.disabled = true;  
-
-  
-
-            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';  
-
-  
-
-              
-
-  
-
-            try {  
-
-  
-
-                const formData = {  
-
-  
-
-                    type: 'serviceAgreement',  
-
-  
-
-                    customer: document.getElementById('serviceCompanyName').value,  
-
-  
-
-                    street: document.getElementById('serviceStreet').value,  
-
-  
-
-                    city: document.getElementById('serviceCity').value,  
-
-  
-
-                    state: document.getElementById('serviceState').value,  
-
-  
-
-                    zip: document.getElementById('serviceZip').value,  
-
-  
-
-                    serviceFee: document.getElementById('serviceMonthlyFee').value,  
-
-  
-
-                    subsidyPercentage: document.getElementById('subsidyPercentage').value,  
-
-  
-
-                    totalKiosks: document.getElementById('serviceFridgeCount').value,  
-
-  
-
-                    installDate: document.getElementById('installDate').value || '',  
-
-  
-
-                    firstBillDate: document.getElementById('firstBillDate').value || '',  
-
-  
-
-                    freeMonths: document.getElementById('freeMonths').value || '0',  
-
-  
-
-                    contactName: document.getElementById('serviceContactName').value || '',  
-
-  
-
-                    preparedBy: document.getElementById('servicePreparedBy').value,  
-
-  
-
-                    preparedByPhone: document.getElementById('servicePreparedByPhone').value,  
-
-  
-
-                    preparedByEmail: document.getElementById('servicePreparedByEmail').value  
-
-  
-
-                };  
-
-  
-
-   
-
-  
-
-                if (!formData.customer || !formData.street || !formData.city || !formData.state ||   
-
-  
-
-                    !formData.zip || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {  
-
-  
-
-                    throw new Error('Please fill in all required fields.');  
-
-  
-
-                }  
-
-  
-
-   
-
-  
-
-                const params = new URLSearchParams();  
-
-  
-
-                Object.keys(formData).forEach(key => {  
-
-  
-
-                    params.append(key, formData[key]);  
-
-  
-
-                });  
-
-  
-
-   
-
-  
-
-                const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;  
-
-  
-
-                window.open(url, '_blank');  
-
-  
-
-   
-
-  
-
-                closeModal('serviceAgreementModal');  
-
-  
-
-                showPopup(`  
-
-  
-
-                    <div class="success-popup">  
-
-  
-
-                        <h3>Service Agreement Generation Started!</h3>  
-
-  
-
-                        <p>Your service agreement is being generated. A new tab has opened with the results.</p>  
-
-  
-
-                        <p><strong>Company:</strong> ${formData.customer}</p>  
-
-  
-
-                        <p><strong>Address:</strong> ${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}</p>  
-
-  
-
-                        <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `, 'success');  
-
-  
-
-   
-
-  
-
-            } catch (error) {  
-
-  
-
-                showPopup(`Error generating service agreement: ${error.message}`, 'error');  
-
-  
-
-            } finally {  
-
-  
-
-                submitBtn.disabled = false;  
-
-  
-
-                submitBtn.innerHTML = originalText;  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        // Service Agreement Viewer  
-
-  
-
-        function openServiceAgreementViewer() {  
-
-  
-
-            const existingOverlay = document.querySelector('.modal-overlay');  
-
-  
-
-            if (existingOverlay) {  
-
-  
-
-                existingOverlay.remove();  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            window.allServiceAgreements = null;  
-
-  
-
-              
-
-  
-
-            const overlay = document.createElement('div');  
-
-  
-
-            overlay.className = 'modal-overlay';  
-
-  
-
-            overlay.style.display = 'block';  
-
-  
-
-              
-
-  
-
-            const modal = document.createElement('div');  
-
-  
-
-            modal.className = 'pdf-modal';  
-
-  
-
-              
-
-  
-
-            modal.innerHTML = `  
-
-  
-
-                <div class="pdf-header">  
-
-  
-
-                    <h3>Service Agreement Library</h3>  
-
-  
-
-                    <button class="close-btn" onclick="closePDFViewer()">Close</button>  
-
-  
-
-                </div>  
-
-  
-
-                <div class="pdf-viewer" style="padding: 20px;">  
-
-  
-
-                    <div style="margin-bottom: 20px; position: relative;">  
-
-  
-
-                        <input type="text" id="serviceAgreementSearch" placeholder="Search by company name..."   
-
-  
-
-                               style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;   
-
-  
-
-                                      border-radius: 10px; transition: all 0.3s ease;"  
-
-  
-
-                               onkeyup="filterServiceAgreements()"  
-
-  
-
-                               onfocus="this.style.borderColor='#1e3a8a'"  
-
-  
-
-                               onblur="this.style.borderColor='#e2e8f0'">  
-
-  
-
-                        <button id="clearServiceSearchBtn"   
-
-  
-
-                                onclick="document.getElementById('serviceAgreementSearch').value=''; this.style.display='none'; filterServiceAgreements();"  
-
-  
-
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);   
-
-  
-
-                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;   
-
-  
-
-                                       cursor: pointer; display: none; transition: all 0.3s ease;   
-
-  
-
-                                       font-size: 18px; color: #4a5568;">  
-
-  
-
-                            ×  
-
-  
-
-                        </button>  
-
-  
-
-                    </div>  
-
-  
-
-                      
-
-  
-
-                    <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">  
-
-  
-
-                        <div style="text-align: center; padding: 40px;">  
-
-  
-
-                            <div class="loading-spinner"></div>  
-
-  
-
-                            <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p>  
-
-  
-
-                        </div>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-            `;  
-
-  
-
-              
-
-  
-
-            overlay.appendChild(modal);  
-
-  
-
-            document.body.appendChild(overlay);  
-
-  
-
-              
-
-  
-
-            setTimeout(() => {  
-
-  
-
-                loadServiceAgreementsFromDrive();  
-
-  
-
-            }, 100);  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        async function loadServiceAgreementsFromDrive() {  
-
-  
-
-            try {  
-
-  
-
-                const callbackName = 'serviceAgreementsCallback_' + Date.now();  
-
-  
-
-                  
-
-  
-
-                const promise = new Promise((resolve, reject) => {  
-
-  
-
-                    window[callbackName] = (data) => {  
-
-  
-
-                        delete window[callbackName];  
-
-  
-
-                        resolve(data);  
-
-  
-
-                    };  
-
-  
-
-                      
-
-  
-
-                    setTimeout(() => {  
-
-  
-
-                        delete window[callbackName];  
-
-  
-
-                        reject(new Error('Request timeout'));  
-
-  
-
-                    }, 20000);  
-
-  
-
-                });  
-
-  
-
-                  
-
-  
-
-                const script = document.createElement('script');  
-
-  
-
-                const url = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;  
-
-  
-
-                script.src = url;  
-
-  
-
-                  
-
-  
-
-                script.onerror = () => {  
-
-  
-
-                    delete window[callbackName];  
-
-  
-
-                    const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-                    if (serviceAgreementsList) {  
-
-  
-
-                        serviceAgreementsList.innerHTML = `  
-
-  
-
-                            <div style="text-align: center; padding: 40px;">  
-
-  
-
-                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>  
-
-  
-
-                                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>  
-
-  
-
-                            </div>  
-
-  
-
-                        `;  
-
-  
-
-                    }  
-
-  
-
-                };  
-
-  
-
-                  
-
-  
-
-                document.body.appendChild(script);  
-
-  
-
-                const data = await promise;  
-
-  
-
-                document.body.removeChild(script);  
-
-  
-
-                  
-
-  
-
-                if (data.status === 'success') {  
-
-  
-
-                    const sortedAgreements = (data.serviceAgreements || []).sort((a, b) => {  
-
-  
-
-                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);  
-
-  
-
-                    });  
-
-  
-
-                    window.allServiceAgreements = sortedAgreements;  
-
-  
-
-                    displayServiceAgreements(sortedAgreements);  
-
-  
-
-                } else {  
-
-  
-
-                    throw new Error(data.message || 'Failed to load service agreements');  
-
-  
-
-                }  
-
-  
-
-            } catch (error) {  
-
-  
-
-                const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-                if (serviceAgreementsList) {  
-
-  
-
-                    serviceAgreementsList.innerHTML = `  
-
-  
-
-                        <div style="text-align: center; padding: 40px;">  
-
-  
-
-                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>  
-
-  
-
-                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>  
-
-  
-
-                            <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>  
-
-  
-
-                        </div>  
-
-  
-
-                    `;  
-
-  
-
-                }  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function displayServiceAgreements(agreements) {  
-
-  
-
-            const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-            if (!serviceAgreementsList) return;  
-
-  
-
-              
-
-  
-
-            if (agreements.length === 0) {  
-
-  
-
-                serviceAgreementsList.innerHTML = `  
-
-  
-
-                    <div style="text-align: center; padding: 40px; color: #718096;">  
-
-  
-
-                        <p>No service agreements found in the folder.</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `;  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            serviceAgreementsList.innerHTML = agreements.map(agreement => `  
-
-  
-
-                <div class="agreement-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"  
-
-  
-
-                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"  
-
-  
-
-                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">  
-
-  
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">  
-
-  
-
-                        <div style="flex: 1; min-width: 200px;">  
-
-  
-
-                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${agreement.name}</h4>  
-
-  
-
-                            <p style="margin: 0; color: #718096; font-size: 14px;">  
-
-  
-
-                                Modified: ${agreement.modifiedTime ? new Date(agreement.modifiedTime).toLocaleDateString() : 'Unknown'}  
-
-  
-
-                            </p>  
-
-  
-
-                        </div>  
-
-  
-
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">  
-
-  
-
-                            <button class="btn btn-primary"   
-
-  
-
-                                    onclick="viewServiceAgreementPDF('${agreement.id}', '${agreement.name}')"  
-
-  
-
-                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
-
-  
-
-                                View  
-
-  
-
-                            </button>  
-
-  
-
-                            <button class="btn btn-secondary"   
-
-  
-
-                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${agreement.id}', '_blank')"  
-
-  
-
-                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
-
-  
-
-                                Download  
-
-  
-
-                            </button>  
-
-  
-
-                        </div>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-            `).join('');  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function filterServiceAgreements() {  
-
-  
-
-            const searchInput = document.getElementById('serviceAgreementSearch');  
-
-  
-
-            const searchTerm = searchInput.value.toLowerCase();  
-
-  
-
-            const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-            const clearBtn = document.getElementById('clearServiceSearchBtn');  
-
-  
-
-              
-
-  
-
-            if (searchTerm.length > 0) {  
-
-  
-
-                clearBtn.style.display = 'block';  
-
-  
-
-            } else {  
-
-  
-
-                clearBtn.style.display = 'none';  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            if (!window.allServiceAgreements || window.allServiceAgreements.length === 0) return;  
-
-  
-
-              
-
-  
-
-            if (searchTerm === '') {  
-
-  
-
-                displayServiceAgreements(window.allServiceAgreements);  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            const filteredAgreements = window.allServiceAgreements.filter(agreement =>   
-
-  
-
-                agreement.name.toLowerCase().includes(searchTerm)  
-
-  
-
-            );  
-
-  
-
-              
-
-  
-
-            if (filteredAgreements.length === 0) {  
-
-  
-
-                serviceAgreementsList.innerHTML = `  
-
-  
-
-                    <div style="text-align: center; padding: 40px; color: #718096;">  
-
-  
-
-                        <p style="font-size: 18px;">No service agreements found matching "<strong>${searchTerm}</strong>"</p>  
-
-  
-
-                        <p style="margin-top: 10px;">Try searching for a different company name.</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `;  
-
-  
-
-            } else {  
-
-  
-
-                displayServiceAgreements(filteredAgreements);  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function viewServiceAgreementPDF(fileId, fileName) {  
-
-  
-
-            closePDFViewer();  
-
-  
-
-              
-
-  
-
-            const overlay = document.createElement('div');  
-
-  
-
-            overlay.className = 'modal-overlay';  
-
-  
-
-            overlay.style.display = 'block';  
-
-  
-
-              
-
-  
-
-            const pdfModal = document.createElement('div');  
-
-  
-
-            pdfModal.className = 'pdf-modal';  
-
-  
-
-              
-
-  
-
-            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;  
-
-  
-
-              
-
-  
-
-            pdfModal.innerHTML = `  
-
-  
-
-                <div class="pdf-header">  
-
-  
-
-                    <h3>${fileName}</h3>  
-
-  
-
-                    <div style="display: flex; gap: 10px; align-items: center;">  
-
-  
-
-                        <button class="btn btn-primary"   
-
-  
-
-                                onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);"   
-
-  
-
-                                style="padding: 10px 20px;">  
-
-  
-
-                            Back to Library  
-
-  
-
-                        </button>  
-
-  
-
-                        <button class="btn btn-secondary"   
-
-  
-
-                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"   
-
-  
-
-                                style="padding: 10px 20px;">  
-
-  
-
-                            Download  
-
-  
-
-                        </button>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-                <div class="pdf-viewer">  
-
-  
-
-                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>  
-
-  
-
-                </div>  
-
-  
-
-            `;  
-
-  
-
-              
-
-  
-
-            overlay.appendChild(pdfModal);  
-
-  
-
-            document.body.appendChild(overlay);  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        // Close modal when clicking outside  
-
-  
-
-        window.onclick = function(event) {  
-
-  
-
-            if (event.target.classList.contains('modal-overlay')) {  
-
-  
-
-                if (event.target === event.currentTarget) {  
-
-  
-
-                    event.target.style.display = 'none';  
-
-  
-
-                }  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-    </script>  
-
-  
-
-</head>  
-
-  
-
-<body>  
-
-  
-
-    <!-- Company Switcher -->  
-
-  
-
-    <div class="company-switcher">  
-
-  
-
-        <button class="company-btn active" onclick="switchCompany('abbondanza')">  
-
-  
-
-            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">  
-
-  
-
-            <span>Abbondanza Vending LLC</span>  
-
-  
-
-        </button>  
-
-  
-
-        <button class="company-btn" onclick="switchCompany('quantum')">  
-
-  
-
-            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">  
-
-  
-
-            <span>Quantum Solutions</span>  
-
-  
-
-        </button>  
-
-  
-
-    </div>  
-
-  
-
-   
-
-  
-
-    <div class="dashboard-container">  
-
-  
-
-        <div class="header">  
-
-  
-
-            <h1 id="dashboard-title">Abbondanza Sales Force</h1>  
-
-  
-
-            <p>Access all your sales resources in one place</p>  
-
-  
-
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.8 - Compact Layout with Service Agreement Copies</p>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- MARKETING Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>MARKETING</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 1: Marketing & Product List -->  
-
-  
-
-        <div class="grid-container">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">TARGET</div>  
-
-  
-
-                <h2>About Us - How We Work</h2>  
-
-  
-
-                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>  
-
-  
-
-                <div class="btn-group">  
-
-  
-
-                    <button onclick="openPDFViewer()" class="btn">View</button>  
-
-  
-
-                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary">Download</button>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-   
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">LIST</div>  
-
-  
-
-                <h2>Product List</h2>  
-
-  
-
-                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>  
-
-  
-
-                <div class="btn-group">  
-
-  
-
-                    <button onclick="openProductListPDF()" class="btn">View</button>  
-
-  
-
-                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download</button>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row Separator -->  
-
-  
-
-        <div class="row-separator"></div>  
-
-  
-
-   
-
-  
-
-        <!-- PROPOSALS Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>PROPOSALS</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 2: Proposals Section -->  
-
-  
-
-        <div class="grid-container">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">CHART</div>  
-
-  
-
-                <h2>Proposal Generator</h2>  
-
-  
-
-                <p>Create customized PDF proposals instantly with our built-in generator.</p>  
-
-  
-
-                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>  
-
-  
-
-            </div>  
-
-  
-
-   
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">DOCS</div>  
-
-  
-
-                <h2>Proposal Copies</h2>  
-
-  
-
-                <p>Access generated proposals, templates, and proposal resources.</p>  
-
-  
-
-                <button class="btn" onclick="openProposalViewer()">View Proposals</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row Separator -->  
-
-  
-
-        <div class="row-separator"></div>  
-
-  
-
-   
-
-  
-
-        <!-- SERVICE AGREEMENTS Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>SERVICE AGREEMENTS</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 3: Service Agreements Section -->  
-
-  
-
-        <div class="grid-container">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">FORMS</div>  
-
-  
-
-                <h2>Service Agreement Generator</h2>  
-
-  
-
-                <p>Generate subsidy agreements with automated pricing calculations.</p>  
-
-  
-
-                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button>  
-
-  
-
-            </div>  
-
-  
-
-   
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">FILES</div>  
-
-  
-
-                <h2>Service Agreement Copies</h2>  
-
-  
-
-                <p>Access all generated service agreements and subsidy contracts with searchable library.</p>  
-
-  
-
-                <button class="btn" onclick="openServiceAgreementViewer()">View Service Agreements</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row Separator -->  
-
-  
-
-        <div class="row-separator"></div>  
-
-  
-
-   
-
-  
-
-        <!-- LEADS Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>LEADS</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 4: Lead Logger (Single Row) -->  
-
-  
-
-        <div class="grid-container single-row">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">NOTES</div>  
-
-  
-
-                <h2>Lead Logger</h2>  
-
-  
-
-                <p>Log and track sales leads with follow-up management and status tracking.</p>  
-
-  
-
-                <a href="lead-logger.html" class="btn">Open Lead Logger</a>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-    </div>  
-
-  
-
-   
-
-  
-
-    <!-- Proposal Generator Modal -->  
-
-  
-
-    <div id="proposalModal" class="modal-overlay">  
-
-  
-
-        <div class="modal">  
-
-  
-
-            <h3>Generate Fresh Food Solutions Proposal</h3>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="companyName">Company Name *</label>  
-
-  
-
-                <input type="text" id="companyName" name="companyName" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="contactName">Contact Name (Optional)</label>  
-
-  
-
-                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="preparedBy">Your Name *</label>  
-
-  
-
-                    <input type="text" id="preparedBy" name="preparedBy" required>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="preparedByPhone">Your Phone *</label>  
-
-  
-
-                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="preparedByEmail">Your Email *</label>  
-
-  
-
-                <input type="email" id="preparedByEmail" name="preparedByEmail" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="fridgeCount">Number of Fridges *</label>  
-
-  
-
-                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>  
-
-  
-
-                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">  
-
-  
-
-                        <option value="395">$395/month</option>  
-
-  
-
-                        <option value="495">$495/month</option>  
-
-  
-
-                        <option value="595">$595/month</option>  
-
-  
-
-                        <option value="695">$695/month</option>  
-
-  
-
-                        <option value="795" selected>$795/month</option>  
-
-  
-
-                    </select>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>  
-
-  
-
-                <input type="number" id="deliveryFee" name="deliveryFee"   
-
-  
-
-                       min="0" max="5000" step="50"   
-
-  
-
-                       placeholder="$0.00"   
-
-  
-
-                       onchange="updatePricingSummary();">  
-
-  
-
-                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="pricing-summary">  
-
-  
-
-                <h4>Pricing Summary</h4>  
-
-  
-
-                <div class="pricing-display" id="pricingSummary">  
-
-  
-
-                    Monthly Total: $795/month<br>  
-
-  
-
-                    Setup Fee: $295 (one-time)  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="modal-buttons">  
-
-  
-
-                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>  
-
-  
-
-                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-    </div>  
-
-  
-
-   
-
-  
-
-    <!-- Service Agreement Modal -->  
-
-  
-
-    <div id="serviceAgreementModal" class="modal-overlay">  
-
-  
-
-        <div class="modal">  
-
-  
-
-            <h3>Generate Service Agreement</h3>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceCompanyName">Company Name *</label>  
-
-  
-
-                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceContactName">Contact Name (Optional)</label>  
-
-  
-
-                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceStreet">Street Address *</label>  
-
-  
-
-                <input type="text" id="serviceStreet" name="serviceStreet" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceCity">City *</label>  
-
-  
-
-                    <input type="text" id="serviceCity" name="serviceCity" required>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceState">State *</label>  
-
-  
-
-                    <select id="serviceState" name="serviceState" required>  
-
-  
-
-                        <option value="">Select State</option>  
-
-  
-
-                        <option value="MA" selected>MA</option>  
-
-  
-
-                        <option value="NH">NH</option>  
-
-  
-
-                        <option value="ME">ME</option>  
-
-  
-
-                        <option value="VT">VT</option>  
-
-  
-
-                        <option value="RI">RI</option>  
-
-  
-
-                        <option value="CT">CT</option>  
-
-  
-
-                    </select>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceZip">Zip Code *</label>  
-
-  
-
-                <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="servicePreparedBy">Your Name *</label>  
-
-  
-
-                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="servicePreparedByPhone">Your Phone *</label>  
-
-  
-
-                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="servicePreparedByEmail">Your Email *</label>  
-
-  
-
-                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceFridgeCount">Total Kiosks to Install *</label>  
-
-  
-
-                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>  
-
-  
-
-                    <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">  
-
-  
-
-                        <option value="395">$395/month</option>  
-
-  
-
-                        <option value="495">$495/month</option>  
-
-  
-
-                        <option value="595">$595/month</option>  
-
-  
-
-                        <option value="695">$695/month</option>  
-
-  
-
-                        <option value="795" selected>$795/month</option>  
-
-  
-
-                    </select>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="subsidyPercentage">Subsidy Percentage *</label>  
-
-  
-
-                    <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">  
-
-  
-
-                        <option value="0" selected>0%</option>  
-
-  
-
-                        <option value="10">10%</option>  
-
-  
-
-                        <option value="20">20%</option>  
-
-  
-
-                        <option value="25">25%</option>  
-
-  
-
-                        <option value="30">30%</option>  
-
-  
-
-                        <option value="40">40%</option>  
-
-  
-
-                        <option value="50">50%</option>  
-
-  
-
-                        <option value="60">60%</option>  
-
-  
-
-                        <option value="70">70%</option>  
-
-  
-
-                        <option value="75">75%</option>  
-
-  
-
-                        <option value="80">80%</option>  
-
-  
-
-                        <option value="90">90%</option>  
-
-  
-
-                        <option value="100">100%</option>  
+                    <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()"> 
 
-  
-
-                    </select>  
-
-  
-
-                    <small>Discount on purchases billed back to company</small>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="freeMonths">Free Months</label>  
-
-  
-
-                    <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">  
-
-  
-
-                        <option value="0" selected>No free months</option>  
-
-  
-
-                        <option value="1">1 month free</option>  
-
-  
-
-                        <option value="2">2 months free</option>  
-
-  
-
-                        <option value="3">3 months free</option>  
-
-  
-
-                        <option value="4">4 months free</option>  
-
-  
-
-                        <option value="5">5 months free</option>  
-
-  
-
-                        <option value="6">6 months free</option>  
-
-  
-
-                    </select>  
-
-  
-
-                    <small>Service fee waived for initial months</small>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
+                    <small>Leave blank for TBD</small> 
 
-                    <label for="installDate">Install Date</label>  
+                </div> 
 
-  
-
-                    <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">  
-
-  
-
-                    <small>Leave blank for TBD</small>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="firstBillDate">First Bill Date</label>  
-
-  
-
-                    <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">  
-
-  
-
-                    <small>Auto-calculated based on install date and free months</small>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
+                 
 
-  
-
-            <div class="pricing-summary">  
-
-  
-
-                <h4>Agreement Summary</h4>  
-
-  
-
-                <div class="pricing-display" id="servicePricingSummary">  
-
-  
-
-                    Total Kiosks: 1<br>  
-
-  
-
-                    Monthly Service Fee: $795.00<br>  
-
-  
+                <div class="form-group"> 
 
-                    Subsidy: 0% discount<br>  
+                    <label for="firstBillDate">First Bill Date</label> 
 
-  
-
-                    Monthly Subsidy Amount: $0.00  
-
-  
+                    <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;"> 
 
-                </div>  
+                    <small>Auto-calculated based on install date and free months</small> 
 
-  
-
-            </div>  
+                </div> 
 
-  
+            </div> 
 
-              
+             
 
-  
+            <div class="pricing-summary"> 
 
-            <div class="modal-buttons">  
+                <h4>Agreement Summary</h4> 
 
-  
+                <div class="pricing-display" id="servicePricingSummary"> 
 
-                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>  
+                    Total Kiosks: 1<br> 
 
-  
+                    Monthly Service Fee: $795.00<br> 
 
-                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>  
+                    Subsidy: 0% discount<br> 
 
-  
+                    Monthly Subsidy Amount: $0.00 
 
-            </div>  
+                </div> 
 
-  
+            </div> 
 
-        </div>  
+             
 
-  
+            <div class="modal-buttons"> 
 
-    </div>  
+                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button> 
 
-  
+                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button> 
 
-</body>  
+            </div> 
 
-  
+        </div> 
 
-</html>  
+    </div> 
 
-  
+</body> 
 
-  
+</html> 
 
  
