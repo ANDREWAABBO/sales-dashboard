@@ -408,7 +408,7 @@
             overlay.style.display = 'block';
             
             const modal = document.createElement('div');
-            modal.className = 'pdf-modal';
+            modal.className = 'materials-modal';
             
             const materials = [
                 {
@@ -444,40 +444,45 @@
             ];
             
             modal.innerHTML = `
-                <div class="pdf-header">
+                <div class="materials-header">
                     <h3>How We Stack Up - Marketing Materials</h3>
-                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                    <button class="close-btn" onclick="closeQuantumMaterialsModal()">✕</button>
                 </div>
-                <div class="pdf-viewer" style="padding: 20px;">
-                    <div style="display: grid; gap: 15px; max-height: 70vh; overflow-y: auto;">
-                        ${materials.map(material => `
-                            <div class="material-item" style="background: white; padding: 20px; border-radius: 12px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"
-                                 onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
-                                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-                                <div style="margin-bottom: 15px;">
-                                    <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${material.title}</h4>
-                                    <p style="margin: 0; color: #718096; font-size: 14px; line-height: 1.4;">${material.description}</p>
-                                </div>
-                                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                    <button class="btn btn-primary" 
-                                            onclick="viewQuantumMaterialPDF('${material.id}', '${material.title}')"
-                                            style="padding: 10px 20px; font-size: 14px; min-width: 100px;">
-                                        View
-                                    </button>
-                                    <button class="btn btn-secondary" 
-                                            onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')"
-                                            style="padding: 10px 20px; font-size: 14px; min-width: 100px;">
-                                        Download
-                                    </button>
-                                </div>
+                <div style="display: grid; gap: 20px;">
+                    ${materials.map(material => `
+                        <div class="material-item" style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"
+                             onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(30,58,138,0.15)'"
+                             onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 1.2em; font-weight: 600;">${material.title}</h4>
+                                <p style="margin: 0; color: #64748b; font-size: 0.95em; line-height: 1.5;">${material.description}</p>
                             </div>
-                        `).join('')}
-                    </div>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" 
+                                        onclick="viewQuantumMaterialPDF('${material.id}', '${material.title}')"
+                                        style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;">
+                                    👁️ View PDF
+                                </button>
+                                <button class="btn btn-secondary" 
+                                        onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')"
+                                        style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600; background: #10b981;">
+                                    📥 Download
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
             
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
+        }
+
+        function closeQuantumMaterialsModal() {
+            const overlay = document.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
         }
 
         function viewQuantumMaterialPDF(fileId, fileName) {
