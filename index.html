@@ -398,17 +398,17 @@
 
         // Quantum Solutions Functions
         function openQuantumAboutUs() {
-            const existingOverlay = document.querySelector('.modal-overlay');
+            const existingOverlay = document.querySelector('.quantum-materials-overlay');
             if (existingOverlay) {
                 existingOverlay.remove();
             }
             
             const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
+            overlay.className = 'quantum-materials-overlay';
             overlay.style.display = 'block';
             
             const modal = document.createElement('div');
-            modal.className = 'materials-modal';
+            modal.className = 'quantum-materials-modal';
             
             const materials = [
                 {
@@ -444,7 +444,7 @@
             ];
             
             modal.innerHTML = `
-                <div class="materials-header">
+                <div class="quantum-materials-header">
                     <h3>How We Stack Up - Marketing Materials</h3>
                     <button class="close-btn" onclick="closeQuantumMaterialsModal()">✕</button>
                 </div>
@@ -479,7 +479,7 @@
         }
 
         function closeQuantumMaterialsModal() {
-            const overlay = document.querySelector('.modal-overlay');
+            const overlay = document.querySelector('.quantum-materials-overlay');
             if (overlay) {
                 overlay.remove();
             }
