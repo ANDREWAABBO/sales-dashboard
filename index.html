@@ -396,9 +396,130 @@
             }
         }
 
-        // Quantum Solutions Functions (Placeholders for now)
+        // Quantum Solutions Functions
         function openQuantumAboutUs() {
-            alert('How We Stack Up materials coming soon!');
+            const existingOverlay = document.querySelector('.modal-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const modal = document.createElement('div');
+            modal.className = 'pdf-modal';
+            
+            const materials = [
+                {
+                    title: 'Restaurant Industry Trends Report',
+                    id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO',
+                    description: 'Current market trends and insights for the restaurant industry'
+                },
+                {
+                    title: 'Maximizing Revenue Per Square Foot in Food Service Operations',
+                    id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC',
+                    description: 'Strategies to optimize space utilization and increase profitability'
+                },
+                {
+                    title: 'Fresh Food Fridge Spec Sheet',
+                    id: '1XsB2nnvRf1fDGUir_Wd2K0rhHbmXYNPE',
+                    description: 'Technical specifications and features of our Smart Food Fridge'
+                },
+                {
+                    title: 'Food Fridge Executive Overview',
+                    id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE',
+                    description: 'High-level overview and business benefits for decision makers'
+                },
+                {
+                    title: 'Commercial Real Estate Premium Food Amenities',
+                    id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0',
+                    description: 'How premium food amenities enhance commercial property value'
+                },
+                {
+                    title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ',
+                    id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c',
+                    description: 'Comprehensive technical documentation and frequently asked questions'
+                }
+            ];
+            
+            modal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>How We Stack Up - Marketing Materials</h3>
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                </div>
+                <div class="pdf-viewer" style="padding: 20px;">
+                    <div style="display: grid; gap: 15px; max-height: 70vh; overflow-y: auto;">
+                        ${materials.map(material => `
+                            <div class="material-item" style="background: white; padding: 20px; border-radius: 12px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"
+                                 onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+                                 onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                                <div style="margin-bottom: 15px;">
+                                    <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${material.title}</h4>
+                                    <p style="margin: 0; color: #718096; font-size: 14px; line-height: 1.4;">${material.description}</p>
+                                </div>
+                                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                    <button class="btn btn-primary" 
+                                            onclick="viewQuantumMaterialPDF('${material.id}', '${material.title}')"
+                                            style="padding: 10px 20px; font-size: 14px; min-width: 100px;">
+                                        View
+                                    </button>
+                                    <button class="btn btn-secondary" 
+                                            onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')"
+                                            style="padding: 10px 20px; font-size: 14px; min-width: 100px;">
+                                        Download
+                                    </button>
+                                    <button class="btn" 
+                                            onclick="window.open('https://drive.google.com/file/d/${material.id}/view', '_blank')"
+                                            style="background: #10b981; padding: 10px 20px; font-size: 14px; min-width: 100px;">
+                                        Open in Drive
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        function viewQuantumMaterialPDF(fileId, fileName) {
+            closePDFViewer();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>${fileName}</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closePDFViewer(); setTimeout(openQuantumAboutUs, 200);" 
+                                style="padding: 10px 20px;">
+                            Back to Materials
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="padding: 10px 20px;">
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
         }
 
         function openQuantumProposalGenerator() {
