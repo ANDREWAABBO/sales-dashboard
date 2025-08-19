@@ -1,1088 +1,976 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-    <meta charset="UTF-8"> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>Quantum Solutions Dashboard</title> 
-    <link rel="preconnect" href="https://fonts.googleapis.com"> 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"> 
-    <style> 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        } 
-  
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
-            background: #1e3a8a; 
-            min-height: 100vh; 
-            padding: 20px; 
-            color: #333; 
-            font-size: 18px; 
-        } 
-  
-        /* Company Switcher */ 
-        .company-switcher { 
-            display: flex; 
-            justify-content: center; 
-            gap: 20px; 
-            padding: 20px; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            background: #000000; 
-            margin: -20px -20px 30px -20px; 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); 
-        } 
-  
-        .company-btn { 
-            padding: 12px 25px; 
-            background: rgba(255, 255, 255, 0.1); 
-            border: 2px solid rgba(255, 255, 255, 0.2); 
-            color: white; 
-            font-size: 18px; 
-            font-weight: 600; 
-            border-radius: 50px; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            backdrop-filter: blur(10px); 
-            text-decoration: none; 
-        } 
-  
-        .company-btn:hover { 
-            background: rgba(255, 255, 255, 0.2); 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
-        } 
-  
-        .company-btn.active { 
-            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); 
-            border-color: transparent; 
-            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 
-                        0 0 60px rgba(59, 130, 246, 0.3); 
-            animation: glow 2s ease-in-out infinite alternate; 
-        } 
-  
-        @keyframes glow { 
-            from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); } 
-            to { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); } 
-        } 
-  
-        .company-logo { 
-            height: 35px; 
-            width: auto; 
-            filter: brightness(0) invert(1); 
-            transition: all 0.3s ease; 
-        } 
-  
-        .abbondanza-logo { 
-            height: 40px; 
-        } 
-  
-        .company-btn:hover .company-logo { 
-            transform: scale(1.05); 
-        } 
-  
-        .dashboard-container { 
-            max-width: 1400px; 
-            margin: 0 auto; 
-            animation: fadeIn 0.8s ease-out; 
-        } 
-  
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(20px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        } 
-  
-        .header { 
-            text-align: center; 
-            margin-bottom: 35px; 
-            color: white; 
-            position: relative; 
-        } 
-  
-        .header h1 { 
-            font-size: 3.2em; 
-            font-weight: 700; 
-            margin-bottom: 10px; 
-            color: white; 
-            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif; 
-            letter-spacing: 2px; 
-            text-transform: uppercase; 
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5); 
-            animation: titleGlow 3s ease-in-out infinite alternate; 
-        } 
-  
-        @keyframes titleGlow { 
-            from { filter: brightness(1); } 
-            to { filter: brightness(1.3); } 
-        } 
-  
-        .header p { 
-            font-size: 1.3em; 
-            opacity: 0.9; 
-        } 
-  
-        /* Quantum Grid - Vertical Stack */ 
-        .quantum-grid { 
-            display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 20px; 
-            max-width: 800px; 
-            margin: 0 auto; 
-        } 
-  
-        .card { 
-            background: rgba(255, 255, 255, 0.95); 
-            border-radius: 15px; 
-            padding: 20px; 
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            position: relative; 
-            overflow: hidden; 
-        } 
-  
-        .card::before { 
-            content: ''; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            height: 4px; 
-            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%); 
-            transform: scaleX(0); 
-            transform-origin: left; 
-            transition: transform 0.3s ease; 
-        } 
-  
-        .card:hover::before { 
-            transform: scaleX(1); 
-        } 
-  
-        .card:hover { 
-            transform: translateY(-3px); 
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35); 
-        } 
-  
-        .card h2 { 
-            font-size: 1.5em; 
-            margin-bottom: 10px; 
-            color: #2d3748; 
-        } 
-  
-        .card p { 
-            color: #718096; 
-            margin-bottom: 18px; 
-            line-height: 1.5; 
-            font-size: 1.1em; 
-        } 
-  
-        .btn { 
-            display: inline-block; 
-            padding: 12px 26px; 
-            background: #1e3a8a; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 25px; 
-            font-weight: 600; 
-            transition: all 0.3s ease; 
-            position: relative; 
-            overflow: hidden; 
-            border: none; 
-            cursor: pointer; 
-            font-size: 1.05em; 
-        } 
-  
-        .btn::after { 
-            content: ''; 
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            width: 0; 
-            height: 0; 
-            border-radius: 50%; 
-            background: rgba(255, 255, 255, 0.3); 
-            transform: translate(-50%, -50%); 
-            transition: width 0.6s, height 0.6s; 
-        } 
-  
-        .btn:hover::after { 
-            width: 300px; 
-            height: 300px; 
-        } 
-  
-        .btn:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4); 
-            background: #1e40af; 
-        } 
-  
-        .logout-btn { 
-            background: white !important; 
-            color: black !important; 
-            font-weight: 700 !important; 
-            border: 2px solid rgba(255, 255, 255, 0.3) !important; 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important; 
-        } 
-  
-        .logout-btn:hover { 
-            background: #f0f0f0 !important; 
-            transform: scale(1.05) !important; 
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important; 
-        } 
-  
-        /* Quantum Materials Modal */ 
-        .quantum-materials-overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0, 0, 0, 0.7); 
-            z-index: 10000; 
-            backdrop-filter: blur(5px); 
-        } 
-  
-        .quantum-materials-modal { 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: white; 
-            border-radius: 20px; 
-            padding: 30px; 
-            max-width: 900px; 
-            width: 90%; 
-            max-height: 80vh; 
-            overflow-y: auto; 
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); 
-            z-index: 10001; 
-        } 
-  
-        .quantum-materials-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 25px; 
-            padding-bottom: 15px; 
-            border-bottom: 2px solid #e2e8f0; 
-        } 
-  
-        .quantum-materials-header h3 { 
-            margin: 0; 
-            color: #2d3748; 
-            font-size: 1.8em; 
-        } 
-  
-        .close-btn { 
-            background: #e53e3e; 
-            color: white; 
-            border: none; 
-            padding: 10px 22px; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: all 0.3s ease; 
-            font-size: 1.05em; 
-        } 
-  
-        .close-btn:hover { 
-            background: #c53030; 
-            transform: scale(1.05); 
-        } 
-  
-        .success-popup { 
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); 
-            border: 2px solid #28a745; 
-            color: #155724; 
-            padding: 20px; 
-            border-radius: 15px; 
-            text-align: center; 
-            font-size: 1.05em; 
-        } 
-  
-        .error-popup { 
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); 
-            border: 2px solid #dc3545; 
-            color: #721c24; 
-            padding: 20px; 
-            border-radius: 15px; 
-            text-align: center; 
-            font-size: 1.05em; 
-        } 
-  
-        .loading-spinner { 
-            display: inline-block; 
-            width: 20px; 
-            height: 20px; 
-            border: 3px solid #f3f3f3; 
-            border-top: 3px solid #1e3a8a; 
-            border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-        } 
-  
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        } 
-  
-        /* Modal Styles */ 
-        .modal-overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0, 0, 0, 0.7); 
-            z-index: 10000; 
-            backdrop-filter: blur(5px); 
-        } 
-  
-        .modal { 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: white; 
-            border-radius: 20px; 
-            padding: 25px 35px; 
-            max-width: 900px; 
-            width: 95%; 
-            max-height: 90vh; 
-            overflow-y: auto; 
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); 
-            z-index: 10001; 
-        } 
-  
-        .modal h3 { 
-            margin-bottom: 15px; 
-            color: #2d3748; 
-            text-align: center; 
-            font-size: 1.4em; 
-        } 
-  
-        .form-group { 
-            margin-bottom: 20px; 
-        } 
-  
-        .form-group label { 
-            display: block; 
-            margin-bottom: 5px; 
-            color: #4a5568; 
-            font-weight: 600; 
-            font-size: 1.05em; 
-        } 
-  
-        .form-group input, 
-        .form-group select, 
-        .form-group textarea { 
-            width: 100%; 
-            padding: 14px; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 10px; 
-            font-size: 1.05em; 
-            transition: border-color 0.3s ease; 
-        } 
-  
-        .form-group input:focus, 
-        .form-group select:focus, 
-        .form-group textarea:focus { 
-            outline: none; 
-            border-color: #1e3a8a; 
-        } 
-  
-        .form-group small { 
-            display: block; 
-            margin-top: 5px; 
-            color: #718096; 
-            font-size: 0.95em; 
-        } 
-  
-        .form-row { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 15px; 
-        } 
-  
-        .form-checkbox { 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            padding: 10px; 
-            background: #f8fafc; 
-            border-radius: 8px; 
-            border: 2px solid #e2e8f0; 
-            transition: all 0.3s ease; 
-        } 
-  
-        .form-checkbox:hover { 
-            border-color: #1e3a8a; 
-        } 
-  
-        .form-checkbox input[type="checkbox"] { 
-            width: auto; 
-            margin: 0; 
-        } 
-  
-        .pricing-summary { 
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); 
-            padding: 20px; 
-            border-radius: 15px; 
-            margin: 20px 0; 
-            border: 2px solid #1e3a8a; 
-        } 
-  
-        .pricing-summary h4 { 
-            margin: 0 0 15px 0; 
-            color: #2d3748; 
-            font-size: 1.3em; 
-            text-align: center; 
-        } 
-  
-        .modal-buttons { 
-            display: flex; 
-            gap: 15px; 
-            margin-top: 25px; 
-        } 
-  
-        .btn-primary { 
-            background: #1e3a8a; 
-            flex: 2; 
-        } 
-  
-        .btn-primary:hover { 
-            background: #1e40af; 
-        } 
-  
-        .btn-secondary { 
-            background: #64748b; 
-            flex: 1; 
-        } 
-  
-        .btn-secondary:hover { 
-            background: #475569; 
-        } 
-    </style> 
-    <script> 
-        // Password protection 
-        const DASHBOARD_PASSWORD = 'abbondanza2025'; 
-         
-        function checkAuth() { 
-            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`; 
-             
-            pdfModal.innerHTML = ` 
-                <div style="padding: 20px; background: #f7fafc; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;"> 
-                    <h3 style="margin: 0; color: #2d3748; font-size: 1.3em;">${fileName}</h3> 
-                    <div style="display: flex; gap: 10px; align-items: center;"> 
-                        <button class="btn btn-primary"  
-                                onclick="closeQuantumMaterialsModal(); setTimeout(openQuantumAboutUs, 200);"  
-                                style="padding: 10px 20px;"> 
-                            Back to Materials 
-                        </button> 
-                        <button class="btn btn-secondary"  
-                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"  
-                                style="padding: 10px 20px;"> 
-                            Download 
-                        </button> 
-                    </div> 
-                </div> 
-                <div style="flex: 1; padding: 20px; overflow: hidden;"> 
-                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);" allowfullscreen></iframe> 
-                </div> 
-            `; 
-             
-            overlay.appendChild(pdfModal); 
-            document.body.appendChild(overlay); 
-        } 
-  
-        // Quantum Proposal Generator 
-        function openQuantumProposalGenerator() { 
-            document.getElementById('quantumProposalModal').style.display = 'block'; 
-            updateQuantumPricingSummary(); 
-        } 
-  
-        function closeQuantumModal(modalId) { 
-            const modal = document.getElementById(modalId); 
-            if (modal) { 
-                modal.style.display = 'none'; 
-            } 
-        } 
-  
-        function updateCustomerType() { 
-            const customerType = document.getElementById('customerType').value; 
-            const scannerGroup = document.getElementById('scannerGroup'); 
-            const scannerCount = document.getElementById('scannerCount'); 
-             
-            if (customerType === 'new') { 
-                scannerCount.value = 1; 
-                scannerGroup.style.display = 'block'; 
-            } else { 
-                scannerCount.value = 0; 
-                scannerGroup.style.display = 'block'; 
-            } 
-            updateQuantumPricingSummary(); 
-        } 
-  
-        function calculateFreight() { 
-            const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1; 
-            const customerZip = document.getElementById('customerZip').value; 
-             
-            let baseFreight; 
-             
-            // Quantity-based freight calculation 
-            if (fridgeCount === 1) { 
-                baseFreight = 895; 
-            } else if (fridgeCount === 2) { 
-                baseFreight = 1400; // $700 each 
-            } else if (fridgeCount === 3) { 
-                baseFreight = 1800; // $600 each 
-            } else { 
-                baseFreight = fridgeCount * 550; // $550 each for 4+ 
-            } 
-             
-            // Distance multiplier (simplified - you can enhance with real zip code logic) 
-            let distanceMultiplier = 1.0; 
-            if (customerZip) { 
-                const zipCode = parseInt(customerZip); 
-                // Simple logic - you can replace with real distance calculation 
-                if (zipCode < 10000 || zipCode > 99999) { 
-                    distanceMultiplier = 1.0; // Local/unknown 
-                } else if (zipCode >= 10000 && zipCode <= 19999) { 
-                    distanceMultiplier = 1.0; // Northeast 
-                } else if (zipCode >= 20000 && zipCode <= 39999) { 
-                    distanceMultiplier = 1.2; // Southeast/Mid-Atlantic 
-                } else { 
-                    distanceMultiplier = 1.5; // West/Far 
-                } 
-            } 
-             
-            return Math.round(baseFreight * distanceMultiplier); 
-        } 
-  
-        function updateQuantumPricingSummary() { 
-            const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1; 
-            const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0; 
-            const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0; 
-            const vinylWrap = document.getElementById('vinylWrap').checked; 
-            const goldSupport = document.getElementById('goldSupport').checked; 
-             
-            // Base pricing 
-            const fridgePrice = 7500; 
-            const scannerPrice = 455; 
-            const rfidRollPrice = 180; // 1000 tags × $0.18 
-            const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50); // Bulk pricing 
-            const freight = calculateFreight(); 
-             
-            // One-time costs 
-            const fridgeTotal = fridgeCount * fridgePrice; 
-            const scannerTotal = scannerCount * scannerPrice; 
-            const rfidTotal = rfidRolls * rfidRollPrice; 
-            const wrapTotal = vinylWrap ? wrapPrice : 0; 
-             
-            const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + freight; 
-             
-            // Monthly costs 
-            const monthlyLicense = fridgeCount * 175; // $175 per fridge 
-            const monthlyLTE = fridgeCount * 25; // $25 per fridge 
-            const monthlyGold = goldSupport ? (fridgeCount * 39) : 0; // $39 per fridge 
-             
-            const monthlyTotal = monthlyLicense + monthlyLTE + monthlyGold; 
-             
-            // Update display 
-            let summaryHTML = ` 
-                <div style="margin-bottom: 15px;"> 
-                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">One-Time Costs</h4> 
-                    <div>Food Fridges (${fridgeCount}): ${fridgeTotal.toLocaleString()}</div> 
-            `; 
-             
-            if (scannerCount > 0) { 
-                summaryHTML += `<div>RFID Scanners (${scannerCount}): ${scannerTotal.toLocaleString()}</div>`; 
-            } 
-             
-            if (rfidRolls > 0) { 
-                summaryHTML += `<div>RFID Tags (${rfidRolls} rolls): ${rfidTotal.toLocaleString()}</div>`; 
-            } 
-             
-            if (vinylWrap) { 
-                summaryHTML += `<div>Vinyl Wrap: ${wrapTotal.toLocaleString()}</div>`; 
-            } 
-             
-            summaryHTML += ` 
-                    <div>Freight: ${freight.toLocaleString()}</div> 
-                    <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;"> 
-                        One-Time Total: ${oneTimeTotal.toLocaleString()} 
-                    </div> 
-                </div> 
-                 
-                <div> 
-                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">Monthly Recurring</h4> 
-                    <div>License Fees: ${monthlyLicense.toLocaleString()}/month</div> 
-                    <div>LTE Service: ${monthlyLTE.toLocaleString()}/month</div> 
-            `; 
-             
-            if (goldSupport) { 
-                summaryHTML += `<div>Gold Support: ${monthlyGold.toLocaleString()}/month</div>`; 
-            } 
-             
-            summaryHTML += ` 
-                    <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;"> 
-                        Monthly Total: ${monthlyTotal.toLocaleString()}/month 
-                    </div> 
-                    <div style="margin-top: 10px; font-size: 0.9em; color: #64748b;"> 
-                        Plus $0.15 per transaction (min. $100/month) 
-                    </div> 
-                </div> 
-            `; 
-             
-            document.getElementById('quantumPricingSummary').innerHTML = summaryHTML; 
-        } 
-  
-        async function generateQuantumProposal(event) { 
-            if (event) { 
-                event.preventDefault(); 
-                event.stopPropagation(); 
-            } 
-             
-            const submitBtn = document.getElementById('generateQuantumBtn'); 
-            const originalText = submitBtn.innerHTML; 
-             
-            if (submitBtn.disabled) { 
-                return; 
-            } 
-             
-            submitBtn.disabled = true; 
-            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...'; 
-             
-            try { 
-                const formData = { 
-                    // Customer info 
-                    companyName: document.getElementById('quantumCompanyName').value, 
-                    contactName: document.getElementById('quantumContactName').value || '', 
-                    customerAddress: document.getElementById('customerAddress').value, 
-                    customerZip: document.getElementById('customerZip').value, 
-                     
-                    // Prepared by 
-                    preparedBy: document.getElementById('quantumPreparedBy').value, 
-                    preparedByPhone: document.getElementById('quantumPreparedByPhone').value, 
-                    preparedByEmail: document.getElementById('quantumPreparedByEmail').value, 
-                     
-                    // Configuration 
-                    customerType: document.getElementById('customerType').value, 
-                    fridgeCount: document.getElementById('quantumFridgeCount').value, 
-                    scannerCount: document.getElementById('scannerCount').value, 
-                    rfidRolls: document.getElementById('rfidRolls').value || '0', 
-                    vinylWrap: document.getElementById('vinylWrap').checked ? 'Yes' : 'No', 
-                    goldSupport: document.getElementById('goldSupport').checked ? 'Yes' : 'No' 
-                }; 
-  
-                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) { 
-                    throw new Error('Please fill in all required fields.'); 
-                } 
-  
-                const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec'; 
-                 
-                const params = new URLSearchParams(); 
-                Object.keys(formData).forEach(key => { 
-                    params.append(key, formData[key]); 
-                }); 
-  
-                // Make API call instead of opening new window
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Solutions Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e3a8a;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        /* Company Switcher */
+        .company-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #000000;
+            margin: -20px -20px 30px -20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .company-btn {
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+        }
+
+        .company-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .company-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-color: transparent;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5),
+                        0 0 60px rgba(59, 130, 246, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); }
+            to { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); }
+        }
+
+        .company-logo {
+            height: 35px;
+            width: auto;
+            filter: brightness(0) invert(1);
+            transition: all 0.3s ease;
+        }
+
+        .abbondanza-logo {
+            height: 40px;
+        }
+
+        .company-btn:hover .company-logo {
+            transform: scale(1.05);
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            color: white;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.3); }
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+
+        /* Quantum Grid - Vertical Stack */
+        .quantum-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .card p {
+            color: #718096;
+            margin-bottom: 18px;
+            line-height: 1.5;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 26px;
+            background: #1e3a8a;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05em;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4);
+            background: #1e40af;
+        }
+
+        .logout-btn {
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 25px 35px;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+        }
+
+        .modal h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            text-align: center;
+            font-size: 1.4em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.05em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1e3a8a;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #718096;
+            font-size: 0.95em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .form-checkbox:hover {
+            border-color: #1e3a8a;
+        }
+
+        .form-checkbox input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .pricing-summary {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #1e3a8a;
+        }
+
+        .pricing-summary h4 {
+            margin: 0 0 15px 0;
+            color: #2d3748;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn-primary {
+            background: #1e3a8a;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+
+        .btn-secondary {
+            background: #64748b;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .close-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1.05em;
+        }
+
+        .close-btn:hover {
+            background: #c53030;
+            transform: scale(1.05);
+        }
+
+        .success-popup {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.05em;
+        }
+
+        .error-popup {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.05em;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1e3a8a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        // Password protection
+        const DASHBOARD_PASSWORD = 'abbondanza2025';
+        
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
+            if (!isLoggedIn) {
+                const password = prompt('Please enter the dashboard password:');
+                if (password === DASHBOARD_PASSWORD) {
+                    sessionStorage.setItem('dashboardAuth', 'true');
+                } else {
+                    alert('Incorrect password. Access denied.');
+                    document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>';
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function logout() {
+            sessionStorage.removeItem('dashboardAuth');
+            location.reload();
+        }
+
+        function addLogoutButton() {
+            const header = document.querySelector('.header');
+            const logoutBtn = document.createElement('button');
+            logoutBtn.textContent = 'Logout';
+            logoutBtn.className = 'btn logout-btn';
+            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;';
+            logoutBtn.onclick = logout;
+            header.appendChild(logoutBtn);
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                addLogoutButton();
+            }
+        });
+
+        // How We Stack Up - Materials Function
+        function openQuantumAboutUs() {
+            const existingOverlay = document.querySelector('.modal-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            
+            const materials = [
+                {
+                    title: 'Restaurant Industry Trends Report',
+                    id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO',
+                    description: 'Current market trends and insights for the restaurant industry'
+                },
+                {
+                    title: 'Maximizing Revenue Per Square Foot in Food Service Operations',
+                    id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC',
+                    description: 'Strategies to optimize space utilization and increase profitability'
+                },
+                {
+                    title: 'Fresh Food Fridge Spec Sheet',
+                    id: '1XsB2nnvRf1fDGUir_Wd2K0rhHbmXYNPE',
+                    description: 'Technical specifications and features of our Smart Food Fridge'
+                },
+                {
+                    title: 'Food Fridge Executive Overview',
+                    id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE',
+                    description: 'High-level overview and business benefits for decision makers'
+                },
+                {
+                    title: 'Commercial Real Estate Premium Food Amenities',
+                    id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0',
+                    description: 'How premium food amenities enhance commercial property value'
+                },
+                {
+                    title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ',
+                    id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c',
+                    description: 'Comprehensive technical documentation and frequently asked questions'
+                }
+            ];
+            
+            modal.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;">
+                    <h3 style="margin: 0; color: #2d3748; font-size: 1.8em;">How We Stack Up - Marketing Materials</h3>
+                    <button class="close-btn" onclick="closeModal()">✕</button>
+                </div>
+                <div style="display: grid; gap: 20px;">
+                    ${materials.map(material => `
+                        <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 1.2em; font-weight: 600;">${material.title}</h4>
+                                <p style="margin: 0; color: #64748b; font-size: 0.95em; line-height: 1.5;">${material.description}</p>
+                            </div>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="window.open('https://drive.google.com/file/d/${material.id}/view', '_blank')" style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;">
+                                    👁️ View PDF
+                                </button>
+                                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')" style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;">
+                                    📥 Download
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        function closeModal() {
+            const overlay = document.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Quantum Proposal Generator
+        function openQuantumProposalGenerator() {
+            document.getElementById('quantumProposalModal').style.display = 'block';
+            updateQuantumPricingSummary();
+        }
+
+        function closeQuantumModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function updateCustomerType() {
+            const customerType = document.getElementById('customerType').value;
+            const scannerCount = document.getElementById('scannerCount');
+            
+            if (customerType === 'new') {
+                scannerCount.value = 1;
+            } else {
+                scannerCount.value = 0;
+            }
+            updateQuantumPricingSummary();
+        }
+
+        function calculateFreight() {
+            const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
+            const customerZip = document.getElementById('customerZip').value;
+            
+            let baseFreight;
+            
+            if (fridgeCount === 1) {
+                baseFreight = 895;
+            } else if (fridgeCount === 2) {
+                baseFreight = 1400;
+            } else if (fridgeCount === 3) {
+                baseFreight = 1800;
+            } else {
+                baseFreight = fridgeCount * 550;
+            }
+            
+            let distanceMultiplier = 1.0;
+            if (customerZip) {
+                const zipCode = parseInt(customerZip);
+                if (zipCode >= 10000 && zipCode <= 19999) {
+                    distanceMultiplier = 1.0;
+                } else if (zipCode >= 20000 && zipCode <= 39999) {
+                    distanceMultiplier = 1.2;
+                } else if (zipCode >= 40000) {
+                    distanceMultiplier = 1.5;
+                }
+            }
+            
+            return Math.round(baseFreight * distanceMultiplier);
+        }
+
+        function updateQuantumPricingSummary() {
+            const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
+            const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
+            const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
+            const vinylWrap = document.getElementById('vinylWrap').checked;
+            const goldSupport = document.getElementById('goldSupport').checked;
+            
+            const fridgePrice = 7500;
+            const scannerPrice = 455;
+            const rfidRollPrice = 180;
+            const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50);
+            const freight = calculateFreight();
+            
+            const fridgeTotal = fridgeCount * fridgePrice;
+            const scannerTotal = scannerCount * scannerPrice;
+            const rfidTotal = rfidRolls * rfidRollPrice;
+            const wrapTotal = vinylWrap ? wrapPrice : 0;
+            
+            const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + freight;
+            
+            const monthlyLicense = fridgeCount * 175;
+            const monthlyLTE = fridgeCount * 25;
+            const monthlyGold = goldSupport ? (fridgeCount * 39) : 0;
+            
+            const monthlyTotal = monthlyLicense + monthlyLTE + monthlyGold;
+            
+            let summaryHTML = `
+                <div style="margin-bottom: 15px;">
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">One-Time Costs</h4>
+                    <div>Food Fridges (${fridgeCount}): $${fridgeTotal.toLocaleString()}</div>
+            `;
+            
+            if (scannerCount > 0) {
+                summaryHTML += `<div>RFID Scanners (${scannerCount}): $${scannerTotal.toLocaleString()}</div>`;
+            }
+            
+            if (rfidRolls > 0) {
+                summaryHTML += `<div>RFID Tags (${rfidRolls} rolls): $${rfidTotal.toLocaleString()}</div>`;
+            }
+            
+            if (vinylWrap) {
+                summaryHTML += `<div>Vinyl Wrap: $${wrapTotal.toLocaleString()}</div>`;
+            }
+            
+            summaryHTML += `
+                    <div>Freight: $${freight.toLocaleString()}</div>
+                    <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                        One-Time Total: $${oneTimeTotal.toLocaleString()}
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">Monthly Recurring</h4>
+                    <div>License Fees: $${monthlyLicense.toLocaleString()}/month</div>
+                    <div>LTE Service: $${monthlyLTE.toLocaleString()}/month</div>
+            `;
+            
+            if (goldSupport) {
+                summaryHTML += `<div>Gold Support: $${monthlyGold.toLocaleString()}/month</div>`;
+            }
+            
+            summaryHTML += `
+                    <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                        Monthly Total: $${monthlyTotal.toLocaleString()}/month
+                    </div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #64748b;">
+                        Plus $0.15 per transaction (min. $100/month)
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('quantumPricingSummary').innerHTML = summaryHTML;
+        }
+
+        async function generateQuantumProposal(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            const submitBtn = document.getElementById('generateQuantumBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            if (submitBtn.disabled) {
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+            
+            try {
+                const formData = {
+                    companyName: document.getElementById('quantumCompanyName').value,
+                    contactName: document.getElementById('quantumContactName').value || '',
+                    customerAddress: document.getElementById('customerAddress').value,
+                    customerZip: document.getElementById('customerZip').value,
+                    preparedBy: document.getElementById('quantumPreparedBy').value,
+                    preparedByPhone: document.getElementById('quantumPreparedByPhone').value,
+                    preparedByEmail: document.getElementById('quantumPreparedByEmail').value,
+                    customerType: document.getElementById('customerType').value,
+                    fridgeCount: document.getElementById('quantumFridgeCount').value,
+                    scannerCount: document.getElementById('scannerCount').value,
+                    rfidRolls: document.getElementById('rfidRolls').value || '0',
+                    vinylWrap: document.getElementById('vinylWrap').checked ? 'Yes' : 'No',
+                    goldSupport: document.getElementById('goldSupport').checked ? 'Yes' : 'No'
+                };
+
+                if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
+                    throw new Error('Please fill in all required fields.');
+                }
+
+                const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
+                
+                const params = new URLSearchParams();
+                Object.keys(formData).forEach(key => {
+                    params.append(key, formData[key]);
+                });
+
                 const response = await fetch(`${QUANTUM_PROPOSAL_URL}?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    closeQuantumModal('quantumProposalModal'); 
-                    showQuantumPopup(` 
-                        <div class="success-popup"> 
-                            <h3>✅ Proposal Generated Successfully!</h3> 
-                            <p>Your Smart Food Fridge proposal has been created and saved to Google Drive.</p> 
-                            <p><strong>Company:</strong> ${formData.companyName}</p> 
-                            <p><strong>Configuration:</strong> ${formData.fridgeCount} fridges, ${formData.scannerCount} scanners</p> 
-                            <p><strong>Total Cost:</strong> ${result.data.pricing.oneTimeTotal.toLocaleString()} one-time + ${result.data.pricing.monthlyTotal}/month</p> 
-                            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;"> 
-                                <button class="btn btn-primary" onclick="window.open('${result.pdfUrl}', '_blank')" style="padding: 12px 24px;"> 
-                                    📄 View PDF 
-                                </button> 
-                                <button class="btn btn-secondary" onclick="window.open('${result.pdfUrl.replace('/view?', '/export?format=pdf&')}', '_blank')" style="padding: 12px 24px;"> 
-                                    📥 Download 
-                                </button> 
-                            </div> 
-                        </div> 
-                    `, 'success'); 
+                    closeQuantumModal('quantumProposalModal');
+                    showQuantumPopup(`
+                        <div class="success-popup">
+                            <h3>✅ Proposal Generated Successfully!</h3>
+                            <p>Your Smart Food Fridge proposal has been created and saved to Google Drive.</p>
+                            <p><strong>Company:</strong> ${formData.companyName}</p>
+                            <p><strong>Configuration:</strong> ${formData.fridgeCount} fridges, ${formData.scannerCount} scanners</p>
+                            <p><strong>Total Cost:</strong> $${result.data.pricing.oneTimeTotal.toLocaleString()} one-time + $${result.data.pricing.monthlyTotal}/month</p>
+                            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                                <button class="btn btn-primary" onclick="window.open('${result.pdfUrl}', '_blank')" style="padding: 12px 24px;">
+                                    📄 View PDF
+                                </button>
+                                <button class="btn btn-secondary" onclick="window.open('${result.pdfUrl.replace('/view?', '/export?format=pdf&')}', '_blank')" style="padding: 12px 24px;">
+                                    📥 Download
+                                </button>
+                            </div>
+                        </div>
+                    `, 'success');
                 } else {
                     throw new Error(result.message || 'Failed to generate proposal');
                 }
-  
-            } catch (error) { 
-                showQuantumPopup(` 
-                    <div class="error-popup"> 
-                        <h3>❌ Error Generating Proposal</h3> 
-                        <p>${error.message}</p> 
-                        <p>Please try again or contact support if the problem persists.</p> 
-                    </div> 
-                `, 'error'); 
-            } finally { 
-                submitBtn.disabled = false; 
-                submitBtn.innerHTML = originalText; 
-            } 
-        } 
-  
-        function showQuantumPopup(content, type) { 
-            const popup = document.createElement('div'); 
-            popup.className = 'quantum-materials-overlay'; 
-            popup.innerHTML = ` 
-                <div class="quantum-materials-modal" style="max-width: 600px;"> 
-                    <div class="${type === 'error' ? 'error-popup' : 'success-popup'}" style="padding: 30px; text-align: center;"> 
-                        ${content} 
-                        <div style="margin-top: 20px;"> 
-                            <button class="btn btn-secondary" onclick="this.closest('.quantum-materials-overlay').remove()">Close</button> 
-                        </div> 
-                    </div> 
-                </div> 
-            `; 
-            document.body.appendChild(popup); 
-             
-            if (type === 'success') { 
-                setTimeout(() => { 
-                    if (popup.parentNode) { 
-                        popup.remove(); 
-                    } 
-                }, 15000); 
-            } 
-        } 
-  
-        function openQuantumMasterAgreement() { 
-            alert('Master Service Agreement coming soon!'); 
-        } 
-  
-        function openQuantumROICalculator() { 
-            alert('ROI Calculator coming soon!'); 
-        } 
-  
-        function openQuantumLeadLogger() { 
-            // Redirect to shared lead logger 
-            window.location.href = 'lead-logger.html'; 
-        } 
-  
-        // Close modal when clicking outside 
-        window.onclick = function(event) { 
-            if (event.target.classList.contains('quantum-materials-overlay')) { 
-                closeQuantumMaterialsModal(); 
-            } 
-        } 
-    </script> 
-</head> 
-<body> 
-    <!-- Company Switcher --> 
-    <div class="company-switcher"> 
-        <a href="index.html" class="company-btn"> 
-            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo"> 
-            <span>Abbondanza Vending LLC</span> 
-        </a> 
-        <button class="company-btn active"> 
-            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo"> 
-            <span>Quantum Solutions</span> 
-        </button> 
-    </div> 
-  
-    <div class="dashboard-container"> 
-        <div class="header"> 
-            <h1>Quantum Solutions Dashboard</h1> 
-            <p>Smart Food Fridge Solutions for Modern Businesses</p> 
-            <p style="font-size: 0.8em; opacity: 0.5;">v1.0 - Quantum Solutions Launch</p> 
-        </div> 
-  
-        <!-- Quantum Solutions - 5 Cards Vertical Stack --> 
-        <div class="quantum-grid"> 
-            <div class="card"> 
-                <h2>How We Stack Up</h2> 
-                <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p> 
-                <button onclick="openQuantumAboutUs()" class="btn">View Materials</button> 
-            </div> 
-  
-            <div class="card"> 
-                <h2>Proposal Generator</h2> 
-                <p>Create customized Smart Food Fridge proposals with ROI calculations and comprehensive pricing analysis.</p> 
-                <button onclick="openQuantumProposalGenerator()" class="btn">Generate Proposal</button> 
-            </div> 
-  
-            <div class="card"> 
-                <h2>Master Service Agreement</h2> 
-                <p>Generate and digitally sign comprehensive service agreements for enterprise clients and partnerships.</p> 
-                <button onclick="openQuantumMasterAgreement()" class="btn">Create Agreement</button> 
-            </div> 
-  
-            <div class="card"> 
-                <h2>ROI Calculator</h2> 
-                <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p> 
-                <button onclick="openQuantumROICalculator()" class="btn">Open Calculator</button> 
-            </div> 
-  
-            <div class="card"> 
-                <h2>Lead Logger</h2> 
-                <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p> 
-                <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button> 
-            </div> 
-        </div> 
-    </div> 
-  
-    <!-- Quantum Proposal Generator Modal --> 
-    <div id="quantumProposalModal" class="modal-overlay"> 
-        <div class="modal"> 
-            <h3>Generate Smart Food Fridge Proposal</h3> 
-             
-            <div class="form-row"> 
-                <div class="form-group"> 
-                    <label for="quantumCompanyName">Company Name *</label> 
-                    <input type="text" id="quantumCompanyName" name="quantumCompanyName" required> 
-                </div> 
-                 
-                <div class="form-group"> 
-                    <label for="quantumContactName">Contact Name (Optional)</label> 
-                    <input type="text" id="quantumContactName" name="quantumContactName" placeholder="Leave blank if unknown"> 
-                </div> 
-            </div> 
-             
-            <div class="form-row"> 
-                <div class="form-group"> 
-                    <label for="customerAddress">Customer Address *</label> 
-                    <input type="text" id="customerAddress" name="customerAddress" placeholder="City, State" required> 
-                </div> 
-                 
-                <div class="form-group"> 
-                    <label for="customerZip">Customer Zip Code *</label> 
-                    <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345" required onchange="updateQuantumPricingSummary()"> 
-                    <small>Used for freight calculation</small> 
-                </div> 
-            </div> 
-             
-            <div class="form-row"> 
-                <div class="form-group"> 
-                    <label for="quantumPreparedBy">Your Name *</label> 
-                    <input type="text" id="quantumPreparedBy" name="quantumPreparedBy" required> 
-                </div> 
-                 
-                <div class="form-group"> 
-                    <label for="quantumPreparedByPhone">Your Phone *</label> 
-                    <input type="tel" id="quantumPreparedByPhone" name="quantumPreparedByPhone" required> 
-                </div> 
-            </div> 
-             
-            <div class="form-group"> 
-                <label for="quantumPreparedByEmail">Your Email *</label> 
-                <input type="email" id="quantumPreparedByEmail" name="quantumPreparedByEmail" required> 
-            </div> 
-             
-            <div class="form-row"> 
-                <div class="form-group"> 
-                    <label for="customerType">Customer Type *</label> 
-                    <select id="customerType" name="customerType" required onchange="updateCustomerType()"> 
-                        <option value="new" selected>New Customer (includes scanner)</option> 
-                        <option value="existing">Existing Customer (has scanner)</option> 
-                    </select> 
-                </div> 
-                 
-                <div class="form-group"> 
-                    <label for="quantumFridgeCount">Number of Fridges *</label> 
-                    <input type="number" id="quantumFridgeCount" name="quantumFridgeCount" min="1" value="1" required onchange="updateQuantumPricingSummary()"> 
-                </div> 
-            </div> 
-             
-            <div class="form-group" id="scannerGroup"> 
-                <label for="scannerCount">RFID Scanners Needed</label> 
-                <select id="scannerCount" name="scannerCount" onchange="updateQuantumPricingSummary()"> 
-                    <option value="0">0 scanners</option> 
-                    <option value="1" selected>1 scanner</option> 
-                    <option value="2">2 scanners</option> 
-                    <option value="3">3 scanners</option> 
-                    <option value="4">4 scanners</option> 
-                    <option value="5">5+ scanners</option> 
-                </select> 
-                <small>New customers typically need 1 scanner per location. Additional scanners for backup or multiple sites.</small> 
-            </div> 
-             
-            <div class="form-group"> 
-                <label for="rfidRolls">RFID Tag Rolls (1,000 tags per roll)</label> 
-                <input type="number" id="rfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricingSummary()"> 
-                <small>Recommended starting quantity: 5 rolls. $0.18 per tag ($180 per roll).</small> 
-            </div> 
-             
-            <div class="form-row"> 
-                <div class="form-group"> 
-                    <label class="form-checkbox"> 
-                        <input type="checkbox" id="vinylWrap" name="vinylWrap" onchange="updateQuantumPricingSummary()"> 
-                        <span>Include Vinyl Wrap (2 sides)</span> 
-                    </label> 
-                    <small>Custom branding for the fridge exterior</small> 
-                </div> 
-                 
-                <div class="form-group"> 
-                    <label class="form-checkbox"> 
-                        <input type="checkbox" id="goldSupport" name="goldSupport" onchange="updateQuantumPricingSummary()"> 
-                        <span>Add Gold Level Support</span> 
-                    </label> 
-                    <small>On-site service, priority support (+$39/month per fridge)</small> 
-                </div> 
-            </div> 
-             
-            <div class="pricing-summary"> 
-                <h4>Proposal Summary</h4> 
-                <div id="quantumPricingSummary"> 
-                    <!-- Pricing will be populated by JavaScript --> 
-                </div> 
-            </div> 
-             
-            <div class="modal-buttons"> 
-                <button class="btn btn-secondary" onclick="closeQuantumModal('quantumProposalModal')" style="flex: 1; background: #64748b;">Cancel</button> 
-                <button class="btn btn-primary" id="generateQuantumBtn" type="button" onclick="generateQuantumProposal()">Generate Proposal PDF</button> 
-            </div> 
-        </div> 
-    </div> 
-</body> 
-</html> isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true'; 
-            if (!isLoggedIn) { 
-                const password = prompt('Please enter the dashboard password:'); 
-                if (password === DASHBOARD_PASSWORD) { 
-                    sessionStorage.setItem('dashboardAuth', 'true'); 
-                } else { 
-                    alert('Incorrect password. Access denied.'); 
-                    document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>'; 
-                    return false; 
-                } 
-            } 
-            return true; 
-        } 
-  
-        function logout() { 
-            sessionStorage.removeItem('dashboardAuth'); 
-            location.reload(); 
-        } 
-  
-        function addLogoutButton() { 
-            const header = document.querySelector('.header'); 
-            const logoutBtn = document.createElement('button'); 
-            logoutBtn.textContent = 'Logout'; 
-            logoutBtn.className = 'btn logout-btn'; 
-            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;'; 
-            logoutBtn.onclick = logout; 
-            header.appendChild(logoutBtn); 
-        } 
-  
-        window.addEventListener('DOMContentLoaded', function() { 
-            if (checkAuth()) { 
-                addLogoutButton(); 
-            } 
-        }); 
-  
-        // How We Stack Up - Materials Function 
-        function openQuantumAboutUs() { 
-            const existingOverlay = document.querySelector('.quantum-materials-overlay'); 
-            if (existingOverlay) { 
-                existingOverlay.remove(); 
-            } 
-             
-            const overlay = document.createElement('div'); 
-            overlay.className = 'quantum-materials-overlay'; 
-            overlay.style.display = 'block'; 
-             
-            const modal = document.createElement('div'); 
-            modal.className = 'quantum-materials-modal'; 
-             
-            const materials = [ 
-                { 
-                    title: 'Restaurant Industry Trends Report', 
-                    id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', 
-                    description: 'Current market trends and insights for the restaurant industry' 
-                }, 
-                { 
-                    title: 'Maximizing Revenue Per Square Foot in Food Service Operations', 
-                    id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', 
-                    description: 'Strategies to optimize space utilization and increase profitability' 
-                }, 
-                { 
-                    title: 'Fresh Food Fridge Spec Sheet', 
-                    id: '1XsB2nnvRf1fDGUir_Wd2K0rhHbmXYNPE', 
-                    description: 'Technical specifications and features of our Smart Food Fridge' 
-                }, 
-                { 
-                    title: 'Food Fridge Executive Overview', 
-                    id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE', 
-                    description: 'High-level overview and business benefits for decision makers' 
-                }, 
-                { 
-                    title: 'Commercial Real Estate Premium Food Amenities', 
-                    id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0', 
-                    description: 'How premium food amenities enhance commercial property value' 
-                }, 
-                { 
-                    title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', 
-                    id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', 
-                    description: 'Comprehensive technical documentation and frequently asked questions' 
-                } 
-            ]; 
-             
-            modal.innerHTML = ` 
-                <div class="quantum-materials-header"> 
-                    <h3>How We Stack Up - Marketing Materials</h3> 
-                    <button class="close-btn" onclick="closeQuantumMaterialsModal()">✕</button> 
-                </div> 
-                <div style="display: grid; gap: 20px;"> 
-                    ${materials.map(material => ` 
-                        <div class="material-item" style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;" 
-                             onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(30,58,138,0.15)'" 
-                             onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'"> 
-                            <div style="margin-bottom: 20px;"> 
-                                <h4 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 1.2em; font-weight: 600;">${material.title}</h4> 
-                                <p style="margin: 0; color: #64748b; font-size: 0.95em; line-height: 1.5;">${material.description}</p> 
-                            </div> 
-                            <div style="display: flex; gap: 15px; flex-wrap: wrap;"> 
-                                <button class="btn btn-primary"  
-                                        onclick="viewQuantumMaterialPDF('${material.id}', '${material.title}')" 
-                                        style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;"> 
-                                    👁️ View PDF 
-                                </button> 
-                                <button class="btn btn-secondary"  
-                                        onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')" 
-                                        style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;"> 
-                                    📥 Download 
-                                </button> 
-                            </div> 
-                        </div> 
-                    `).join('')} 
-                </div> 
-            `; 
-             
-            overlay.appendChild(modal); 
-            document.body.appendChild(overlay); 
-        } 
-  
-        function closeQuantumMaterialsModal() { 
-            const overlay = document.querySelector('.quantum-materials-overlay'); 
-            if (overlay) { 
-                overlay.remove(); 
-            } 
-        } 
-  
-        function viewQuantumMaterialPDF(fileId, fileName) { 
-            closeQuantumMaterialsModal(); 
-             
-            const overlay = document.createElement('div'); 
-            overlay.className = 'quantum-materials-overlay'; 
-            overlay.style.display = 'block'; 
-             
-            const pdfModal = document.createElement('div'); 
-            pdfModal.style.cssText = ` 
-                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                background: white; border-radius: 20px; width: 90%; height: 90%; 
-                max-width: 1200px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); 
-                z-index: 10001; display: flex; flex-direction: column; 
-            `; 
-             
-            const
+
+            } catch (error) {
+                showQuantumPopup(`
+                    <div class="error-popup">
+                        <h3>❌ Error Generating Proposal</h3>
+                        <p>${error.message}</p>
+                        <p>Please try again or contact support if the problem persists.</p>
+                    </div>
+                `, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        function showQuantumPopup(content, type) {
+            const popup = document.createElement('div');
+            popup.className = 'modal-overlay';
+            popup.innerHTML = `
+                <div class="modal" style="max-width: 600px;">
+                    ${content}
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                    </div>
+                </div>
+            `;
+            popup.style.display = 'block';
+            document.body.appendChild(popup);
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (popup.parentNode) {
+                        popup.remove();
+                    }
+                }, 15000);
+            }
+        }
+
+        function openQuantumMasterAgreement() {
+            alert('Master Service Agreement coming soon!');
+        }
+
+        function openQuantumROICalculator() {
+            alert('ROI Calculator coming soon!');
+        }
+
+        function openQuantumLeadLogger() {
+            window.location.href = 'lead-logger.html';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Company Switcher -->
+    <div class="company-switcher">
+        <a href="index.html" class="company-btn">
+            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
+            <span>Abbondanza Vending LLC</span>
+        </a>
+        <button class="company-btn active">
+            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
+            <span>Quantum Solutions</span>
+        </button>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>Quantum Solutions Dashboard</h1>
+            <p>Smart Food Fridge Solutions for Modern Businesses</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.0 - Quantum Solutions Launch</p>
+        </div>
+
+        <!-- Quantum Solutions - 5 Cards Vertical Stack -->
+        <div class="quantum-grid">
+            <div class="card">
+                <h2>How We Stack Up</h2>
+                <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
+                <button onclick="openQuantumAboutUs()" class="btn">View Materials</button>
+            </div>
+
+            <div class="card">
+                <h2>Proposal Generator</h2>
+                <p>Create customized Smart Food Fridge proposals with ROI calculations and comprehensive pricing analysis.</p>
+                <button onclick="openQuantumProposalGenerator()" class="btn">Generate Proposal</button>
+            </div>
+
+            <div class="card">
+                <h2>Master Service Agreement</h2>
+                <p>Generate and digitally sign comprehensive service agreements for enterprise clients and partnerships.</p>
+                <button onclick="openQuantumMasterAgreement()" class="btn">Create Agreement</button>
+            </div>
+
+            <div class="card">
+                <h2>ROI Calculator</h2>
+                <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p>
+                <button onclick="openQuantumROICalculator()" class="btn">Open Calculator</button>
+            </div>
+
+            <div class="card">
+                <h2>Lead Logger</h2>
+                <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
+                <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quantum Proposal Generator Modal -->
+    <div id="quantumProposalModal" class="modal-overlay">
+        <div class="modal">
+            <h3>Generate Smart Food Fridge Proposal</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantumCompanyName">Company Name *</label>
+                    <input type="text" id="quantumCompanyName" name="quantumCompanyName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantumContactName">Contact Name (Optional)</label>
+                    <input type="text" id="quantumContactName" name="quantumContactName" placeholder="Leave blank if unknown">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customerAddress">Customer Address *</label>
+                    <input type="text" id="customerAddress" name="customerAddress" placeholder="City, State" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="customerZip">Customer Zip Code *</label>
+                    <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345" required onchange="updateQuantumPricingSummary()">
+                    <small>Used for freight calculation</small>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="quantumPreparedBy">Your Name *</label>
+                    <input type="text" id="quantumPreparedBy" name="quantumPreparedBy" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantumPreparedByPhone">Your Phone *</label>
+                    <input type="tel" id="quantumPreparedByPhone" name="quantumPreparedByPhone" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="quantumPreparedByEmail">Your Email *</label>
+                <input type="email" id="quantumPreparedByEmail" name="quantumPreparedByEmail" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customerType">Customer Type *</label>
+                    <select id="customerType" name="customerType" required onchange="updateCustomerType()">
+                        <option value="new" selected>New Customer (includes scanner)</option>
+                        <option value="existing">Existing Customer (has scanner)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantumFridgeCount">Number of Fridges *</label>
+                    <input type="number" id="quantumFridgeCount" name="quantumFridgeCount" min="1" value="1" required onchange="updateQuantumPricingSummary()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="scannerCount">RFID Scanners Needed</label>
+                <select id="scannerCount" name="scannerCount" onchange="updateQuantumPricingSummary()">
+                    <option value="0">0 scanners</option>
+                    <option value="1" selected>1 scanner</option>
+                    <option value="2">2 scanners</option>
+                    <option value="3">3 scanners</option>
+                    <option value="4">4 scanners</option>
+                    <option value="5">5+ scanners</option>
+                </select>
+                <small>New customers typically need 1 scanner per location. Additional scanners for backup or multiple sites.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="rfidRolls">RFID Tag Rolls (1,000 tags per roll)</label>
+                <input type="number" id="rfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricingSummary()">
+                <small>Recommended starting quantity: 5 rolls. $0.18 per tag ($180 per roll).</small>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="vinylWrap" name="vinylWrap" onchange="updateQuantumPricingSummary()">
+                        <span>Include Vinyl Wrap (2 sides)</span>
+                    </label>
+                    <small>Custom branding for the fridge exterior</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="goldSupport" name="goldSupport" onchange="updateQuantumPricingSummary()">
+                        <span>Add Gold Level Support</span>
+                    </label>
+                    <small>On-site service, priority support (+$39/month per fridge)</small>
+                </div>
+            </div>
+            
+            <div class="pricing-summary">
+                <h4>Proposal Summary</h4>
+                <div id="quantumPricingSummary">
+                    <!-- Pricing will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeQuantumModal('quantumProposalModal')" style="flex: 1; background: #64748b;">Cancel</button>
+                <button class="btn btn-primary" id="generateQuantumBtn" type="button" onclick="generateQuantumProposal()">Generate Proposal PDF</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
