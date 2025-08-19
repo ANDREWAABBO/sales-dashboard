@@ -670,7 +670,6 @@
                     <div style="font-weight: bold; color: #1e3a8a; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
                         Monthly Total: $${monthlyTotal.toLocaleString()}/month
                     </div>
-          
                 </div>
             `;
             
@@ -796,6 +795,247 @@
             window.location.href = 'lead-logger.html';
         }
 
+        // Quantum Proposal Viewer
+        function openQuantumProposalViewer() {
+            const existingOverlay = document.querySelector('.proposal-viewer-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
+            window.allQuantumProposals = null;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay proposal-viewer-overlay';
+            overlay.style.display = 'block';
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.maxWidth = '1000px';
+            
+            modal.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;">
+                    <h3 style="margin: 0; color: #2d3748; font-size: 1.8em;">Quantum Proposal Library</h3>
+                    <button class="close-btn" onclick="closeQuantumProposalViewer()">✕</button>
+                </div>
+                <div style="margin-bottom: 20px; position: relative;">
+                    <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."  
+                           style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;  
+                                  border-radius: 10px; transition: all 0.3s ease;" 
+                           onkeyup="filterQuantumProposals()" 
+                           onfocus="this.style.borderColor='#1e3a8a'" 
+                           onblur="this.style.borderColor='#e2e8f0'">
+                    <button id="clearQuantumSearchBtn"  
+                            onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();" 
+                            style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);  
+                                   background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;  
+                                   cursor: pointer; display: none; transition: all 0.3s ease;  
+                                   font-size: 18px; color: #4a5568;"> 
+                        × 
+                    </button> 
+                </div>
+                
+                <div id="quantumProposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;"> 
+                    <div style="text-align: center; padding: 40px;"> 
+                        <div class="loading-spinner"></div> 
+                        <p style="margin-top: 20px; color: #718096;">Loading proposals from library...</p> 
+                    </div> 
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                loadQuantumProposalsFromDrive();
+            }, 100);
+        }
+
+        function closeQuantumProposalViewer() {
+            const overlay = document.querySelector('.proposal-viewer-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        async function loadQuantumProposalsFromDrive() {
+            try {
+                const callbackName = 'quantumProposalsCallback_' + Date.now();
+                
+                const promise = new Promise((resolve, reject) => {
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        resolve(data);
+                    };
+                    
+                    setTimeout(() => {
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }, 20000);
+                });
+                
+                const script = document.createElement('script');
+                const url = `https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec?action=getProposals&callback=${callbackName}`;
+                script.src = url;
+                
+                script.onerror = () => {
+                    delete window[callbackName];
+                    const proposalsList = document.getElementById('quantumProposalsList');
+                    if (proposalsList) {
+                        proposalsList.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                                <button class="btn btn-primary" onclick="loadQuantumProposalsFromDrive()">Try Again</button>
+                            </div>
+                        `;
+                    }
+                };
+                
+                document.body.appendChild(script);
+                const data = await promise;
+                document.body.removeChild(script);
+                
+                if (data.status === 'success') {
+                    const sortedProposals = (data.proposals || []).sort((a, b) => {
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                    });
+                    window.allQuantumProposals = sortedProposals;
+                    displayQuantumProposals(sortedProposals);
+                } else {
+                    throw new Error(data.message || 'Failed to load proposals');
+                }
+            } catch (error) {
+                const proposalsList = document.getElementById('quantumProposalsList');
+                if (proposalsList) {
+                    proposalsList.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadQuantumProposalsFromDrive()">Try Again</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function displayQuantumProposals(proposals) {
+            const proposalsList = document.getElementById('quantumProposalsList');
+            if (!proposalsList) return;
+            
+            if (proposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p>No proposals found in the library.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            proposalsList.innerHTML = proposals.map(proposal => `
+                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);" 
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'" 
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'"> 
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;"> 
+                        <div style="flex: 1; min-width: 200px;"> 
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.companyName}</h4> 
+                            <p style="margin: 0; color: #718096; font-size: 14px;"> 
+                                ${proposal.name}<br>
+                                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'} 
+                            </p> 
+                        </div> 
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;"> 
+                            <button class="btn btn-primary"  
+                                    onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')" 
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;"> 
+                                📄 View 
+                            </button> 
+                            <button class="btn btn-secondary"  
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')" 
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;"> 
+                                📥 Download 
+                            </button> 
+                        </div> 
+                    </div> 
+                </div> 
+            `).join('');
+        }
+
+        function filterQuantumProposals() {
+            const searchInput = document.getElementById('quantumProposalSearch');
+            const searchTerm = searchInput.value.toLowerCase();
+            const proposalsList = document.getElementById('quantumProposalsList');
+            const clearBtn = document.getElementById('clearQuantumSearchBtn');
+            
+            if (searchTerm.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
+            if (!window.allQuantumProposals || window.allQuantumProposals.length === 0) return;
+            
+            if (searchTerm === '') {
+                displayQuantumProposals(window.allQuantumProposals);
+                return;
+            }
+            
+            const filteredProposals = window.allQuantumProposals.filter(proposal => 
+                proposal.companyName.toLowerCase().includes(searchTerm) ||
+                proposal.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredProposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>
+                    </div>
+                `;
+            } else {
+                displayQuantumProposals(filteredProposals);
+            }
+        }
+
+        function viewQuantumProposalPDF(fileId, companyName) {
+            closeQuantumProposalViewer();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'modal';
+            pdfModal.style.maxWidth = '1200px';
+            pdfModal.style.height = '90vh';
+            pdfModal.style.display = 'flex';
+            pdfModal.style.flexDirection = 'column';
+            
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div style="padding: 20px; background: #f7fafc; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; color: #2d3748; font-size: 1.3em;">Proposal for ${companyName}</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closeModal(); setTimeout(openQuantumProposalViewer, 200);" 
+                                style="padding: 10px 20px;">
+                            Back to Library
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="padding: 10px 20px;">
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div style="flex: 1; padding: 20px; overflow: hidden;">
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);" allowfullscreen></iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
         // Close modal when clicking outside
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
@@ -824,7 +1064,7 @@
             <p style="font-size: 0.8em; opacity: 0.5;">v1.0 - Quantum Solutions Launch</p>
         </div>
 
-        <!-- Quantum Solutions - 5 Cards Vertical Stack -->
+        <!-- Quantum Solutions - 6 Cards Vertical Stack -->
         <div class="quantum-grid">
             <div class="card">
                 <h2>How We Stack Up</h2>
@@ -855,15 +1095,13 @@
                 <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
                 <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
             </div>
+
+            <div class="card">
+                <h2>Proposal Copies</h2>
+                <p>Access all generated Smart Food Fridge proposals with searchable library and download options.</p>
+                <button onclick="openQuantumProposalViewer()" class="btn">View Proposals</button>
+            </div>
         </div>
-
-        <div class="card">
-    <h2>Proposal Copies</h2>
-    <p>Access all generated Smart Food Fridge proposals with searchable library and download options.</p>
-    <button onclick="openQuantumProposalViewer()" class="btn">View Proposals</button>
-</div>
-
-        
     </div>
 
     <!-- Quantum Proposal Generator Modal -->
@@ -956,8 +1194,6 @@
                 <input type="number" id="rfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricingSummary()">
                 <small>Recommended starting quantity: 5 rolls. $0.18 per tag ($180 per roll).</small>
             </div>
-            
-            
             
             <div class="pricing-summary">
                 <h4>Proposal Summary</h4>
