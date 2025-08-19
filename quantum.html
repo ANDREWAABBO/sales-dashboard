@@ -1,1 +1,560 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Solutions Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e3a8a;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        /* Company Switcher */
+        .company-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #000000;
+            margin: -20px -20px 30px -20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .company-btn {
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+        }
+
+        .company-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .company-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border-color: transparent;
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5),
+                        0 0 60px rgba(59, 130, 246, 0.3);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); }
+            to { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); }
+        }
+
+        .company-logo {
+            height: 35px;
+            width: auto;
+            filter: brightness(0) invert(1);
+            transition: all 0.3s ease;
+        }
+
+        .abbondanza-logo {
+            height: 40px;
+        }
+
+        .company-btn:hover .company-logo {
+            transform: scale(1.05);
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+            color: white;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.3); }
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+
+        /* Quantum Grid - Vertical Stack */
+        .quantum-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .card h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        .card p {
+            color: #718096;
+            margin-bottom: 18px;
+            line-height: 1.5;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 26px;
+            background: #1e3a8a;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+            cursor: pointer;
+            font-size: 1.05em;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4);
+            background: #1e40af;
+        }
+
+        .logout-btn {
+            background: white !important;
+            color: black !important;
+            font-weight: 700 !important;
+            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0 !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Quantum Materials Modal */
+        .quantum-materials-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .quantum-materials-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+        }
+
+        .quantum-materials-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .quantum-materials-header h3 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 1.8em;
+        }
+
+        .close-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1.05em;
+        }
+
+        .close-btn:hover {
+            background: #c53030;
+            transform: scale(1.05);
+        }
+
+        .btn-secondary {
+            background: #10b981;
+        }
+
+        .btn-secondary:hover {
+            background: #059669;
+        }
+    </style>
+    <script>
+        // Password protection
+        const DASHBOARD_PASSWORD = 'abbondanza2025';
+        
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
+            if (!isLoggedIn) {
+                const password = prompt('Please enter the dashboard password:');
+                if (password === DASHBOARD_PASSWORD) {
+                    sessionStorage.setItem('dashboardAuth', 'true');
+                } else {
+                    alert('Incorrect password. Access denied.');
+                    document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>';
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function logout() {
+            sessionStorage.removeItem('dashboardAuth');
+            location.reload();
+        }
+
+        function addLogoutButton() {
+            const header = document.querySelector('.header');
+            const logoutBtn = document.createElement('button');
+            logoutBtn.textContent = 'Logout';
+            logoutBtn.className = 'btn logout-btn';
+            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;';
+            logoutBtn.onclick = logout;
+            header.appendChild(logoutBtn);
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                addLogoutButton();
+            }
+        });
+
+        // How We Stack Up - Materials Function
+        function openQuantumAboutUs() {
+            const existingOverlay = document.querySelector('.quantum-materials-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'quantum-materials-overlay';
+            overlay.style.display = 'block';
+            
+            const modal = document.createElement('div');
+            modal.className = 'quantum-materials-modal';
+            
+            const materials = [
+                {
+                    title: 'Restaurant Industry Trends Report',
+                    id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO',
+                    description: 'Current market trends and insights for the restaurant industry'
+                },
+                {
+                    title: 'Maximizing Revenue Per Square Foot in Food Service Operations',
+                    id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC',
+                    description: 'Strategies to optimize space utilization and increase profitability'
+                },
+                {
+                    title: 'Fresh Food Fridge Spec Sheet',
+                    id: '1XsB2nnvRf1fDGUir_Wd2K0rhHbmXYNPE',
+                    description: 'Technical specifications and features of our Smart Food Fridge'
+                },
+                {
+                    title: 'Food Fridge Executive Overview',
+                    id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE',
+                    description: 'High-level overview and business benefits for decision makers'
+                },
+                {
+                    title: 'Commercial Real Estate Premium Food Amenities',
+                    id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0',
+                    description: 'How premium food amenities enhance commercial property value'
+                },
+                {
+                    title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ',
+                    id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c',
+                    description: 'Comprehensive technical documentation and frequently asked questions'
+                }
+            ];
+            
+            modal.innerHTML = `
+                <div class="quantum-materials-header">
+                    <h3>How We Stack Up - Marketing Materials</h3>
+                    <button class="close-btn" onclick="closeQuantumMaterialsModal()">✕</button>
+                </div>
+                <div style="display: grid; gap: 20px;">
+                    ${materials.map(material => `
+                        <div class="material-item" style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"
+                             onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(30,58,138,0.15)'"
+                             onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 1.2em; font-weight: 600;">${material.title}</h4>
+                                <p style="margin: 0; color: #64748b; font-size: 0.95em; line-height: 1.5;">${material.description}</p>
+                            </div>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" 
+                                        onclick="viewQuantumMaterialPDF('${material.id}', '${material.title}')"
+                                        style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;">
+                                    👁️ View PDF
+                                </button>
+                                <button class="btn btn-secondary" 
+                                        onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')"
+                                        style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;">
+                                    📥 Download
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+
+        function closeQuantumMaterialsModal() {
+            const overlay = document.querySelector('.quantum-materials-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        function viewQuantumMaterialPDF(fileId, fileName) {
+            closeQuantumMaterialsModal();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'quantum-materials-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: white; border-radius: 20px; width: 90%; height: 90%;
+                max-width: 1200px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                z-index: 10001; display: flex; flex-direction: column;
+            `;
+            
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div style="padding: 20px; background: #f7fafc; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+                    <h3 style="margin: 0; color: #2d3748; font-size: 1.3em;">${fileName}</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closeQuantumMaterialsModal(); setTimeout(openQuantumAboutUs, 200);" 
+                                style="padding: 10px 20px;">
+                            Back to Materials
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="padding: 10px 20px;">
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div style="flex: 1; padding: 20px; overflow: hidden;">
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);" allowfullscreen></iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
+        // Placeholder functions for other Quantum features
+        function openQuantumProposalGenerator() {
+            alert('Quantum Proposal Generator coming soon!');
+        }
+
+        function openQuantumMasterAgreement() {
+            alert('Master Service Agreement coming soon!');
+        }
+
+        function openQuantumROICalculator() {
+            alert('ROI Calculator coming soon!');
+        }
+
+        function openQuantumLeadLogger() {
+            // Redirect to shared lead logger
+            window.location.href = 'lead-logger.html';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('quantum-materials-overlay')) {
+                closeQuantumMaterialsModal();
+            }
+        }
+    </script>
+</head>
+<body>
+    <!-- Company Switcher -->
+    <div class="company-switcher">
+        <a href="index.html" class="company-btn">
+            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
+            <span>Abbondanza Vending LLC</span>
+        </a>
+        <button class="company-btn active">
+            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
+            <span>Quantum Solutions</span>
+        </button>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>Quantum Solutions Dashboard</h1>
+            <p>Smart Food Fridge Solutions for Modern Businesses</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.0 - Quantum Solutions Launch</p>
+        </div>
+
+        <!-- Quantum Solutions - 5 Cards Vertical Stack -->
+        <div class="quantum-grid">
+            <div class="card">
+                <h2>How We Stack Up</h2>
+                <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
+                <button onclick="openQuantumAboutUs()" class="btn">View Materials</button>
+            </div>
+
+            <div class="card">
+                <h2>Proposal Generator</h2>
+                <p>Create customized Smart Food Fridge proposals with ROI calculations and comprehensive pricing analysis.</p>
+                <button onclick="openQuantumProposalGenerator()" class="btn">Generate Proposal</button>
+            </div>
+
+            <div class="card">
+                <h2>Master Service Agreement</h2>
+                <p>Generate and digitally sign comprehensive service agreements for enterprise clients and partnerships.</p>
+                <button onclick="openQuantumMasterAgreement()" class="btn">Create Agreement</button>
+            </div>
+
+            <div class="card">
+                <h2>ROI Calculator</h2>
+                <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p>
+                <button onclick="openQuantumROICalculator()" class="btn">Open Calculator</button>
+            </div>
+
+            <div class="card">
+                <h2>Lead Logger</h2>
+                <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
+                <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
