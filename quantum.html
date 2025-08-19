@@ -609,8 +609,8 @@
             const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
             const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
             const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
-            const vinylWrap = document.getElementById('vinylWrap').checked;
-            const goldSupport = document.getElementById('goldSupport').checked;
+            const vinylWrap = false;
+            const goldSupport = false;
             
             const fridgePrice = 7500;
             const scannerPrice = 455;
@@ -706,8 +706,8 @@
                     fridgeCount: document.getElementById('quantumFridgeCount').value,
                     scannerCount: document.getElementById('scannerCount').value,
                     rfidRolls: document.getElementById('rfidRolls').value || '0',
-                    vinylWrap: document.getElementById('vinylWrap').checked ? 'Yes' : 'No',
-                    goldSupport: document.getElementById('goldSupport').checked ? 'Yes' : 'No'
+                    vinylWrap: 'No',
+                    goldSupport: 'No'
                 };
 
                 if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
