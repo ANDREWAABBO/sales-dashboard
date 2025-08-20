@@ -549,11 +549,33 @@
             }
         }
 
-        // Quantum Proposal Generator
-        function openQuantumProposalGenerator() {
-            document.getElementById('quantumProposalModal').style.display = 'block';
+   function openQuantumProposalGenerator() {
+    // First, ensure any existing modal is properly closed
+    const existingModal = document.getElementById('quantumProposalModal');
+    if (existingModal) {
+        existingModal.style.display = 'none';
+    }
+    
+    // Small delay to ensure cleanup is complete
+    setTimeout(() => {
+        const modal = document.getElementById('quantumProposalModal');
+        if (modal) {
+            modal.style.display = 'block';
             updateQuantumPricingSummary();
+            
+            // Re-attach event listener to the generate button
+            const generateBtn = document.getElementById('generateQuantumBtn');
+            if (generateBtn) {
+                // Remove any existing event listeners by cloning
+                const newBtn = generateBtn.cloneNode(true);
+                generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+                newBtn.addEventListener('click', generateQuantumProposal);
+            }
+        } else {
+            console.error('Modal element quantumProposalModal not found');
         }
+    }, 100);
+}
 
         function closeQuantumModal(modalId) {
             const modal = document.getElementById(modalId);
