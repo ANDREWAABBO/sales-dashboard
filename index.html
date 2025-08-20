@@ -354,198 +354,6 @@
 
   
 
-        /* Row Separator */  
-
-  
-
-        .row-separator {  
-
-  
-
-            height: 2px;  
-
-  
-
-            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);  
-
-  
-
-            margin: 25px 0;  
-
-  
-
-            animation: shimmer 3s infinite;  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        @keyframes shimmer {  
-
-  
-
-            0% { opacity: 0.5; }  
-
-  
-
-            50% { opacity: 1; }  
-
-  
-
-            100% { opacity: 0.5; }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        /* Section Headers */  
-
-  
-
-        .section-header {  
-
-  
-
-            text-align: center;  
-
-  
-
-            margin: 30px 0 20px 0;  
-
-  
-
-            color: white;  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        .section-header h2 {  
-
-  
-
-            font-size: 2.0em; /* INCREASED FROM 1.8em */  
-
-  
-
-            font-weight: 700;  
-
-  
-
-            margin: 0;  
-
-  
-
-            padding: 12px 30px;  
-
-  
-
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);  
-
-  
-
-            border-radius: 50px;  
-
-  
-
-            backdrop-filter: blur(10px);  
-
-  
-
-            border: 2px solid rgba(255, 255, 255, 0.2);  
-
-  
-
-            display: inline-block;  
-
-  
-
-            font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;  
-
-  
-
-            letter-spacing: 1.5px;  
-
-  
-
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);  
-
-  
-
-            animation: headerGlow 3s ease-in-out infinite alternate;  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        @keyframes headerGlow {  
-
-  
-
-            from {   
-
-  
-
-                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);  
-
-  
-
-                filter: brightness(1);   
-
-  
-
-            }  
-
-  
-
-            to {   
-
-  
-
-                box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);  
-
-  
-
-                filter: brightness(1.1);   
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
         .dashboard-container {  
 
   
@@ -706,55 +514,14 @@
 
   
 
+        /* Vertical Stack Grid - Same as Quantum */
         .grid-container {  
-
-  
-
-            display: grid;  
-
-  
-
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));  
-
-  
-
-            gap: 20px;  
-
-  
-
-            margin-bottom: 30px;  
-
-  
-
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
         }  
-
-  
-
-   
-
-  
-
-        /* Single Row Grid */  
-
-  
-
-        .grid-container.single-row {  
-
-  
-
-            grid-template-columns: repeat(auto-fit, minmax(300px, 500px));  
-
-  
-
-            justify-content: center;  
-
-  
-
-        }  
-
-  
-
-   
 
   
 
@@ -3398,6 +3165,1918 @@
 
   
 
+                    <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">  
+
+  
+
+                        <div style="text-align: center; padding: 40px;">  
+
+  
+
+                            <div class="loading-spinner"></div>  
+
+  
+
+                            <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p>  
+
+  
+
+                        </div>  
+
+  
+
+                    </div>  
+
+  
+
+                </div>  
+
+  
+
+            `;  
+
+  
+
+              
+
+  
+
+            overlay.appendChild(modal);  
+
+  
+
+            document.body.appendChild(overlay);  
+
+  
+
+              
+
+  
+
+            setTimeout(() => {  
+
+  
+
+                loadServiceAgreementsFromDrive();  
+
+  
+
+            }, 100);  
+
+  
+
+        }  
+
+  
+
+   
+
+  
+
+        async function loadServiceAgreementsFromDrive() {  
+
+  
+
+            try {  
+
+  
+
+                const callbackName = 'serviceAgreementsCallback_' + Date.now();  
+
+  
+
+                  
+
+  
+
+                const promise = new Promise((resolve, reject) => {  
+
+  
+
+                    window[callbackName] = (data) => {  
+
+  
+
+                        delete window[callbackName];  
+
+  
+
+                        resolve(data);  
+
+  
+
+                    };  
+
+  
+
+                      
+
+  
+
+                    setTimeout(() => {  
+
+  
+
+                        delete window[callbackName];  
+
+  
+
+                        reject(new Error('Request timeout'));  
+
+  
+
+                    }, 20000);  
+
+  
+
+                });  
+
+  
+
+                  
+
+  
+
+                const script = document.createElement('script');  
+
+  
+
+                const url = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;  
+
+  
+
+                script.src = url;  
+
+  
+
+                  
+
+  
+
+                script.onerror = () => {  
+
+  
+
+                    delete window[callbackName];  
+
+  
+
+                    const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
+
+  
+
+                    if (serviceAgreementsList) {  
+
+  
+
+                        serviceAgreementsList.innerHTML = `  
+
+  
+
+                            <div style="text-align: center; padding: 40px;">  
+
+  
+
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>  
+
+  
+
+                                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>  
+
+  
+
+                            </div>  
+
+  
+
+                        `;  
+
+  
+
+                    }  
+
+  
+
+                };  
+
+  
+
+                  
+
+  
+
+                document.body.appendChild(script);  
+
+  
+
+                const data = await promise;  
+
+  
+
+                document.body.removeChild(script);  
+
+  
+
+                  
+
+  
+
+                if (data.status === 'success') {  
+
+  
+
+                    const sortedAgreements = (data.serviceAgreements || []).sort((a, b) => {  
+
+  
+
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);  
+
+  
+
+                    });  
+
+  
+
+                    window.allServiceAgreements = sortedAgreements;  
+
+  
+
+                    displayServiceAgreements(sortedAgreements);  
+
+  
+
+                } else {  
+
+  
+
+                    throw new Error(data.message || 'Failed to load service agreements');  
+
+  
+
+                }  
+
+  
+
+            } catch (error) {  
+
+  
+
+                const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
+
+  
+
+                if (serviceAgreementsList) {  
+
+  
+
+                    serviceAgreementsList.innerHTML = `  
+
+  
+
+                        <div style="text-align: center; padding: 40px;">  
+
+  
+
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>  
+
+  
+
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>  
+
+  
+
+                            <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>  
+
+  
+
+                        </div>  
+
+  
+
+                    `;  
+
+  
+
+                }  
+
+  
+
+            }  
+
+  
+
+        }  
+
+  
+
+   
+
+  
+
+        function displayServiceAgreements(agreements) {  
+
+  
+
+            const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
+
+  
+
+            if (!serviceAgreementsList) return;  
+
+  
+
+              
+
+  
+
+            if (agreements.length === 0) {  
+
+  
+
+                serviceAgreementsList.innerHTML = `  
+
+  
+
+                    <div style="text-align: center; padding: 40px; color: #718096;">  
+
+  
+
+                        <p>No service agreements found in the folder.</p>  
+
+  
+
+                    </div>  
+
+  
+
+                `;  
+
+  
+
+                return;  
+
+  
+
+            }  
+
+  
+
+              
+
+  
+
+            serviceAgreementsList.innerHTML = agreements.map(agreement => `  
+
+  
+
+                <div class="agreement-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"  
+
+  
+
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"  
+
+  
+
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">  
+
+  
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">  
+
+  
+
+                        <div style="flex: 1; min-width: 200px;">  
+
+  
+
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${agreement.name}</h4>  
+
+  
+
+                            <p style="margin: 0; color: #718096; font-size: 14px;">  
+
+  
+
+                                Modified: ${agreement.modifiedTime ? new Date(agreement.modifiedTime).toLocaleDateString() : 'Unknown'}  
+
+  
+
+                            </p>  
+
+  
+
+                        </div>  
+
+  
+
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">  
+
+  
+
+                            <button class="btn btn-primary"   
+
+  
+
+                                    onclick="viewServiceAgreementPDF('${agreement.id}', '${agreement.name}')"  
+
+  
+
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
+
+  
+
+                                View  
+
+  
+
+                            </button>  
+
+  
+
+                            <button class="btn btn-secondary"   
+
+  
+
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${agreement.id}', '_blank')"  
+
+  
+
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
+
+  
+
+                                Download  
+
+  
+
+                            </button>  
+
+  
+
+                        </div>  
+
+  
+
+                    </div>  
+
+  
+
+                </div>  
+
+  
+
+            `).join('');  
+
+  
+
+        }  
+
+  
+
+   
+
+  
+
+        function filterServiceAgreements() {  
+
+  
+
+            const searchInput = document.getElementById('serviceAgreementSearch');  
+
+  
+
+            const searchTerm = searchInput.value.toLowerCase();  
+
+  
+
+            const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
+
+  
+
+            const clearBtn = document.getElementById('clearServiceSearchBtn');  
+
+  
+
+              
+
+  
+
+            if (searchTerm.length > 0) {  
+
+  
+
+                clearBtn.style.display = 'block';  
+
+  
+
+            } else {  
+
+  
+
+                clearBtn.style.display = 'none';  
+
+  
+
+            }  
+
+  
+
+              
+
+  
+
+            if (!window.allServiceAgreements || window.allServiceAgreements.length === 0) return;  
+
+  
+
+              
+
+  
+
+            if (searchTerm === '') {  
+
+  
+
+                displayServiceAgreements(window.allServiceAgreements);  
+
+  
+
+                return;  
+
+  
+
+            }  
+
+  
+
+              
+
+  
+
+            const filteredAgreements = window.allServiceAgreements.filter(agreement =>   
+
+  
+
+                agreement.name.toLowerCase().includes(searchTerm)  
+
+  
+
+            );  
+
+  
+
+              
+
+  
+
+            if (filteredAgreements.length === 0) {  
+
+  
+
+                serviceAgreementsList.innerHTML = `  
+
+  
+
+                    <div style="text-align: center; padding: 40px; color: #718096;">  
+
+  
+
+                        <p style="font-size: 18px;">No service agreements found matching "<strong>${searchTerm}</strong>"</p>  
+
+  
+
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>  
+
+  
+
+                    </div>  
+
+  
+
+                `;  
+
+  
+
+            } else {  
+
+  
+
+                displayServiceAgreements(filteredAgreements);  
+
+  
+
+            }  
+
+  
+
+        }  
+
+  
+
+   
+
+  
+
+        function viewServiceAgreementPDF(fileId, fileName) {  
+
+  
+
+            closePDFViewer();  
+
+  
+
+              
+
+  
+
+            const overlay = document.createElement('div');  
+
+  
+
+            overlay.className = 'modal-overlay';  
+
+  
+
+            overlay.style.display = 'block';  
+
+  
+
+              
+
+  
+
+            const pdfModal = document.createElement('div');  
+
+  
+
+            pdfModal.className = 'pdf-modal';  
+
+  
+
+              
+
+  
+
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;  
+
+  
+
+              
+
+  
+
+            pdfModal.innerHTML = `  
+
+  
+
+                <div class="pdf-header">  
+
+  
+
+                    <h3>${fileName}</h3>  
+
+  
+
+                    <div style="display: flex; gap: 10px; align-items: center;">  
+
+  
+
+                        <button class="btn btn-primary"   
+
+  
+
+                                onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);"   
+
+  
+
+                                style="padding: 10px 20px;">  
+
+  
+
+                            Back to Library  
+
+  
+
+                        </button>  
+
+  
+
+                        <button class="btn btn-secondary"   
+
+  
+
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"   
+
+  
+
+                                style="padding: 10px 20px;">  
+
+  
+
+                            Download  
+
+  
+
+                        </button>  
+
+  
+
+                    </div>  
+
+  
+
+                </div>  
+
+  
+
+                <div class="pdf-viewer">  
+
+  
+
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>  
+
+  
+
+                </div>  
+
+  
+
+            `;  
+
+  
+
+              
+
+  
+
+            overlay.appendChild(pdfModal);  
+
+  
+
+            document.body.appendChild(overlay);  
+
+  
+
+        }  
+
+  
+
+   
+
+  
+
+        // Close modal when clicking outside  
+
+  
+
+        window.onclick = function(event) {  
+
+  
+
+            if (event.target.classList.contains('modal-overlay')) {  
+
+  
+
+                if (event.target === event.currentTarget) {  
+
+  
+
+                    event.target.style.display = 'none';  
+
+  
+
+                }  
+
+  
+
+            }  
+
+  
+
+        }  
+
+  
+
+    </script>  
+
+  
+
+</head>  
+
+  
+
+<body>  
+
+  
+
+    <!-- Company Switcher -->  
+
+  
+
+    <div class="company-switcher">  
+
+  
+
+        <button class="company-btn active" onclick="switchCompany('abbondanza')">  
+
+  
+
+            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">  
+
+  
+
+            <span>Abbondanza Vending LLC</span>  
+
+  
+
+        </button>  
+
+  
+
+        <button class="company-btn" onclick="switchCompany('quantum')">  
+
+  
+
+            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">  
+
+  
+
+            <span>Quantum Solutions</span>  
+
+  
+
+        </button>  
+
+  
+
+    </div>  
+
+  
+
+   
+
+  
+
+    <div class="dashboard-container">  
+
+  
+
+        <div class="header">  
+
+  
+
+            <h1 id="dashboard-title">Abbondanza Sales Force</h1>  
+
+  
+
+            <p>Access all your sales resources in one place</p>  
+
+  
+
+            <p style="font-size: 0.8em; opacity: 0.5;">v2.8 - Compact Layout with Service Agreement Copies</p>  
+
+  
+
+        </div>  
+
+  
+
+   
+
+  
+
+        <!-- Stacked Cards - Same as Quantum -->
+
+        <div class="grid-container">
+            <div class="card">  
+
+                <div class="card-icon">TARGET</div>  
+
+                <h2>About Us - How We Work</h2>  
+
+                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>  
+
+                <div class="btn-group">  
+
+                    <button onclick="openPDFViewer()" class="btn">View</button>  
+
+                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary">Download</button>  
+
+                </div>  
+
+            </div>  
+
+   
+
+            <div class="card">  
+
+                <div class="card-icon">LIST</div>  
+
+                <h2>Product List</h2>  
+
+                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>  
+
+                <div class="btn-group">  
+
+                    <button onclick="openProductListPDF()" class="btn">View</button>  
+
+                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download</button>  
+
+                </div>  
+
+            </div>  
+
+            
+            <div class="card">  
+
+                <div class="card-icon">CHART</div>  
+
+                <h2>Proposal Generator</h2>  
+
+                <p>Create customized PDF proposals instantly with our built-in generator.</p>  
+
+                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>  
+
+            </div>  
+
+   
+
+            <div class="card">  
+
+                <div class="card-icon">DOCS</div>  
+
+                <h2>Proposal Copies</h2>  
+
+                <p>Access generated proposals, templates, and proposal resources.</p>  
+
+                <button class="btn" onclick="openProposalViewer()">View Proposals</button>  
+
+            </div>  
+
+            
+            <div class="card">  
+
+                <div class="card-icon">FORMS</div>  
+
+                <h2>Service Agreement Generator</h2>  
+
+                <p>Generate subsidy agreements with automated pricing calculations.</p>  
+
+                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button>  
+
+            </div>  
+
+   
+
+            <div class="card">  
+
+                <div class="card-icon">FILES</div>  
+
+                <h2>Service Agreement Copies</h2>  
+
+                <p>Access all generated service agreements and subsidy contracts with searchable library.</p>  
+
+                <button class="btn" onclick="openServiceAgreementViewer()">View Service Agreements</button>  
+
+            </div>  
+
+            
+            <div class="card">  
+
+                <div class="card-icon">NOTES</div>  
+
+                <h2>Lead Logger</h2>  
+
+                <p>Log and track sales leads with follow-up management and status tracking.</p>  
+
+                <a href="lead-logger.html" class="btn">Open Lead Logger</a>  
+
+            </div>
+        </div>
+    </div>  
+
+  
+
+   
+
+  
+
+    <!-- Proposal Generator Modal -->  
+
+  
+
+    <div id="proposalModal" class="modal-overlay">  
+
+  
+
+        <div class="modal">  
+
+  
+
+            <h3>Generate Fresh Food Solutions Proposal</h3>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="companyName">Company Name *</label>  
+
+  
+
+                <input type="text" id="companyName" name="companyName" required>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="contactName">Contact Name (Optional)</label>  
+
+  
+
+                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="preparedBy">Your Name *</label>  
+
+  
+
+                    <input type="text" id="preparedBy" name="preparedBy" required>  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="preparedByPhone">Your Phone *</label>  
+
+  
+
+                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="preparedByEmail">Your Email *</label>  
+
+  
+
+                <input type="email" id="preparedByEmail" name="preparedByEmail" required>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="fridgeCount">Number of Fridges *</label>  
+
+  
+
+                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>  
+
+  
+
+                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">  
+
+  
+
+                        <option value="395">$395/month</option>  
+
+  
+
+                        <option value="495">$495/month</option>  
+
+  
+
+                        <option value="595">$595/month</option>  
+
+  
+
+                        <option value="695">$695/month</option>  
+
+  
+
+                        <option value="795" selected>$795/month</option>  
+
+  
+
+                    </select>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>  
+
+  
+
+                <input type="number" id="deliveryFee" name="deliveryFee"   
+
+  
+
+                       min="0" max="5000" step="50"   
+
+  
+
+                       placeholder="$0.00"   
+
+  
+
+                       onchange="updatePricingSummary();">  
+
+  
+
+                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="pricing-summary">  
+
+  
+
+                <h4>Pricing Summary</h4>  
+
+  
+
+                <div class="pricing-display" id="pricingSummary">  
+
+  
+
+                    Monthly Total: $795/month<br>  
+
+  
+
+                    Setup Fee: $295 (one-time)  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="modal-buttons">  
+
+  
+
+                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>  
+
+  
+
+                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>  
+
+  
+
+            </div>  
+
+  
+
+        </div>  
+
+  
+
+    </div>  
+
+  
+
+   
+
+  
+
+    <!-- Service Agreement Modal -->  
+
+  
+
+    <div id="serviceAgreementModal" class="modal-overlay">  
+
+  
+
+        <div class="modal">  
+
+  
+
+            <h3>Generate Service Agreement</h3>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="serviceCompanyName">Company Name *</label>  
+
+  
+
+                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="serviceContactName">Contact Name (Optional)</label>  
+
+  
+
+                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="serviceStreet">Street Address *</label>  
+
+  
+
+                <input type="text" id="serviceStreet" name="serviceStreet" required>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="serviceCity">City *</label>  
+
+  
+
+                    <input type="text" id="serviceCity" name="serviceCity" required>  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="serviceState">State *</label>  
+
+  
+
+                    <select id="serviceState" name="serviceState" required>  
+
+  
+
+                        <option value="">Select State</option>  
+
+  
+
+                        <option value="MA" selected>MA</option>  
+
+  
+
+                        <option value="NH">NH</option>  
+
+  
+
+                        <option value="ME">ME</option>  
+
+  
+
+                        <option value="VT">VT</option>  
+
+  
+
+                        <option value="RI">RI</option>  
+
+  
+
+                        <option value="CT">CT</option>  
+
+  
+
+                    </select>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="serviceZip">Zip Code *</label>  
+
+  
+
+                <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="servicePreparedBy">Your Name *</label>  
+
+  
+
+                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="servicePreparedByPhone">Your Phone *</label>  
+
+  
+
+                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-group">  
+
+  
+
+                <label for="servicePreparedByEmail">Your Email *</label>  
+
+  
+
+                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="serviceFridgeCount">Total Kiosks to Install *</label>  
+
+  
+
+                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>  
+
+  
+
+                    <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">  
+
+  
+
+                        <option value="395">$395/month</option>  
+
+  
+
+                        <option value="495">$495/month</option>  
+
+  
+
+                        <option value="595">$595/month</option>  
+
+  
+
+                        <option value="695">$695/month</option>  
+
+  
+
+                        <option value="795" selected>$795/month</option>  
+
+  
+
+                    </select>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="subsidyPercentage">Subsidy Percentage *</label>  
+
+  
+
+                    <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">  
+
+  
+
+                        <option value="0" selected>0%</option>  
+
+  
+
+                        <option value="10">10%</option>  
+
+  
+
+                        <option value="20">20%</option>  
+
+  
+
+                        <option value="25">25%</option>  
+
+  
+
+                        <option value="30">30%</option>  
+
+  
+
+                        <option value="40">40%</option>  
+
+  
+
+                        <option value="50">50%</option>  
+
+  
+
+                        <option value="60">60%</option>  
+
+  
+
+                        <option value="70">70%</option>  
+
+  
+
+                        <option value="75">75%</option>  
+
+  
+
+                        <option value="80">80%</option>  
+
+  
+
+                        <option value="90">90%</option>  
+
+  
+
+                        <option value="100">100%</option>  
+
+  
+
+                    </select>  
+
+  
+
+                    <small>Discount on purchases billed back to company</small>  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="freeMonths">Free Months</label>  
+
+  
+
+                    <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">  
+
+  
+
+                        <option value="0" selected>No free months</option>  
+
+  
+
+                        <option value="1">1 month free</option>  
+
+  
+
+                        <option value="2">2 months free</option>  
+
+  
+
+                        <option value="3">3 months free</option>  
+
+  
+
+                        <option value="4">4 months free</option>  
+
+  
+
+                        <option value="5">5 months free</option>  
+
+  
+
+                        <option value="6">6 months free</option>  
+
+  
+
+                    </select>  
+
+  
+
+                    <small>Service fee waived for initial months</small>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="form-row">  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="installDate">Install Date</label>  
+
+  
+
+                    <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">  
+
+  
+
+                    <small>Leave blank for TBD</small>  
+
+  
+
+                </div>  
+
+  
+
+                  
+
+  
+
+                <div class="form-group">  
+
+  
+
+                    <label for="firstBillDate">First Bill Date</label>  
+
+  
+
+                    <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">  
+
+  
+
+                    <small>Auto-calculated based on install date and free months</small>  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="pricing-summary">  
+
+  
+
+                <h4>Agreement Summary</h4>  
+
+  
+
+                <div class="pricing-display" id="servicePricingSummary">  
+
+  
+
+                    Total Kiosks: 1<br>  
+
+  
+
+                    Monthly Service Fee: $795.00<br>  
+
+  
+
+                    Subsidy: 0% discount<br>  
+
+  
+
+                    Monthly Subsidy Amount: $0.00  
+
+  
+
+                </div>  
+
+  
+
+            </div>  
+
+  
+
+              
+
+  
+
+            <div class="modal-buttons">  
+
+  
+
+                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>  
+
+  
+
+                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>  
+
+  
+
+            </div>  
+
+  
+
+        </div>  
+
+  
+
+    </div>  
+
+  
+
+</body>  
+
+  
+
+</html>50%);   
+
+  
+
+                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;   
+
+  
+
+                                       cursor: pointer; display: none; transition: all 0.3s ease;   
+
+  
+
+                                       font-size: 18px; color: #4a5568;">  
+
+  
+
+                            ×  
+
+  
+
+                        </button>  
+
+  
+
+                    </div>  
+
+  
+
+                      
+
+  
+
                     <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">  
 
   
@@ -4862,2194 +6541,4 @@
 
   
 
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);   
-
-  
-
-                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;   
-
-  
-
-                                       cursor: pointer; display: none; transition: all 0.3s ease;   
-
-  
-
-                                       font-size: 18px; color: #4a5568;">  
-
-  
-
-                            ×  
-
-  
-
-                        </button>  
-
-  
-
-                    </div>  
-
-  
-
-                      
-
-  
-
-                    <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">  
-
-  
-
-                        <div style="text-align: center; padding: 40px;">  
-
-  
-
-                            <div class="loading-spinner"></div>  
-
-  
-
-                            <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p>  
-
-  
-
-                        </div>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-            `;  
-
-  
-
-              
-
-  
-
-            overlay.appendChild(modal);  
-
-  
-
-            document.body.appendChild(overlay);  
-
-  
-
-              
-
-  
-
-            setTimeout(() => {  
-
-  
-
-                loadServiceAgreementsFromDrive();  
-
-  
-
-            }, 100);  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        async function loadServiceAgreementsFromDrive() {  
-
-  
-
-            try {  
-
-  
-
-                const callbackName = 'serviceAgreementsCallback_' + Date.now();  
-
-  
-
-                  
-
-  
-
-                const promise = new Promise((resolve, reject) => {  
-
-  
-
-                    window[callbackName] = (data) => {  
-
-  
-
-                        delete window[callbackName];  
-
-  
-
-                        resolve(data);  
-
-  
-
-                    };  
-
-  
-
-                      
-
-  
-
-                    setTimeout(() => {  
-
-  
-
-                        delete window[callbackName];  
-
-  
-
-                        reject(new Error('Request timeout'));  
-
-  
-
-                    }, 20000);  
-
-  
-
-                });  
-
-  
-
-                  
-
-  
-
-                const script = document.createElement('script');  
-
-  
-
-                const url = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;  
-
-  
-
-                script.src = url;  
-
-  
-
-                  
-
-  
-
-                script.onerror = () => {  
-
-  
-
-                    delete window[callbackName];  
-
-  
-
-                    const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-                    if (serviceAgreementsList) {  
-
-  
-
-                        serviceAgreementsList.innerHTML = `  
-
-  
-
-                            <div style="text-align: center; padding: 40px;">  
-
-  
-
-                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>  
-
-  
-
-                                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>  
-
-  
-
-                            </div>  
-
-  
-
-                        `;  
-
-  
-
-                    }  
-
-  
-
-                };  
-
-  
-
-                  
-
-  
-
-                document.body.appendChild(script);  
-
-  
-
-                const data = await promise;  
-
-  
-
-                document.body.removeChild(script);  
-
-  
-
-                  
-
-  
-
-                if (data.status === 'success') {  
-
-  
-
-                    const sortedAgreements = (data.serviceAgreements || []).sort((a, b) => {  
-
-  
-
-                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);  
-
-  
-
-                    });  
-
-  
-
-                    window.allServiceAgreements = sortedAgreements;  
-
-  
-
-                    displayServiceAgreements(sortedAgreements);  
-
-  
-
-                } else {  
-
-  
-
-                    throw new Error(data.message || 'Failed to load service agreements');  
-
-  
-
-                }  
-
-  
-
-            } catch (error) {  
-
-  
-
-                const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-                if (serviceAgreementsList) {  
-
-  
-
-                    serviceAgreementsList.innerHTML = `  
-
-  
-
-                        <div style="text-align: center; padding: 40px;">  
-
-  
-
-                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>  
-
-  
-
-                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>  
-
-  
-
-                            <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>  
-
-  
-
-                        </div>  
-
-  
-
-                    `;  
-
-  
-
-                }  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function displayServiceAgreements(agreements) {  
-
-  
-
-            const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-            if (!serviceAgreementsList) return;  
-
-  
-
-              
-
-  
-
-            if (agreements.length === 0) {  
-
-  
-
-                serviceAgreementsList.innerHTML = `  
-
-  
-
-                    <div style="text-align: center; padding: 40px; color: #718096;">  
-
-  
-
-                        <p>No service agreements found in the folder.</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `;  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            serviceAgreementsList.innerHTML = agreements.map(agreement => `  
-
-  
-
-                <div class="agreement-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"  
-
-  
-
-                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"  
-
-  
-
-                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">  
-
-  
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">  
-
-  
-
-                        <div style="flex: 1; min-width: 200px;">  
-
-  
-
-                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${agreement.name}</h4>  
-
-  
-
-                            <p style="margin: 0; color: #718096; font-size: 14px;">  
-
-  
-
-                                Modified: ${agreement.modifiedTime ? new Date(agreement.modifiedTime).toLocaleDateString() : 'Unknown'}  
-
-  
-
-                            </p>  
-
-  
-
-                        </div>  
-
-  
-
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">  
-
-  
-
-                            <button class="btn btn-primary"   
-
-  
-
-                                    onclick="viewServiceAgreementPDF('${agreement.id}', '${agreement.name}')"  
-
-  
-
-                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
-
-  
-
-                                View  
-
-  
-
-                            </button>  
-
-  
-
-                            <button class="btn btn-secondary"   
-
-  
-
-                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${agreement.id}', '_blank')"  
-
-  
-
-                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">  
-
-  
-
-                                Download  
-
-  
-
-                            </button>  
-
-  
-
-                        </div>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-            `).join('');  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function filterServiceAgreements() {  
-
-  
-
-            const searchInput = document.getElementById('serviceAgreementSearch');  
-
-  
-
-            const searchTerm = searchInput.value.toLowerCase();  
-
-  
-
-            const serviceAgreementsList = document.getElementById('serviceAgreementsList');  
-
-  
-
-            const clearBtn = document.getElementById('clearServiceSearchBtn');  
-
-  
-
-              
-
-  
-
-            if (searchTerm.length > 0) {  
-
-  
-
-                clearBtn.style.display = 'block';  
-
-  
-
-            } else {  
-
-  
-
-                clearBtn.style.display = 'none';  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            if (!window.allServiceAgreements || window.allServiceAgreements.length === 0) return;  
-
-  
-
-              
-
-  
-
-            if (searchTerm === '') {  
-
-  
-
-                displayServiceAgreements(window.allServiceAgreements);  
-
-  
-
-                return;  
-
-  
-
-            }  
-
-  
-
-              
-
-  
-
-            const filteredAgreements = window.allServiceAgreements.filter(agreement =>   
-
-  
-
-                agreement.name.toLowerCase().includes(searchTerm)  
-
-  
-
-            );  
-
-  
-
-              
-
-  
-
-            if (filteredAgreements.length === 0) {  
-
-  
-
-                serviceAgreementsList.innerHTML = `  
-
-  
-
-                    <div style="text-align: center; padding: 40px; color: #718096;">  
-
-  
-
-                        <p style="font-size: 18px;">No service agreements found matching "<strong>${searchTerm}</strong>"</p>  
-
-  
-
-                        <p style="margin-top: 10px;">Try searching for a different company name.</p>  
-
-  
-
-                    </div>  
-
-  
-
-                `;  
-
-  
-
-            } else {  
-
-  
-
-                displayServiceAgreements(filteredAgreements);  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        function viewServiceAgreementPDF(fileId, fileName) {  
-
-  
-
-            closePDFViewer();  
-
-  
-
-              
-
-  
-
-            const overlay = document.createElement('div');  
-
-  
-
-            overlay.className = 'modal-overlay';  
-
-  
-
-            overlay.style.display = 'block';  
-
-  
-
-              
-
-  
-
-            const pdfModal = document.createElement('div');  
-
-  
-
-            pdfModal.className = 'pdf-modal';  
-
-  
-
-              
-
-  
-
-            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;  
-
-  
-
-              
-
-  
-
-            pdfModal.innerHTML = `  
-
-  
-
-                <div class="pdf-header">  
-
-  
-
-                    <h3>${fileName}</h3>  
-
-  
-
-                    <div style="display: flex; gap: 10px; align-items: center;">  
-
-  
-
-                        <button class="btn btn-primary"   
-
-  
-
-                                onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);"   
-
-  
-
-                                style="padding: 10px 20px;">  
-
-  
-
-                            Back to Library  
-
-  
-
-                        </button>  
-
-  
-
-                        <button class="btn btn-secondary"   
-
-  
-
-                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')"   
-
-  
-
-                                style="padding: 10px 20px;">  
-
-  
-
-                            Download  
-
-  
-
-                        </button>  
-
-  
-
-                    </div>  
-
-  
-
-                </div>  
-
-  
-
-                <div class="pdf-viewer">  
-
-  
-
-                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>  
-
-  
-
-                </div>  
-
-  
-
-            `;  
-
-  
-
-              
-
-  
-
-            overlay.appendChild(pdfModal);  
-
-  
-
-            document.body.appendChild(overlay);  
-
-  
-
-        }  
-
-  
-
-   
-
-  
-
-        // Close modal when clicking outside  
-
-  
-
-        window.onclick = function(event) {  
-
-  
-
-            if (event.target.classList.contains('modal-overlay')) {  
-
-  
-
-                if (event.target === event.currentTarget) {  
-
-  
-
-                    event.target.style.display = 'none';  
-
-  
-
-                }  
-
-  
-
-            }  
-
-  
-
-        }  
-
-  
-
-    </script>  
-
-  
-
-</head>  
-
-  
-
-<body>  
-
-  
-
-    <!-- Company Switcher -->  
-
-  
-
-    <div class="company-switcher">  
-
-  
-
-        <button class="company-btn active" onclick="switchCompany('abbondanza')">  
-
-  
-
-            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">  
-
-  
-
-            <span>Abbondanza Vending LLC</span>  
-
-  
-
-        </button>  
-
-  
-
-        <button class="company-btn" onclick="switchCompany('quantum')">  
-
-  
-
-            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">  
-
-  
-
-            <span>Quantum Solutions</span>  
-
-  
-
-        </button>  
-
-  
-
-    </div>  
-
-  
-
-   
-
-  
-
-    <div class="dashboard-container">  
-
-  
-
-        <div class="header">  
-
-  
-
-            <h1 id="dashboard-title">Abbondanza Sales Force</h1>  
-
-  
-
-            <p>Access all your sales resources in one place</p>  
-
-  
-
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.8 - Compact Layout with Service Agreement Copies</p>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- MARKETING Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>MARKETING</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 1: Marketing & Product List -->  
-
-  
-
-        <div class="grid-container">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">TARGET</div>  
-
-  
-
-                <h2>About Us - How We Work</h2>  
-
-  
-
-                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>  
-
-  
-
-                <div class="btn-group">  
-
-  
-
-                    <button onclick="openPDFViewer()" class="btn">View</button>  
-
-  
-
-                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary">Download</button>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-   
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">LIST</div>  
-
-  
-
-                <h2>Product List</h2>  
-
-  
-
-                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>  
-
-  
-
-                <div class="btn-group">  
-
-  
-
-                    <button onclick="openProductListPDF()" class="btn">View</button>  
-
-  
-
-                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download</button>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row Separator -->  
-
-  
-
-        <div class="row-separator"></div>  
-
-  
-
-   
-
-  
-
-        <!-- PROPOSALS Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>PROPOSALS</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 2: Proposals Section -->  
-
-  
-
-        <div class="grid-container">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">CHART</div>  
-
-  
-
-                <h2>Proposal Generator</h2>  
-
-  
-
-                <p>Create customized PDF proposals instantly with our built-in generator.</p>  
-
-  
-
-                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button>  
-
-  
-
-            </div>  
-
-  
-
-   
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">DOCS</div>  
-
-  
-
-                <h2>Proposal Copies</h2>  
-
-  
-
-                <p>Access generated proposals, templates, and proposal resources.</p>  
-
-  
-
-                <button class="btn" onclick="openProposalViewer()">View Proposals</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row Separator -->  
-
-  
-
-        <div class="row-separator"></div>  
-
-  
-
-   
-
-  
-
-        <!-- SERVICE AGREEMENTS Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>SERVICE AGREEMENTS</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 3: Service Agreements Section -->  
-
-  
-
-        <div class="grid-container">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">FORMS</div>  
-
-  
-
-                <h2>Service Agreement Generator</h2>  
-
-  
-
-                <p>Generate subsidy agreements with automated pricing calculations.</p>  
-
-  
-
-                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button>  
-
-  
-
-            </div>  
-
-  
-
-   
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">FILES</div>  
-
-  
-
-                <h2>Service Agreement Copies</h2>  
-
-  
-
-                <p>Access all generated service agreements and subsidy contracts with searchable library.</p>  
-
-  
-
-                <button class="btn" onclick="openServiceAgreementViewer()">View Service Agreements</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row Separator -->  
-
-  
-
-        <div class="row-separator"></div>  
-
-  
-
-   
-
-  
-
-        <!-- LEADS Section -->  
-
-  
-
-        <div class="section-header">  
-
-  
-
-            <h2>LEADS</h2>  
-
-  
-
-        </div>  
-
-  
-
-   
-
-  
-
-        <!-- Row 4: Lead Logger (Single Row) -->  
-
-  
-
-        <div class="grid-container single-row">  
-
-  
-
-            <div class="card">  
-
-  
-
-                <div class="card-icon">NOTES</div>  
-
-  
-
-                <h2>Lead Logger</h2>  
-
-  
-
-                <p>Log and track sales leads with follow-up management and status tracking.</p>  
-
-  
-
-                <a href="lead-logger.html" class="btn">Open Lead Logger</a>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-    </div>  
-
-  
-
-   
-
-  
-
-    <!-- Proposal Generator Modal -->  
-
-  
-
-    <div id="proposalModal" class="modal-overlay">  
-
-  
-
-        <div class="modal">  
-
-  
-
-            <h3>Generate Fresh Food Solutions Proposal</h3>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="companyName">Company Name *</label>  
-
-  
-
-                <input type="text" id="companyName" name="companyName" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="contactName">Contact Name (Optional)</label>  
-
-  
-
-                <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="preparedBy">Your Name *</label>  
-
-  
-
-                    <input type="text" id="preparedBy" name="preparedBy" required>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="preparedByPhone">Your Phone *</label>  
-
-  
-
-                    <input type="tel" id="preparedByPhone" name="preparedByPhone" required>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="preparedByEmail">Your Email *</label>  
-
-  
-
-                <input type="email" id="preparedByEmail" name="preparedByEmail" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="fridgeCount">Number of Fridges *</label>  
-
-  
-
-                    <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>  
-
-  
-
-                    <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">  
-
-  
-
-                        <option value="395">$395/month</option>  
-
-  
-
-                        <option value="495">$495/month</option>  
-
-  
-
-                        <option value="595">$595/month</option>  
-
-  
-
-                        <option value="695">$695/month</option>  
-
-  
-
-                        <option value="795" selected>$795/month</option>  
-
-  
-
-                    </select>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="deliveryFee">Additional Delivery Charges (Optional)</label>  
-
-  
-
-                <input type="number" id="deliveryFee" name="deliveryFee"   
-
-  
-
-                       min="0" max="5000" step="50"   
-
-  
-
-                       placeholder="$0.00"   
-
-  
-
-                       onchange="updatePricingSummary();">  
-
-  
-
-                <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="pricing-summary">  
-
-  
-
-                <h4>Pricing Summary</h4>  
-
-  
-
-                <div class="pricing-display" id="pricingSummary">  
-
-  
-
-                    Monthly Total: $795/month<br>  
-
-  
-
-                    Setup Fee: $295 (one-time)  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="modal-buttons">  
-
-  
-
-                <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>  
-
-  
-
-                <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-    </div>  
-
-  
-
-   
-
-  
-
-    <!-- Service Agreement Modal -->  
-
-  
-
-    <div id="serviceAgreementModal" class="modal-overlay">  
-
-  
-
-        <div class="modal">  
-
-  
-
-            <h3>Generate Service Agreement</h3>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceCompanyName">Company Name *</label>  
-
-  
-
-                <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceContactName">Contact Name (Optional)</label>  
-
-  
-
-                <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceStreet">Street Address *</label>  
-
-  
-
-                <input type="text" id="serviceStreet" name="serviceStreet" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceCity">City *</label>  
-
-  
-
-                    <input type="text" id="serviceCity" name="serviceCity" required>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceState">State *</label>  
-
-  
-
-                    <select id="serviceState" name="serviceState" required>  
-
-  
-
-                        <option value="">Select State</option>  
-
-  
-
-                        <option value="MA" selected>MA</option>  
-
-  
-
-                        <option value="NH">NH</option>  
-
-  
-
-                        <option value="ME">ME</option>  
-
-  
-
-                        <option value="VT">VT</option>  
-
-  
-
-                        <option value="RI">RI</option>  
-
-  
-
-                        <option value="CT">CT</option>  
-
-  
-
-                    </select>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="serviceZip">Zip Code *</label>  
-
-  
-
-                <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="servicePreparedBy">Your Name *</label>  
-
-  
-
-                    <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="servicePreparedByPhone">Your Phone *</label>  
-
-  
-
-                    <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-group">  
-
-  
-
-                <label for="servicePreparedByEmail">Your Email *</label>  
-
-  
-
-                <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceFridgeCount">Total Kiosks to Install *</label>  
-
-  
-
-                    <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>  
-
-  
-
-                    <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">  
-
-  
-
-                        <option value="395">$395/month</option>  
-
-  
-
-                        <option value="495">$495/month</option>  
-
-  
-
-                        <option value="595">$595/month</option>  
-
-  
-
-                        <option value="695">$695/month</option>  
-
-  
-
-                        <option value="795" selected>$795/month</option>  
-
-  
-
-                    </select>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="subsidyPercentage">Subsidy Percentage *</label>  
-
-  
-
-                    <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">  
-
-  
-
-                        <option value="0" selected>0%</option>  
-
-  
-
-                        <option value="10">10%</option>  
-
-  
-
-                        <option value="20">20%</option>  
-
-  
-
-                        <option value="25">25%</option>  
-
-  
-
-                        <option value="30">30%</option>  
-
-  
-
-                        <option value="40">40%</option>  
-
-  
-
-                        <option value="50">50%</option>  
-
-  
-
-                        <option value="60">60%</option>  
-
-  
-
-                        <option value="70">70%</option>  
-
-  
-
-                        <option value="75">75%</option>  
-
-  
-
-                        <option value="80">80%</option>  
-
-  
-
-                        <option value="90">90%</option>  
-
-  
-
-                        <option value="100">100%</option>  
-
-  
-
-                    </select>  
-
-  
-
-                    <small>Discount on purchases billed back to company</small>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="freeMonths">Free Months</label>  
-
-  
-
-                    <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">  
-
-  
-
-                        <option value="0" selected>No free months</option>  
-
-  
-
-                        <option value="1">1 month free</option>  
-
-  
-
-                        <option value="2">2 months free</option>  
-
-  
-
-                        <option value="3">3 months free</option>  
-
-  
-
-                        <option value="4">4 months free</option>  
-
-  
-
-                        <option value="5">5 months free</option>  
-
-  
-
-                        <option value="6">6 months free</option>  
-
-  
-
-                    </select>  
-
-  
-
-                    <small>Service fee waived for initial months</small>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="form-row">  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="installDate">Install Date</label>  
-
-  
-
-                    <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">  
-
-  
-
-                    <small>Leave blank for TBD</small>  
-
-  
-
-                </div>  
-
-  
-
-                  
-
-  
-
-                <div class="form-group">  
-
-  
-
-                    <label for="firstBillDate">First Bill Date</label>  
-
-  
-
-                    <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">  
-
-  
-
-                    <small>Auto-calculated based on install date and free months</small>  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="pricing-summary">  
-
-  
-
-                <h4>Agreement Summary</h4>  
-
-  
-
-                <div class="pricing-display" id="servicePricingSummary">  
-
-  
-
-                    Total Kiosks: 1<br>  
-
-  
-
-                    Monthly Service Fee: $795.00<br>  
-
-  
-
-                    Subsidy: 0% discount<br>  
-
-  
-
-                    Monthly Subsidy Amount: $0.00  
-
-  
-
-                </div>  
-
-  
-
-            </div>  
-
-  
-
-              
-
-  
-
-            <div class="modal-buttons">  
-
-  
-
-                <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>  
-
-  
-
-                <button class="btn btn-primary" id="generateServiceBtn" type="button">Generate Service Agreement PDF</button>  
-
-  
-
-            </div>  
-
-  
-
-        </div>  
-
-  
-
-    </div>  
-
-  
-
-</body>  
-
-  
-
-</html>  
-
-  
-
-  
-
- 
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-
