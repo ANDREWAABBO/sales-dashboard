@@ -1070,7 +1070,7 @@
 
         // Your deployed Web App URLs 
 
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec'; 
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec'; 
 
         const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec'; 
 
@@ -2872,256 +2872,59 @@
 
   
 
-<!-- Replace the entire dashboard section in your index.html with this -->
+    <!-- Clean Dashboard Section -->
+    <div class="dashboard-container">
+        <div class="header">
+            <h1 id="dashboard-title">Abbondanza Sales Force</h1>
+            <p>Access all your sales resources in one place</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v3.0 - Clean Layout Update</p>
+        </div>
 
-<div class="dashboard-container">
-    <div class="header">
-        <h1 id="dashboard-title">Abbondanza Sales Force</h1>
-        <p>Access all your sales resources in one place</p>
-        <p style="font-size: 0.8em; opacity: 0.5;">v3.0 - Clean Layout Update</p>
+        <!-- Abbondanza - 5 Cards Vertical Stack -->
+        <div class="grid-container single-row">
+            <div class="card">
+                <h2>About Us - How We Work</h2>
+                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
+                <div style="display: flex; gap: 15px; margin-top: 18px;">
+                    <button onclick="openPDFViewer()" class="btn" style="flex: 1;">View</button>
+                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary" style="flex: 1;">Download</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Product List</h2>
+                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
+                <div style="display: flex; gap: 15px; margin-top: 18px;">
+                    <button onclick="openProductListPDF()" class="btn" style="flex: 1;">View</button>
+                    <button onclick="downloadProductListPDF()" class="btn btn-secondary" style="flex: 1;">Download</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Proposal Management</h2>
+                <p>Create customized PDF proposals instantly and access your proposal library with search functionality.</p>
+                <div style="display: flex; gap: 15px; margin-top: 18px;">
+                    <button onclick="openProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
+                    <button onclick="openProposalViewer()" class="btn" style="flex: 1;">View Library</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Service Agreement Management</h2>
+                <p>Generate subsidy agreements with automated pricing calculations and access all service agreements.</p>
+                <div style="display: flex; gap: 15px; margin-top: 18px;">
+                    <button onclick="generateServiceAgreement()" class="btn" style="flex: 1;">Create Agreement</button>
+                    <button onclick="openServiceAgreementViewer()" class="btn" style="flex: 1;">View Library</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Lead Logger</h2>
+                <p>Log and track sales leads with follow-up management and status tracking.</p>
+                <a href="lead-logger.html" class="btn">Open Lead Logger</a>
+            </div>
+        </div>
     </div>
-
-    <!-- Abbondanza - 5 Cards Vertical Stack -->
-    <div class="grid-container single-row">
-        <div class="card">
-            <h2>About Us - How We Work</h2>
-            <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
-            <div style="display: flex; gap: 15px; margin-top: 18px;">
-                <button onclick="openPDFViewer()" class="btn" style="flex: 1;">View</button>
-                <button onclick="downloadPresentationPDF()" class="btn btn-secondary" style="flex: 1;">Download</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Product List</h2>
-            <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
-            <div style="display: flex; gap: 15px; margin-top: 18px;">
-                <button onclick="openProductListPDF()" class="btn" style="flex: 1;">View</button>
-                <button onclick="downloadProductListPDF()" class="btn btn-secondary" style="flex: 1;">Download</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Proposal Management</h2>
-            <p>Create customized PDF proposals instantly and access your proposal library with search functionality.</p>
-            <div style="display: flex; gap: 15px; margin-top: 18px;">
-                <button onclick="openProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
-                <button onclick="openProposalViewer()" class="btn" style="flex: 1;">View Library</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Service Agreement Management</h2>
-            <p>Generate subsidy agreements with automated pricing calculations and access all service agreements.</p>
-            <div style="display: flex; gap: 15px; margin-top: 18px;">
-                <button onclick="generateServiceAgreement()" class="btn" style="flex: 1;">Create Agreement</button>
-                <button onclick="openServiceAgreementViewer()" class="btn" style="flex: 1;">View Library</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Lead Logger</h2>
-            <p>Log and track sales leads with follow-up management and status tracking.</p>
-            <a href="lead-logger.html" class="btn">Open Lead Logger</a>
-        </div>
-    </div>
-</div>
-
-  
-
-        <!-- MARKETING Section --> 
-
-        <div class="section-header"> 
-
-            <h2>MARKETING</h2> 
-
-        </div> 
-
-  
-
-        <!-- Row 1: Marketing & Product List --> 
-
-        <div class="grid-container"> 
-
-            <div class="card"> 
-
-                <div class="card-icon">TARGET</div> 
-
-                <h2>About Us - How We Work</h2> 
-
-                <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p> 
-
-                <div class="btn-group"> 
-
-                    <button onclick="openPDFViewer()" class="btn">View</button> 
-
-                    <button onclick="downloadPresentationPDF()" class="btn btn-secondary">Download</button> 
-
-                </div> 
-
-            </div> 
-
-  
-
-            <div class="card"> 
-
-                <div class="card-icon">LIST</div> 
-
-                <h2>Product List</h2> 
-
-                <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p> 
-
-                <div class="btn-group"> 
-
-                    <button onclick="openProductListPDF()" class="btn">View</button> 
-
-                    <button onclick="downloadProductListPDF()" class="btn btn-secondary">Download</button> 
-
-                </div> 
-
-            </div> 
-
-        </div> 
-
-  
-
-        <!-- Row Separator --> 
-
-        <div class="row-separator"></div> 
-
-  
-
-        <!-- PROPOSALS Section --> 
-
-        <div class="section-header"> 
-
-            <h2>PROPOSALS</h2> 
-
-        </div> 
-
-  
-
-        <!-- Row 2: Proposals Section --> 
-
-        <div class="grid-container"> 
-
-            <div class="card"> 
-
-                <div class="card-icon">CHART</div> 
-
-                <h2>Proposal Generator</h2> 
-
-                <p>Create customized PDF proposals instantly with our built-in generator.</p> 
-
-                <button onclick="openProposalGenerator()" class="btn">Generate Proposal</button> 
-
-            </div> 
-
-  
-
-            <div class="card"> 
-
-                <div class="card-icon">DOCS</div> 
-
-                <h2>Proposal Copies</h2> 
-
-                <p>Access generated proposals, templates, and proposal resources.</p> 
-
-                <button class="btn" onclick="openProposalViewer()">View Proposals</button> 
-
-            </div> 
-
-        </div> 
-
-  
-
-        <!-- Row Separator --> 
-
-        <div class="row-separator"></div> 
-
-  
-
-        <!-- SERVICE AGREEMENTS Section --> 
-
-        <div class="section-header"> 
-
-            <h2>SERVICE AGREEMENTS</h2> 
-
-        </div> 
-
-  
-
-        <!-- Row 3: Service Agreements Section --> 
-
-        <div class="grid-container"> 
-
-            <div class="card"> 
-
-                <div class="card-icon">FORMS</div> 
-
-                <h2>Service Agreement Generator</h2> 
-
-                <p>Generate subsidy agreements with automated pricing calculations.</p> 
-
-                <button onclick="generateServiceAgreement()" class="btn">Create Agreement</button> 
-
-            </div> 
-
-  
-
-            <div class="card"> 
-
-                <div class="card-icon">FILES</div> 
-
-                <h2>Service Agreement Copies</h2> 
-
-                <p>Access all generated service agreements and subsidy contracts with searchable library.</p> 
-
-                <button class="btn" onclick="openServiceAgreementViewer()">View Service Agreements</button> 
-
-            </div> 
-
-        </div> 
-
-  
-
-        <!-- Row Separator --> 
-
-        <div class="row-separator"></div> 
-
-  
-
-        <!-- LEADS Section --> 
-
-        <div class="section-header"> 
-
-            <h2>LEADS</h2> 
-
-        </div> 
-
-  
-
-        <!-- Row 4: Lead Logger (Single Row) --> 
-
-        <div class="grid-container single-row"> 
-
-            <div class="card"> 
-
-                <div class="card-icon">NOTES</div> 
-
-                <h2>Lead Logger</h2> 
-
-                <p>Log and track sales leads with follow-up management and status tracking.</p> 
-
-                <a href="lead-logger.html" class="btn">Open Lead Logger</a> 
-
-            </div> 
-
-        </div> 
-
-    </div> 
-
-  
 
     <!-- Proposal Generator Modal --> 
 
@@ -3565,6 +3368,4 @@
 
 </body> 
 
-</html> 
-
- 
+</html>
