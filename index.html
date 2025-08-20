@@ -1506,7 +1506,7 @@
 
                     monthlyFee: document.getElementById('monthlyFee').value, 
 
-                    deliveryFee: document.getElementById('deliveryFee').value || '0' 
+                    deliveryFee: document.getElementById('deliveryFee').value || '' 
 
                 }; 
 
@@ -1531,8 +1531,6 @@
   
 
                 const url = `${WEB_APP_URL}?${params.toString()}`; 
-
-                console.log('Opening URL:', url); // Debug log
 
                 window.open(url, '_blank'); 
 
