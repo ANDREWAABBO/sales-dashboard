@@ -2872,17 +2872,60 @@
 
   
 
-    <div class="dashboard-container"> 
+<!-- Replace the entire dashboard section in your index.html with this -->
 
-        <div class="header"> 
+<div class="dashboard-container">
+    <div class="header">
+        <h1 id="dashboard-title">Abbondanza Sales Force</h1>
+        <p>Access all your sales resources in one place</p>
+        <p style="font-size: 0.8em; opacity: 0.5;">v3.0 - Clean Layout Update</p>
+    </div>
 
-            <h1 id="dashboard-title">Abbondanza Sales Force</h1> 
+    <!-- Abbondanza - 5 Cards Vertical Stack -->
+    <div class="quantum-grid">
+        <div class="card">
+            <h2>About Us - How We Work</h2>
+            <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
+            <div style="display: flex; gap: 15px; margin-top: 18px;">
+                <button onclick="openPDFViewer()" class="btn" style="flex: 1;">View</button>
+                <button onclick="downloadPresentationPDF()" class="btn btn-secondary" style="flex: 1;">Download</button>
+            </div>
+        </div>
 
-            <p>Access all your sales resources in one place</p> 
+        <div class="card">
+            <h2>Product List</h2>
+            <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
+            <div style="display: flex; gap: 15px; margin-top: 18px;">
+                <button onclick="openProductListPDF()" class="btn" style="flex: 1;">View</button>
+                <button onclick="downloadProductListPDF()" class="btn btn-secondary" style="flex: 1;">Download</button>
+            </div>
+        </div>
 
-            <p style="font-size: 0.8em; opacity: 0.5;">v2.8 - Compact Layout with Service Agreement Copies</p> 
+        <div class="card">
+            <h2>Proposal Management</h2>
+            <p>Create customized PDF proposals instantly and access your proposal library with search functionality.</p>
+            <div style="display: flex; gap: 15px; margin-top: 18px;">
+                <button onclick="openProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
+                <button onclick="openProposalViewer()" class="btn" style="flex: 1;">View Library</button>
+            </div>
+        </div>
 
-        </div> 
+        <div class="card">
+            <h2>Service Agreement Management</h2>
+            <p>Generate subsidy agreements with automated pricing calculations and access all service agreements.</p>
+            <div style="display: flex; gap: 15px; margin-top: 18px;">
+                <button onclick="generateServiceAgreement()" class="btn" style="flex: 1;">Create Agreement</button>
+                <button onclick="openServiceAgreementViewer()" class="btn" style="flex: 1;">View Library</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Lead Logger</h2>
+            <p>Log and track sales leads with follow-up management and status tracking.</p>
+            <a href="lead-logger.html" class="btn">Open Lead Logger</a>
+        </div>
+    </div>
+</div>
 
   
 
