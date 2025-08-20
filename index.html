@@ -366,13 +366,15 @@
 
   
 
-        /* Single Row Grid */ 
+        /* Single Column Grid for Vertical Stacking */ 
 
         .grid-container.single-row { 
 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 500px)); 
+            grid-template-columns: 1fr; 
 
-            justify-content: center; 
+            max-width: 600px; 
+
+            margin: 0 auto; 
 
         } 
 
