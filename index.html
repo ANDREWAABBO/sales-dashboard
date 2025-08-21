@@ -1109,10 +1109,296 @@
                     proposalsList.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
                             <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
-                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.
+                           <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+
+        function displayProposals(proposals) {
+            const proposalsList = document.getElementById('proposalsList');
+            if (!proposalsList) return;
+            
+            if (proposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p>No proposals found in the folder.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            proposalsList.innerHTML = proposals.map(proposal => `
+                <div class="proposal-item" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+                     onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${proposal.name}</h4>
+                            <p style="margin: 0; color: #718096; font-size: 14px;">
+                                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" 
+                                    onclick="viewProposalPDF('${proposal.id}', '${proposal.name}')"
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
+                                View
+                            </button>
+                            <button class="btn btn-secondary" 
+                                    onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')"
+                                    style="padding: 14px 28px; font-size: 16px; font-weight: 600; min-width: 120px;">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProposals() {
+            const searchInput = document.getElementById('proposalSearch');
+            const searchTerm = searchInput.value.toLowerCase();
+            const proposalsList = document.getElementById('proposalsList');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            if (searchTerm.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
+            if (!window.allProposals || window.allProposals.length === 0) return;
+            
+            if (searchTerm === '') {
+                displayProposals(window.allProposals);
+                return;
+            }
+            
+            const filteredProposals = window.allProposals.filter(proposal => 
+                proposal.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredProposals.length === 0) {
+                proposalsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #718096;">
+                        <p style="font-size: 18px;">No proposals found matching "<strong>${searchTerm}</strong>"</p>
+                        <p style="margin-top: 10px;">Try searching for a different company name.</p>
+                    </div>
+                `;
+            } else {
+                displayProposals(filteredProposals);
+            }
+        }
+
+        function viewProposalPDF(fileId, fileName) {
+            closePDFViewer();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const pdfModal = document.createElement('div');
+            pdfModal.className = 'pdf-modal';
+            
+            const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            
+            pdfModal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>${fileName}</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button class="btn btn-primary" 
+                                onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);" 
+                                style="padding: 10px 20px;">
+                            Back to Library
+                        </button>
+                        <button class="btn btn-secondary" 
+                                onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" 
+                                style="padding: 10px 20px;">
+                            Download
+                        </button>
+                    </div>
+                </div>
+                <div class="pdf-viewer">
+                    <iframe src="${viewerUrl}" width="100%" height="100%" style="border: none;" allowfullscreen></iframe>
+                </div>
+            `;
+            
+            overlay.appendChild(pdfModal);
+            document.body.appendChild(overlay);
+        }
+
+        function generateServiceAgreement() {
+            const serviceModal = document.getElementById('serviceAgreementModal');
+            if (serviceModal) {
+                serviceModal.style.display = 'block';
+                updateServiceAgreementPricing();
+            }
+        }
+
+        function openServiceAgreementViewer() {
+            const existingOverlay = document.querySelector('.modal-overlay');
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
+            window.allServiceAgreements = null;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.style.display = 'block';
+            
+            const modal = document.createElement('div');
+            modal.className = 'pdf-modal';
+            
+            modal.innerHTML = `
+                <div class="pdf-header">
+                    <h3>Service Agreement Library</h3>
+                    <button class="close-btn" onclick="closePDFViewer()">Close</button>
+                </div>
+                <div class="pdf-viewer" style="padding: 20px;">
+                    <div style="margin-bottom: 20px; position: relative;">
+                        <input type="text" id="serviceAgreementSearch" placeholder="Search by company name..." 
+                               style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0; 
+                                      border-radius: 10px; transition: all 0.3s ease;"
+                               onkeyup="filterServiceAgreements()"
+                               onfocus="this.style.borderColor='#1e3a8a'"
+                               onblur="this.style.borderColor='#e2e8f0'">
+                        <button id="clearServiceSearchBtn" 
+                                onclick="document.getElementById('serviceAgreementSearch').value=''; this.style.display='none'; filterServiceAgreements();"
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px; 
+                                       cursor: pointer; display: none; transition: all 0.3s ease; 
+                                       font-size: 18px; color: #4a5568;">
+                            ×
+                        </button>
+                    </div>
+                    
+                    <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
+                        <div style="text-align: center; padding: 40px;">
+                            <div class="loading-spinner"></div>
+                            <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                loadServiceAgreementsFromDrive();
+            }, 100);
+        }
+
+        async function loadServiceAgreementsFromDrive() {
+            try {
+                const callbackName = 'serviceAgreementsCallback_' + Date.now();
+                
+                const promise = new Promise((resolve, reject) => {
+                    window[callbackName] = (data) => {
+                        delete window[callbackName];
+                        resolve(data);
+                    };
+                    
+                    setTimeout(() => {
+                        delete window[callbackName];
+                        reject(new Error('Request timeout'));
+                    }, 20000);
+                });
+                
+                const script = document.createElement('script');
+                const url = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;
+                script.src = url;
+                
+                script.onerror = () => {
+                    delete window[callbackName];
+                    const serviceAgreementsList = document.getElementById('serviceAgreementsList');
+                    if (serviceAgreementsList) {
+                        serviceAgreementsList.innerHTML = `
+                            <div style="text-align: center; padding: 40px;">
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
+                                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
+                            </div>
+                        `;
+                    }
+                };
+                
+                document.body.appendChild(script);
+                const data = await promise;
+                document.body.removeChild(script);
+                
+                if (data.status === 'success') {
+                    const sortedAgreements = (data.serviceAgreements || []).sort((a, b) => {
+                        return new Date(b.modifiedTime) - new Date(a.modifiedTime);
+                    });
+                    window.allServiceAgreements = sortedAgreements;
+                    displayServiceAgreements(sortedAgreements);
+                } else {
+                    throw new Error(data.message || 'Failed to load service agreements');
+                }
+            } catch (error) {
+                const serviceAgreementsList = document.getElementById('serviceAgreementsList');
+                if (serviceAgreementsList) {
+                    serviceAgreementsList.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function updateServiceAgreementPricing() {
+            const fridgeCount = parseInt(document.getElementById('serviceFridgeCount').value) || 1;
+            const basePrice = parseInt(document.getElementById('serviceMonthlyFee').value) || 795;
+            const subsidyPercentage = parseInt(document.getElementById('subsidyPercentage').value) || 0;
+            
+            let monthlyTotal = basePrice;
+            
+            if (fridgeCount > 1) {
+                const additionalUnits = fridgeCount - 1;
+                const discountedPrice = basePrice - 100;
+                monthlyTotal = basePrice + (discountedPrice * additionalUnits);
+            }
+            
+            const estimatedMonthlyPurchases = fridgeCount * 300;
+            const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPercentage) / 100;
+            
+            let pricingText = `Total Kiosks: ${fridgeCount}<br>`;
+            pricingText += `Monthly Service Fee: $${monthlyTotal.toFixed(2)}<br>`;
+            pricingText += `Subsidy: ${subsidyPercentage}% discount<br>`;
+            pricingText += `Estimated Monthly Subsidy: $${monthlySubsidyAmount.toFixed(2)}`;
+            
+            document.getElementById('servicePricingSummary').innerHTML = pricingText;
+        }
+
+        function calculateFirstBillDate() {
+            const installDate = document.getElementById('installDate').value;
+            const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;
+            const firstBillDateInput = document.getElementById('firstBillDate');
+            
+            if (installDate) {
+                const install = new Date(installDate);
+                const firstBill = new Date(install);
+                firstBill.setMonth(firstBill.getMonth() + 1 + freeMonths);
+                
+                const year = firstBill.getFullYear();
+                const month = String(firstBill.getMonth() + 1).padStart(2, '0');
+                const day = String(firstBill.getDate()).padStart(2, '0');
+                
+                firstBillDateInput.value = `${year}-${month}-${day}`;
+            } else {
+                firstBillDateInput.value = '';
+            }
+        }
 
 
-                                                                                     
+
+                                                                       
 
         function displayServiceAgreements(agreements) {
             const serviceAgreementsList = document.getElementById('serviceAgreementsList');
