@@ -3138,22 +3138,17 @@ async function generateServiceAgreementPDF() {
 
   
 
-// Replace the existing window.onclick function (at the bottom of your lead logger) with these complete functions:
+
 
 // Close modal when clicking outside - FIXED VERSION
-window.onclick = function(event) {
-   const modal = document.getElementById('leadModal');
-    // Only close if clicking directly on the modal overlay, not on any child elements
-    if (event.target === modal) {
-        closeModal();
-    }
-    // Prevent event bubbling that might interfere with form interactions
-    event.stopPropagation();
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                if (event.target === event.currentTarget) {
+                    event.target.style.display = 'none';
                 }
-
-            } 
-
-        } 
+            }
+        }
 
     </script> 
 
