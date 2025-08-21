@@ -149,13 +149,21 @@
             max-width: 250px; /* Limit column width */
         }
 
-        /* Special handling for notes column */
-        td:nth-child(11) {
-            max-width: 300px; /* Slightly wider for notes */
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+
+
+/* Special handling for notes column - allow wrapping */
+td:nth-child(11) {
+    max-width: 300px; /* Slightly wider for notes */
+    white-space: normal; /* Allow text wrapping */
+    word-wrap: break-word; /* Break long words if needed */
+    overflow: visible; /* Show all content */
+    text-overflow: initial; /* Remove ellipsis */
+    vertical-align: top; /* Align content to top when multi-line */
+    line-height: 1.4; /* Better readability for wrapped text */
+    padding: 12px 15px; /* Slightly more vertical padding */
+}
+
+        
 
         tr:hover {
             background: #f7fafc;
@@ -588,8 +596,8 @@
             const statusClass = getStatusClass(lead.status);
             const appointmentClass = lead.appointmentMade === 'Yes' ? 'appointment-yes' : 'appointment-no';
             
-            const notes = lead.notes || '';
-            const notesDisplay = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
+           const notes = lead.notes || '';
+             // Remove truncation - show full notes, let CSS handle wrapping
             
             const cells = [
                 dateAdded,
@@ -602,7 +610,7 @@
                 followUp,
                 '<span class="' + appointmentClass + '">' + (lead.appointmentMade || 'No') + '</span>',
                 appointmentDate,
-                notesDisplay,
+                notes,
                 '<div class="action-buttons">' +
                     '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
                     '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
