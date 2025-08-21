@@ -1054,7 +1054,10 @@
             }, 100);
         }
 
-        async function loadProposalsFromDrive() {
+
+        
+
+      async function loadProposalsFromDrive() {
             try {
                 const callbackName = 'proposalsCallback_' + Date.now();
                 
@@ -1071,17 +1074,17 @@
                 });
                 
                 const script = document.createElement('script');
-                const url = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;
+                const url = `${PROPOSALS_API_URL}?action=getProposals&callback=${callbackName}`;
                 script.src = url;
                 
                 script.onerror = () => {
                     delete window[callbackName];
-                    const serviceAgreementsList = document.getElementById('serviceAgreementsList');
-                    if (serviceAgreementsList) {
-                        serviceAgreementsList.innerHTML = `
+                    const proposalsList = document.getElementById('proposalsList');
+                    if (proposalsList) {
+                        proposalsList.innerHTML = `
                             <div style="text-align: center; padding: 40px;">
-                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
-                                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
+                                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
                             </div>
                         `;
                     }
@@ -1092,27 +1095,24 @@
                 document.body.removeChild(script);
                 
                 if (data.status === 'success') {
-                    const sortedAgreements = (data.serviceAgreements || []).sort((a, b) => {
+                    const sortedProposals = (data.proposals || []).sort((a, b) => {
                         return new Date(b.modifiedTime) - new Date(a.modifiedTime);
                     });
-                    window.allServiceAgreements = sortedAgreements;
-                    displayServiceAgreements(sortedAgreements);
+                    window.allProposals = sortedProposals;
+                    displayProposals(sortedProposals);
                 } else {
-                    throw new Error(data.message || 'Failed to load service agreements');
+                    throw new Error(data.message || 'Failed to load proposals');
                 }
             } catch (error) {
-                const serviceAgreementsList = document.getElementById('serviceAgreementsList');
-                if (serviceAgreementsList) {
-                    serviceAgreementsList.innerHTML = `
+                const proposalsList = document.getElementById('proposalsList');
+                if (proposalsList) {
+                    proposalsList.innerHTML = `
                         <div style="text-align: center; padding: 40px;">
-                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
-                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
-                            <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
-                        </div>
-                    `;
-                }
-            }
-        }
+                            <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
+                            <p style="color: #718096; margin-bottom: 20px;">Error: ${error.
+
+
+                                                                                     
 
         function displayServiceAgreements(agreements) {
             const serviceAgreementsList = document.getElementById('serviceAgreementsList');
