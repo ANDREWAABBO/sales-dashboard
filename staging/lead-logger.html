@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Logger - Abbondanza Sales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e3a8a; /* Deep blue, no gradient */
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 95%; /* Much wider - uses 95% of screen */
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #1e3a8a; /* Deep blue to match */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.4);
+            background: #1e40af; /* Slightly lighter on hover */
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        select, input[type="search"] {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus, input[type="search"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .status-active {
+            background: #d4f1d4;
+            color: #2d5a2d;
+        }
+
+        .status-followup {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-notqualified {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-dead {
+            background: #e2e8f0;
+            color: #718096;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #1e3a8a; /* Deep blue header */
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap; /* Prevent text wrapping */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px; /* Limit column width */
+        }
+
+        /* Special handling for notes column */
+        td:nth-child(11) {
+            max-width: 300px; /* Slightly wider for notes */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .appointment-yes {
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .appointment-no {
+            color: #e53e3e;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #4a5568;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-edit {
+            background: #2563eb; /* Nice blue for edit */
+        }
+
+        .btn-edit:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-archive {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2d3748;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: none;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lead Database</h1>
+        
+        <div class="controls">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="goToDashboard()" style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);">
+                    ← Back to Dashboard
+                </button>
+                <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
+            </div>
+            
+            <div class="filters">
+                <select id="repFilter" onchange="filterLeads()">
+                    <option value="">All Reps</option>
+                </select>
+                
+                <select id="statusFilter" onchange="filterLeads()">
+                    <option value="">All Status</option>
+                    <option value="Active">Active</option>
+                    <option value="Follow Up Later">Follow Up Later</option>
+                    <option value="Not Qualified">Not Qualified</option>
+                    <option value="Dead">Dead (Archived)</option>
+                </select>
+                
+                <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="loadingState" class="loading">
+                <div class="spinner"></div>
+                <p>Loading leads...</p>
+            </div>
+            
+            <table id="leadsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Date Added</th>
+                        <th>Company Name</th>
+                        <th>Contact Name</th>
+                        <th>Phone Number</th>
+                        <th>Email Address</th>
+                        <th>Rep Name</th>
+                        <th>Status</th>
+                        <th>Follow Up</th>
+                        <th>Appt Made</th>
+                        <th>Appt Date</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody">
+                </tbody>
+            </table>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h3>No leads found</h3>
+                <p>Add your first lead using the form above.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Lead Modal -->
+    <div id="leadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add New Lead</h2>
+            
+            <form id="leadForm" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="companyName">Company Name *</label>
+                    <input type="text" id="companyName" name="companyName" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contactName">Contact Name</label>
+                        <input type="text" id="contactName" name="contactName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emailAddress">Email Address</label>
+                    <input type="email" id="emailAddress" name="emailAddress">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="repName">Rep Name *</label>
+                        <input type="text" id="repName" name="repName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status">
+                            <option value="Active">Active</option>
+                            <option value="Follow Up Later">Follow Up Later</option>
+                            <option value="Not Qualified">Not Qualified</option>
+                            <option value="Dead">Dead (Archived)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="followUp">Follow Up Date</label>
+                        <input type="date" id="followUp" name="followUp">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="appointmentMade">Appointment Made?</label>
+                        <select id="appointmentMade" name="appointmentMade" onchange="toggleAppointmentDate()">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="appointmentDateGroup" style="display: none;">
+                    <label for="appointmentDate">Appointment Date</label>
+                    <input type="date" id="appointmentDate" name="appointmentDate">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Configuration
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzajzjde529Dvv0UhkzY9_WaAQRkm3TSGqjN_VkzQ9L_OpQHUJuHypmSb92pTZufJsa/exec';
+        
+        let allLeads = [];
+        let currentEditId = null;
+
+        // Initialize the application
+        window.addEventListener('DOMContentLoaded', function() {
+            loadLeads();
+            setupPhoneFormatting();
+        });
+
+        // Setup phone number formatting
+        function setupPhoneFormatting() {
+            const phoneInput = document.getElementById('phoneNumber');
+            phoneInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 6) {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                } else if (value.length >= 3) {
+                    value = value.slice(0, 3) + '-' + value.slice(3);
+                }
+                e.target.value = value;
+            });
+            
+            phoneInput.addEventListener('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                if (!char.match(/[0-9-]/)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Load leads from Google Sheet
+        async function loadLeads() {
+            try {
+                console.log('Fetching leads...');
+                const response = await fetch(WEB_APP_URL + '?action=getLeads');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Filter out archived/dead leads
+                    allLeads = (data.leads || []).filter(lead => lead.status !== 'Dead');
+                    displayLeads(allLeads);
+                    updateRepFilter();
+                } else {
+                    throw new Error(data.message || 'Failed to load leads');
+                }
+            } catch (error) {
+                console.error('Error loading leads:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'block';
+                showToast('Error loading leads. Please refresh the page.', 'error');
+            }
+        }
+
+        // Display leads in the table
+        function displayLeads(leads) {
+            const tbody = document.getElementById('leadsTableBody');
+            const table = document.getElementById('leadsTable');
+            const loading = document.getElementById('loadingState');
+            const empty = document.getElementById('emptyState');
+            
+            tbody.innerHTML = '';
+            loading.style.display = 'none';
+            
+            if (leads.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            table.style.display = 'table';
+            empty.style.display = 'none';
+            
+            leads.forEach(lead => {
+                const row = createLeadRow(lead);
+                tbody.appendChild(row);
+            });
+        }
+
+        // Create a table row for a lead
+        function createLeadRow(lead) {
+            const row = document.createElement('tr');
+            const leadId = parseInt(lead.id || lead.iD || lead.ID);
+            
+            // Log the lead data to debug status and appointmentMade
+            console.log('Lead data:', lead);
+            console.log('Status value:', lead.status);
+            console.log('AppointmentMade value:', lead.appointmentMade);
+            
+            const dateAdded = formatDate(lead.dateAdded);
+            const followUp = formatDate(lead.followUp);
+            const appointmentDate = formatDate(lead.appointmentDate);
+            const statusClass = getStatusClass(lead.status);
+            const appointmentClass = lead.appointmentMade === 'Yes' ? 'appointment-yes' : 'appointment-no';
+            
+            const notes = lead.notes || '';
+            const notesDisplay = notes.length > 50 ? notes.substring(0, 50) + '...' : notes;
+            
+            const cells = [
+                dateAdded,
+                '<strong>' + (lead.companyName || '') + '</strong>',
+                lead.contactName || '',
+                lead.phoneNumber || '',
+                lead.emailAddress || '',
+                lead.repName || '',
+                '<span class="status-badge ' + statusClass + '">' + (lead.status || 'Active') + '</span>',
+                followUp,
+                '<span class="' + appointmentClass + '">' + (lead.appointmentMade || 'No') + '</span>',
+                appointmentDate,
+                notesDisplay,
+                '<div class="action-buttons">' +
+                    '<button class="btn btn-small btn-edit" onclick="editLead(' + leadId + ')">Edit</button>' +
+                    '<button class="btn btn-small btn-archive" onclick="archiveLead(' + leadId + ')">Archive</button>' +
+                '</div>'
+            ];
+            
+            cells.forEach(cellContent => {
+                const td = document.createElement('td');
+                td.innerHTML = cellContent;
+                row.appendChild(td);
+            });
+            
+            return row;
+        }
+
+        // Get status badge class
+        function getStatusClass(status) {
+            const statusMap = {
+                'Active': 'status-active',
+                'Follow Up Later': 'status-followup',
+                'Not Qualified': 'status-notqualified',
+                'Dead': 'status-dead'
+            };
+            return statusMap[status] || 'status-active';
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return '';
+                
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const year = date.getFullYear();
+                
+                return month + '/' + day + '/' + year;
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // Filter leads
+        function filterLeads() {
+            const repFilter = document.getElementById('repFilter').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filteredLeads = allLeads.filter(lead => {
+                const matchRep = !repFilter || (lead.repName && lead.repName.toLowerCase().includes(repFilter));
+                const matchStatus = !statusFilter || lead.status === statusFilter;
+                const matchSearch = !searchFilter || 
+                    (lead.companyName && lead.companyName.toLowerCase().includes(searchFilter)) ||
+                    (lead.contactName && lead.contactName.toLowerCase().includes(searchFilter)) ||
+                    (lead.phoneNumber && lead.phoneNumber.includes(searchFilter)) ||
+                    (lead.emailAddress && lead.emailAddress.toLowerCase().includes(searchFilter));
+                
+                return matchRep && matchStatus && matchSearch;
+            });
+            
+            displayLeads(filteredLeads);
+        }
+
+        // Update rep filter dropdown
+        function updateRepFilter() {
+            const repFilter = document.getElementById('repFilter');
+            const reps = [...new Set(allLeads.map(lead => lead.repName).filter(Boolean))];
+            
+            repFilter.innerHTML = '<option value="">All Reps</option>';
+            reps.sort().forEach(rep => {
+                const option = document.createElement('option');
+                option.value = rep;
+                option.textContent = rep;
+                repFilter.appendChild(option);
+            });
+        }
+
+        // Modal functions
+        function openAddLeadModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Lead';
+            document.getElementById('leadForm').reset();
+            document.getElementById('status').value = 'Active';
+            document.getElementById('appointmentMade').value = 'No';
+            toggleAppointmentDate();
+            document.getElementById('leadModal').style.display = 'block';
+        }
+
+        function editLead(leadId) {
+            leadId = parseInt(leadId);
+            const lead = allLeads.find(l => parseInt(l.id || l.iD || l.ID) === leadId);
+            if (!lead) return;
+            
+            currentEditId = leadId;
+            document.getElementById('modalTitle').textContent = 'Edit Lead';
+            // Don't reset the form here - we're about to populate it!
+            // document.getElementById('leadForm').reset();
+            
+            console.log('Editing lead:', lead);
+            console.log('Current status:', lead.status);
+            console.log('Current appointmentMade:', lead.appointmentMade);
+            
+            // Populate form fields
+            document.getElementById('companyName').value = lead.companyName || '';
+            document.getElementById('contactName').value = lead.contactName || '';
+            document.getElementById('phoneNumber').value = lead.phoneNumber || '';
+            document.getElementById('emailAddress').value = lead.emailAddress || '';
+            document.getElementById('repName').value = lead.repName || '';
+            
+            // Set status AFTER other fields
+            const statusSelect = document.getElementById('status');
+            statusSelect.value = lead.status || 'Active';
+            
+            // Set appointment made AFTER other fields
+            const apptMadeSelect = document.getElementById('appointmentMade');
+            apptMadeSelect.value = lead.appointmentMade || 'No';
+            
+            document.getElementById('notes').value = lead.notes || '';
+            
+            console.log('Status dropdown value set to:', statusSelect.value);
+            console.log('AppointmentMade dropdown value set to:', apptMadeSelect.value);
+            
+            // Handle dates
+            if (lead.followUp) {
+                const followUpDate = new Date(lead.followUp);
+                if (!isNaN(followUpDate)) {
+                    document.getElementById('followUp').value = followUpDate.toISOString().split('T')[0];
+                }
+            }
+            
+            if (lead.appointmentDate) {
+                const apptDate = new Date(lead.appointmentDate);
+                if (!isNaN(apptDate)) {
+                    document.getElementById('appointmentDate').value = apptDate.toISOString().split('T')[0];
+                }
+            }
+            
+            toggleAppointmentDate();
+            document.getElementById('leadModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('leadModal').style.display = 'none';
+            document.getElementById('leadForm').reset();
+            currentEditId = null;
+        }
+
+        function toggleAppointmentDate() {
+            const appointmentMade = document.getElementById('appointmentMade').value;
+            const dateGroup = document.getElementById('appointmentDateGroup');
+            dateGroup.style.display = appointmentMade === 'Yes' ? 'block' : 'none';
+        }
+
+        // Handle form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const leadData = Object.fromEntries(formData.entries());
+            
+            // Log ALL form values to debug
+            console.log('=== FORM SUBMISSION ===');
+            console.log('All form values:');
+            for (const [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            console.log('Lead data object:', leadData);
+            console.log('Current Edit ID:', currentEditId);
+            
+            try {
+                let response;
+                let requestBody;
+                
+                if (currentEditId) {
+                    console.log('>>> UPDATING lead ID:', currentEditId);
+                    requestBody = {
+                        action: 'updateLead',
+                        leadId: currentEditId,
+                        updates: leadData
+                    };
+                    console.log('Full request body:', JSON.stringify(requestBody));
+                    
+                    response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(requestBody)
+                    });
+                } else {
+                    console.log('>>> ADDING new lead');
+                    response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'addLead',
+                            lead: leadData
+                        })
+                    });
+                }
+                
+                const result = await response.json();
+                console.log('Server response:', result);
+                
+                if (result.status === 'success') {
+                    showToast(currentEditId ? 'Lead updated successfully!' : 'Lead added successfully!', 'success');
+                    closeModal();
+                    await loadLeads();
+                } else {
+                    throw new Error(result.message || 'Failed to save lead');
+                }
+            } catch (error) {
+                console.error('Error saving lead:', error);
+                showToast('Error saving lead: ' + error.message, 'error');
+            }
+        }
+
+        // Archive lead
+        function archiveLead(leadId) {
+            if (!confirm('Are you sure you want to archive this lead?')) return;
+            
+            leadId = parseInt(leadId);
+            
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'archiveLead',
+                    leadId: leadId
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showToast('Lead archived successfully!', 'success');
+                    loadLeads();
+                } else {
+                    throw new Error(result.message || 'Failed to archive lead');
+                }
+            })
+            .catch(error => {
+                console.error('Error archiving lead:', error);
+                showToast('Error archiving lead: ' + error.message, 'error');
+            });
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('leadModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Make functions globally available
+        window.editLead = editLead;
+        window.archiveLead = archiveLead;
+        window.openAddLeadModal = openAddLeadModal;
+        window.closeModal = closeModal;
+        window.toggleAppointmentDate = toggleAppointmentDate;
+        window.handleSubmit = handleSubmit;
+        window.filterLeads = filterLeads;
+        
+        // Dashboard navigation - UPDATED to use location.href instead of location.replace
+        window.goToDashboard = function() {
+            // Navigate back to dashboard in same window to preserve session
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
