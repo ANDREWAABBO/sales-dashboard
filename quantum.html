@@ -425,70 +425,471 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Password strength indicator styles */
+        .password-strength-weak {
+            color: #dc3545 !important;
+        }
+
+        .password-strength-medium {
+            color: #ffc107 !important;
+        }
+
+        .password-strength-strong {
+            color: #059669 !important;
+        }
+
+        /* Forgot password link style */
+        .forgot-password-link {
+            display: block;
+            text-align: center;
+            color: #1e3a8a;
+            text-decoration: none;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password-link:hover {
+            color: #1e40af;
+            text-decoration: underline;
+        }
     </style>
     <script>
-       // USER MANAGEMENT SYSTEM - Quantum (Login Check Only)
-const USER_MANAGEMENT_URL = 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec';
+        // USER MANAGEMENT SYSTEM
+        const USER_MANAGEMENT_URL = 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec';
 
-function checkAuth() {
-    const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
-    const loggedInUser = sessionStorage.getItem('dashboardUser');
-    
-    if (!isLoggedIn || !loggedInUser) {
-        // Redirect to index.html for login
-        alert('Please login first. Redirecting to login page...');
-        window.location.href = 'index.html';
-        return false;
-    }
-    return true;
-}
+        // Password validation function
+        function validatePassword(password) {
+            const minLength = 8;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            
+            const errors = [];
+            
+            if (password.length < minLength) {
+                errors.push(`at least ${minLength} characters`);
+            }
+            if (!hasUpperCase) {
+                errors.push("one uppercase letter");
+            }
+            if (!hasLowerCase) {
+                errors.push("one lowercase letter");
+            }
+            if (!hasNumbers) {
+                errors.push("one number");
+            }
+            if (!hasSpecialChar) {
+                errors.push("one special character");
+            }
+            
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
 
-function addLogoutButton() {
-    const header = document.querySelector('.header');
-    const loggedInUser = sessionStorage.getItem('dashboardUser');
-    
-    // Remove existing logout button if any
-    const existingBtn = header.querySelector('.logout-container');
-    if (existingBtn) existingBtn.remove();
-    
-    const logoutContainer = document.createElement('div');
-    logoutContainer.className = 'logout-container';
-    logoutContainer.style.cssText = 'position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 15px;';
-    
-    const userInfo = document.createElement('button');
-    userInfo.textContent = `👤 ${loggedInUser}`;
-    userInfo.style.cssText = 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9em;';
-    userInfo.onclick = openUserProfile;
-    
-    const logoutBtn = document.createElement('button');
-    logoutBtn.textContent = 'Logout';
-    logoutBtn.className = 'btn logout-btn';
-    logoutBtn.style.cssText = 'padding: 10px 20px;';
-    logoutBtn.onclick = logout;
-    
-    logoutContainer.appendChild(userInfo);
-    logoutContainer.appendChild(logoutBtn);
-    header.appendChild(logoutContainer);
-}
+        // Check password strength in real-time
+        function checkPasswordStrength() {
+            const password = document.getElementById('regPassword').value;
+            const requirements = document.getElementById('passwordRequirements');
+            const validation = validatePassword(password);
+            
+            if (validation.isValid) {
+                requirements.className = 'password-strength-strong';
+                requirements.textContent = '✓ Password meets all requirements';
+            } else {
+                requirements.className = 'password-strength-weak';
+                requirements.textContent = 'Need: ' + validation.errors.join(', ');
+            }
+        }
 
-function openUserProfile() {
-    const user = sessionStorage.getItem('dashboardUser');
-    const email = sessionStorage.getItem('userEmail');
-    const company = sessionStorage.getItem('userCompany');
-    
-    alert(`Profile: ${user}\nEmail: ${email}\nCompany: ${company}\n\nPassword change feature coming soon!`);
-}
+        function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
+            const loggedInUser = sessionStorage.getItem('dashboardUser');
+            
+            if (!isLoggedIn || !loggedInUser) {
+                return showLoginForm();
+            }
+            return true;
+        }
 
-function logout() {
-    sessionStorage.clear();
-    window.location.href = 'index.html';
-}
+        function showLoginForm() {
+            const loginOverlay = document.createElement('div');
+            loginOverlay.id = 'loginOverlay';
+            loginOverlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; 
+                align-items: center; z-index: 99999; backdrop-filter: blur(5px);
+            `;
+            
+            const loginModal = document.createElement('div');
+            loginModal.id = 'loginModal';
+            loginModal.style.cssText = `
+                background: white; padding: 40px; border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); max-width: 450px; 
+                width: 90%; text-align: center;
+            `;
+            
+            loginModal.innerHTML = `
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #1e3a8a; margin-bottom: 10px; font-size: 1.8em;">Quantum Solutions Access</h2>
+                    <p style="color: #64748b; font-size: 1.1em;">Login to access the dashboard</p>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginFormContainer">
+                    <form id="loginForm" style="margin-bottom: 20px;">
+                        <input type="text" id="loginUsername" placeholder="Username" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+                        
+                        <input type="password" id="loginPassword" placeholder="Password" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 20px;">
+                        
+                        <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
+                            Login
+                        </button>
+                        
+                        <a href="#" onclick="showForgotPassword(); return false;" class="forgot-password-link">
+                            Forgot Password?
+                        </a>
+                    </form>
+                    
+                    <div style="margin: 20px 0; color: #64748b;">- OR -</div>
+                    
+                    <button id="showRegisterBtn" onclick="showRegisterForm()" 
+                            style="width: 100%; padding: 15px; background: #059669; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer;">
+                        Create New Account
+                    </button>
+                </div>
+                
+                <!-- Registration Form (hidden initially) -->
+                <div id="registerFormContainer" style="display: none;">
+                    <form id="registerForm">
+                        <input type="text" id="regUsername" placeholder="Choose Username" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+                        
+                        <input type="email" id="regEmail" placeholder="Email Address" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+                        
+                        <input type="password" id="regPassword" placeholder="Choose Password" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 5px;"
+                               onkeyup="checkPasswordStrength()">
+                        <small id="passwordRequirements" style="display: block; margin-bottom: 10px; color: #718096; font-size: 0.9em;">
+                            Password must contain: 8+ characters, uppercase, lowercase, number, special character
+                        </small>
+                        
+                        <input type="password" id="regConfirmPassword" placeholder="Confirm Password" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+                        
+                        <input type="text" id="regCompany" placeholder="Company Name" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 20px;">
+                        
+                        <button type="submit" style="width: 100%; padding: 15px; background: #059669; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
+                            Create Account
+                        </button>
+                        
+                        <button type="button" onclick="showLoginFormInModal()" 
+                                style="width: 100%; padding: 10px; background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1em; cursor: pointer;">
+                            Back to Login
+                        </button>
+                    </form>
+                </div>
+                
+                <div id="authError" style="color: #dc3545; margin-top: 15px; display: none; font-size: 1em;"></div>
+                <div id="authSuccess" style="color: #059669; margin-top: 15px; display: none; font-size: 1em;"></div>
+            `;
+            
+            loginOverlay.appendChild(loginModal);
+            document.body.appendChild(loginOverlay);
+            
+            // Setup form handlers
+            setupLoginHandler();
+            setupRegisterHandler();
+            
+            // Focus on username
+            setTimeout(() => document.getElementById('loginUsername').focus(), 100);
+            return false;
+        }
 
-window.addEventListener('DOMContentLoaded', function() {
-    if (checkAuth()) {
-        addLogoutButton();
-    }
-});
+        function showRegisterForm() {
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('registerFormContainer').style.display = 'block';
+            setTimeout(() => document.getElementById('regUsername').focus(), 100);
+        }
+
+        function showLoginFormInModal() {
+            document.getElementById('registerFormContainer').style.display = 'none';
+            const forgotPasswordContainer = document.getElementById('forgotPasswordContainer');
+            if (forgotPasswordContainer) {
+                forgotPasswordContainer.style.display = 'none';
+            }
+            document.getElementById('loginFormContainer').style.display = 'block';
+            setTimeout(() => document.getElementById('loginUsername').focus(), 100);
+        }
+
+        function showForgotPassword() {
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('registerFormContainer').style.display = 'none';
+            
+            // Remove existing forgot password container if any
+            const existingContainer = document.getElementById('forgotPasswordContainer');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+            
+            const forgotPasswordHTML = `
+                <div id="forgotPasswordContainer">
+                    <h4 style="color: #1e3a8a; margin-bottom: 15px;">Reset Password</h4>
+                    <p style="color: #64748b; margin-bottom: 20px; font-size: 0.95em;">Enter your email address and we'll send you a password reset link.</p>
+                    
+                    <form id="forgotPasswordForm">
+                        <input type="email" id="resetEmail" placeholder="Email Address" required
+                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 20px;">
+                        
+                        <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
+                            Send Reset Link
+                        </button>
+                        
+                        <button type="button" onclick="showLoginFormInModal()" 
+                                style="width: 100%; padding: 10px; background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1em; cursor: pointer;">
+                            Back to Login
+                        </button>
+                    </form>
+                </div>
+            `;
+            
+            document.getElementById('loginModal').insertAdjacentHTML('beforeend', forgotPasswordHTML);
+            
+            // Setup reset form handler
+            document.getElementById('forgotPasswordForm').addEventListener('submit', handlePasswordReset);
+        }
+
+        async function handlePasswordReset(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value.trim();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+            
+            try {
+                const response = await fetch(USER_MANAGEMENT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=resetPassword&email=${encodeURIComponent(email)}`
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('Password reset link sent! Check your email.');
+                    setTimeout(() => {
+                        showLoginFormInModal();
+                    }, 3000);
+                } else {
+                    showError(result.message || 'Email not found in our system');
+                }
+            } catch (error) {
+                showError('Connection error. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+
+        function setupLoginHandler() {
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                
+                try {
+                    const response = await fetch(USER_MANAGEMENT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        sessionStorage.setItem('dashboardAuth', 'true');
+                        sessionStorage.setItem('dashboardUser', username);
+                        sessionStorage.setItem('userEmail', result.email);
+                        sessionStorage.setItem('userCompany', result.company);
+                        
+                        document.getElementById('loginOverlay').remove();
+                        addLogoutButton();
+                        showMessage('Login successful!', 'success');
+                    } else {
+                        showError(result.message || 'Invalid username or password');
+                    }
+                } catch (error) {
+                    showError('Connection error. Please try again.');
+                }
+            });
+        }
+
+        function setupRegisterHandler() {
+            document.getElementById('registerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('regUsername').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const password = document.getElementById('regPassword').value;
+                const confirmPassword = document.getElementById('regConfirmPassword').value;
+                const company = document.getElementById('regCompany').value.trim();
+                
+                // Validation
+                if (password !== confirmPassword) {
+                    return showError('Passwords do not match');
+                }
+                
+                // Strong password validation
+                const passwordValidation = validatePassword(password);
+                if (!passwordValidation.isValid) {
+                    return showError('Password requirements not met: ' + passwordValidation.errors.join(', '));
+                }
+                
+                if (username.length < 3) {
+                    return showError('Username must be at least 3 characters');
+                }
+                
+                // Email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    return showError('Please enter a valid email address');
+                }
+                
+                try {
+                    const response = await fetch(USER_MANAGEMENT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `action=register&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&company=${encodeURIComponent(company)}`
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showSuccess('Account created successfully! You can now login.');
+                        setTimeout(() => {
+                            showLoginFormInModal();
+                            document.getElementById('loginUsername').value = username;
+                        }, 2000);
+                    } else {
+                        showError(result.message || 'Registration failed');
+                    }
+                } catch (error) {
+                    showError('Connection error. Please try again.');
+                }
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            
+            successDiv.style.display = 'none';
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Shake animation
+            const modal = document.getElementById('loginModal');
+            modal.style.animation = 'shake 0.5s';
+            setTimeout(() => modal.style.animation = '', 500);
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            
+            errorDiv.style.display = 'none';
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function showMessage(message, type) {
+            // Show toast notification for successful actions
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 100000;
+                padding: 15px 25px; border-radius: 10px; color: white; font-weight: 600;
+                background: ${type === 'success' ? '#059669' : '#dc3545'};
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3); animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function addLogoutButton() {
+            const header = document.querySelector('.header');
+            const loggedInUser = sessionStorage.getItem('dashboardUser');
+            
+            // Remove existing logout button if any
+            const existingBtn = header.querySelector('.logout-container');
+            if (existingBtn) existingBtn.remove();
+            
+            const logoutContainer = document.createElement('div');
+            logoutContainer.className = 'logout-container';
+            logoutContainer.style.cssText = 'position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 15px;';
+            
+            const userInfo = document.createElement('button');
+            userInfo.textContent = `👤 ${loggedInUser}`;
+            userInfo.style.cssText = 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9em;';
+            userInfo.onclick = openUserProfile;
+            
+            const logoutBtn = document.createElement('button');
+            logoutBtn.textContent = 'Logout';
+            logoutBtn.className = 'btn logout-btn';
+            logoutBtn.style.cssText = 'padding: 10px 20px;';
+            logoutBtn.onclick = logout;
+            
+            logoutContainer.appendChild(userInfo);
+            logoutContainer.appendChild(logoutBtn);
+            header.appendChild(logoutContainer);
+        }
+
+        function openUserProfile() {
+            const user = sessionStorage.getItem('dashboardUser');
+            const email = sessionStorage.getItem('userEmail');
+            const company = sessionStorage.getItem('userCompany');
+            
+            alert(`Profile: ${user}\nEmail: ${email}\nCompany: ${company}\n\nPassword change feature coming soon!`);
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // CSS for animations
+        const userMgmtCSS = document.createElement('style');
+        userMgmtCSS.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(userMgmtCSS);
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                addLogoutButton();
+            }
+        });
 
         // How We Stack Up - Materials Function
         function openQuantumAboutUs() {
@@ -573,33 +974,33 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-   function openQuantumProposalGenerator() {
-    // First, ensure any existing modal is properly closed
-    const existingModal = document.getElementById('quantumProposalModal');
-    if (existingModal) {
-        existingModal.style.display = 'none';
-    }
-    
-    // Small delay to ensure cleanup is complete
-    setTimeout(() => {
-        const modal = document.getElementById('quantumProposalModal');
-        if (modal) {
-            modal.style.display = 'block';
-            updateQuantumPricingSummary();
-            
-            // Re-attach event listener to the generate button
-            const generateBtn = document.getElementById('generateQuantumBtn');
-            if (generateBtn) {
-                // Remove any existing event listeners by cloning
-                const newBtn = generateBtn.cloneNode(true);
-                generateBtn.parentNode.replaceChild(newBtn, generateBtn);
-                newBtn.addEventListener('click', generateQuantumProposal);
+        function openQuantumProposalGenerator() {
+            // First, ensure any existing modal is properly closed
+            const existingModal = document.getElementById('quantumProposalModal');
+            if (existingModal) {
+                existingModal.style.display = 'none';
             }
-        } else {
-            console.error('Modal element quantumProposalModal not found');
+            
+            // Small delay to ensure cleanup is complete
+            setTimeout(() => {
+                const modal = document.getElementById('quantumProposalModal');
+                if (modal) {
+                    modal.style.display = 'block';
+                    updateQuantumPricingSummary();
+                    
+                    // Re-attach event listener to the generate button
+                    const generateBtn = document.getElementById('generateQuantumBtn');
+                    if (generateBtn) {
+                        // Remove any existing event listeners by cloning
+                        const newBtn = generateBtn.cloneNode(true);
+                        generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+                        newBtn.addEventListener('click', generateQuantumProposal);
+                    }
+                } else {
+                    console.error('Modal element quantumProposalModal not found');
+                }
+            }, 100);
         }
-    }, 100);
-}
 
         function closeQuantumModal(modalId) {
             const modal = document.getElementById(modalId);
@@ -1107,45 +1508,45 @@ window.addEventListener('DOMContentLoaded', function() {
         <div class="header">
             <h1>Quantum Solutions Dashboard</h1>
             <p>Smart Food Fridge Solutions for Modern Businesses</p>
-            <p style="font-size: 0.8em; opacity: 0.5;">v1.0 - Quantum Solutions Launch</p>
+            <p style="font-size: 0.8em; opacity: 0.5;">v1.1 - Enhanced Password Security</p>
         </div>
 
         <!-- Quantum Solutions - 6 Cards Vertical Stack -->
-
-<div class="quantum-grid">
-    <div class="card">
-        <h2>How We Stack Up</h2>
-        <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
-        <button onclick="openQuantumAboutUs()" class="btn">View Materials</button>
-    </div>
-    
-    <div class="card">
-        <h2>Proposal Management</h2>
-        <p>Create and access Smart Food Fridge proposals with comprehensive pricing analysis and searchable library.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-            <button onclick="openQuantumProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
-            <button onclick="openQuantumProposalViewer()" class="btn" style="flex: 1;">View Library</button>
+        <div class="quantum-grid">
+            <div class="card">
+                <h2>How We Stack Up</h2>
+                <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
+                <button onclick="openQuantumAboutUs()" class="btn">View Materials</button>
+            </div>
+            
+            <div class="card">
+                <h2>Proposal Management</h2>
+                <p>Create and access Smart Food Fridge proposals with comprehensive pricing analysis and searchable library.</p>
+                <div style="display: flex; gap: 15px; margin-top: 18px;">
+                    <button onclick="openQuantumProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
+                    <button onclick="openQuantumProposalViewer()" class="btn" style="flex: 1;">View Library</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Master Service Agreement</h2>
+                <p>Generate and digitally sign comprehensive service agreements for enterprise clients and partnerships.</p>
+                <button onclick="openQuantumMasterAgreement()" class="btn">Create Agreement</button>
+            </div>
+            
+            <div class="card">
+                <h2>ROI Calculator</h2>
+                <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p>
+                <button onclick="openQuantumROICalculator()" class="btn">Open Calculator</button>
+            </div>
+            
+            <div class="card">
+                <h2>Lead Logger</h2>
+                <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
+                <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
+            </div>
         </div>
     </div>
-    
-    <div class="card">
-        <h2>Master Service Agreement</h2>
-        <p>Generate and digitally sign comprehensive service agreements for enterprise clients and partnerships.</p>
-        <button onclick="openQuantumMasterAgreement()" class="btn">Create Agreement</button>
-    </div>
-    
-    <div class="card">
-        <h2>ROI Calculator</h2>
-        <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p>
-        <button onclick="openQuantumROICalculator()" class="btn">Open Calculator</button>
-    </div>
-    
-    <div class="card">
-        <h2>Lead Logger</h2>
-        <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
-        <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
-    </div>
-</div>
 
     <!-- Quantum Proposal Generator Modal -->
     <div id="quantumProposalModal" class="modal-overlay">
