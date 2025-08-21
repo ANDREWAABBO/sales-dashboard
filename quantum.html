@@ -427,44 +427,68 @@
         }
     </style>
     <script>
-        // Password protection
-        const DASHBOARD_PASSWORD = 'abbondanza2025';
-        
-        function checkAuth() {
-            const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
-            if (!isLoggedIn) {
-                const password = prompt('Please enter the dashboard password:');
-                if (password === DASHBOARD_PASSWORD) {
-                    sessionStorage.setItem('dashboardAuth', 'true');
-                } else {
-                    alert('Incorrect password. Access denied.');
-                    document.body.innerHTML = '<div style="text-align: center; margin-top: 50px; font-family: Arial; color: white;"><h1>Access Denied</h1><p>Please contact your administrator.</p></div>';
-                    return false;
-                }
-            }
-            return true;
-        }
+       // USER MANAGEMENT SYSTEM - Quantum (Login Check Only)
+const USER_MANAGEMENT_URL = 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec';
 
-        function logout() {
-            sessionStorage.removeItem('dashboardAuth');
-            location.reload();
-        }
+function checkAuth() {
+    const isLoggedIn = sessionStorage.getItem('dashboardAuth') === 'true';
+    const loggedInUser = sessionStorage.getItem('dashboardUser');
+    
+    if (!isLoggedIn || !loggedInUser) {
+        // Redirect to index.html for login
+        alert('Please login first. Redirecting to login page...');
+        window.location.href = 'index.html';
+        return false;
+    }
+    return true;
+}
 
-        function addLogoutButton() {
-            const header = document.querySelector('.header');
-            const logoutBtn = document.createElement('button');
-            logoutBtn.textContent = 'Logout';
-            logoutBtn.className = 'btn logout-btn';
-            logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 10px 20px;';
-            logoutBtn.onclick = logout;
-            header.appendChild(logoutBtn);
-        }
+function addLogoutButton() {
+    const header = document.querySelector('.header');
+    const loggedInUser = sessionStorage.getItem('dashboardUser');
+    
+    // Remove existing logout button if any
+    const existingBtn = header.querySelector('.logout-container');
+    if (existingBtn) existingBtn.remove();
+    
+    const logoutContainer = document.createElement('div');
+    logoutContainer.className = 'logout-container';
+    logoutContainer.style.cssText = 'position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 15px;';
+    
+    const userInfo = document.createElement('button');
+    userInfo.textContent = `👤 ${loggedInUser}`;
+    userInfo.style.cssText = 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9em;';
+    userInfo.onclick = openUserProfile;
+    
+    const logoutBtn = document.createElement('button');
+    logoutBtn.textContent = 'Logout';
+    logoutBtn.className = 'btn logout-btn';
+    logoutBtn.style.cssText = 'padding: 10px 20px;';
+    logoutBtn.onclick = logout;
+    
+    logoutContainer.appendChild(userInfo);
+    logoutContainer.appendChild(logoutBtn);
+    header.appendChild(logoutContainer);
+}
 
-        window.addEventListener('DOMContentLoaded', function() {
-            if (checkAuth()) {
-                addLogoutButton();
-            }
-        });
+function openUserProfile() {
+    const user = sessionStorage.getItem('dashboardUser');
+    const email = sessionStorage.getItem('userEmail');
+    const company = sessionStorage.getItem('userCompany');
+    
+    alert(`Profile: ${user}\nEmail: ${email}\nCompany: ${company}\n\nPassword change feature coming soon!`);
+}
+
+function logout() {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    if (checkAuth()) {
+        addLogoutButton();
+    }
+});
 
         // How We Stack Up - Materials Function
         function openQuantumAboutUs() {
