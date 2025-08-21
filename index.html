@@ -1752,11 +1752,20 @@
 
         function closeModal(modalId) { 
 
-            const modal = document.getElementById(modalId); 
-
-            if (modal) { 
-
-                modal.style.display = 'none'; 
+            
+  const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    // If it's the lead modal, also reset the form and clear focus issues
+    if (modalId === 'leadModal') {
+        document.getElementById('leadForm').reset();
+        currentEditId = null;
+        
+        // Clear any focus issues
+        if (document.activeElement) {
+            document.activeElement.blur();
 
             } 
 
@@ -3129,17 +3138,18 @@ async function generateServiceAgreementPDF() {
 
   
 
-        // Close modal when clicking outside 
+// Replace the existing window.onclick function (at the bottom of your lead logger) with these complete functions:
 
-        window.onclick = function(event) { 
-
-            if (event.target.classList.contains('modal-overlay')) { 
-
-                if (event.target === event.currentTarget) { 
-
-                    event.target.style.display = 'none'; 
-
-                } 
+// Close modal when clicking outside - FIXED VERSION
+window.onclick = function(event) {
+   const modal = document.getElementById('leadModal');
+    // Only close if clicking directly on the modal overlay, not on any child elements
+    if (event.target === modal) {
+        closeModal();
+    }
+    // Prevent event bubbling that might interfere with form interactions
+    event.stopPropagation();
+                }
 
             } 
 
