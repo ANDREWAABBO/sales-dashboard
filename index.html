@@ -2800,13 +2800,104 @@
 
   
 
-function generateServiceAgreementPDF() { 
+async function generateServiceAgreementPDF() {
+    const submitBtn = document.getElementById('generateServiceBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    if (submitBtn.disabled) {
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+    
+    try {
+        // Collect all form data
+        const formData = {
+            companyName: document.getElementById('serviceCompanyName').value,
+            contactName: document.getElementById('serviceContactName').value || '',
+            street: document.getElementById('serviceStreet').value,
+            city: document.getElementById('serviceCity').value,
+            state: document.getElementById('serviceState').value,
+            zip: document.getElementById('serviceZip').value,
+            preparedBy: document.getElementById('servicePreparedBy').value,
+            preparedByPhone: document.getElementById('servicePreparedByPhone').value,
+            preparedByEmail: document.getElementById('servicePreparedByEmail').value,
+            fridgeCount: document.getElementById('serviceFridgeCount').value,
+            monthlyFee: document.getElementById('serviceMonthlyFee').value,
+            subsidyPercentage: document.getElementById('subsidyPercentage').value,
+            freeMonths: document.getElementById('freeMonths').value,
+            installDate: document.getElementById('installDate').value,
+            firstBillDate: document.getElementById('firstBillDate').value
+        };
 
-    // Add service agreement generation logic here 
+        // Validate required fields
+        const requiredFields = ['companyName', 'street', 'city', 'state', 'zip', 'preparedBy', 'preparedByPhone', 'preparedByEmail'];
+        
+        for (const field of requiredFields) {
+            if (!formData[field]) {
+                const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+                throw new Error(`Please fill in the ${fieldName} field.`);
+            }
+        }
 
-    alert('Service Agreement generation coming soon!'); 
+        // Calculate pricing details for summary
+        const fridgeCount = parseInt(formData.fridgeCount) || 1;
+        const basePrice = parseInt(formData.monthlyFee) || 795;
+        const subsidyPercentage = parseInt(formData.subsidyPercentage) || 0;
+        
+        let monthlyTotal = basePrice;
+        if (fridgeCount > 1) {
+            const additionalUnits = fridgeCount - 1;
+            const discountedPrice = basePrice - 100;
+            monthlyTotal = basePrice + (discountedPrice * additionalUnits);
+        }
+        
+        const estimatedMonthlyPurchases = fridgeCount * 300;
+        const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPercentage) / 100;
 
-} 
+        // Build URL parameters for the Google Apps Script
+        const params = new URLSearchParams();
+        Object.keys(formData).forEach(key => {
+            params.append(key, formData[key]);
+        });
+        
+        // Add calculated values
+        params.append('monthlyTotal', monthlyTotal);
+        params.append('monthlySubsidyAmount', monthlySubsidyAmount);
+        params.append('estimatedMonthlyPurchases', estimatedMonthlyPurchases);
+
+        // Open the service agreement generator in a new tab
+        const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
+        window.open(url, '_blank');
+
+        // Close the modal and show success message
+        closeModal('serviceAgreementModal');
+        showPopup(`
+            <div class="success-popup">
+                <h3>Service Agreement Generation Started!</h3>
+                <p>Your service agreement is being generated. A new tab has opened with the results.</p>
+                <p><strong>Company:</strong> ${formData.companyName}</p>
+                <p><strong>Monthly Fee:</strong> $${monthlyTotal}/month</p>
+                <p><strong>Subsidy:</strong> ${subsidyPercentage}%</p>
+                <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
+            </div>
+        `, 'success');
+
+    } catch (error) {
+        console.error('Error generating service agreement:', error);
+        showPopup(`
+            <div class="error-popup">
+                <h3>Error Generating Service Agreement</h3>
+                <p>${error.message}</p>
+                <p>Please check all required fields and try again.</p>
+            </div>
+        `, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+}
 
                                                                         
 
