@@ -352,6 +352,29 @@ td:nth-child(11) {
             to { transform: translateX(0); }
         }
     </style>
+
+    <style>
+  /* Keep the lead modal inside the viewport and make it scrollable */
+  #leadModal .modal-content {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  /* Keep the Save/Cancel bar visible while scrolling */
+  #leadModal .form-actions {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid #e2e8f0;
+    z-index: 1;
+  }
+</style>
+
+
 </head>
 <body>
     <div class="container">
