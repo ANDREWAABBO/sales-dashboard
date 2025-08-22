@@ -2877,8 +2877,9 @@ async function generateServiceAgreementPDF() {
         params.append('estimatedMonthlyPurchases', estimatedMonthlyPurchases);
 
         // Open the service agreement generator in a new tab
-        const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
-        window.open(url, '_blank');
+      const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
+      console.log('SA URL →', url);       // <— add this line
+      window.open(url, '_blank');
 
         // Close the modal and show success message
         closeModal('serviceAgreementModal');
