@@ -2810,103 +2810,120 @@
   
 
 async function generateServiceAgreementPDF() {
-    const submitBtn = document.getElementById('generateServiceBtn');
-    const originalText = submitBtn.innerHTML;
-    
-    if (submitBtn.disabled) {
-        return;
+  const submitBtn = document.getElementById('generateServiceBtn');
+  const originalText = submitBtn.innerHTML;
+
+  if (submitBtn.disabled) return;
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+
+  try {
+    // 1) Collect all form data (keep your current field IDs)
+    const formData = {
+      companyName: document.getElementById('serviceCompanyName').value,
+      contactName: document.getElementById('serviceContactName').value || '',
+      street: document.getElementById('serviceStreet').value,
+      city: document.getElementById('serviceCity').value,
+      state: document.getElementById('serviceState').value,
+      zip: document.getElementById('serviceZip').value,
+      preparedBy: document.getElementById('servicePreparedBy').value,
+      preparedByPhone: document.getElementById('servicePreparedByPhone').value,
+      preparedByEmail: document.getElementById('servicePreparedByEmail').value,
+      fridgeCount: document.getElementById('serviceFridgeCount').value,
+      monthlyFee: document.getElementById('serviceMonthlyFee').value,
+      subsidyPercentage: document.getElementById('subsidyPercentage').value,
+      freeMonths: document.getElementById('freeMonths').value,
+      installDate: document.getElementById('installDate').value,
+      firstBillDate: document.getElementById('firstBillDate').value
+    };
+
+    // 2) Validate required fields
+    const requiredFields = [
+      'companyName', 'street', 'city', 'state', 'zip',
+      'preparedBy', 'preparedByPhone', 'preparedByEmail'
+    ];
+    for (const field of requiredFields) {
+      if (!formData[field]) {
+        const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+        throw new Error(`Please fill in the ${fieldName} field.`);
+      }
     }
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
-    
-    try {
-        // Collect all form data
-        const formData = {
-            companyName: document.getElementById('serviceCompanyName').value,
-            contactName: document.getElementById('serviceContactName').value || '',
-            street: document.getElementById('serviceStreet').value,
-            city: document.getElementById('serviceCity').value,
-            state: document.getElementById('serviceState').value,
-            zip: document.getElementById('serviceZip').value,
-            preparedBy: document.getElementById('servicePreparedBy').value,
-            preparedByPhone: document.getElementById('servicePreparedByPhone').value,
-            preparedByEmail: document.getElementById('servicePreparedByEmail').value,
-            fridgeCount: document.getElementById('serviceFridgeCount').value,
-            monthlyFee: document.getElementById('serviceMonthlyFee').value,
-            subsidyPercentage: document.getElementById('subsidyPercentage').value,
-            freeMonths: document.getElementById('freeMonths').value,
-            installDate: document.getElementById('installDate').value,
-            firstBillDate: document.getElementById('firstBillDate').value
-        };
 
-        // Validate required fields
-        const requiredFields = ['companyName', 'street', 'city', 'state', 'zip', 'preparedBy', 'preparedByPhone', 'preparedByEmail'];
-        
-        for (const field of requiredFields) {
-            if (!formData[field]) {
-                const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
-                throw new Error(`Please fill in the ${fieldName} field.`);
-            }
-        }
+    // 3) Pricing calculations (unchanged)
+    const fridgeCount = parseInt(formData.fridgeCount) || 1;
+    const basePrice = parseInt(formData.monthlyFee) || 795;
+    const subsidyPct = parseInt(formData.subsidyPercentage) || 0;
 
-        // Calculate pricing details for summary
-        const fridgeCount = parseInt(formData.fridgeCount) || 1;
-        const basePrice = parseInt(formData.monthlyFee) || 795;
-        const subsidyPercentage = parseInt(formData.subsidyPercentage) || 0;
-        
-        let monthlyTotal = basePrice;
-        if (fridgeCount > 1) {
-            const additionalUnits = fridgeCount - 1;
-            const discountedPrice = basePrice - 100;
-            monthlyTotal = basePrice + (discountedPrice * additionalUnits);
-        }
-        
-        const estimatedMonthlyPurchases = fridgeCount * 300;
-        const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPercentage) / 100;
-
-        // Build URL parameters for the Google Apps Script
-        const params = new URLSearchParams();
-        Object.keys(formData).forEach(key => {
-            params.append(key, formData[key]);
-        });
-        
-        // Add calculated values
-        params.append('monthlyTotal', monthlyTotal);
-        params.append('monthlySubsidyAmount', monthlySubsidyAmount);
-        params.append('estimatedMonthlyPurchases', estimatedMonthlyPurchases);
-
-        // Open the service agreement generator in a new tab
-      const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
-      console.log('SA URL →', url);       // <— add this line
-      window.open(url, '_blank');
-
-        // Close the modal and show success message
-        closeModal('serviceAgreementModal');
-        showPopup(`
-            <div class="success-popup">
-                <h3>Service Agreement Generation Started!</h3>
-                <p>Your service agreement is being generated. A new tab has opened with the results.</p>
-                <p><strong>Company:</strong> ${formData.companyName}</p>
-                <p><strong>Monthly Fee:</strong> $${monthlyTotal}/month</p>
-                <p><strong>Subsidy:</strong> ${subsidyPercentage}%</p>
-                <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
-            </div>
-        `, 'success');
-
-    } catch (error) {
-        console.error('Error generating service agreement:', error);
-        showPopup(`
-            <div class="error-popup">
-                <h3>Error Generating Service Agreement</h3>
-                <p>${error.message}</p>
-                <p>Please check all required fields and try again.</p>
-            </div>
-        `, 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+    let monthlyTotal = basePrice;
+    if (fridgeCount > 1) {
+      const additionalUnits = fridgeCount - 1;
+      const discountedPrice = basePrice - 100;
+      monthlyTotal = basePrice + (discountedPrice * additionalUnits);
     }
+
+    const estimatedMonthlyPurchases = fridgeCount * 300;
+    const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPct) / 100;
+
+    // 4) Build URL params in the shape your Apps Script expects
+    //    (type + 'customer', 'serviceFee', 'totalKiosks', etc.)
+    const params = new URLSearchParams({
+      type: 'serviceAgreement',
+      customer: formData.companyName,
+      street: formData.street,
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zip,
+      subsidyPercentage: formData.subsidyPercentage,
+      serviceFee: formData.monthlyFee,
+      installDate: formData.installDate,
+      totalKiosks: formData.fridgeCount,
+      firstBillDate: formData.firstBillDate,
+      freeMonths: formData.freeMonths
+    });
+
+    // Optional extras (safe to include; Script can ignore if unused)
+    params.append('preparedBy', formData.preparedBy);
+    params.append('preparedByPhone', formData.preparedByPhone);
+    params.append('preparedByEmail', formData.preparedByEmail);
+    params.append('contactName', formData.contactName);
+
+    // Keep calculated values too (handy for future script use)
+    params.append('monthlyTotal', String(monthlyTotal));
+    params.append('monthlySubsidyAmount', String(monthlySubsidyAmount));
+    params.append('estimatedMonthlyPurchases', String(estimatedMonthlyPurchases));
+
+    // 5) Open the Apps Script web app
+    const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
+    console.log('SA URL →', url);
+    window.open(url, '_blank');
+
+    // 6) Close modal + toast
+    closeModal('serviceAgreementModal');
+    showPopup(`
+      <div class="success-popup">
+        <h3>Service Agreement Generation Started!</h3>
+        <p>Your service agreement is being generated. A new tab has opened with the results.</p>
+        <p><strong>Company:</strong> ${formData.companyName}</p>
+        <p><strong>Monthly Fee:</strong> $${monthlyTotal}/month</p>
+        <p><strong>Subsidy:</strong> ${subsidyPct}%</p>
+        <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
+      </div>
+    `, 'success');
+
+  } catch (error) {
+    console.error('Error generating service agreement:', error);
+    showPopup(`
+      <div class="error-popup">
+        <h3>Error Generating Service Agreement</h3>
+        <p>${error.message}</p>
+        <p>Please check all required fields and try again.</p>
+      </div>
+    `, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  }
 }
 
                                                                         
