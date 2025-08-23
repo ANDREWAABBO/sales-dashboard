@@ -6,10 +6,7 @@
   <title>Lead Logger - Abbondanza Sales</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
-      background:#1e3a8a;min-height:100vh;padding:20px;
-    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
     .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.2rem}
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
@@ -68,7 +65,7 @@
 
       <div class="filters">
         <select id="repFilter" onchange="filterLeads()"><option value="">All Reps</option></select>
-        <select id="companyFilter" onchange="filterLeads()"><option value="">All Companies</option></select>
+        <select id="companyFilter" onchange="filterLeads()"><option value="">All Business Units</option></select>
         <select id="statusFilter" onchange="filterLeads()">
           <option value="">All Status</option>
           <option value="Active">Active</option>
@@ -121,9 +118,9 @@
 
       <form id="leadForm">
         <div class="form-group">
-          <label for="businessUnit">Company *</label>
+          <label for="businessUnit">Business Unit *</label>
           <select id="businessUnit" name="businessUnit" required>
-            <option value="">Select Company...</option>
+            <option value="">Select...</option>
             <option value="Abbondanza Vending">Abbondanza Vending</option>
             <option value="Quantum Solutions">Quantum Solutions</option>
           </select>
@@ -247,7 +244,7 @@
         console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
         document.getElementById('emptyState').style.display='block';
-        showToast('Error loading leads. Please refresh.', 'error');
+        showToast('Error loading leads. ' + err.message, 'error');
       }
     }
 
@@ -266,7 +263,7 @@
 
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
-        sel.innerHTML = '<option value="">All Companies</option>';
+        sel.innerHTML = '<option value="">All Business Units</option>';
         units.sort().forEach(u => {
           const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
         });
@@ -345,20 +342,20 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value;
+      const unit = document.getElementById('companyFilter').value;
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
       const filtered = (allLeads || []).filter(l => {
         const matchRep = !rep || ((l.repName||'').toLowerCase().includes(rep));
         const matchStatus = !status || (l.status === status);
-        const matchCompany = !company || (l.businessUnit === company);
+        const matchUnit = !unit || (l.businessUnit === unit);
         const matchSearch = !q ||
           (l.companyName && l.companyName.toLowerCase().includes(q)) ||
           (l.contactName && l.contactName.toLowerCase().includes(q)) ||
           (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
           (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
-        return matchRep && matchStatus && matchCompany && matchSearch;
+        return matchRep && matchStatus && matchUnit && matchSearch;
       });
 
       displayLeads(filtered);
