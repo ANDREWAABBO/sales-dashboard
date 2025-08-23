@@ -11,7 +11,7 @@
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.5em}
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
     .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.3s;text-decoration:none;display:inline-block}
-    .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.4);background:#1e40af}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.4);background:#1d4eaf}
     .btn-secondary{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
     .filters{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
     select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .3s}
@@ -35,16 +35,13 @@
     .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 
-    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .3s ease}
-    .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:600px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .3s ease}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @keyframes slideIn{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer;transition:color .3s}
+    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5)}
+    .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:600px;box-shadow:0 20px 40px rgba(0,0,0,.2)}
+    .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer}
     .close:hover{color:#000}
     .form-group{margin-bottom:20px}
     .form-group label{display:block;margin-bottom:5px;color:#4a5568;font-weight:600}
-    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:border-color .3s}
-    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
     .form-actions{display:flex;gap:10px;margin-top:25px;justify-content:flex-end}
     .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
@@ -52,10 +49,9 @@
     .btn-small{padding:6px 12px;font-size:12px;border-radius:6px}
     .btn-edit{background:#2563eb}.btn-edit:hover{background:#1d4ed8}
     .btn-archive{background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)}
-    .toast{position:fixed;bottom:20px;right:20px;background:#2d3748;color:#fff;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);display:none;animation:slideInRight .3s ease}
+    .toast{position:fixed;bottom:20px;right:20px;background:#2d3748;color:#fff;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);display:none}
     .toast.success{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
     .toast.error{background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)}
-    @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
 
     /* Modal scroll fix + sticky action bar */
     #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
@@ -73,14 +69,8 @@
       </div>
 
       <div class="filters">
-        <select id="repFilter" onchange="filterLeads()">
-          <option value="">All Reps</option>
-        </select>
-
-        <select id="companyFilter" onchange="filterLeads()">
-          <option value="">All Companies</option>
-        </select>
-
+        <select id="repFilter" onchange="filterLeads()"><option value="">All Reps</option></select>
+        <select id="companyFilter" onchange="filterLeads()"><option value="">All Companies</option></select>
         <select id="statusFilter" onchange="filterLeads()">
           <option value="">All Status</option>
           <option value="Active">Active</option>
@@ -88,7 +78,6 @@
           <option value="Not Qualified">Not Qualified</option>
           <option value="Dead">Dead (Archived)</option>
         </select>
-
         <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()"/>
       </div>
     </div>
@@ -101,20 +90,11 @@
 
       <table id="leadsTable" style="display:none;">
         <thead>
-        <tr>
-          <th>Date Added</th>
-          <th>Company Name</th>
-          <th>Contact Name</th>
-          <th>Phone Number</th>
-          <th>Email Address</th>
-          <th>Rep Name</th>
-          <th>Status</th>
-          <th>Follow Up</th>
-          <th>Appt Made</th>
-          <th>Appt Date</th>
-          <th>Notes</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Date Added</th><th>Company Name</th><th>Contact Name</th><th>Phone Number</th>
+            <th>Email Address</th><th>Rep Name</th><th>Status</th><th>Follow Up</th>
+            <th>Appt Made</th><th>Appt Date</th><th>Notes</th><th>Actions</th>
+          </tr>
         </thead>
         <tbody id="leadsTableBody"></tbody>
       </table>
@@ -215,7 +195,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ====== CONFIG: your deployed Apps Script URL ======
+    // ====== YOUR deployed Apps Script URL ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
     let allLeads = [];
@@ -242,37 +222,43 @@
       });
     }
 
+    async function getJson(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      try { return JSON.parse(text); }
+      catch (e) {
+        console.error('Non-JSON response:', text);
+        throw new Error('Server returned non-JSON. See console.');
+      }
+    }
+
     async function loadLeads(){
       try{
         document.getElementById('loadingState').style.display='block';
         document.getElementById('leadsTable').style.display='none';
         document.getElementById('emptyState').style.display='none';
 
-        const res = await fetch(WEB_APP_URL + '?action=getLeads');
-        const data = await res.json();
+        const url = WEB_APP_URL + '?action=getLeads';
+        const data = await getJson(url);
 
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        // Exclude archived
         allLeads = (data.leads || []).filter(l => (l.status || '') !== 'Dead');
-
         displayLeads(allLeads);
         updateRepFilter();
       }catch(err){
         console.error(err);
         document.getElementById('loadingState').style.display='none';
         document.getElementById('emptyState').style.display='block';
-        showToast('Error loading leads. Please refresh.', 'error');
+        showToast('Error loading leads: ' + err.message, 'error');
       }
     }
 
     async function loadCompanyLists(){
       try{
-        const res = await fetch(WEB_APP_URL + '?action=getCompanies');
-        const data = await res.json();
+        const data = await getJson(WEB_APP_URL + '?action=getCompanies');
         if (data.status !== 'success') return;
 
-        // Suggestions for Company Name field
         knownCompanies = data.companies || [];
         const dl = document.getElementById('companySuggestions');
         dl.innerHTML = '';
@@ -282,14 +268,12 @@
           dl.appendChild(opt);
         });
 
-        // Populate Company filter from business units (e.g., AV / QS)
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
         sel.innerHTML = '<option value="">All Companies</option>';
         units.sort().forEach(u => {
           const o = document.createElement('option');
-          o.value = u;
-          o.textContent = u;
+          o.value = u; o.textContent = u;
           sel.appendChild(o);
         });
       }catch(e){
@@ -332,7 +316,7 @@
         dateAdded,
         `<strong>${lead.companyName || ''}</strong>`,
         lead.contactName || '',
-        lead.phoneNumber || '',
+        String(lead.phoneNumber || ''),
         lead.emailAddress || '',
         lead.repName || '',
         `<span class="status-badge ${statusClass}">${lead.status || 'Active'}</span>`,
@@ -372,7 +356,7 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value; // exact match against businessUnit
+      const company = document.getElementById('companyFilter').value;
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
@@ -422,7 +406,7 @@
       document.getElementById('businessUnit').value = lead.businessUnit || '';
       document.getElementById('companyName').value = lead.companyName || '';
       document.getElementById('contactName').value = lead.contactName || '';
-      document.getElementById('phoneNumber').value = lead.phoneNumber || '';
+      document.getElementById('phoneNumber').value = String(lead.phoneNumber || '');
       document.getElementById('emailAddress').value = lead.emailAddress || '';
       document.getElementById('repName').value = lead.repName || '';
       document.getElementById('status').value = lead.status || 'Active';
@@ -482,8 +466,11 @@
           body.set('lead', JSON.stringify(lead));
           res = await fetch(WEB_APP_URL, { method:'POST', body });
         }
+        const text = await res.text();
+        let out;
+        try { out = JSON.parse(text); }
+        catch { throw new Error('Server returned non-JSON: ' + text); }
 
-        const out = await res.json();
         if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
         showToast(currentEditId ? 'Lead updated!' : 'Lead added!', 'success');
@@ -504,8 +491,10 @@
       body.set('leadId', String(leadId));
 
       fetch(WEB_APP_URL, { method:'POST', body })
-        .then(r => r.json())
-        .then(out => {
+        .then(r => r.text())
+        .then(text => {
+          let out; try { out = JSON.parse(text); }
+          catch { throw new Error('Server returned non-JSON: ' + text); }
           if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
           showToast('Lead archived', 'success');
           loadLeads();
