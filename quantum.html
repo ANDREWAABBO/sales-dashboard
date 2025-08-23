@@ -982,156 +982,89 @@ window.addEventListener('DOMContentLoaded', function() {
 
   
 
-        // How We Stack Up - Materials Function 
-
-        function openQuantumAboutUs() { 
-
-            const existingOverlay = document.querySelector('.modal-overlay'); 
-
-            if (existingOverlay) { 
-
-                existingOverlay.remove(); 
-
-            } 
-
-             
-
-            const overlay = document.createElement('div'); 
-
-            overlay.className = 'modal-overlay'; 
-
-            overlay.style.display = 'block'; 
-
-             
-
-            const modal = document.createElement('div'); 
-
-            modal.className = 'modal'; 
-
-             
-
-            const materials = [ 
-
-                { 
-
-                    title: 'Restaurant Industry Trends Report', 
-
-                    id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', 
-
-                    description: 'Current market trends and insights for the restaurant industry' 
-
-                }, 
-
-                { 
-
-                    title: 'Maximizing Revenue Per Square Foot in Food Service Operations', 
-
-                    id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', 
-
-                    description: 'Strategies to optimize space utilization and increase profitability' 
-
-                }, 
-
-                { 
-
-                    title: 'Fresh Food Fridge Spec Sheet', 
-
-                    id: '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas', 
-
-                    description: 'Technical specifications and features of our Smart Food Fridge' 
-
-                }, 
-
-                { 
-
-                    title: 'Food Fridge Executive Overview', 
-
-                    id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE', 
-
-                    description: 'High-level overview and business benefits for decision makers' 
-
-                }, 
-
-                { 
-
-                    title: 'Commercial Real Estate Premium Food Amenities', 
-
-                    id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0', 
-
-                    description: 'How premium food amenities enhance commercial property value' 
-
-                }, 
-
-                { 
-
-                    title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', 
-
-                    id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', 
-
-                    description: 'Comprehensive technical documentation and frequently asked questions' 
-
-                } 
-
-            ]; 
-
-             
-
-            modal.innerHTML = ` 
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;"> 
-
-                    <h3 style="margin: 0; color: #2d3748; font-size: 1.8em;">How We Stack Up - Marketing Materials</h3> 
-
-                    <button class="close-btn" onclick="closeModal()">✕</button> 
-
-                </div> 
-
-                <div style="display: grid; gap: 20px;"> 
-
-                    ${materials.map(material => ` 
-
-                        <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"> 
-
-                            <div style="margin-bottom: 20px;"> 
-
-                                <h4 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 1.2em; font-weight: 600;">${material.title}</h4> 
-
-                                <p style="margin: 0; color: #64748b; font-size: 0.95em; line-height: 1.5;">${material.description}</p> 
-
-                            </div> 
-
-                            <div style="display: flex; gap: 15px; flex-wrap: wrap;"> 
-
-                                <button class="btn btn-primary" onclick="window.open('https://drive.google.com/file/d/${material.id}/view', '_blank')" style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;"> 
-
-                                    👁️ View PDF 
-
-                                </button> 
-
-                                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')" style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;"> 
-
-                                    📥 Download 
-
-                                </button> 
-
-                            </div> 
-
-                        </div> 
-
-                    `).join('')} 
-
-                </div> 
-
-            `; 
-
-             
-
-            overlay.appendChild(modal); 
-
-            document.body.appendChild(overlay); 
-
+     // How We Stack Up - Materials Function 
+function openQuantumAboutUs() { 
+    const existingOverlay = document.querySelector('.modal-overlay'); 
+    if (existingOverlay) { 
+        existingOverlay.remove(); 
+    } 
+     
+    const overlay = document.createElement('div'); 
+    overlay.className = 'modal-overlay'; 
+    overlay.style.display = 'block'; 
+     
+    const modal = document.createElement('div'); 
+    modal.className = 'modal'; 
+     
+    const materials = [ 
+        { 
+            title: 'Restaurant Industry Trends Report', 
+            id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', 
+            description: 'Current market trends and insights for the restaurant industry' 
+        }, 
+        { 
+            title: 'Maximizing Revenue Per Square Foot in Food Service Operations', 
+            id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', 
+            description: 'Strategies to optimize space utilization and increase profitability' 
+        }, 
+        { 
+            title: 'Fresh Food Fridge Spec Sheet', 
+            id: '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas', 
+            description: 'Technical specifications and features of our Smart Food Fridge' 
+        }, 
+        { 
+            title: 'Food Fridge Executive Overview', 
+            id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE', 
+            description: 'High-level overview and business benefits for decision makers' 
+        }, 
+        { 
+            title: 'Commercial Real Estate Premium Food Amenities', 
+            id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0', 
+            description: 'How premium food amenities enhance commercial property value' 
+        }, 
+        { 
+            title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', 
+            id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', 
+            description: 'Comprehensive technical documentation and frequently asked questions' 
         } 
-
+    ]; 
+     
+    modal.innerHTML = ` 
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0;"> 
+            <h3 style="margin: 0; color: #2d3748; font-size: 1.8em;">How We Stack Up - Marketing Materials</h3> 
+            <button class="close-btn" onclick="closeModal()">✕</button> 
+        </div> 
+        <div style="display: grid; gap: 20px;"> 
+            ${materials.map(material => {
+                // Check if this is the Google Slides document
+                const isSlides = material.id === '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas';
+                const viewUrl = isSlides ? 
+                    `https://docs.google.com/presentation/d/${material.id}/export/pdf` : 
+                    `https://drive.google.com/file/d/${material.id}/view`;
+                
+                return `
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"> 
+                        <div style="margin-bottom: 20px;"> 
+                            <h4 style="margin: 0 0 10px 0; color: #1e3a8a; font-size: 1.2em; font-weight: 600;">${material.title}</h4> 
+                            <p style="margin: 0; color: #64748b; font-size: 0.95em; line-height: 1.5;">${material.description}</p> 
+                        </div> 
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;"> 
+                            <button class="btn btn-primary" onclick="window.open('${viewUrl}', '_blank')" style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;"> 
+                                👁️ View PDF 
+                            </button> 
+                            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${material.id}', '_blank')" style="padding: 12px 24px; font-size: 0.9em; min-width: 120px; font-weight: 600;"> 
+                                📥 Download 
+                            </button> 
+                        </div> 
+                    </div>
+                `;
+            }).join('')} 
+        </div> 
+    `; 
+     
+    overlay.appendChild(modal); 
+    document.body.appendChild(overlay); 
+}
   
 
         function closeModal() { 
