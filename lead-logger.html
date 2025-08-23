@@ -441,11 +441,11 @@
           ? { action:'updateLead', leadId:Number(currentEditId), updates:lead }
           : { action:'addLead',   lead:lead };
 
-        const res = await fetch(url, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json; charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
+         const res = await fetch(url, {
+         method: 'POST',
+         headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // ← change this
+         body: JSON.stringify(payload)
+       });
 
         if (!res.ok) throw new Error(`Network ${res.status}`);
         const out = await res.json();
@@ -469,10 +469,10 @@
       const payload = { action:'archiveLead', leadId };
 
       fetch(url, {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json; charset=utf-8' },
-        body: JSON.stringify(payload)
-      })
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // ← change this
+      body: JSON.stringify(payload)
+     })
       .then(r => r.json())
       .then(out => {
         if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
