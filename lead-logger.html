@@ -217,7 +217,6 @@
     let knownCompanies = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Bind explicit click to avoid native submit blocking
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
       loadLeads();
       loadCompanyLists();
@@ -249,7 +248,6 @@
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
         allLeads = data.leads || [];
-
         displayLeads(allLeads);
         updateRepFilter();
       }catch(err){
@@ -362,7 +360,7 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value; // businessUnit exact match
+      const company = document.getElementById('companyFilter').value;
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
@@ -447,7 +445,6 @@
       e.preventDefault();
       const formEl = document.getElementById('leadForm');
 
-      // our own validation to avoid native blocking
       if (!formEl.checkValidity()){
         formEl.reportValidity();
         return;
@@ -458,17 +455,20 @@
       const saveBtn = document.getElementById('saveBtn');
       const originalText = saveBtn.textContent;
 
-      // UI lock
       saveBtn.disabled = true;
-      saveBtn.textContent = currentEditId ? 'Saving...' : 'Saving...';
+      saveBtn.textContent = 'Saving...';
 
       try{
-        const payload = currentEditId
-          ? { action:'updateLead', leadId: Number(currentEditId), updates: lead }
-          : { action:'addLead', lead: lead };
+        const isUpdate = !!currentEditId;
+        const action = isUpdate ? 'updateLead' : 'addLead';
+        const url = WEB_APP_URL + '?action=' + encodeURIComponent(action)
+          + (isUpdate ? ('&leadId=' + Number(currentEditId)) : '');
 
-        // text/plain avoids CORS preflight
-        const res = await fetch(WEB_APP_URL, {
+        const payload = isUpdate
+          ? { updates: lead }
+          : { lead: lead };
+
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
@@ -478,7 +478,7 @@
         const out = await res.json();
         if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
-        showToast(currentEditId ? 'Lead updated!' : 'Lead added!', 'success');
+        showToast(isUpdate ? 'Lead updated!' : 'Lead added!', 'success');
         closeModal();
         await loadLeads();
       }catch(err){
@@ -493,11 +493,12 @@
     function archiveLead(leadId){
       if (!confirm('Archive this lead?')) return;
       leadId = Number(leadId);
+      const url = WEB_APP_URL + '?action=archiveLead&leadId=' + leadId;
 
-      fetch(WEB_APP_URL, {
+      fetch(url, {
         method:'POST',
         headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action:'archiveLead', leadId })
+        body: JSON.stringify({})
       })
       .then(r => r.json())
       .then(out => {
