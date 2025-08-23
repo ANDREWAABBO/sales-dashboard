@@ -6,10 +6,7 @@
   <title>Lead Logger - Abbondanza Sales</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
-      background:#1e3a8a;min-height:100vh;padding:20px;
-    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
     .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.5em}
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
@@ -23,7 +20,7 @@
     table{width:100%;border-collapse:collapse;background:#fff}
     th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
     td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
-    /* Notes column wraps */
+    /* Notes wraps */
     td:nth-child(11){max-width:300px;white-space:normal;word-wrap:break-word;overflow:visible;text-overflow:initial;vertical-align:top;line-height:1.4;padding:12px 15px}
     tr:hover{background:#f7fafc}
     .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-align:center;display:inline-block}
@@ -34,7 +31,6 @@
     .appointment-yes{color:#48bb78;font-weight:600}
     .appointment-no{color:#e53e3e}
     .empty-state{text-align:center;padding:60px 20px;color:#718096}
-    .empty-state h3{font-size:1.5em;margin-bottom:10px;color:#4a5568}
     .loading{text-align:center;padding:40px;color:#718096}
     .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
@@ -220,7 +216,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ====== CONFIG: Use your deployed Apps Script URL ======
+    // ====== CONFIG: your deployed Apps Script URL ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
     let allLeads = [];
@@ -255,15 +251,13 @@
 
         const res = await fetch(WEB_APP_URL + '?action=getLeads');
         const data = await res.json();
-
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        // Exclude archived
-        allLeads = (data.leads || []).filter(l => (l.status || '') !== 'Dead');
+        // SHOW EVERYTHING by default (including Dead)
+        allLeads = data.leads || [];
 
         displayLeads(allLeads);
         updateRepFilter();
-        // companyFilter is updated by loadCompanyLists()
       }catch(err){
         console.error(err);
         document.getElementById('loadingState').style.display='none';
@@ -278,7 +272,7 @@
         const data = await res.json();
         if (data.status !== 'success') return;
 
-        // Suggestions for Company Name field
+        // Datalist suggestions for Company Name
         knownCompanies = data.companies || [];
         const dl = document.getElementById('companySuggestions');
         dl.innerHTML = '';
@@ -288,7 +282,7 @@
           dl.appendChild(opt);
         });
 
-        // Populate Company filter from business units (e.g., AV / QS)
+        // Company filter from business units (AV/QS)
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
         sel.innerHTML = '<option value="">All Companies</option>';
@@ -389,7 +383,7 @@
         const matchSearch = !q ||
           (l.companyName && l.companyName.toLowerCase().includes(q)) ||
           (l.contactName && l.contactName.toLowerCase().includes(q)) ||
-          (l.phoneNumber && l.phoneNumber.toLowerCase().includes(q)) ||
+          (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
           (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
         return matchRep && matchStatus && matchCompany && matchSearch;
       });
@@ -465,7 +459,6 @@
       const form = new FormData(e.target);
       const lead = Object.fromEntries(form.entries());
 
-      // requireds
       const required = ['businessUnit','companyName','repName'];
       for (const f of required){
         if (!lead[f]){
