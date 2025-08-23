@@ -346,8 +346,7 @@
 
     function getStatusClass(status){
       const map = {'Active':'status-active','Follow Up Later':'status-followup','Not Qualified':'status-notqualified','Dead':'status-dead'};
-      row.children[1].title = (lead.companyName || ''); // Company Name column
-      row.children[10].title = (notes || '');           // Notes column
+
       return map[status] || 'status-active';
     }
 
