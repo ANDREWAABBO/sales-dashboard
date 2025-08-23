@@ -5,54 +5,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lead Logger - Abbondanza Sales</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
-    .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
-    h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.5em}
-    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
-    .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.3s;text-decoration:none;display:inline-block}
-    .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.4);background:#1e40af}
-    .btn-secondary{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
-    .filters{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
-    select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .3s}
-    select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
-    .table-container{overflow-x:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-    table{width:100%;border-collapse:collapse;background:#fff}
-    th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
-    td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
-    td:nth-child(11){max-width:300px;white-space:normal;word-wrap:break-word;overflow:visible;text-overflow:initial;vertical-align:top;line-height:1.4;padding:12px 15px}
-    tr:hover{background:#f7fafc}
-    .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-align:center;display:inline-block}
-    .status-active{background:#d4f1d4;color:#2d5a2d}
-    .status-followup{background:#fff3cd;color:#856404}
-    .status-notqualified{background:#f8d7da;color:#721c24}
-    .status-dead{background:#e2e8f0;color:#718096}
-    .appointment-yes{color:#48bb78;font-weight:600}
-    .appointment-no{color:#e53e3e}
-    .empty-state{text-align:center;padding:60px 20px;color:#718096}
-    .empty-state h3{font-size:1.5em;margin-bottom:10px;color:#4a5568}
-    .loading{text-align:center;padding:40px;color:#718096}
-    .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: #1e3a8a;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 95%;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    h1 { color: #2d3748; margin-bottom: 30px; text-align: center; font-size: 2.2rem; }
+
+    .controls {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 30px; flex-wrap: wrap; gap: 15px;
+    }
+    .btn {
+      padding: 12px 24px; background: #1e3a8a; color: #fff; border: none; border-radius: 8px;
+      cursor: pointer; font-weight: 600; transition: all .2s ease; text-decoration: none; display: inline-block;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(30,58,138,.35); background:#1e40af; }
+    .btn-secondary { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+
+    .filters { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+    select, input[type="search"] {
+      padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: white;
+      transition: border-color .2s ease;
+    }
+    select:focus, input[type="search"]:focus { outline: none; border-color: #667eea; }
+
+    .table-container { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th {
+      background: #1e3a8a; color: #fff; padding: 15px; text-align: left; font-weight: 600;
+      position: sticky; top: 0; z-index: 10; white-space: nowrap;
+    }
+    td {
+      padding: 15px; border-bottom: 1px solid #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;
+    }
+    /* Notes column wraps */
+    td:nth-child(11) {
+      max-width: 300px; white-space: normal; word-wrap: break-word; overflow: visible; text-overflow: initial;
+      vertical-align: top; line-height: 1.4; padding: 12px 15px;
+    }
+    tr:hover { background: #f7fafc; }
+
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .status-active { background:#d4f1d4; color:#2d5a2d; }
+    .status-followup { background:#fff3cd; color:#856404; }
+    .status-notqualified { background:#f8d7da; color:#721c24; }
+    .status-dead { background:#e2e8f0; color:#718096; }
+
+    .appointment-yes { color:#48bb78; font-weight:600; }
+    .appointment-no  { color:#e53e3e; }
+
+    .empty-state { text-align:center; padding:60px 20px; color:#718096; }
+    .empty-state h3 { font-size: 1.25rem; margin-bottom: 10px; color:#4a5568; }
+    .loading { text-align:center; padding:40px; color:#718096; }
+    .spinner { display:inline-block; width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #667eea; border-radius:50%; animation: spin 1s linear infinite; }
+    @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
 
     /* Modal */
-    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .3s ease}
-    .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:600px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .3s ease}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @keyframes slideIn{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer;transition:color .3s}
-    .close:hover{color:#000}
-    .form-group{margin-bottom:20px}
-    .form-group label{display:block;margin-bottom:5px;color:#4a5568;font-weight:600}
-    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:border-color .3s}
-    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-    .form-actions{display:flex;gap:10px;margin-top:25px;justify-content:flex-end}
-    .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
+    .modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,.5); animation:fadeIn .2s ease; }
+    .modal-content {
+      background:#fff; margin:5% auto; padding:30px; border-radius:12px; width:90%; max-width:620px;
+      box-shadow:0 20px 40px rgba(0,0,0,.2); animation:slideIn .2s ease;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes slideIn { from{transform:translateY(-40px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .close { color:#aaa; float:right; font-size:28px; font-weight:700; cursor:pointer; }
+    .close:hover { color:#000; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display:block; margin-bottom:6px; color:#4a5568; font-weight:600; }
+    .form-group input, .form-group select, .form-group textarea {
+      width:100%; padding:10px; border:2px solid #e2e8f0; border-radius:8px; font-size:14px; transition:border-color .2s ease;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:#667eea; }
+    .form-row { display:grid; grid-template-columns: 1fr 1fr; gap:15px; }
+    .form-actions { display:flex; gap:10px; margin-top:18px; justify-content:flex-end; }
+    .btn-cancel { background: linear-gradient(135deg, #a0aec0 0%, #718096 100%); }
+
+    .action-buttons { display:flex; gap:8px; }
+    .btn-small { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+
+    .toast { display:none; }
 
     /* Modal scroll fix + sticky action bar */
-    #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
-    #leadModal .form-actions{position:sticky;bottom:0;background:#fff;padding-top:12px;margin-top:12px;border-top:1px solid #e2e8f0;z-index:1}
+    #leadModal .modal-content { max-height: 90vh; display:flex; flex-direction:column; overflow-y:auto; }
+    #leadModal .form-actions { position: sticky; bottom: 0; background: #fff; padding-top: 12px; margin-top: 12px; border-top: 1px solid #e2e8f0; z-index: 1; }
   </style>
 </head>
 <body>
@@ -60,8 +107,8 @@
     <h1>Lead Database</h1>
 
     <div class="controls">
-      <div style="display:flex;gap:10px;">
-        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">← Back to Dashboard</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" onclick="goToDashboard()" style="background: linear-gradient(135deg,#6b7280 0%,#4b5563 100%);">← Back to Dashboard</button>
         <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
       </div>
 
@@ -69,11 +116,9 @@
         <select id="repFilter" onchange="filterLeads()">
           <option value="">All Reps</option>
         </select>
-
         <select id="companyFilter" onchange="filterLeads()">
           <option value="">All Companies</option>
         </select>
-
         <select id="statusFilter" onchange="filterLeads()">
           <option value="">All Status</option>
           <option value="Active">Active</option>
@@ -81,8 +126,7 @@
           <option value="Not Qualified">Not Qualified</option>
           <option value="Dead">Dead (Archived)</option>
         </select>
-
-        <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()"/>
+        <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()" />
       </div>
     </div>
 
@@ -94,20 +138,20 @@
 
       <table id="leadsTable" style="display:none;">
         <thead>
-        <tr>
-          <th>Date Added</th>
-          <th>Company Name</th>
-          <th>Contact Name</th>
-          <th>Phone Number</th>
-          <th>Email Address</th>
-          <th>Rep Name</th>
-          <th>Status</th>
-          <th>Follow Up</th>
-          <th>Appt Made</th>
-          <th>Appt Date</th>
-          <th>Notes</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Date Added</th>
+            <th>Company Name</th>
+            <th>Contact Name</th>
+            <th>Phone Number</th>
+            <th>Email Address</th>
+            <th>Rep Name</th>
+            <th>Status</th>
+            <th>Follow Up</th>
+            <th>Appt Made</th>
+            <th>Appt Date</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody id="leadsTableBody"></tbody>
       </table>
@@ -120,13 +164,12 @@
   </div>
 
   <!-- Add/Edit Lead Modal -->
-  <div id="leadModal" class="modal">
+  <div id="leadModal" class="modal" aria-hidden="true">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <h2 id="modalTitle">Add New Lead</h2>
 
-      <!-- Disable native blocking; we validate ourselves -->
-      <form id="leadForm" novalidate>
+      <form id="leadForm">
         <div class="form-group">
           <label for="businessUnit">Company *</label>
           <select id="businessUnit" name="businessUnit" required>
@@ -145,23 +188,23 @@
         <div class="form-row">
           <div class="form-group">
             <label for="contactName">Contact Name</label>
-            <input type="text" id="contactName" name="contactName"/>
+            <input type="text" id="contactName" name="contactName" />
           </div>
           <div class="form-group">
             <label for="phoneNumber">Phone Number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12"/>
+            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12" />
           </div>
         </div>
 
         <div class="form-group">
           <label for="emailAddress">Email Address</label>
-          <input type="email" id="emailAddress" name="emailAddress"/>
+          <input type="email" id="emailAddress" name="emailAddress" />
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="repName">Rep Name *</label>
-            <input type="text" id="repName" name="repName" required/>
+            <input type="text" id="repName" name="repName" required />
           </div>
           <div class="form-group">
             <label for="status">Status</label>
@@ -177,7 +220,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="followUp">Follow Up Date</label>
-            <input type="date" id="followUp" name="followUp"/>
+            <input type="date" id="followUp" name="followUp" />
           </div>
           <div class="form-group">
             <label for="appointmentMade">Appointment Made?</label>
@@ -190,17 +233,17 @@
 
         <div class="form-group" id="appointmentDateGroup" style="display:none;">
           <label for="appointmentDate">Appointment Date</label>
-          <input type="date" id="appointmentDate" name="appointmentDate"/>
+          <input type="date" id="appointmentDate" name="appointmentDate" />
         </div>
 
         <div class="form-group">
           <label for="notes">Notes</label>
-          <textarea id="notes" name="notes" rows="3"></textarea>
+          <textarea id="notes" name="notes" rows="4"></textarea>
         </div>
 
         <div class="form-actions">
           <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-          <button id="saveBtn" type="submit" class="btn">Save Lead</button>
+          <button type="submit" id="saveBtn" class="btn">Save Lead</button>
         </div>
       </form>
     </div>
@@ -247,7 +290,7 @@
         const data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        allLeads = data.leads || [];
+        allLeads = (data.leads || []); // do NOT filter out Dead here; let the status filter do it
         displayLeads(allLeads);
         updateRepFilter();
       }catch(err){
@@ -264,21 +307,20 @@
         const data = await res.json();
         if (data.status !== 'success') return;
 
+        // datalist for companyName suggestions
         knownCompanies = data.companies || [];
         const dl = document.getElementById('companySuggestions');
         dl.innerHTML = '';
         knownCompanies.forEach(name => {
-          const opt = document.createElement('option');
-          opt.value = name;
-          dl.appendChild(opt);
+          const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt);
         });
 
+        // company filter (business unit)
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
         sel.innerHTML = '<option value="">All Companies</option>';
         units.sort().forEach(u => {
-          const o = document.createElement('option'); o.value = u; o.textContent = u;
-          sel.appendChild(o);
+          const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
         });
       }catch(e){
         console.warn('getCompanies failed (using defaults).', e);
@@ -335,9 +377,7 @@
       ];
 
       cells.forEach(html => {
-        const td = document.createElement('td');
-        td.innerHTML = html;
-        row.appendChild(td);
+        const td = document.createElement('td'); td.innerHTML = html; row.appendChild(td);
       });
 
       return row;
@@ -360,7 +400,7 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value;
+      const company = document.getElementById('companyFilter').value; // businessUnit
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
@@ -384,8 +424,7 @@
       const reps = [...new Set((allLeads || []).map(l => l.repName).filter(Boolean))].sort();
       sel.innerHTML = '<option value="">All Reps</option>';
       reps.forEach(r => {
-        const o = document.createElement('option'); o.value = r; o.textContent = r;
-        sel.appendChild(o);
+        const o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o);
       });
     }
 
@@ -441,6 +480,7 @@
       document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
     }
 
+    // ---------- SAVE (Add/Update) ----------
     async function onSaveClick(e){
       e.preventDefault();
       const formEl = document.getElementById('leadForm');
@@ -455,8 +495,7 @@
       const saveBtn = document.getElementById('saveBtn');
       const originalText = saveBtn.textContent;
 
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving...';
+      saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
 
       try{
         const isUpdate = !!currentEditId;
@@ -464,9 +503,10 @@
         const url = WEB_APP_URL + '?action=' + encodeURIComponent(action)
           + (isUpdate ? ('&leadId=' + Number(currentEditId)) : '');
 
+        // include action in body as well (defensive vs. Apps Script parsers)
         const payload = isUpdate
-          ? { updates: lead }
-          : { lead: lead };
+          ? { action: 'updateLead', leadId: Number(currentEditId), updates: lead }
+          : { action: 'addLead', lead: lead };
 
         const res = await fetch(url, {
           method: 'POST',
@@ -485,20 +525,21 @@
         console.error('save error:', err);
         showToast('Error saving lead: ' + err.message, 'error');
       }finally{
-        saveBtn.disabled = false;
-        saveBtn.textContent = originalText;
+        saveBtn.disabled = false; saveBtn.textContent = originalText;
       }
     }
 
+    // ---------- Archive ----------
     function archiveLead(leadId){
       if (!confirm('Archive this lead?')) return;
       leadId = Number(leadId);
       const url = WEB_APP_URL + '?action=archiveLead&leadId=' + leadId;
+      const payload = { action: 'archiveLead', leadId };
 
       fetch(url, {
-        method:'POST',
-        headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-        body: JSON.stringify({})
+        method: 'POST',
+        headers: { 'Content-Type':'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
       })
       .then(r => r.json())
       .then(out => {
@@ -518,7 +559,7 @@
       el.className = 'toast ' + type;
       el.style.position = 'fixed';
       el.style.bottom = '20px';
-      el.style.right = '20px';
+      el.style.right  = '20px';
       el.style.background = type === 'success'
         ? 'linear-gradient(135deg,#48bb78 0%,#38a169 100%)'
         : 'linear-gradient(135deg,#e53e3e 0%,#c53030 100%)';
@@ -535,7 +576,7 @@
       if (e.target === m) closeModal();
     }
 
-    // Expose
+    // Expose to global (for inline handlers)
     window.openAddLeadModal = openAddLeadModal;
     window.editLead = editLead;
     window.archiveLead = archiveLead;
