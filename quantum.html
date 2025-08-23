@@ -982,7 +982,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   
 
-     // How We Stack Up - Materials Function 
+    // How We Stack Up - Materials Function 
 function openQuantumAboutUs() { 
     const existingOverlay = document.querySelector('.modal-overlay'); 
     if (existingOverlay) { 
@@ -1039,7 +1039,7 @@ function openQuantumAboutUs() {
                 // Check if this is the Google Slides document
                 const isSlides = material.id === '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas';
                 const viewUrl = isSlides ? 
-                    `https://docs.google.com/presentation/d/${material.id}/export/pdf` : 
+                    `https://docs.google.com/presentation/d/${material.id}/preview` : 
                     `https://drive.google.com/file/d/${material.id}/view`;
                 
                 return `
