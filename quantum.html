@@ -1001,32 +1001,38 @@ function openQuantumAboutUs() {
         { 
             title: 'Restaurant Industry Trends Report', 
             id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', 
-            description: 'Current market trends and insights for the restaurant industry' 
+            description: 'Current market trends and insights for the restaurant industry',
+            type: 'pdf'
         }, 
         { 
             title: 'Maximizing Revenue Per Square Foot in Food Service Operations', 
             id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', 
-            description: 'Strategies to optimize space utilization and increase profitability' 
+            description: 'Strategies to optimize space utilization and increase profitability',
+            type: 'pdf'
         }, 
         { 
             title: 'Fresh Food Fridge Spec Sheet', 
             id: '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas', 
-            description: 'Technical specifications and features of our Smart Food Fridge' 
+            description: 'Technical specifications and features of our Smart Food Fridge',
+            type: 'slides'
         }, 
         { 
             title: 'Food Fridge Executive Overview', 
             id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE', 
-            description: 'High-level overview and business benefits for decision makers' 
+            description: 'High-level overview and business benefits for decision makers',
+            type: 'pdf'
         }, 
         { 
             title: 'Commercial Real Estate Premium Food Amenities', 
             id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0', 
-            description: 'How premium food amenities enhance commercial property value' 
+            description: 'How premium food amenities enhance commercial property value',
+            type: 'pdf'
         }, 
         { 
             title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', 
             id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', 
-            description: 'Comprehensive technical documentation and frequently asked questions' 
+            description: 'Comprehensive technical documentation and frequently asked questions',
+            type: 'pdf'
         } 
     ]; 
      
@@ -1037,14 +1043,26 @@ function openQuantumAboutUs() {
         </div> 
         <div style="display: grid; gap: 20px;"> 
             ${materials.map(material => {
-                // Check if this is the Google Slides document
-                const isSlides = material.id === '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas';
-                const viewUrl = isSlides ? 
-                    `https://docs.google.com/presentation/d/${material.id}/preview` : 
-                    `https://drive.google.com/file/d/${material.id}/view`;
-                const downloadUrl = isSlides ?
-                    `https://docs.google.com/presentation/d/${material.id}/export/pdf` :
-                    `https://drive.google.com/uc?export=download&id=${material.id}`;
+                // Generate URLs based on document type
+                let viewUrl, downloadUrl;
+                
+                switch(material.type) {
+                    case 'slides':
+                        viewUrl = `https://docs.google.com/presentation/d/${material.id}/preview`;
+                        downloadUrl = `https://docs.google.com/presentation/d/${material.id}/export/pdf`;
+                        break;
+                    case 'docs':
+                        viewUrl = `https://docs.google.com/document/d/${material.id}/preview`;
+                        downloadUrl = `https://docs.google.com/document/d/${material.id}/export?format=pdf`;
+                        break;
+                    case 'sheets':
+                        viewUrl = `https://docs.google.com/spreadsheets/d/${material.id}/preview`;
+                        downloadUrl = `https://docs.google.com/spreadsheets/d/${material.id}/export?format=pdf`;
+                        break;
+                    default: // 'pdf' or any other type
+                        viewUrl = `https://drive.google.com/file/d/${material.id}/view`;
+                        downloadUrl = `https://drive.google.com/uc?export=download&id=${material.id}`;
+                }
                 
                 return `
                     <div style="background: #f8fafc; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease;"> 
