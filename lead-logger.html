@@ -6,10 +6,7 @@
   <title>Lead Logger - Abbondanza Sales</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
-      background:#1e3a8a;min-height:100vh;padding:20px;
-    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
     .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.5em}
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
@@ -23,7 +20,6 @@
     table{width:100%;border-collapse:collapse;background:#fff}
     th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
     td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
-    /* Notes column wraps */
     td:nth-child(11){max-width:300px;white-space:normal;word-wrap:break-word;overflow:visible;text-overflow:initial;vertical-align:top;line-height:1.4;padding:12px 15px}
     tr:hover{background:#f7fafc}
     .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-align:center;display:inline-block}
@@ -53,8 +49,6 @@
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
     .form-actions{display:flex;gap:10px;margin-top:25px;justify-content:flex-end}
     .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
-    .action-buttons{display:flex;gap:8px}
-    .btn-small{padding:6px 12px;font-size:12px;border-radius:6px}
 
     /* Modal scroll fix + sticky action bar */
     #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
@@ -100,20 +94,20 @@
 
       <table id="leadsTable" style="display:none;">
         <thead>
-          <tr>
-            <th>Date Added</th>
-            <th>Company Name</th>
-            <th>Contact Name</th>
-            <th>Phone Number</th>
-            <th>Email Address</th>
-            <th>Rep Name</th>
-            <th>Status</th>
-            <th>Follow Up</th>
-            <th>Appt Made</th>
-            <th>Appt Date</th>
-            <th>Notes</th>
-            <th>Actions</th>
-          </tr>
+        <tr>
+          <th>Date Added</th>
+          <th>Company Name</th>
+          <th>Contact Name</th>
+          <th>Phone Number</th>
+          <th>Email Address</th>
+          <th>Rep Name</th>
+          <th>Status</th>
+          <th>Follow Up</th>
+          <th>Appt Made</th>
+          <th>Appt Date</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
         </thead>
         <tbody id="leadsTableBody"></tbody>
       </table>
@@ -131,7 +125,7 @@
       <span class="close" onclick="closeModal()">&times;</span>
       <h2 id="modalTitle">Add New Lead</h2>
 
-      <form id="leadForm" onsubmit="handleSubmit(event)">
+      <form id="leadForm">
         <div class="form-group">
           <label for="businessUnit">Company *</label>
           <select id="businessUnit" name="businessUnit" required>
@@ -205,7 +199,7 @@
 
         <div class="form-actions">
           <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn">Save Lead</button>
+          <button id="saveBtn" type="submit" class="btn">Save Lead</button>
         </div>
       </form>
     </div>
@@ -214,7 +208,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ====== CONFIG: Use your deployed Apps Script URL ======
+    // ====== CONFIG: your deployed Apps Script URL ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
     let allLeads = [];
@@ -222,6 +216,8 @@
     let knownCompanies = [];
 
     window.addEventListener('DOMContentLoaded', () => {
+      // Use JS listener (more reliable than inline onsubmit)
+      document.getElementById('leadForm').addEventListener('submit', handleSubmit);
       loadLeads();
       loadCompanyLists();
       setupPhoneFormatting();
@@ -247,17 +243,18 @@
         document.getElementById('leadsTable').style.display='none';
         document.getElementById('emptyState').style.display='none';
 
-        const res = await fetch(WEB_APP_URL + '?action=getLeads');
+        const res = await fetch(WEB_APP_URL + '?action=getLeads', { method:'GET' });
         const data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        // Keep ALL rows; filter logic is applied by filterLeads (default hides Dead)
+        // Keep everything; filtering happens in filterLeads()
         allLeads = data.leads || [];
 
+        displayLeads(allLeads);
         updateRepFilter();
-        filterLeads();  // apply current filters immediately
+        // company filter populated in loadCompanyLists()
       }catch(err){
-        console.error(err);
+        console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
         document.getElementById('emptyState').style.display='block';
         showToast('Error loading leads. Please refresh.', 'error');
@@ -270,7 +267,6 @@
         const data = await res.json();
         if (data.status !== 'success') return;
 
-        // Suggestions for Company Name field
         knownCompanies = data.companies || [];
         const dl = document.getElementById('companySuggestions');
         dl.innerHTML = '';
@@ -280,13 +276,11 @@
           dl.appendChild(opt);
         });
 
-        // Company filter from business units (AV/QS)
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
         sel.innerHTML = '<option value="">All Companies</option>';
         units.sort().forEach(u => {
-          const o = document.createElement('option');
-          o.value = u; o.textContent = u;
+          const o = document.createElement('option'); o.value = u; o.textContent = u;
           sel.appendChild(o);
         });
       }catch(e){
@@ -369,26 +363,19 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value; // exact match against businessUnit
+      const company = document.getElementById('companyFilter').value; // businessUnit exact match
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
-      const filtered = allLeads.filter(l => {
+      const filtered = (allLeads || []).filter(l => {
         const matchRep = !rep || ((l.repName || '').toLowerCase().includes(rep));
-
-        // All Status => hide Dead; otherwise match exactly
-        const matchStatus = !status
-          ? ((l.status || '') !== 'Dead')
-          : ((l.status || '') === status);
-
-        const matchCompany = !company || (l.businessUnit === company);
-
+        const matchStatus = !status ? true : ((l.status || '') === status);
+        const matchCompany = !company ? true : ((l.businessUnit || '') === company);
         const matchSearch = !q ||
           (l.companyName && l.companyName.toLowerCase().includes(q)) ||
           (l.contactName && l.contactName.toLowerCase().includes(q)) ||
           (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
           (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
-
         return matchRep && matchStatus && matchCompany && matchSearch;
       });
 
@@ -397,7 +384,7 @@
 
     function updateRepFilter(){
       const sel = document.getElementById('repFilter');
-      const reps = [...new Set(allLeads.map(l => l.repName).filter(Boolean))].sort();
+      const reps = [...new Set((allLeads || []).map(l => l.repName).filter(Boolean))].sort();
       sel.innerHTML = '<option value="">All Reps</option>';
       reps.forEach(r => {
         const o = document.createElement('option'); o.value = r; o.textContent = r;
@@ -417,7 +404,7 @@
 
     function editLead(leadId){
       leadId = Number(leadId);
-      const lead = allLeads.find(l => Number(l.id || l.ID || l.iD) === leadId);
+      const lead = (allLeads || []).find(l => Number(l.id || l.ID || l.iD) === leadId);
       if (!lead) return;
 
       currentEditId = leadId;
@@ -460,12 +447,19 @@
     async function handleSubmit(e){
       e.preventDefault();
 
-      const form = new FormData(e.target);
-      const lead = Object.fromEntries(form.entries());
+      // HTML5 constraint validation first
+      const formEl = e.target;
+      if (!formEl.checkValidity()) {
+        formEl.reportValidity();
+        return;
+      }
 
-      // requireds
-      const required = ['businessUnit','companyName','repName'];
-      for (const f of required){
+      const form = new FormData(formEl);
+      const lead = Object.fromEntries(form.entries());
+      const saveBtn = document.getElementById('saveBtn');
+
+      // requireds (extra safety)
+      for (const f of ['businessUnit','companyName','repName']){
         if (!lead[f]){
           const name = f.replace(/([A-Z])/g,' $1').toLowerCase();
           showToast(`Please enter ${name}.`, 'error');
@@ -473,25 +467,43 @@
         }
       }
 
+      // Convert date inputs (browsers return yyyy-mm-dd already)
+      // If they’re blank, leave them blank.
+      console.log('Submitting lead payload:', { currentEditId, lead });
+
+      // UI: disable while saving
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = currentEditId ? 'Saving...' : 'Saving...';
+
       try{
         let payload, res;
         if (currentEditId){
           payload = { action:'updateLead', leadId: currentEditId, updates: lead };
-          res = await fetch(WEB_APP_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         }else{
           payload = { action:'addLead', lead: lead };
-          res = await fetch(WEB_APP_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         }
 
+        res = await fetch(WEB_APP_URL, {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Network ${res.status}`);
         const out = await res.json();
+        console.log('Server response:', out);
         if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
         showToast(currentEditId ? 'Lead updated!' : 'Lead added!', 'success');
         closeModal();
         await loadLeads();
       }catch(err){
-        console.error(err);
+        console.error('handleSubmit error:', err);
         showToast('Error saving lead: ' + err.message, 'error');
+      }finally{
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
       }
     }
 
@@ -535,7 +547,6 @@
     window.archiveLead = archiveLead;
     window.closeModal = closeModal;
     window.toggleAppointmentDate = toggleAppointmentDate;
-    window.handleSubmit = handleSubmit;
     window.filterLeads = filterLeads;
     window.goToDashboard = () => { window.location.href = 'index.html'; };
   </script>
