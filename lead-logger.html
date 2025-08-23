@@ -125,7 +125,8 @@
       <span class="close" onclick="closeModal()">&times;</span>
       <h2 id="modalTitle">Add New Lead</h2>
 
-      <form id="leadForm">
+      <!-- Disable native blocking; we validate ourselves -->
+      <form id="leadForm" novalidate>
         <div class="form-group">
           <label for="businessUnit">Company *</label>
           <select id="businessUnit" name="businessUnit" required>
@@ -216,8 +217,8 @@
     let knownCompanies = [];
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Use JS listener (more reliable than inline onsubmit)
-      document.getElementById('leadForm').addEventListener('submit', handleSubmit);
+      // Bind explicit click to avoid native submit blocking
+      document.getElementById('saveBtn').addEventListener('click', onSaveClick);
       loadLeads();
       loadCompanyLists();
       setupPhoneFormatting();
@@ -247,12 +248,10 @@
         const data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        // Keep everything; filtering happens in filterLeads()
         allLeads = data.leads || [];
 
         displayLeads(allLeads);
         updateRepFilter();
-        // company filter populated in loadCompanyLists()
       }catch(err){
         console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
@@ -444,12 +443,12 @@
       document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
     }
 
-    async function handleSubmit(e){
+    async function onSaveClick(e){
       e.preventDefault();
+      const formEl = document.getElementById('leadForm');
 
-      // HTML5 constraint validation first
-      const formEl = e.target;
-      if (!formEl.checkValidity()) {
+      // our own validation to avoid native blocking
+      if (!formEl.checkValidity()){
         formEl.reportValidity();
         return;
       }
@@ -457,49 +456,33 @@
       const form = new FormData(formEl);
       const lead = Object.fromEntries(form.entries());
       const saveBtn = document.getElementById('saveBtn');
-
-      // requireds (extra safety)
-      for (const f of ['businessUnit','companyName','repName']){
-        if (!lead[f]){
-          const name = f.replace(/([A-Z])/g,' $1').toLowerCase();
-          showToast(`Please enter ${name}.`, 'error');
-          return;
-        }
-      }
-
-      // Convert date inputs (browsers return yyyy-mm-dd already)
-      // If they’re blank, leave them blank.
-      console.log('Submitting lead payload:', { currentEditId, lead });
-
-      // UI: disable while saving
       const originalText = saveBtn.textContent;
+
+      // UI lock
       saveBtn.disabled = true;
       saveBtn.textContent = currentEditId ? 'Saving...' : 'Saving...';
 
       try{
-        let payload, res;
-        if (currentEditId){
-          payload = { action:'updateLead', leadId: currentEditId, updates: lead };
-        }else{
-          payload = { action:'addLead', lead: lead };
-        }
+        const payload = currentEditId
+          ? { action:'updateLead', leadId: Number(currentEditId), updates: lead }
+          : { action:'addLead', lead: lead };
 
-        res = await fetch(WEB_APP_URL, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
+        // text/plain avoids CORS preflight
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
         });
 
         if (!res.ok) throw new Error(`Network ${res.status}`);
         const out = await res.json();
-        console.log('Server response:', out);
         if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
         showToast(currentEditId ? 'Lead updated!' : 'Lead added!', 'success');
         closeModal();
         await loadLeads();
       }catch(err){
-        console.error('handleSubmit error:', err);
+        console.error('save error:', err);
         showToast('Error saving lead: ' + err.message, 'error');
       }finally{
         saveBtn.disabled = false;
@@ -513,7 +496,7 @@
 
       fetch(WEB_APP_URL, {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{ 'Content-Type':'text/plain;charset=utf-8' },
         body: JSON.stringify({ action:'archiveLead', leadId })
       })
       .then(r => r.json())
@@ -532,6 +515,16 @@
       const el = document.getElementById('toast');
       el.textContent = msg;
       el.className = 'toast ' + type;
+      el.style.position = 'fixed';
+      el.style.bottom = '20px';
+      el.style.right = '20px';
+      el.style.background = type === 'success'
+        ? 'linear-gradient(135deg,#48bb78 0%,#38a169 100%)'
+        : 'linear-gradient(135deg,#e53e3e 0%,#c53030 100%)';
+      el.style.color = '#fff';
+      el.style.padding = '16px 24px';
+      el.style.borderRadius = '8px';
+      el.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
       el.style.display = 'block';
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
@@ -545,7 +538,6 @@
     window.openAddLeadModal = openAddLeadModal;
     window.editLead = editLead;
     window.archiveLead = archiveLead;
-    window.closeModal = closeModal;
     window.toggleAppointmentDate = toggleAppointmentDate;
     window.filterLeads = filterLeads;
     window.goToDashboard = () => { window.location.href = 'index.html'; };
