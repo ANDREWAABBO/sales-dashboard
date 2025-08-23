@@ -20,7 +20,6 @@
     table{width:100%;border-collapse:collapse;background:#fff}
     th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
     td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
-    /* Notes wraps */
     td:nth-child(11){max-width:300px;white-space:normal;word-wrap:break-word;overflow:visible;text-overflow:initial;vertical-align:top;line-height:1.4;padding:12px 15px}
     tr:hover{background:#f7fafc}
     .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-align:center;display:inline-block}
@@ -31,11 +30,11 @@
     .appointment-yes{color:#48bb78;font-weight:600}
     .appointment-no{color:#e53e3e}
     .empty-state{text-align:center;padding:60px 20px;color:#718096}
+    .empty-state h3{font-size:1.5em;margin-bottom:10px;color:#4a5568}
     .loading{text-align:center;padding:40px;color:#718096}
     .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 
-    /* Modal */
     .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .3s ease}
     .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:600px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .3s ease}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -135,7 +134,7 @@
 
       <form id="leadForm" onsubmit="handleSubmit(event)">
         <div class="form-group">
-          <label for="businessUnit">Select One *</label>
+          <label for="businessUnit">Company *</label>
           <select id="businessUnit" name="businessUnit" required>
             <option value="">Select Company...</option>
             <option value="Abbondanza Vending">Abbondanza Vending</option>
@@ -144,7 +143,7 @@
         </div>
 
         <div class="form-group">
-          <label for="companyName">Company Name For Lead*</label>
+          <label for="companyName">Company Name *</label>
           <input type="text" id="companyName" name="companyName" list="companySuggestions" required />
           <datalist id="companySuggestions"></datalist>
         </div>
@@ -251,10 +250,11 @@
 
         const res = await fetch(WEB_APP_URL + '?action=getLeads');
         const data = await res.json();
+
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        // SHOW EVERYTHING by default (including Dead)
-        allLeads = data.leads || [];
+        // Exclude archived
+        allLeads = (data.leads || []).filter(l => (l.status || '') !== 'Dead');
 
         displayLeads(allLeads);
         updateRepFilter();
@@ -272,7 +272,7 @@
         const data = await res.json();
         if (data.status !== 'success') return;
 
-        // Datalist suggestions for Company Name
+        // Suggestions for Company Name field
         knownCompanies = data.companies || [];
         const dl = document.getElementById('companySuggestions');
         dl.innerHTML = '';
@@ -282,7 +282,7 @@
           dl.appendChild(opt);
         });
 
-        // Company filter from business units (AV/QS)
+        // Populate Company filter from business units (e.g., AV / QS)
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
         sel.innerHTML = '<option value="">All Companies</option>';
@@ -469,13 +469,18 @@
       }
 
       try{
-        let payload, res;
+        let res;
         if (currentEditId){
-          payload = { action:'updateLead', leadId: currentEditId, updates: lead };
-          res = await fetch(WEB_APP_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-        }else{
-          payload = { action:'addLead', lead: lead };
-          res = await fetch(WEB_APP_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+          const body = new URLSearchParams();
+          body.set('action','updateLead');
+          body.set('leadId', String(currentEditId));
+          body.set('updates', JSON.stringify(lead));
+          res = await fetch(WEB_APP_URL, { method:'POST', body });
+        } else {
+          const body = new URLSearchParams();
+          body.set('action','addLead');
+          body.set('lead', JSON.stringify(lead));
+          res = await fetch(WEB_APP_URL, { method:'POST', body });
         }
 
         const out = await res.json();
@@ -494,21 +499,21 @@
       if (!confirm('Archive this lead?')) return;
       leadId = Number(leadId);
 
-      fetch(WEB_APP_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ action:'archiveLead', leadId })
-      })
-      .then(r => r.json())
-      .then(out => {
-        if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
-        showToast('Lead archived', 'success');
-        loadLeads();
-      })
-      .catch(err => {
-        console.error(err);
-        showToast('Error archiving lead: ' + err.message, 'error');
-      });
+      const body = new URLSearchParams();
+      body.set('action','archiveLead');
+      body.set('leadId', String(leadId));
+
+      fetch(WEB_APP_URL, { method:'POST', body })
+        .then(r => r.json())
+        .then(out => {
+          if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
+          showToast('Lead archived', 'success');
+          loadLeads();
+        })
+        .catch(err => {
+          console.error(err);
+          showToast('Error archiving lead: ' + err.message, 'error');
+        });
     }
 
     function showToast(msg, type='success'){
