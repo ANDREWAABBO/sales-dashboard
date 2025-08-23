@@ -1,547 +1,340 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Lead Logger - Abbondanza Sales</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
-    .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
-    h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.5em}
-    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
-    .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.3s;text-decoration:none;display:inline-block}
-    .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.4);background:#1e40af}
-    .btn-secondary{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
-    .filters{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
-    select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .3s}
-    select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
-    .table-container{overflow-x:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-    table{width:100%;border-collapse:collapse;background:#fff}
-    th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
-    td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
-    td:nth-child(11){max-width:300px;white-space:normal;word-wrap:break-word;overflow:visible;text-overflow:initial;vertical-align:top;line-height:1.4;padding:12px 15px}
-    tr:hover{background:#f7fafc}
-    .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-align:center;display:inline-block}
-    .status-active{background:#d4f1d4;color:#2d5a2d}
-    .status-followup{background:#fff3cd;color:#856404}
-    .status-notqualified{background:#f8d7da;color:#721c24}
-    .status-dead{background:#e2e8f0;color:#718096}
-    .appointment-yes{color:#48bb78;font-weight:600}
-    .appointment-no{color:#e53e3e}
-    .empty-state{text-align:center;padding:60px 20px;color:#718096}
-    .empty-state h3{font-size:1.5em;margin-bottom:10px;color:#4a5568}
-    .loading{text-align:center;padding:40px;color:#718096}
-    .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
-    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+<script>
+  // ====== CONFIG: your deployed Apps Script URL ======
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
-    /* Modal */
-    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .3s ease}
-    .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:600px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .3s ease}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @keyframes slideIn{from{transform:translateY(-50px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer;transition:color .3s}
-    .close:hover{color:#000}
-    .form-group{margin-bottom:20px}
-    .form-group label{display:block;margin-bottom:5px;color:#4a5568;font-weight:600}
-    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:border-color .3s}
-    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea}
-    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-    .form-actions{display:flex;gap:10px;margin-top:25px;justify-content:flex-end}
-    .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
+  let allLeads = [];
+  let currentEditId = null;
+  let knownCompanies = [];
 
-    /* Modal scroll fix + sticky action bar */
-    #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
-    #leadModal .form-actions{position:sticky;bottom:0;background:#fff;padding-top:12px;margin-top:12px;border-top:1px solid #e2e8f0;z-index:1}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Lead Database</h1>
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('saveBtn').addEventListener('click', onSaveClick);
+    loadLeads();
+    loadCompanyLists();
+    setupPhoneFormatting();
+  });
 
-    <div class="controls">
-      <div style="display:flex;gap:10px;">
-        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">← Back to Dashboard</button>
-        <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
-      </div>
-
-      <div class="filters">
-        <select id="repFilter" onchange="filterLeads()">
-          <option value="">All Reps</option>
-        </select>
-
-        <select id="companyFilter" onchange="filterLeads()">
-          <option value="">All Companies</option>
-        </select>
-
-        <select id="statusFilter" onchange="filterLeads()">
-          <option value="">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Follow Up Later">Follow Up Later</option>
-          <option value="Not Qualified">Not Qualified</option>
-          <option value="Dead">Dead (Archived)</option>
-        </select>
-
-        <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()"/>
-      </div>
-    </div>
-
-    <div class="table-container">
-      <div id="loadingState" class="loading">
-        <div class="spinner"></div>
-        <p>Loading leads...</p>
-      </div>
-
-      <table id="leadsTable" style="display:none;">
-        <thead>
-        <tr>
-          <th>Date Added</th>
-          <th>Company Name</th>
-          <th>Contact Name</th>
-          <th>Phone Number</th>
-          <th>Email Address</th>
-          <th>Rep Name</th>
-          <th>Status</th>
-          <th>Follow Up</th>
-          <th>Appt Made</th>
-          <th>Appt Date</th>
-          <th>Notes</th>
-          <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody id="leadsTableBody"></tbody>
-      </table>
-
-      <div id="emptyState" class="empty-state" style="display:none;">
-        <h3>No leads found</h3>
-        <p>Add your first lead using the form above.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add/Edit Lead Modal -->
-  <div id="leadModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h2 id="modalTitle">Add New Lead</h2>
-
-      <!-- Disable native blocking; we validate ourselves -->
-      <form id="leadForm" novalidate>
-        <div class="form-group">
-          <label for="businessUnit">Company *</label>
-          <select id="businessUnit" name="businessUnit" required>
-            <option value="">Select Company...</option>
-            <option value="Abbondanza Vending">Abbondanza Vending</option>
-            <option value="Quantum Solutions">Quantum Solutions</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="companyName">Company Name *</label>
-          <input type="text" id="companyName" name="companyName" list="companySuggestions" required />
-          <datalist id="companySuggestions"></datalist>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="contactName">Contact Name</label>
-            <input type="text" id="contactName" name="contactName"/>
-          </div>
-          <div class="form-group">
-            <label for="phoneNumber">Phone Number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12"/>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="emailAddress">Email Address</label>
-          <input type="email" id="emailAddress" name="emailAddress"/>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="repName">Rep Name *</label>
-            <input type="text" id="repName" name="repName" required/>
-          </div>
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="Active">Active</option>
-              <option value="Follow Up Later">Follow Up Later</option>
-              <option value="Not Qualified">Not Qualified</option>
-              <option value="Dead">Dead (Archived)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="followUp">Follow Up Date</label>
-            <input type="date" id="followUp" name="followUp"/>
-          </div>
-          <div class="form-group">
-            <label for="appointmentMade">Appointment Made?</label>
-            <select id="appointmentMade" name="appointmentMade" onchange="toggleAppointmentDate()">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group" id="appointmentDateGroup" style="display:none;">
-          <label for="appointmentDate">Appointment Date</label>
-          <input type="date" id="appointmentDate" name="appointmentDate"/>
-        </div>
-
-        <div class="form-group">
-          <label for="notes">Notes</label>
-          <textarea id="notes" name="notes" rows="3"></textarea>
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
-          <button id="saveBtn" type="submit" class="btn">Save Lead</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div id="toast" class="toast"></div>
-
-  <script>
-    // ====== CONFIG: your deployed Apps Script URL ======
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
-
-    let allLeads = [];
-    let currentEditId = null;
-    let knownCompanies = [];
-
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('saveBtn').addEventListener('click', onSaveClick);
-      loadLeads();
-      loadCompanyLists();
-      setupPhoneFormatting();
+  function setupPhoneFormatting(){
+    const phoneInput = document.getElementById('phoneNumber');
+    phoneInput.addEventListener('input', (e) => {
+      let v = e.target.value.replace(/\D/g,'');
+      if (v.length >= 6) v = v.slice(0,3)+'-'+v.slice(3,6)+'-'+v.slice(6,10);
+      else if (v.length >= 3) v = v.slice(0,3)+'-'+v.slice(3);
+      e.target.value = v;
     });
+    phoneInput.addEventListener('keypress', (e) => {
+      const ch = String.fromCharCode(e.which);
+      if (!/[0-9-]/.test(ch)) e.preventDefault();
+    });
+  }
 
-    function setupPhoneFormatting(){
-      const phoneInput = document.getElementById('phoneNumber');
-      phoneInput.addEventListener('input', (e) => {
-        let v = e.target.value.replace(/\D/g,'');
-        if (v.length >= 6) v = v.slice(0,3)+'-'+v.slice(3,6)+'-'+v.slice(6,10);
-        else if (v.length >= 3) v = v.slice(0,3)+'-'+v.slice(3);
-        e.target.value = v;
-      });
-      phoneInput.addEventListener('keypress', (e) => {
-        const ch = String.fromCharCode(e.which);
-        if (!/[0-9-]/.test(ch)) e.preventDefault();
-      });
+  async function loadLeads(){
+    try{
+      document.getElementById('loadingState').style.display='block';
+      document.getElementById('leadsTable').style.display='none';
+      document.getElementById('emptyState').style.display='none';
+
+      const res = await fetch(WEB_APP_URL + '?action=getLeads', { method:'GET' });
+      const data = await res.json();
+      if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
+
+      allLeads = data.leads || [];
+      displayLeads(allLeads);
+      updateRepFilter();
+    }catch(err){
+      console.error('loadLeads error:', err);
+      document.getElementById('loadingState').style.display='none';
+      document.getElementById('emptyState').style.display='block';
+      showToast('Error loading leads. Please refresh.', 'error');
     }
+  }
 
-    async function loadLeads(){
-      try{
-        document.getElementById('loadingState').style.display='block';
-        document.getElementById('leadsTable').style.display='none';
-        document.getElementById('emptyState').style.display='none';
+  async function loadCompanyLists(){
+    try{
+      const res = await fetch(WEB_APP_URL + '?action=getCompanies');
+      const data = await res.json();
+      if (data.status !== 'success') return;
 
-        const res = await fetch(WEB_APP_URL + '?action=getLeads', { method:'GET' });
-        const data = await res.json();
-        if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
-
-        allLeads = data.leads || [];
-        displayLeads(allLeads);
-        updateRepFilter();
-      }catch(err){
-        console.error('loadLeads error:', err);
-        document.getElementById('loadingState').style.display='none';
-        document.getElementById('emptyState').style.display='block';
-        showToast('Error loading leads. Please refresh.', 'error');
-      }
-    }
-
-    async function loadCompanyLists(){
-      try{
-        const res = await fetch(WEB_APP_URL + '?action=getCompanies');
-        const data = await res.json();
-        if (data.status !== 'success') return;
-
-        knownCompanies = data.companies || [];
-        const dl = document.getElementById('companySuggestions');
-        dl.innerHTML = '';
-        knownCompanies.forEach(name => {
-          const opt = document.createElement('option');
-          opt.value = name;
-          dl.appendChild(opt);
-        });
-
-        const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
-        const sel = document.getElementById('companyFilter');
-        sel.innerHTML = '<option value="">All Companies</option>';
-        units.sort().forEach(u => {
-          const o = document.createElement('option'); o.value = u; o.textContent = u;
-          sel.appendChild(o);
-        });
-      }catch(e){
-        console.warn('getCompanies failed (using defaults).', e);
-      }
-    }
-
-    function displayLeads(leads){
-      const tbody = document.getElementById('leadsTableBody');
-      const table = document.getElementById('leadsTable');
-      const loading = document.getElementById('loadingState');
-      const empty = document.getElementById('emptyState');
-
-      tbody.innerHTML = '';
-      loading.style.display = 'none';
-
-      if (!leads.length){
-        table.style.display = 'none';
-        empty.style.display = 'block';
-        return;
-      }
-      table.style.display = 'table';
-      empty.style.display = 'none';
-
-      leads.forEach(lead => tbody.appendChild(createLeadRow(lead)));
-    }
-
-    function createLeadRow(lead){
-      const row = document.createElement('tr');
-      const leadId = Number(lead.id || lead.ID || lead.iD);
-
-      const dateAdded = formatDate(lead.dateAdded);
-      const followUp = formatDate(lead.followUp);
-      const appointmentDate = formatDate(lead.appointmentDate);
-      const statusClass = getStatusClass(lead.status);
-      const appointmentClass = (lead.appointmentMade === 'Yes') ? 'appointment-yes' : 'appointment-no';
-      const notes = lead.notes || '';
-
-      const cells = [
-        dateAdded,
-        `<strong>${lead.companyName || ''}</strong>`,
-        lead.contactName || '',
-        lead.phoneNumber || '',
-        lead.emailAddress || '',
-        lead.repName || '',
-        `<span class="status-badge ${statusClass}">${lead.status || 'Active'}</span>`,
-        followUp,
-        `<span class="${appointmentClass}">${lead.appointmentMade || 'No'}</span>`,
-        appointmentDate,
-        notes,
-        `<div class="action-buttons">
-           <button class="btn btn-small" style="background:#2563eb" onclick="editLead(${leadId})">Edit</button>
-           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(${leadId})">Archive</button>
-         </div>`
-      ];
-
-      cells.forEach(html => {
-        const td = document.createElement('td');
-        td.innerHTML = html;
-        row.appendChild(td);
+      knownCompanies = data.companies || [];
+      const dl = document.getElementById('companySuggestions');
+      dl.innerHTML = '';
+      knownCompanies.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        dl.appendChild(opt);
       });
 
-      return row;
-    }
-
-    function getStatusClass(status){
-      const map = {'Active':'status-active','Follow Up Later':'status-followup','Not Qualified':'status-notqualified','Dead':'status-dead'};
-      return map[status] || 'status-active';
-    }
-
-    function formatDate(s){
-      if (!s) return '';
-      const d = new Date(s);
-      if (isNaN(d)) return '';
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const day = String(d.getDate()).padStart(2,'0');
-      const y = d.getFullYear();
-      return `${m}/${day}/${y}`;
-    }
-
-    function filterLeads(){
-      const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value;
-      const status = document.getElementById('statusFilter').value;
-      const q = document.getElementById('searchInput').value.toLowerCase();
-
-      const filtered = (allLeads || []).filter(l => {
-        const matchRep = !rep || ((l.repName || '').toLowerCase().includes(rep));
-        const matchStatus = !status ? true : ((l.status || '') === status);
-        const matchCompany = !company ? true : ((l.businessUnit || '') === company);
-        const matchSearch = !q ||
-          (l.companyName && l.companyName.toLowerCase().includes(q)) ||
-          (l.contactName && l.contactName.toLowerCase().includes(q)) ||
-          (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
-          (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
-        return matchRep && matchStatus && matchCompany && matchSearch;
-      });
-
-      displayLeads(filtered);
-    }
-
-    function updateRepFilter(){
-      const sel = document.getElementById('repFilter');
-      const reps = [...new Set((allLeads || []).map(l => l.repName).filter(Boolean))].sort();
-      sel.innerHTML = '<option value="">All Reps</option>';
-      reps.forEach(r => {
-        const o = document.createElement('option'); o.value = r; o.textContent = r;
+      const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
+      const sel = document.getElementById('companyFilter');
+      sel.innerHTML = '<option value="">All Companies</option>';
+      units.sort().forEach(u => {
+        const o = document.createElement('option'); o.value = u; o.textContent = u;
         sel.appendChild(o);
       });
+    }catch(e){
+      console.warn('getCompanies failed (using defaults).', e);
+    }
+  }
+
+  function displayLeads(leads){
+    const tbody = document.getElementById('leadsTableBody');
+    const table = document.getElementById('leadsTable');
+    const loading = document.getElementById('loadingState');
+    const empty = document.getElementById('emptyState');
+
+    tbody.innerHTML = '';
+    loading.style.display = 'none';
+
+    if (!leads.length){
+      table.style.display = 'none';
+      empty.style.display = 'block';
+      return;
+    }
+    table.style.display = 'table';
+    empty.style.display = 'none';
+
+    leads.forEach(lead => tbody.appendChild(createLeadRow(lead)));
+  }
+
+  function createLeadRow(lead){
+    const row = document.createElement('tr');
+    const leadId = Number(lead.id || lead.ID || lead.iD);
+
+    const dateAdded = formatDate(lead.dateAdded);
+    const followUp = formatDate(lead.followUp);
+    const appointmentDate = formatDate(lead.appointmentDate);
+    const statusClass = getStatusClass(lead.status);
+    const appointmentClass = (lead.appointmentMade === 'Yes') ? 'appointment-yes' : 'appointment-no';
+    const notes = lead.notes || '';
+
+    const cells = [
+      dateAdded,
+      `<strong>${lead.companyName || ''}</strong>`,
+      lead.contactName || '',
+      lead.phoneNumber || '',
+      lead.emailAddress || '',
+      lead.repName || '',
+      `<span class="status-badge ${statusClass}">${lead.status || 'Active'}</span>`,
+      followUp,
+      `<span class="${appointmentClass}">${lead.appointmentMade || 'No'}</span>`,
+      appointmentDate,
+      notes,
+      `<div class="action-buttons">
+         <button class="btn btn-small" style="background:#2563eb" onclick="editLead(${leadId})">Edit</button>
+         <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(${leadId})">Archive</button>
+       </div>`
+    ];
+
+    cells.forEach(html => {
+      const td = document.createElement('td');
+      td.innerHTML = html;
+      row.appendChild(td);
+    });
+
+    return row;
+  }
+
+  function getStatusClass(status){
+    const map = {'Active':'status-active','Follow Up Later':'status-followup','Not Qualified':'status-notqualified','Dead':'status-dead'};
+    return map[status] || 'status-active';
+  }
+
+  function formatDate(s){
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d)) return '';
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const day = String(d.getDate()).padStart(2,'0');
+    const y = d.getFullYear();
+    return `${m}/${day}/${y}`;
+  }
+
+  function filterLeads(){
+    const rep = document.getElementById('repFilter').value.toLowerCase();
+    const company = document.getElementById('companyFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const q = document.getElementById('searchInput').value.toLowerCase();
+
+    const filtered = (allLeads || []).filter(l => {
+      const matchRep = !rep || ((l.repName || '').toLowerCase().includes(rep));
+      const matchStatus = !status ? true : ((l.status || '') === status);
+      const matchCompany = !company ? true : ((l.businessUnit || '') === company);
+      const matchSearch = !q ||
+        (l.companyName && l.companyName.toLowerCase().includes(q)) ||
+        (l.contactName && l.contactName.toLowerCase().includes(q)) ||
+        (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
+        (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
+      return matchRep && matchStatus && matchCompany && matchSearch;
+    });
+
+    displayLeads(filtered);
+  }
+
+  function updateRepFilter(){
+    const sel = document.getElementById('repFilter');
+    const reps = [...new Set((allLeads || []).map(l => l.repName).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">All Reps</option>';
+    reps.forEach(r => {
+      const o = document.createElement('option'); o.value = r; o.textContent = r;
+      sel.appendChild(o);
+    });
+  }
+
+  function openAddLeadModal(){
+    currentEditId = null;
+    document.getElementById('modalTitle').textContent = 'Add New Lead';
+    document.getElementById('leadForm').reset();
+    document.getElementById('status').value = 'Active';
+    document.getElementById('appointmentMade').value = 'No';
+    toggleAppointmentDate();
+    document.getElementById('leadModal').style.display = 'block';
+  }
+
+  function editLead(leadId){
+    leadId = Number(leadId);
+    const lead = (allLeads || []).find(l => Number(l.id || l.ID || l.iD) === leadId);
+    if (!lead) return;
+
+    currentEditId = leadId;
+    document.getElementById('modalTitle').textContent = 'Edit Lead';
+
+    document.getElementById('businessUnit').value = lead.businessUnit || '';
+    document.getElementById('companyName').value = lead.companyName || '';
+    document.getElementById('contactName').value = lead.contactName || '';
+    document.getElementById('phoneNumber').value = lead.phoneNumber || '';
+    document.getElementById('emailAddress').value = lead.emailAddress || '';
+    document.getElementById('repName').value = lead.repName || '';
+    document.getElementById('status').value = lead.status || 'Active';
+    document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
+    document.getElementById('notes').value = lead.notes || '';
+
+    if (lead.followUp){
+      const d = new Date(lead.followUp);
+      if (!isNaN(d)) document.getElementById('followUp').value = d.toISOString().split('T')[0];
+    }
+    if (lead.appointmentDate){
+      const d = new Date(lead.appointmentDate);
+      if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
     }
 
-    function openAddLeadModal(){
-      currentEditId = null;
-      document.getElementById('modalTitle').textContent = 'Add New Lead';
-      document.getElementById('leadForm').reset();
-      document.getElementById('status').value = 'Active';
-      document.getElementById('appointmentMade').value = 'No';
-      toggleAppointmentDate();
-      document.getElementById('leadModal').style.display = 'block';
+    toggleAppointmentDate();
+    document.getElementById('leadModal').style.display = 'block';
+  }
+
+  function closeModal(){
+    document.getElementById('leadModal').style.display = 'none';
+    document.getElementById('leadForm').reset();
+    currentEditId = null;
+  }
+
+  function toggleAppointmentDate(){
+    const show = document.getElementById('appointmentMade').value === 'Yes';
+    document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
+  }
+
+  // ---------- SAVE (Add/Update) ----------
+  async function onSaveClick(e){
+    e.preventDefault();
+    const formEl = document.getElementById('leadForm');
+
+    if (!formEl.checkValidity()){
+      formEl.reportValidity();
+      return;
     }
 
-    function editLead(leadId){
-      leadId = Number(leadId);
-      const lead = (allLeads || []).find(l => Number(l.id || l.ID || l.iD) === leadId);
-      if (!lead) return;
+    const form = new FormData(formEl);
+    const lead = Object.fromEntries(form.entries());
+    const saveBtn = document.getElementById('saveBtn');
+    const originalText = saveBtn.textContent;
 
-      currentEditId = leadId;
-      document.getElementById('modalTitle').textContent = 'Edit Lead';
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
 
-      document.getElementById('businessUnit').value = lead.businessUnit || '';
-      document.getElementById('companyName').value = lead.companyName || '';
-      document.getElementById('contactName').value = lead.contactName || '';
-      document.getElementById('phoneNumber').value = lead.phoneNumber || '';
-      document.getElementById('emailAddress').value = lead.emailAddress || '';
-      document.getElementById('repName').value = lead.repName || '';
-      document.getElementById('status').value = lead.status || 'Active';
-      document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
-      document.getElementById('notes').value = lead.notes || '';
+    try{
+      const isUpdate = !!currentEditId;
+      const action = isUpdate ? 'updateLead' : 'addLead';
+      const url = WEB_APP_URL + '?action=' + encodeURIComponent(action)
+        + (isUpdate ? ('&leadId=' + Number(currentEditId)) : '');
 
-      if (lead.followUp){
-        const d = new Date(lead.followUp);
-        if (!isNaN(d)) document.getElementById('followUp').value = d.toISOString().split('T')[0];
-      }
-      if (lead.appointmentDate){
-        const d = new Date(lead.appointmentDate);
-        if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
-      }
+      // ✅ include action (and leadId) in the JSON body too
+      const payload = isUpdate
+        ? { action: 'updateLead', leadId: Number(currentEditId), updates: lead }
+        : { action: 'addLead', lead: lead };
 
-      toggleAppointmentDate();
-      document.getElementById('leadModal').style.display = 'block';
-    }
-
-    function closeModal(){
-      document.getElementById('leadModal').style.display = 'none';
-      document.getElementById('leadForm').reset();
-      currentEditId = null;
-    }
-
-    function toggleAppointmentDate(){
-      const show = document.getElementById('appointmentMade').value === 'Yes';
-      document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
-    }
-
-    async function onSaveClick(e){
-      e.preventDefault();
-      const formEl = document.getElementById('leadForm');
-
-      if (!formEl.checkValidity()){
-        formEl.reportValidity();
-        return;
-      }
-
-      const form = new FormData(formEl);
-      const lead = Object.fromEntries(form.entries());
-      const saveBtn = document.getElementById('saveBtn');
-      const originalText = saveBtn.textContent;
-
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving...';
-
-      try{
-        const isUpdate = !!currentEditId;
-        const action = isUpdate ? 'updateLead' : 'addLead';
-        const url = WEB_APP_URL + '?action=' + encodeURIComponent(action)
-          + (isUpdate ? ('&leadId=' + Number(currentEditId)) : '');
-
-        const payload = isUpdate
-          ? { updates: lead }
-          : { lead: lead };
-
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error(`Network ${res.status}`);
-        const out = await res.json();
-        if (out.status !== 'success') throw new Error(out.message || 'Save failed');
-
-        showToast(isUpdate ? 'Lead updated!' : 'Lead added!', 'success');
-        closeModal();
-        await loadLeads();
-      }catch(err){
-        console.error('save error:', err);
-        showToast('Error saving lead: ' + err.message, 'error');
-      }finally{
-        saveBtn.disabled = false;
-        saveBtn.textContent = originalText;
-      }
-    }
-
-    function archiveLead(leadId){
-      if (!confirm('Archive this lead?')) return;
-      leadId = Number(leadId);
-      const url = WEB_APP_URL + '?action=archiveLead&leadId=' + leadId;
-
-      fetch(url, {
-        method:'POST',
-        headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-        body: JSON.stringify({})
-      })
-      .then(r => r.json())
-      .then(out => {
-        if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
-        showToast('Lead archived', 'success');
-        loadLeads();
-      })
-      .catch(err => {
-        console.error(err);
-        showToast('Error archiving lead: ' + err.message, 'error');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
       });
-    }
 
-    function showToast(msg, type='success'){
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.className = 'toast ' + type;
-      el.style.position = 'fixed';
-      el.style.bottom = '20px';
-      el.style.right = '20px';
-      el.style.background = type === 'success'
-        ? 'linear-gradient(135deg,#48bb78 0%,#38a169 100%)'
-        : 'linear-gradient(135deg,#e53e3e 0%,#c53030 100%)';
-      el.style.color = '#fff';
-      el.style.padding = '16px 24px';
-      el.style.borderRadius = '8px';
-      el.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
-      el.style.display = 'block';
-      setTimeout(() => { el.style.display = 'none'; }, 3000);
-    }
+      if (!res.ok) throw new Error(`Network ${res.status}`);
+      const out = await res.json();
+      if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
-    window.onclick = function(e){
-      const m = document.getElementById('leadModal');
-      if (e.target === m) closeModal();
+      showToast(isUpdate ? 'Lead updated!' : 'Lead added!', 'success');
+      closeModal();
+      await loadLeads();
+    }catch(err){
+      console.error('save error:', err);
+      showToast('Error saving lead: ' + err.message, 'error');
+    }finally{
+      saveBtn.disabled = false;
+      saveBtn.textContent = originalText;
     }
+  }
 
-    // Expose
-    window.openAddLeadModal = openAddLeadModal;
-    window.editLead = editLead;
-    window.archiveLead = archiveLead;
-    window.toggleAppointmentDate = toggleAppointmentDate;
-    window.filterLeads = filterLeads;
-    window.goToDashboard = () => { window.location.href = 'index.html'; };
-  </script>
-</body>
-</html>
+  // ---------- Archive ----------
+  function archiveLead(leadId){
+    if (!confirm('Archive this lead?')) return;
+    leadId = Number(leadId);
+    const url = WEB_APP_URL + '?action=archiveLead&leadId=' + leadId;
+
+    const payload = { action: 'archiveLead', leadId };
+
+    fetch(url, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(out => {
+      if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
+      showToast('Lead archived', 'success');
+      loadLeads();
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Error archiving lead: ' + err.message, 'error');
+    });
+  }
+
+  function showToast(msg, type='success'){
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + type;
+    el.style.position = 'fixed';
+    el.style.bottom = '20px';
+    el.style.right = '20px';
+    el.style.background = type === 'success'
+      ? 'linear-gradient(135deg,#48bb78 0%,#38a169 100%)'
+      : 'linear-gradient(135deg,#e53e3e 0%,#c53030 100%)';
+    el.style.color = '#fff';
+    el.style.padding = '16px 24px';
+    el.style.borderRadius = '8px';
+    el.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+  }
+
+  window.onclick = function(e){
+    const m = document.getElementById('leadModal');
+    if (e.target === m) closeModal();
+  }
+
+  // Expose
+  window.openAddLeadModal = openAddLeadModal;
+  window.editLead = editLead;
+  window.archiveLead = archiveLead;
+  window.toggleAppointmentDate = toggleAppointmentDate;
+  window.filterLeads = filterLeads;
+  window.goToDashboard = () => { window.location.href = 'index.html'; };
+</script>
