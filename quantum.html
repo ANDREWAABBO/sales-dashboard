@@ -1660,27 +1660,34 @@ window.addEventListener('DOMContentLoaded', function() {
 
   
 
-        function openQuantumMasterAgreement() {
+       function openQuantumMasterAgreement() {
+    // Close any existing overlays first
     const existingOverlay = document.querySelector('.modal-overlay');
     if (existingOverlay) {
         existingOverlay.remove();
     }
 
+    // Create the modal overlay with proper styling
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.style.display = 'block';
 
-    const pdfModal = document.createElement('div');
-    pdfModal.className = 'pdf-modal';
+    // Create the modal container using the same structure as other PDF viewers
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.maxWidth = '1200px';
+    modal.style.height = '90vh';
+    modal.style.display = 'flex';
+    modal.style.flexDirection = 'column';
 
     // Google Docs ID extracted from the URL you provided
     const docId = '1ChcyX_PUlX48AhzAkNtsDWduamgQHomYSYM9LVwd3FA';
     const pdfUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
     const viewerUrl = `https://docs.google.com/document/d/${docId}/preview`;
 
-    pdfModal.innerHTML = `
-        <div class="pdf-header">
-            <h3>REDYREF Master Services Agreement (Food Fridge)</h3>
+    modal.innerHTML = `
+        <div style="padding: 20px; background: #f7fafc; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0;">
+            <h3 style="margin: 0; color: #2d3748; font-size: 1.3em;">REDYREF Master Services Agreement (Food Fridge)</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <button class="btn btn-secondary" 
                         onclick="window.open('${pdfUrl}', '_blank')" 
@@ -1690,7 +1697,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 <button class="close-btn" onclick="closeModal()">✕</button>
             </div>
         </div>
-        <div class="pdf-viewer">
+        <div style="flex: 1; padding: 20px; overflow: hidden;">
             <iframe src="${viewerUrl}" 
                     width="100%" 
                     height="100%" 
@@ -1700,7 +1707,7 @@ window.addEventListener('DOMContentLoaded', function() {
         </div>
     `;
 
-    overlay.appendChild(pdfModal);
+    overlay.appendChild(modal);
     document.body.appendChild(overlay);
 }
 
