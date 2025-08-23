@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lead Logger - Abbondanza Sales</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+      background:#1e3a8a;min-height:100vh;padding:20px;
+    }
     .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.5em}
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
@@ -20,6 +23,7 @@
     table{width:100%;border-collapse:collapse;background:#fff}
     th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
     td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
+    /* Notes column wraps */
     td:nth-child(11){max-width:300px;white-space:normal;word-wrap:break-word;overflow:visible;text-overflow:initial;vertical-align:top;line-height:1.4;padding:12px 15px}
     tr:hover{background:#f7fafc}
     .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;text-align:center;display:inline-block}
@@ -51,12 +55,6 @@
     .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
     .action-buttons{display:flex;gap:8px}
     .btn-small{padding:6px 12px;font-size:12px;border-radius:6px}
-    .btn-edit{background:#2563eb}.btn-edit:hover{background:#1d4ed8}
-    .btn-archive{background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)}
-    .toast{position:fixed;bottom:20px;right:20px;background:#2d3748;color:#fff;padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);display:none;animation:slideInRight .3s ease}
-    .toast.success{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
-    .toast.error{background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)}
-    @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
 
     /* Modal scroll fix + sticky action bar */
     #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
@@ -102,20 +100,20 @@
 
       <table id="leadsTable" style="display:none;">
         <thead>
-        <tr>
-          <th>Date Added</th>
-          <th>Company Name</th>
-          <th>Contact Name</th>
-          <th>Phone Number</th>
-          <th>Email Address</th>
-          <th>Rep Name</th>
-          <th>Status</th>
-          <th>Follow Up</th>
-          <th>Appt Made</th>
-          <th>Appt Date</th>
-          <th>Notes</th>
-          <th>Actions</th>
-        </tr>
+          <tr>
+            <th>Date Added</th>
+            <th>Company Name</th>
+            <th>Contact Name</th>
+            <th>Phone Number</th>
+            <th>Email Address</th>
+            <th>Rep Name</th>
+            <th>Status</th>
+            <th>Follow Up</th>
+            <th>Appt Made</th>
+            <th>Appt Date</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody id="leadsTableBody"></tbody>
       </table>
@@ -145,7 +143,7 @@
 
         <div class="form-group">
           <label for="companyName">Company Name *</label>
-          <input type="text" id="companyName" name="companyName" list="companySuggestions" required/>
+          <input type="text" id="companyName" name="companyName" list="companySuggestions" required />
           <datalist id="companySuggestions"></datalist>
         </div>
 
@@ -216,7 +214,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ====== CONFIG: your deployed Apps Script URL ======
+    // ====== CONFIG: Use your deployed Apps Script URL ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
     let allLeads = [];
@@ -243,58 +241,52 @@
       });
     }
 
-    // Small helper: POST without CORS preflight (urlencoded "payload")
-    function postJSON(url, obj){
-      const body = new URLSearchParams({ payload: JSON.stringify(obj) }).toString();
-      return fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body
-      });
-    }
-
     async function loadLeads(){
       try{
         document.getElementById('loadingState').style.display='block';
         document.getElementById('leadsTable').style.display='none';
         document.getElementById('emptyState').style.display='none';
 
-        const res = await fetch(WEB_APP_URL + '?action=getLeads', { cache: 'no-store' });
+        const res = await fetch(WEB_APP_URL + '?action=getLeads');
         const data = await res.json();
-
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
-        allLeads = (data.leads || []).filter(l => (l.status || '') !== 'Dead');
-        displayLeads(allLeads);
+        // Keep ALL rows; filter logic is applied by filterLeads (default hides Dead)
+        allLeads = data.leads || [];
+
         updateRepFilter();
+        filterLeads();  // apply current filters immediately
       }catch(err){
         console.error(err);
         document.getElementById('loadingState').style.display='none';
         document.getElementById('emptyState').style.display='block';
-        showToast('Error loading leads: ' + err.message, 'error');
+        showToast('Error loading leads. Please refresh.', 'error');
       }
     }
 
     async function loadCompanyLists(){
       try{
-        const res = await fetch(WEB_APP_URL + '?action=getCompanies', { cache: 'no-store' });
+        const res = await fetch(WEB_APP_URL + '?action=getCompanies');
         const data = await res.json();
         if (data.status !== 'success') return;
 
+        // Suggestions for Company Name field
         knownCompanies = data.companies || [];
         const dl = document.getElementById('companySuggestions');
         dl.innerHTML = '';
         knownCompanies.forEach(name => {
           const opt = document.createElement('option');
-          opt.value = name; dl.appendChild(opt);
+          opt.value = name;
+          dl.appendChild(opt);
         });
 
+        // Company filter from business units (AV/QS)
         const units = data.businessUnits || ['Abbondanza Vending','Quantum Solutions'];
         const sel = document.getElementById('companyFilter');
         sel.innerHTML = '<option value="">All Companies</option>';
         units.sort().forEach(u => {
           const o = document.createElement('option');
-          o.value = o.textContent = u;
+          o.value = u; o.textContent = u;
           sel.appendChild(o);
         });
       }catch(e){
@@ -346,8 +338,8 @@
         appointmentDate,
         notes,
         `<div class="action-buttons">
-           <button class="btn btn-small btn-edit" onclick="editLead(${leadId})">Edit</button>
-           <button class="btn btn-small btn-archive" onclick="archiveLead(${leadId})">Archive</button>
+           <button class="btn btn-small" style="background:#2563eb" onclick="editLead(${leadId})">Edit</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(${leadId})">Archive</button>
          </div>`
       ];
 
@@ -377,19 +369,26 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const company = document.getElementById('companyFilter').value; // businessUnit exact match
+      const company = document.getElementById('companyFilter').value; // exact match against businessUnit
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
       const filtered = allLeads.filter(l => {
-        const matchRep = !rep || ((l.repName||'').toLowerCase().includes(rep));
-        const matchStatus = !status || (l.status === status);
+        const matchRep = !rep || ((l.repName || '').toLowerCase().includes(rep));
+
+        // All Status => hide Dead; otherwise match exactly
+        const matchStatus = !status
+          ? ((l.status || '') !== 'Dead')
+          : ((l.status || '') === status);
+
         const matchCompany = !company || (l.businessUnit === company);
+
         const matchSearch = !q ||
           (l.companyName && l.companyName.toLowerCase().includes(q)) ||
           (l.contactName && l.contactName.toLowerCase().includes(q)) ||
           (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
           (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
+
         return matchRep && matchStatus && matchCompany && matchSearch;
       });
 
@@ -464,6 +463,7 @@
       const form = new FormData(e.target);
       const lead = Object.fromEntries(form.entries());
 
+      // requireds
       const required = ['businessUnit','companyName','repName'];
       for (const f of required){
         if (!lead[f]){
@@ -477,10 +477,10 @@
         let payload, res;
         if (currentEditId){
           payload = { action:'updateLead', leadId: currentEditId, updates: lead };
-          res = await postJSON(WEB_APP_URL, payload);
+          res = await fetch(WEB_APP_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         }else{
-          payload = { action:'addLead', lead };
-          res = await postJSON(WEB_APP_URL, payload);
+          payload = { action:'addLead', lead: lead };
+          res = await fetch(WEB_APP_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
         }
 
         const out = await res.json();
@@ -499,7 +499,11 @@
       if (!confirm('Archive this lead?')) return;
       leadId = Number(leadId);
 
-      postJSON(WEB_APP_URL, { action:'archiveLead', leadId })
+      fetch(WEB_APP_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'archiveLead', leadId })
+      })
       .then(r => r.json())
       .then(out => {
         if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
