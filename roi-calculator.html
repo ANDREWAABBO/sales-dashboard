@@ -1,565 +1,643 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
-  <link rel="icon" href="data:,">
   <style>
     :root{
-      --qs-blue:#1e3a8a;
-      --qs-blue-2:#1e40af;
-      --bg:#0b2a70;
-      --muted:#64748b;
+      --q-blue:#1e3a8a;
+      --q-blue-2:#1e40af;
+      --q-bg:#0f172a;
       --panel:#ffffff;
-      --panel-soft:#f8fafc;
-      --ring:#d1d5db;
-      --ok:#059669;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --line:#e5e7eb;
+      --soft:#f8fafc;
+      --good:#059669;
       --bad:#dc2626;
+      --chip:#dbeafe;
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,system-ui,Arial,sans-serif;background:linear-gradient(135deg,#122c69,#3b82f6 120%);min-height:100vh;padding:24px;color:#0f172a}
-    .wrap{max-width:1100px;margin:0 auto;background:#fff;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:24px 24px 28px}
-    .header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--qs-blue);padding-bottom:16px;margin-bottom:18px}
-    .title{display:flex;flex-direction:column;gap:4px}
-    .title h1{font-size:22px;color:var(--qs-blue);letter-spacing:.2px}
-    .title small{color:#6b7280}
-    .chips{display:flex;gap:8px}
-    .chip{border:none;background:var(--panel-soft);border:2px solid #e2e8f0;color:#111;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
-    .chip:hover{border-color:var(--qs-blue)}
-    .note{background:#fef3c7;border:2px solid #f59e0b;color:#92400e;padding:10px 12px;border-radius:10px;text-align:center;margin-bottom:16px;font-weight:600}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .card{background:#f8fafc;border:2px solid #e5e7eb;border-radius:14px;padding:16px}
-    .card h3{color:var(--qs-blue);font-size:16px;margin-bottom:10px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .field{margin-bottom:12px}
-    label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px}
-    input{width:100%;padding:10px 12px;border-radius:8px;border:2px solid #d1d5db;background:#fff;font-size:14px}
-    input:focus{outline:none;border-color:var(--qs-blue);box-shadow:0 0 0 3px rgba(30,58,138,.1)}
-    .info{background:#e0f2fe;border:2px solid #93c5fd;border-radius:10px;padding:10px;color:#0369a1;font-size:12px}
-    .results{grid-column:1/-1;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:3px solid var(--qs-blue);border-radius:16px;padding:14px}
-    .results h3{text-align:center;margin-bottom:12px}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
-    .stat{background:#fff;border:2px solid #e5e7eb;border-radius:10px;padding:12px;text-align:center}
-    .stat small{display:block;color:#6b7280;margin-bottom:6px;font-weight:600}
-    .stat .v{font-size:20px;font-weight:800;color:var(--qs-blue)}
-    .stat .pos{color:var(--ok)}.stat .neg{color:var(--bad)}
-    .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .timeline{background:#fff;border:2px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px}
-    .timeline h4{text-align:center;color:var(--qs-blue);margin-bottom:10px}
-    .timeline .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .timeline .box{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center}
-    .footer{display:flex;gap:10px;justify-content:center;margin-top:14px}
-    .btn{padding:12px 18px;border-radius:10px;border:none;background:var(--qs-blue);color:#fff;font-weight:700;cursor:pointer}
-    .btn:hover{background:var(--qs-blue-2)}
-    /* overlay / modal */
-    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50}
-    .modal{background:#fff;padding:18px;border-radius:14px;max-width:520px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    .modal h4{color:#111;margin-bottom:10px}
-    .modal .muted{color:#64748b;font-size:12px}
-    .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-    .muted-msg{font-size:12px;color:#6b7280;margin-top:6px}
-    @media (max-width:860px){
-      .grid{grid-template-columns:1fr}
-      .stats{grid-template-columns:1fr 1fr}
-      .kpis{grid-template-columns:1fr}
-      .timeline .tgrid{grid-template-columns:1fr}
-      .chips{flex-wrap:wrap}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,system-ui,Arial,sans-serif;
+      background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);
+      color:var(--ink);
     }
+    .wrap{
+      max-width:980px;
+      margin:40px auto;
+      padding:0 16px;
+    }
+    .card{
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      overflow:hidden;
+      border:1px solid var(--line);
+    }
+    .card-hd{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 24px;border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg,#fff 0%,#fafafa 100%);
+    }
+    .title{
+      margin:0;font-weight:800;color:var(--q-blue);letter-spacing:.2px;font-size:22px;
+    }
+    .hdr-actions{display:flex;gap:8px}
+    .btn{
+      appearance:none;border:0;cursor:pointer;border-radius:10px;
+      padding:10px 14px;font-weight:700;color:#fff;background:var(--q-blue);
+      transition:transform .15s ease, box-shadow .15s ease, background .2s ease;
+      box-shadow:0 6px 20px rgba(30,58,138,.25);
+    }
+    .btn:hover{transform:translateY(-1px);background:var(--q-blue-2)}
+    .btn.ghost{background:#fff;color:var(--q-blue);border:1px solid var(--line);box-shadow:none}
+    .note{
+      margin:16px 24px;padding:10px 12px;border-radius:10px;
+      background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:700;
+      text-align:center
+    }
+    .grid{
+      display:grid;gap:20px;padding:20px 24px 8px 24px;
+      grid-template-columns:1fr 1fr;
+    }
+    @media (max-width:860px){.grid{grid-template-columns:1fr}}
+    .panel{
+      border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff
+    }
+    .panel h3{margin:0 0 10px 0;color:var(--q-blue);font-size:16px}
+    .row{display:grid;gap:10px;margin:10px 0}
+    .row.two{grid-template-columns:1fr 1fr}
+    label{font-size:12px;color:#334155;font-weight:700;display:block;margin-bottom:6px}
+    input{
+      width:100%;padding:10px 12px;border:2px solid #d1d5db;border-radius:8px;font-size:15px;background:#fff
+    }
+    input:focus{outline:none;border-color:var(--q-blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
+    .fixed{
+      background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px;color:#0369a1;font-size:13px
+    }
+    .results{padding:8px 24px 24px 24px}
+    .band{
+      border:2px solid #bfdbfe;background:#eef2ff;border-radius:14px;padding:14px
+    }
+    .band h4{margin:0 0 10px 0;text-align:center;color:var(--q-blue)}
+    .kpis{display:grid;gap:12px;grid-template-columns:repeat(4,1fr)}
+    @media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}}
+    .k{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+    .k small{display:block;color:var(--muted);font-weight:800}
+    .k b{display:block;margin-top:6px;font-size:20px;color:var(--q-blue)}
+    .k .pos{color:var(--good)}.k .neg{color:var(--bad)}
+    .proj{display:grid;gap:12px;grid-template-columns:repeat(3,1fr);margin-top:12px}
+    .tile{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+    .tile small{display:block;color:var(--muted);font-weight:800}
+    .tile b{display:block;margin-top:6px;color:var(--q-blue)}
+    .footer-actions{display:flex;gap:10px;justify-content:center;margin:18px 0 6px}
+    /* overlays */
+    .overlay{position:fixed;inset:0;background:rgba(15,23,42,.65);display:none;align-items:center;justify-content:center;z-index:1000}
+    .modal{width:min(560px,92vw);background:#fff;border-radius:16px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden}
+    .modal-hd{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .modal-hd h4{margin:0;color:var(--q-blue)}
+    .modal-bd{padding:16px}
+    .muted{color:var(--muted)}
+    .inputs{display:grid;gap:10px}
+    .btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
+    .tag{display:inline-block;background:var(--chip);border:1px solid #bfdbfe;color:#1d4ed8;border-radius:20px;padding:2px 8px;margin-left:8px;font-size:12px}
+    .pill{padding:10px 12px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc}
+    .hidden{display:none !important}
+    .loading{
+      position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(30,58,138,.92);z-index:999
+    }
+    .load-card{background:#fff;border-radius:16px;padding:26px 28px;width:min(360px,92vw);text-align:center}
+    .spinner{width:36px;height:36px;border-radius:50%;border:4px solid #e5e7eb;border-top-color:var(--q-blue);animation:spin 1s linear infinite;margin:0 auto 12px}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div class="title">
-        <h1>Smart Food Fridge ROI Calculator</h1>
-        <small>Quantum Solutions – Advanced Food Service Technology</small>
-      </div>
-      <div class="chips" id="operatorActions" style="display:none">
-        <button class="chip" onclick="openShare()">Share / Get Link</button>
-        <button class="chip" onclick="openManage()">Manage Links</button>
-      </div>
+  <!-- loading -->
+  <div id="loading" class="loading">
+    <div class="load-card">
+      <div class="spinner"></div>
+      <h4 style="margin:6px 0 6px;color:var(--q-blue)">Loading ROI Calculator…</h4>
+      <div class="muted" style="font-size:13px">Validating access and retrieving latest data</div>
     </div>
+  </div>
 
-    <div class="note">These are estimated calculations. True profit is determined by your actual business model and operational factors.</div>
-
-    <div class="grid">
-      <!-- Business Assumptions -->
-      <div class="card">
-        <h3>Business Assumptions</h3>
-        <div class="field">
-          <label for="fridgeCount">Number of Fridges</label>
-          <input id="fridgeCount" type="number" value="1" min="1" max="200" oninput="updateAll()"/>
-        </div>
-
-        <div class="field">
-          <label for="transactions">Monthly Transactions (per fridge)</label>
-          <input id="transactions" type="number" value="330" min="50" max="5000" oninput="updateAll()"/>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="foodPrice">Food Price per Sale</label>
-            <input id="foodPrice" type="number" value="10" step="0.25" oninput="updateAll()"/>
-          </div>
-          <div class="field">
-            <label for="foodPercent">Food Sales %</label>
-            <input id="foodPercent" type="number" value="90" min="0" max="100" oninput="syncPct('food')"/>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="beveragePrice">Beverage Price per Sale</label>
-            <input id="beveragePrice" type="number" value="3.99" step="0.25" oninput="updateAll()"/>
-          </div>
-          <div class="field">
-            <label for="beveragePercent">Beverage Sales %</label>
-            <input id="beveragePercent" type="number" value="10" min="0" max="100" oninput="syncPct('bev')"/>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="margin">Your Profit Margin %</label>
-            <input id="margin" type="number" value="60" min="10" max="95" oninput="updateAll()"/>
-          </div>
-          <div class="field">
-            <label for="spoilage">Spoilage %</label>
-            <input id="spoilage" type="number" value="0" min="0" max="30" step="0.5" oninput="updateAll()"/>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="serviceFee">Monthly Service Fee Charged to Client (per fridge)</label>
-          <input id="serviceFee" type="number" value="0" min="0" step="1" oninput="updateAll()"/>
-          <div class="muted-msg">Positive value adds to monthly revenue per fridge (e.g., $50/month).</div>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-hd">
+        <h1 class="title">Smart Food Fridge ROI Calculator
+          <span id="modeTag" class="tag">Operator Mode</span>
+        </h1>
+        <div id="hdrActions" class="hdr-actions hidden">
+          <button class="btn ghost" id="btnManage">Manage Links</button>
+          <button class="btn" id="btnShare">Share / Get Link</button>
         </div>
       </div>
 
-      <!-- Operational costs -->
-      <div class="card">
-        <h3>Operational Costs</h3>
+      <div class="note">
+        These are estimated calculations. True profit is determined by your actual business model and operational factors.
+      </div>
 
-        <div class="field">
-          <label for="financing">Monthly Financing Payment</label>
-          <input id="financing" type="number" value="295" min="0" oninput="updateAll()"/>
-        </div>
-
-        <div class="row">
-          <div class="field">
-            <label for="laborRate">Labor Rate ($/hour)</label>
-            <input id="laborRate" type="number" value="20" min="0" oninput="updateAll()"/>
+      <div class="grid">
+        <!-- Business -->
+        <div class="panel">
+          <h3>Business Assumptions</h3>
+          <div class="row">
+            <label>Number of Fridges</label>
+            <input id="fridgeCount" type="number" min="1" value="1">
           </div>
-          <div class="field">
-            <label for="laborHours">Hours per Week (per fridge)</label>
-            <input id="laborHours" type="number" value="0.75" step="0.25" min="0" oninput="updateAll()"/>
+
+          <div class="row">
+            <label>Monthly Transactions (per fridge)</label>
+            <input id="transactions" type="number" min="50" value="330">
+          </div>
+
+          <div class="row two">
+            <div>
+              <label>Food Price per Sale</label>
+              <input id="foodPrice" type="number" step="0.01" value="10.00">
+            </div>
+            <div>
+              <label>Food Sales %</label>
+              <input id="foodPercent" type="number" min="0" max="100" value="90">
+            </div>
+          </div>
+
+          <div class="row two">
+            <div>
+              <label>Beverage Price per Sale</label>
+              <input id="beveragePrice" type="number" step="0.01" value="3.99">
+            </div>
+            <div>
+              <label>Beverage Sales %</label>
+              <input id="beveragePercent" type="number" min="0" max="100" value="10">
+            </div>
+          </div>
+
+          <div class="row two">
+            <div>
+              <label>Your Profit Margin %</label>
+              <input id="margin" type="number" min="20" max="80" value="60">
+            </div>
+            <div>
+              <label>Spoilage %</label>
+              <input id="spoilage" type="number" min="0" max="20" step="0.5" value="0">
+            </div>
+          </div>
+
+          <div class="row">
+            <label>Monthly Service Fee Charged to Client (per fridge)</label>
+            <input id="serviceFee" type="number" min="0" step="1" value="0">
           </div>
         </div>
 
-        <div class="field">
-          <label for="miscCosts">Miscellaneous Monthly Costs</label>
-          <input id="miscCosts" type="number" value="0" min="0" oninput="updateAll()"/>
-        </div>
+        <!-- Ops -->
+        <div class="panel">
+          <h3>Operational Costs</h3>
+          <div class="row">
+            <label>Monthly Financing Payment (per fridge)</label>
+            <input id="financing" type="number" min="0" value="295">
+          </div>
 
-        <div class="info">
-          <strong>Fixed Costs & Fees (per fridge):</strong><br/>
-          • Cellular: $25/month<br/>
-          • License Fee: $175/month<br/>
-          • Engage fee: $0.15 per transaction<br/>
-          • Gateway fee: $0.07 per transaction<br/>
-          • Merchant %: 2.5% + $0.03 per transaction<br/>
-          • RFID Tags: $0.18 per tag
+          <div class="row two">
+            <div>
+              <label>Labor Rate ($/hour)</label>
+              <input id="laborRate" type="number" min="0" value="20">
+            </div>
+            <div>
+              <label>Hours per Week (per fridge)</label>
+              <input id="laborHours" type="number" min="0" step="0.25" value="0.75">
+            </div>
+          </div>
+
+          <div class="row">
+            <label>Miscellaneous Monthly Costs (per fridge)</label>
+            <input id="miscCosts" type="number" min="0" value="0">
+          </div>
+
+          <div class="fixed">
+            <b>Fixed Costs & Fees (per fridge):</b>
+            <ul style="margin:6px 0 0 18px;padding:0">
+              <li>Cellular: $25/month</li>
+              <li>License Fee: $175/month</li>
+              <li>Engage Transaction: $0.15 per tx</li>
+              <li>Gateway Transaction: $0.07 per tx</li>
+              <li>Merchant Interchange: 2.5% of revenue</li>
+              <li>Merchant Swipe Fee: $0.03 per tx</li>
+              <li>RFID Tags: $0.18 per tag</li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <!-- Results -->
       <div class="results">
-        <h3>Financial Performance</h3>
-        <div class="stats">
-          <div class="stat">
-            <small>Monthly Revenue</small>
-            <div id="monthlyRevenue" class="v">$0</div>
+        <div class="band">
+          <h4>Financial Performance</h4>
+          <div class="kpis">
+            <div class="k">
+              <small>Monthly Revenue</small>
+              <b id="monthlyRevenue">$0</b>
+            </div>
+            <div class="k">
+              <small>Monthly Costs</small>
+              <b id="monthlyCosts">$0</b>
+            </div>
+            <div class="k">
+              <small>Monthly Net Profit</small>
+              <b id="monthlyProfit" class="pos">$0</b>
+            </div>
+            <div class="k">
+              <small>Annual Net Profit</small>
+              <b id="annualProfit" class="pos">$0</b>
+            </div>
           </div>
-          <div class="stat">
-            <small>Monthly Costs</small>
-            <div id="monthlyCosts" class="v">$0</div>
-          </div>
-          <div class="stat">
-            <small>Monthly Net Profit</small>
-            <div id="monthlyProfit" class="v">$0</div>
-          </div>
-        </div>
-        <div class="kpis">
-          <div class="stat">
-            <small>Annual Net Profit</small>
-            <div id="annualProfit" class="v">$0</div>
-          </div>
-          <div class="stat">
-            <small>ROI %</small>
-            <div id="roiPercent" class="v">0%</div>
-          </div>
-          <div class="stat">
-            <small>Payback Period</small>
-            <div id="paybackPeriod" class="v">—</div>
+
+          <div class="kpis" style="margin-top:10px">
+            <div class="k">
+              <small>ROI %</small>
+              <b id="roiPercent">0%</b>
+            </div>
+            <div class="k">
+              <small>Payback Period</small>
+              <b id="paybackPeriod">0 months</b>
+            </div>
+            <div class="k">
+              <small>—</small><b style="opacity:.2"> </b>
+            </div>
+            <div class="k">
+              <small>—</small><b style="opacity:.2"> </b>
+            </div>
           </div>
         </div>
 
-        <div class="timeline">
+        <div class="band" style="margin-top:12px">
           <h4>Multi-Year Projection</h4>
-          <div class="tgrid" id="timelineGrid"></div>
+          <div class="proj">
+            <div class="tile">
+              <small>Year 1</small>
+              <b id="y1">$0</b>
+            </div>
+            <div class="tile">
+              <small>Year 2</small>
+              <b id="y2">$0</b>
+            </div>
+            <div class="tile">
+              <small>Year 3</small>
+              <b id="y3">$0</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-actions">
+          <button class="btn" id="btnPdf">Download PDF Report</button>
+          <button class="btn ghost" id="btnShareFooter">Share Results</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="footer">
-      <button class="btn" onclick="downloadPDF()">Download PDF Report</button>
-      <button class="btn" id="shareBtnFoot" style="display:none" onclick="openShare()">Share Results</button>
+  <!-- Share Modal -->
+  <div id="shareOverlay" class="overlay">
+    <div class="modal">
+      <div class="modal-hd">
+        <h4>Create a 7-day share link</h4>
+        <button class="btn ghost" id="shareClose">Close</button>
+      </div>
+      <div class="modal-bd">
+        <div class="inputs">
+          <div>
+            <label>Client name (optional)</label>
+            <input id="shareClient" type="text" placeholder="e.g., Acme HQ">
+          </div>
+          <div class="pill">
+            Your name (for the token record): <b id="shareCreator">(detected)</b>
+          </div>
+          <div>
+            <label>Link</label>
+            <input id="shareLink" type="text" readonly placeholder="Click Generate to create link">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn ghost" id="shareCopy" disabled>Copy</button>
+          <button class="btn" id="shareGen">Generate</button>
+        </div>
+        <div id="shareHint" class="muted" style="margin-top:8px"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Share modal -->
-  <div class="overlay" id="shareOverlay">
+  <!-- Manage (placeholder if backend doesn’t support) -->
+  <div id="manageOverlay" class="overlay">
     <div class="modal">
-      <h4>Create a 7-day share link</h4>
-      <div class="muted">The link will open this calculator in view mode for your client.</div>
-      <div class="field" style="margin-top:10px">
-        <label>Client name (optional)</label>
-        <input id="shareClient" placeholder="e.g., Acme HQ"/>
+      <div class="modal-hd">
+        <h4>Manage Links</h4>
+        <button class="btn ghost" id="manageClose">Close</button>
       </div>
-      <div class="field">
-        <label>Link</label>
-        <input id="shareUrl" readonly placeholder="Click Generate to create link"/>
+      <div class="modal-bd">
+        <div class="muted">
+          Token listing / revoke requires backend endpoints (e.g., <code>listTokens</code>, <code>deactivateToken</code>).
+          If you haven’t added those yet in Apps Script, this panel will stay read-only.
+        </div>
       </div>
-      <div class="actions">
-        <button class="chip" onclick="copyShare()">Copy</button>
-        <button class="chip" style="background:#1e3a8a;color:#fff;border-color:#1e3a8a" onclick="createShare()">Generate</button>
-        <button class="chip" onclick="closeShare()">Close</button>
-      </div>
-      <div id="shareHelp" class="muted-msg"></div>
-    </div>
-  </div>
-
-  <!-- Manage modal (simple) -->
-  <div class="overlay" id="manageOverlay">
-    <div class="modal">
-      <h4>Recent links</h4>
-      <div id="tokenList" class="muted" style="min-height:56px">Loading…</div>
-      <div class="actions">
-        <button class="chip" onclick="closeManage()">Close</button>
-      </div>
-      <div id="manageHelp" class="muted-msg"></div>
     </div>
   </div>
 
   <script>
-    // ======= CONFIG =======
+    // ========= CONFIG =========
     const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
-    // If your Apps Script requires an auth key for token generation, put it here:
-    const AUTH_KEY = ''; // e.g. 'YOUR_SECRET_KEY'  (leave blank if not required)
-    const PUBLIC_BASE = (new URL(location.href)).origin + (new URL(location.href)).pathname;
+    // Set this to your Apps Script auth key (must match the key in code.gs generateToken handler)
+    const SHARE_AUTH_KEY = 'YOUR_SECRET_KEY';
 
-    // ======= STATE =======
-    const qs = new URLSearchParams(location.search);
-    const tokenParam = qs.get('token');
-    const operatorMode = !tokenParam; // dashboard user = no token in URL
-    let baseRates = getDefaultRates();
-    let accessValidated = operatorMode;
+    // Defaults (used if backend unreachable)
+    const DEFAULTS = {
+      fixedCosts: {
+        cellular: 25,
+        licenseFee: 175,
+        rfidTagsPerTag: 0.18,
+        engageTransactionFee: 0.15,
+        gatewayTransactionFee: 0.07,
+        merchantAccountPercent: 2.5,
+        merchantAccountSwipeFee: 0.03
+      },
+      defaults: {
+        transactions: 330,
+        foodPrice: 10.00,
+        foodPercent: 90,
+        beveragePrice: 3.99,
+        beveragePercent: 10,
+        margin: 60,
+        spoilage: 0,
+        financing: 295,
+        laborRate: 20,
+        laborHours: 0.75,
+        serviceFee: 0
+      }
+    };
 
-    // show operator actions if in operator mode
-    if(operatorMode){
-      document.getElementById('operatorActions').style.display='flex';
-      document.getElementById('shareBtnFoot').style.display='inline-block';
-    }
+    let baseRates = null;
+    let accessToken = null;
+    let operatorMode = true; // true when opened from the dashboard (no token)
 
-    // ======= INIT =======
+    // ========= INIT =========
     window.addEventListener('DOMContentLoaded', init);
 
-    async function init(){
-      try{
-        if(!operatorMode){
-          // viewer mode: validate access and try loading base rates from backend
-          const ok = await validateAccess(tokenParam);
-          if(!ok){
-            alert('Your access to this ROI Calculator has expired or is invalid. Please contact your Quantum Solutions representative.');
-            return;
-          }
-          const br = await getBaseRates(tokenParam);
-          if(br) baseRates = br;
-        }
-      }catch(e){
+    async function init() {
+      // Detect token
+      const params = new URLSearchParams(location.search);
+      accessToken = params.get('token');
+      operatorMode = !accessToken;
+
+      // Header actions visible only in operator mode
+      document.getElementById('hdrActions').classList.toggle('hidden', !operatorMode);
+      document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Shared Link';
+
+      // Wire UI
+      hookInputs();
+      document.getElementById('btnPdf').onclick = () => alert('PDF export coming soon.');
+      document.getElementById('btnShare').onclick = openShare;
+      document.getElementById('btnShareFooter').onclick = openShare;
+      document.getElementById('btnManage').onclick = () => toggleOverlay('manageOverlay', true);
+      document.getElementById('manageClose').onclick = () => toggleOverlay('manageOverlay', false);
+
+      document.getElementById('shareClose').onclick = () => toggleOverlay('shareOverlay', false);
+      document.getElementById('shareGen').onclick = generateShareLink;
+      document.getElementById('shareCopy').onclick = copyShare;
+
+      // detect operator name from localStorage (mirrored by dashboard login)
+      const opName = localStorage.getItem('dashboardUser') || 'Unknown';
+      document.getElementById('shareCreator').textContent = opName;
+
+      // Load base rates (and validate token, if any)
+      try {
+        const ok = await validateAndLoad();
+        if (!ok) throw new Error('Access invalid');
+      } catch (e) {
         console.warn('Falling back to defaults:', e);
-      }finally{
+        baseRates = DEFAULTS;
+      } finally {
+        // Apply defaults to inputs, compute
         applyDefaults();
-        updateAll();
+        computeAll();
+        document.getElementById('loading').style.display = 'none';
       }
     }
 
-    function applyDefaults(){
-      const d = baseRates.defaults || {};
-      setVal('transactions', d.transactions ?? 330);
-      setVal('foodPrice', d.foodPrice ?? 10);
-      setVal('foodPercent', d.foodPercent ?? 90);
-      setVal('beveragePrice', d.beveragePrice ?? 3.99);
-      setVal('beveragePercent', d.beveragePercent ?? 10);
-      setVal('margin', d.margin ?? 60);
-      setVal('spoilage', d.spoilage ?? 0);
-      setVal('financing', d.financing ?? 295);
-      setVal('laborRate', d.laborRate ?? 20);
-      setVal('laborHours', d.laborHours ?? 0.75);
-      // service fee default 0 unless provided later from sheet
-      setVal('serviceFee', (d.serviceFee ?? 0));
-    }
-
-    function setVal(id, v){ const el=document.getElementById(id); if(el) el.value=v; }
-
-    // ======= BACKEND =======
-    async function validateAccess(token){
-      const res = await fetch(`${BACKEND_URL}?action=validateAccess&token=${encodeURIComponent(token)}`);
-      const data = await res.json();
-      const ok = data?.status === 'success';
-      accessValidated = ok;
-      return ok;
-    }
-
-    async function getBaseRates(token){
-      const res = await fetch(`${BACKEND_URL}?action=getBaseRates&token=${encodeURIComponent(token)}`);
-      const data = await res.json();
-      if(data?.status === 'success') return data.data.baseRates;
-      return null;
-    }
-
-    // ======= INPUT HELPERS =======
-    function syncPct(which){
-      if(which==='food'){
-        const f = clampNum(getNum('foodPercent'),0,100);
-        setVal('foodPercent',f);
-        setVal('beveragePercent', 100 - f);
-      }else{
-        const b = clampNum(getNum('beveragePercent'),0,100);
-        setVal('beveragePercent',b);
-        setVal('foodPercent', 100 - b);
+    async function validateAndLoad() {
+      if (accessToken) {
+        // validate
+        const v = await apiGet('validateAccess', { token: accessToken });
+        if (v?.status !== 'success') return false;
       }
-      updateAll();
-    }
-    function getNum(id){ return parseFloat(document.getElementById(id).value) || 0; }
-    function clampNum(v,min,max){ return Math.max(min, Math.min(max, v)); }
-
-    // ======= CALC =======
-    function updateAll(){
-      if(!accessValidated && !operatorMode) return;
-      const inputs = {
-        fridgeCount: Math.max(1, parseInt(getNum('fridgeCount')) || 1),
-        transactions: getNum('transactions'),
-        foodPrice: getNum('foodPrice'),
-        foodPercent: clampNum(getNum('foodPercent'),0,100),
-        beveragePrice: getNum('beveragePrice'),
-        beveragePercent: clampNum(getNum('beveragePercent'),0,100),
-        margin: clampNum(getNum('margin'),0,100),
-        spoilage: clampNum(getNum('spoilage'),0,100),
-        financing: getNum('financing'),
-        laborRate: getNum('laborRate'),
-        laborHours: getNum('laborHours'),
-        miscCosts: getNum('miscCosts'),
-        serviceFee: getNum('serviceFee') // NEW: positive revenue per fridge / month
-      };
-      const results = calculate(inputs);
-      render(results);
-      renderTimeline(results);
+      // load rates
+      const r = await apiGet('getBaseRates', { token: accessToken || '' });
+      if (r?.status !== 'success') return false;
+      baseRates = r.data.baseRates || DEFAULTS;
+      return true;
     }
 
-    function calculate(inp){
-      const rates = (baseRates && baseRates.fixedCosts) ? baseRates.fixedCosts : getDefaultRates().fixedCosts;
-
-      // Avg ticket
-      const avgTicket = (inp.foodPrice * (inp.foodPercent/100)) + (inp.beveragePrice * (inp.beveragePercent/100));
-
-      // Revenue per fridge
-      const revSales = inp.transactions * avgTicket;
-      const revService = inp.serviceFee; // monthly per fridge
-      const monthlyRevenuePerFridge = revSales + revService;
-
-      // COGS from margin
-      const cogs = monthlyRevenuePerFridge * ((100 - inp.margin)/100);
-
-      // Per-transaction and merchant fees
-      const txFees = inp.transactions * (rates.engageTransactionFee + rates.gatewayTransactionFee);
-      const merchantFees = (monthlyRevenuePerFridge * (rates.merchantAccountPercent/100)) + (inp.transactions * rates.merchantAccountSwipeFee);
-
-      // Fixed + variable
-      const rfidCost = inp.transactions * rates.rfidTagsPerTag;
-      const labor = inp.laborRate * inp.laborHours * 4.33; // weeks per month
-      const spoil = monthlyRevenuePerFridge * (inp.spoilage/100);
-
-      const fixedOps = rates.cellular + rates.licenseFee + txFees + merchantFees + rfidCost;
-      const costsExFinancing = cogs + fixedOps + labor + spoil + inp.miscCosts;
-
-      // Include financing in costs & profit
-      const monthlyCostsPerFridge = costsExFinancing + inp.financing;
-      const monthlyProfitPerFridge = monthlyRevenuePerFridge - monthlyCostsPerFridge;
-
-      // Roll up across all fridges
-      const monthlyRevenue = monthlyRevenuePerFridge * inp.fridgeCount;
-      const monthlyCosts = monthlyCostsPerFridge * inp.fridgeCount;
-      const monthlyProfit = monthlyProfitPerFridge * inp.fridgeCount;
-
-      // ROI / Payback
-      const initialInvestment = 7500; // per fridge
-      const profitPreFinancingPerFridge = monthlyProfitPerFridge + inp.financing;
-      const roi = (profitPreFinancingPerFridge * 12 / initialInvestment) * 100;
-      const paybackMonths = profitPreFinancingPerFridge > 0 ? (initialInvestment / profitPreFinancingPerFridge) : Infinity;
-
-      return {
-        monthlyRevenue, monthlyCosts, monthlyProfit,
-        annualProfit: monthlyProfit * 12,
-        roi, paybackMonths
-      };
+    // ========= API (fetch JSON) =========
+    async function apiGet(action, params = {}) {
+      try {
+        const qs = new URLSearchParams({ action, ...params });
+        const res = await fetch(`${BACKEND_URL}?${qs.toString()}`, { method:'GET', credentials:'omit' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (e) {
+        console.debug('apiGet failed', action, e);
+        return null;
+      }
     }
 
-    function render(r){
-      setText('monthlyRevenue', money(r.monthlyRevenue));
-      setText('monthlyCosts', money(r.monthlyCosts));
-      const pe = document.getElementById('monthlyProfit');
-      pe.textContent = money(r.monthlyProfit);
-      pe.className = 'v ' + (r.monthlyProfit >= 0 ? 'pos' : 'neg');
-      const ae = document.getElementById('annualProfit');
-      ae.textContent = money(r.annualProfit);
-      ae.className = 'v ' + (r.annualProfit >= 0 ? 'pos' : 'neg');
-
-      setText('roiPercent', (isFinite(r.roi) ? r.roi.toFixed(1) : 0) + '%');
-      setText('paybackPeriod', isFinite(r.paybackMonths) ? Math.round(r.paybackMonths) + ' months' : '—');
-    }
-
-    function renderTimeline(r){
-      const el = document.getElementById('timelineGrid');
-      el.innerHTML = '';
-      const rows = [
-        {label:'Year 1', months:12},
-        {label:'Year 2', months:24},
-        {label:'Year 3', months:36}
-      ];
-      rows.forEach(row=>{
-        const div = document.createElement('div');
-        div.className = 'box';
-        const profit = r.monthlyProfit * (row.months);
-        div.innerHTML = `<div style="color:#6b7280;font-weight:600;margin-bottom:4px">${row.label}</div>
-                         <div style="font-weight:800;color:var(--ok)">${money(profit)}</div>`;
-        el.appendChild(div);
+    // ========= INPUTS / CALC =========
+    function hookInputs() {
+      const ids = ['fridgeCount','transactions','foodPrice','foodPercent','beveragePrice','beveragePercent','margin','spoilage','financing','laborRate','laborHours','miscCosts','serviceFee'];
+      ids.forEach(id=>{
+        const el = document.getElementById(id);
+        el.addEventListener('input', ()=>{
+          if (id==='foodPercent') document.getElementById('beveragePercent').value = String(Math.max(0, 100 - (+el.value||0)));
+          if (id==='beveragePercent') document.getElementById('foodPercent').value = String(Math.max(0, 100 - (+el.value||0)));
+          computeAll();
+        });
       });
     }
 
-    function money(n){
-      return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(n);
+    function applyDefaults() {
+      const d = (baseRates?.defaults) || DEFAULTS.defaults;
+      const set = (id,v)=>{ const el=document.getElementById(id); if (el && (el.value===''||el.value==null)) el.value = v; };
+      set('transactions', d.transactions);
+      set('foodPrice', d.foodPrice);
+      set('foodPercent', d.foodPercent);
+      set('beveragePrice', d.beveragePrice);
+      set('beveragePercent', d.beveragePercent);
+      set('margin', d.margin);
+      set('spoilage', d.spoilage);
+      set('financing', d.financing);
+      set('laborRate', d.laborRate);
+      set('laborHours', d.laborHours);
+      set('serviceFee', d.serviceFee ?? 0);
     }
-    function setText(id, text){ const el=document.getElementById(id); if(el) el.textContent=text; }
 
-    // ======= SHARE / MANAGE =======
-    function openShare(){
-      document.getElementById('shareHelp').textContent='';
-      document.getElementById('shareOverlay').style.display='flex';
-      // prefill client name with the dashboard user if present
-      const u = localStorage.getItem('dashboardUser');
-      if(u && !document.getElementById('shareClient').value) document.getElementById('shareClient').value = u;
+    function num(id){ return parseFloat(document.getElementById(id).value)||0; }
+    function int(id){ return parseInt(document.getElementById(id).value)||0; }
+
+    function fmt(n, digits=0){
+      return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:digits,maximumFractionDigits:digits}).format(n);
     }
-    function closeShare(){ document.getElementById('shareOverlay').style.display='none'; }
+
+    function computeAll(){
+      const inputs = {
+        fridgeCount: Math.max(1, int('fridgeCount')),
+        transactions: Math.max(0, int('transactions')),
+        foodPrice: num('foodPrice'),
+        foodPercent: num('foodPercent'),
+        beveragePrice: num('beveragePrice'),
+        beveragePercent: num('beveragePercent'),
+        margin: num('margin'),
+        spoilage: num('spoilage'),
+        financing: num('financing'),
+        laborRate: num('laborRate'),
+        laborHours: num('laborHours'),
+        miscCosts: num('miscCosts'),
+        serviceFee: num('serviceFee')
+      };
+
+      const r = calcPerFridge(inputs);
+      const monthlyRevenue  = r.monthlyRevenue * inputs.fridgeCount;
+      const monthlyCosts    = r.monthlyCosts   * inputs.fridgeCount;
+      const monthlyProfit   = r.monthlyProfit  * inputs.fridgeCount;
+      const annualProfit    = monthlyProfit * 12;
+
+      // KPI paint
+      document.getElementById('monthlyRevenue').textContent = fmt(monthlyRevenue);
+      document.getElementById('monthlyCosts').textContent   = fmt(monthlyCosts);
+      const mp = document.getElementById('monthlyProfit');
+      mp.textContent = fmt(monthlyProfit);
+      mp.classList.toggle('pos', monthlyProfit >= 0);
+      mp.classList.toggle('neg', monthlyProfit < 0);
+
+      const ap = document.getElementById('annualProfit');
+      ap.textContent = fmt(annualProfit);
+      ap.classList.toggle('pos', annualProfit >= 0);
+      ap.classList.toggle('neg', annualProfit < 0);
+
+      document.getElementById('roiPercent').textContent = `${r.roi.toFixed(1)}%`;
+      document.getElementById('paybackPeriod').textContent = `${Math.max(0, Math.round(r.paybackMonths))} months`;
+
+      // Projection (cumulative net)
+      document.getElementById('y1').textContent = fmt(monthlyProfit * 12);
+      document.getElementById('y2').textContent = fmt(monthlyProfit * 24);
+      document.getElementById('y3').textContent = fmt(monthlyProfit * 36);
+    }
+
+    function calcPerFridge(inp){
+      const rates = baseRates?.fixedCosts || DEFAULTS.fixedCosts;
+
+      // Revenue mix
+      const atv = (inp.foodPrice * (inp.foodPercent/100)) + (inp.beveragePrice * (inp.beveragePercent/100));
+      const monthlyRevenue = inp.transactions * atv;
+
+      // COGS from margin (margin% is gross margin before operating costs)
+      const cogs = monthlyRevenue * ((100 - inp.margin)/100);
+
+      // Transaction-based fees
+      const rfidCost  = inp.transactions * rates.rfidTagsPerTag;
+      const engageFee = inp.transactions * rates.engageTransactionFee;
+      const gateway   = inp.transactions * rates.gatewayTransactionFee;
+      const swipe     = inp.transactions * rates.merchantAccountSwipeFee;
+      const interchange = monthlyRevenue * (rates.merchantAccountPercent/100);
+
+      // Fixed platform
+      const platformFixed = rates.cellular + rates.licenseFee;
+
+      // Variable ops
+      const spoilageCost = monthlyRevenue * (inp.spoilage/100);
+      const labor = inp.laborRate * inp.laborHours * 4.33; // weeks per month
+
+      // Total OPEX for one fridge (includes financing)
+      const totalCosts =
+        cogs + platformFixed + rfidCost + engageFee + gateway + swipe + interchange +
+        spoilageCost + labor + inp.miscCosts + inp.financing;
+
+      // Net profit per fridge = revenue - costs + service fee charged to client
+      const monthlyProfit = (monthlyRevenue - totalCosts) + inp.serviceFee;
+
+      // ROI & Payback — use profit before financing for ROI on asset cost
+      const monthlyPreFin = monthlyProfit + inp.financing; // remove financing effect
+      const initialInvestment = 7500; // assumed fridge cost
+      const roi = (monthlyPreFin * 12 / initialInvestment) * 100;
+      const paybackMonths = (initialInvestment / Math.max(1, monthlyPreFin));
+
+      return {
+        monthlyRevenue,
+        monthlyCosts: totalCosts, // note: service fee is NOT a cost
+        monthlyProfit,
+        roi,
+        paybackMonths
+      };
+    }
+
+    // ========= SHARE =========
+    function openShare(){
+      if (!operatorMode){
+        alert('This is a shared link. Only operators (from the dashboard) can create new links.');
+        return;
+      }
+      toggleOverlay('shareOverlay', true);
+      document.getElementById('shareHint').textContent = '';
+      document.getElementById('shareLink').value = '';
+      document.getElementById('shareCopy').disabled = true;
+    }
+
+    async function generateShareLink(){
+      const creator = localStorage.getItem('dashboardUser') || 'Operator';
+      const clientName = document.getElementById('shareClient').value || '';
+
+      if (!SHARE_AUTH_KEY || SHARE_AUTH_KEY === 'YOUR_SECRET_KEY'){
+        document.getElementById('shareHint').textContent =
+          'To enable link generation, set SHARE_AUTH_KEY in roi-calculator.html and update Apps Script to accept the same key.';
+        return;
+      }
+
+      const resp = await apiGet('generateToken', {
+        authKey: SHARE_AUTH_KEY,
+        createdBy: creator,
+        clientName
+      });
+
+      if (!resp || resp.status !== 'success'){
+        document.getElementById('shareHint').textContent =
+          (resp && resp.message) ? resp.message : 'Unable to generate link. Check your Apps Script deployment.';
+        return;
+      }
+
+      const token = resp.data?.token;
+      if (!token){
+        document.getElementById('shareHint').textContent = 'No token returned from server.';
+        return;
+      }
+
+      // Compose the public URL (same page with ?token=)
+      const shareUrl = new URL(location.href);
+      shareUrl.search = `?token=${encodeURIComponent(token)}`;
+      document.getElementById('shareLink').value = shareUrl.toString();
+      document.getElementById('shareCopy').disabled = false;
+      document.getElementById('shareHint').textContent = `Expires: ${new Date(resp.data.expiresAt).toLocaleString()}`;
+    }
+
     function copyShare(){
-      const el = document.getElementById('shareUrl');
+      const el = document.getElementById('shareLink');
       el.select(); el.setSelectionRange(0, 99999);
       document.execCommand('copy');
+      document.getElementById('shareHint').textContent = 'Link copied to clipboard.';
     }
 
-    async function createShare(){
-      const createdBy = localStorage.getItem('dashboardUser') || 'Operator';
-      const clientName = document.getElementById('shareClient').value || '';
-      try{
-        const url = new URL(BACKEND_URL);
-        url.searchParams.set('action','generateToken');
-        if(AUTH_KEY) url.searchParams.set('authKey', AUTH_KEY);
-        url.searchParams.set('createdBy', createdBy);
-        url.searchParams.set('clientName', clientName);
-
-        const res = await fetch(url.toString());
-        const data = await res.json();
-
-        if(data.status !== 'success'){
-          throw new Error(data.message || 'Failed to generate token');
-        }
-        const token = data.data?.token;
-        if(!token) throw new Error('No token returned');
-
-        const share = `${PUBLIC_BASE}?token=${encodeURIComponent(token)}`;
-        document.getElementById('shareUrl').value = share;
-        document.getElementById('shareHelp').textContent = 'Link generated. Click Copy to put it on your clipboard.';
-      }catch(err){
-        document.getElementById('shareHelp').textContent = 'Unable to generate a link. If your backend requires an authKey, set AUTH_KEY in the HTML.';
-        console.error(err);
-      }
-    }
-
-    function openManage(){
-      document.getElementById('manageHelp').textContent='';
-      document.getElementById('manageOverlay').style.display='flex';
-      loadTokens().catch(err=>{
-        document.getElementById('tokenList').textContent = 'Unable to load links.';
-      });
-    }
-    function closeManage(){ document.getElementById('manageOverlay').style.display='none'; }
-
-    async function loadTokens(){
-      const tokenList = document.getElementById('tokenList');
-      tokenList.textContent = 'Loading…';
-      try{
-        const url = new URL(BACKEND_URL);
-        url.searchParams.set('action','getAnalytics'); // fallback to analytics list (total accesses)
-        if(AUTH_KEY) url.searchParams.set('authKey', AUTH_KEY);
-        const res = await fetch(url.toString());
-        const data = await res.json();
-        if(data.status !== 'success'){ throw new Error(data.message || 'Failed'); }
-
-        // Show just a light summary from analytics (since listTokens may not be implemented server-side yet)
-        const a = data.data?.analytics;
-        if(!a){ tokenList.textContent = 'No data.'; return; }
-        tokenList.innerHTML = `
-          <div>Recent activity (last 10):</div>
-          <div style="margin-top:6px;font-family:ui-monospace,monospace;font-size:12px;max-height:180px;overflow:auto;background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:6px">
-            ${a.recentActivity.map(r => {
-              const when = new Date(r[0]).toLocaleString();
-              const token = r[1]; const action = r[2];
-              return `<div>${when} — ${action} — ${token}</div>`;
-            }).join('')}
-          </div>
-        `;
-      }catch(err){
-        console.error(err);
-        tokenList.textContent = 'Manage view not available.';
-        document.getElementById('manageHelp').textContent = 'Tip: add a listTokens endpoint on the backend if you want full link management UI.';
-      }
-    }
-
-    // ======= MISC =======
-    function downloadPDF(){
-      alert('PDF export coming soon.');
-    }
-
-    function getDefaultRates(){
-      return {
-        fixedCosts:{
-          cellular:25,
-          licenseFee:175,
-          rfidTagsPerTag:0.18,
-          engageTransactionFee:0.15,
-          gatewayTransactionFee:0.07,
-          merchantAccountPercent:2.5,
-          merchantAccountSwipeFee:0.03
-        },
-        defaults:{
-          transactions:330, foodPrice:10, foodPercent:90,
-          beveragePrice:3.99, beveragePercent:10,
-          margin:60, spoilage:0, financing:295,
-          laborRate:20, laborHours:0.75,
-          serviceFee:0
-        }
-      };
+    // ========= UTILS =========
+    function toggleOverlay(id, show){
+      document.getElementById(id).style.display = show ? 'flex' : 'none';
     }
   </script>
 </body>
