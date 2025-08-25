@@ -9,6 +9,7 @@
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
     .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.2rem}
+
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
     .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.2s;text-decoration:none;display:inline-block}
     .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.35);background:#1e40af}
@@ -16,13 +17,18 @@
     .filters{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
     select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .2s}
     select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
+
+    /* --- TABLE: single row separator, no “wonky” lines --- */
     .table-container{overflow-x:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-    table{width:100%;border-collapse:collapse;background:#fff}
-    th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap}
-    td{padding:15px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px}
+    table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed}
+    th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:1px solid #cbd5e1}
+    td{padding:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;border-bottom:none;vertical-align:middle}
+    tbody tr{border-bottom:1px solid #e2e8f0}
+    tbody tr:last-child{border-bottom:none}
+    tr:hover{background:#f7fafc}
     td:nth-child(2){white-space:normal;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:260px}
     td:nth-child(11){white-space:normal;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;max-width:420px;vertical-align:top;line-height:1.4;padding:12px 15px}
-    tr:hover{background:#f7fafc}
+
     .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block}
     .status-active{background:#d4f1d4;color:#2d5a2d}
     .status-followup{background:#fff3cd;color:#856404}
@@ -35,6 +41,8 @@
     .loading{text-align:center;padding:40px;color:#718096}
     .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+    /* --- MODAL: static backdrop, no accidental close --- */
     .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .2s ease}
     .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:620px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .2s ease}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -113,8 +121,8 @@
 
   <!-- Add/Edit Lead Modal -->
   <div id="leadModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
+    <div class="modal-content" id="leadModalContent">
+      <span class="close" onclick="attemptCloseModal()">&times;</span>
       <h2 id="modalTitle">Add New Lead</h2>
 
       <form id="leadForm">
@@ -190,7 +198,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+          <button type="button" class="btn btn-cancel" onclick="attemptCloseModal()">Cancel</button>
           <button type="submit" id="saveBtn" class="btn">Save Lead</button>
         </div>
       </form>
@@ -207,8 +215,21 @@
     let currentEditId = null;
     let knownCompanies = [];
 
+    // Track unsaved edits in the modal
+    let formInitialSnapshot = '';
+    let formDirty = false;
+
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
+      // Static backdrop: clicking outside should NOT close the modal
+      const modal = document.getElementById('leadModal');
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          // swallow clicks on backdrop; do nothing
+          e.stopPropagation();
+        }
+      });
+
       loadLeads();
       loadCompanyLists();
       setupPhoneFormatting();
@@ -249,57 +270,48 @@
       }
     }
 
-async function loadCompanyLists(){
-  try{
-    const res = await fetch(WEB_APP_URL + '?action=getCompanies');
-    const data = await res.json();
-    if (data.status !== 'success') throw new Error('API returned non-success status');
-    
-    // Company name suggestions
-    knownCompanies = Array.isArray(data.companies) ? data.companies : [];
-    const dl = document.getElementById('companySuggestions');
-    dl.innerHTML = '';
-    knownCompanies.forEach(name => {
-      const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt);
-    });
-    
-    // Business Units - always include both default options
-    const unitsFromApi = Array.isArray(data.businessUnits) ? data.businessUnits : [];
-    const unitsFromLeads = [...new Set((allLeads||[]).map(l => l.businessUnit).filter(Boolean))];
-    const defaultUnits = ['Abbondanza Vending', 'Quantum Solutions'];
-    
-    // Combine all sources and remove duplicates
-    const allUnits = [...new Set([...defaultUnits, ...unitsFromApi, ...unitsFromLeads])];
-    const units = allUnits.sort();
-    
-    // Filter dropdown
-    const sel = document.getElementById('companyFilter');
-    sel.innerHTML = '<option value="">All Business Units</option>';
-    units.forEach(u => {
-      const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
-    });
-    
-    // Modal dropdown (keep form in sync too)
-    const bu = document.getElementById('businessUnit');
-    const current = bu.value;
-    bu.innerHTML = '<option value="">Select...</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
-    if (current) bu.value = current;  // preserve selection if editing
-    
-  }catch(e){
-    console.warn('getCompanies failed, using defaults:', e);
-    const fallback = ['Abbondanza Vending','Quantum Solutions'];
-    
-    // Filter dropdown
-    const sel = document.getElementById('companyFilter');
-    sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>`<option value="${u}">${u}</option>`).join('');
-    
-    // Modal dropdown
-    const bu = document.getElementById('businessUnit');
-    const current = bu.value;
-    bu.innerHTML = '<option value="">Select...</option>' + fallback.map(u => `<option value="${u}">${u}</option>`).join('');
-    if (current) bu.value = current;
-  }
-}
+    async function loadCompanyLists(){
+      try{
+        const res = await fetch(WEB_APP_URL + '?action=getCompanies');
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error('API returned non-success status');
+
+        knownCompanies = Array.isArray(data.companies) ? data.companies : [];
+        const dl = document.getElementById('companySuggestions');
+        dl.innerHTML = '';
+        knownCompanies.forEach(name => {
+          const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt);
+        });
+
+        const unitsFromApi = Array.isArray(data.businessUnits) ? data.businessUnits : [];
+        const unitsFromLeads = [...new Set((allLeads||[]).map(l => l.businessUnit).filter(Boolean))];
+        const defaultUnits = ['Abbondanza Vending', 'Quantum Solutions'];
+        const allUnits = [...new Set([...defaultUnits, ...unitsFromApi, ...unitsFromLeads])];
+        const units = allUnits.sort();
+
+        const sel = document.getElementById('companyFilter');
+        sel.innerHTML = '<option value="">All Business Units</option>';
+        units.forEach(u => {
+          const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
+        });
+
+        const bu = document.getElementById('businessUnit');
+        const current = bu.value;
+        bu.innerHTML = '<option value="">Select...</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
+        if (current) bu.value = current;
+      }catch(e){
+        console.warn('getCompanies failed, using defaults:', e);
+        const fallback = ['Abbondanza Vending','Quantum Solutions'];
+
+        const sel = document.getElementById('companyFilter');
+        sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>`<option value="${u}">${u}</option>`).join('');
+
+        const bu = document.getElementById('businessUnit');
+        const current = bu.value;
+        bu.innerHTML = '<option value="">Select...</option>' + fallback.map(u => `<option value="${u}">${u}</option>`).join('');
+        if (current) bu.value = current;
+      }
+    }
 
     function displayLeads(leads){
       const tbody = document.getElementById('leadsTableBody');
@@ -356,7 +368,6 @@ async function loadCompanyLists(){
 
     function getStatusClass(status){
       const map = {'Active':'status-active','Follow Up Later':'status-followup','Not Qualified':'status-notqualified','Dead':'status-dead'};
-
       return map[status] || 'status-active';
     }
 
@@ -406,6 +417,7 @@ async function loadCompanyLists(){
       document.getElementById('appointmentMade').value = 'No';
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
+      markFormPristineAndWatch();
     }
 
     function editLead(leadId){
@@ -437,17 +449,58 @@ async function loadCompanyLists(){
 
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
+      markFormPristineAndWatch();
+    }
+
+    function attemptCloseModal(){
+      if (formDirty){
+        const ok = confirm('Discard your changes?');
+        if (!ok) return;
+      }
+      closeModal();
     }
 
     function closeModal(){
       document.getElementById('leadModal').style.display = 'none';
       document.getElementById('leadForm').reset();
       currentEditId = null;
+      formDirty = false;
+      formInitialSnapshot = '';
+      removeFormWatchers();
     }
 
     function toggleAppointmentDate(){
       const show = document.getElementById('appointmentMade').value === 'Yes';
       document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
+    }
+
+    // Track pristine/dirty state
+    function snapshotForm(){
+      const formEl = document.getElementById('leadForm');
+      const form = new FormData(formEl);
+      return JSON.stringify(Object.fromEntries(form.entries()));
+    }
+    function markFormPristineAndWatch(){
+      formInitialSnapshot = snapshotForm();
+      formDirty = false;
+      removeFormWatchers();
+      const formEl = document.getElementById('leadForm');
+      const markDirty = () => { formDirty = (snapshotForm() !== formInitialSnapshot); };
+      formEl.querySelectorAll('input,select,textarea').forEach(el => {
+        el.addEventListener('input', markDirty);
+        el.addEventListener('change', markDirty);
+        el._dirtyHandlersAttached = true;
+      });
+    }
+    function removeFormWatchers(){
+      const formEl = document.getElementById('leadForm');
+      if (!formEl) return;
+      formEl.querySelectorAll('input,select,textarea').forEach(el => {
+        if (el._dirtyHandlersAttached){
+          const clone = el.cloneNode(true);
+          el.parentNode.replaceChild(clone, el);
+        }
+      });
     }
 
     async function onSaveClick(e){
@@ -471,17 +524,18 @@ async function loadCompanyLists(){
           ? { action:'updateLead', leadId:Number(currentEditId), updates:lead }
           : { action:'addLead',   lead:lead };
 
-         const res = await fetch(url, {
-         method: 'POST',
-         headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // ← change this
-         body: JSON.stringify(payload)
-       });
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
 
         if (!res.ok) throw new Error(`Network ${res.status}`);
         const out = await res.json();
         if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
         showToast(isUpdate ? 'Lead updated!' : 'Lead added!', 'success');
+        formDirty = false; // prevent discard prompt on programmatic close
         closeModal();
         await loadLeads();
       }catch(err){
@@ -499,10 +553,10 @@ async function loadCompanyLists(){
       const payload = { action:'archiveLead', leadId };
 
       fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // ← change this
-      body: JSON.stringify(payload)
-     })
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: JSON.stringify(payload)
+      })
       .then(r => r.json())
       .then(out => {
         if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
@@ -533,13 +587,13 @@ async function loadCompanyLists(){
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
-    window.onclick = (e) => { const m = document.getElementById('leadModal'); if (e.target === m) closeModal(); }
-
+    // No backdrop-close anymore. Only explicit buttons can close.
     window.openAddLeadModal = openAddLeadModal;
     window.editLead = editLead;
     window.archiveLead = archiveLead;
     window.toggleAppointmentDate = toggleAppointmentDate;
     window.filterLeads = filterLeads;
+    window.attemptCloseModal = attemptCloseModal;
     window.goToDashboard = () => { window.location.href = 'index.html'; };
   </script>
 </body>
