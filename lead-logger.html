@@ -77,7 +77,7 @@
         <select id="companyFilter" onchange="filterLeads()"><option value="">All Business Units</option></select>
         <select id="statusFilter" onchange="filterLeads()">
           <option value="">All Status</option>
-          <option value="Active">Active</option>
+          <option value="Active" selected>Active</option>
           <option value="Follow Up Later">Follow Up Later</option>
           <option value="Not Qualified">Not Qualified</option>
           <option value="Dead">Dead (Archived)</option>
@@ -219,9 +219,7 @@
     let formInitialSnapshot = '';
     let formDirty = false;
 
-    // --- Utilities ---
     function safeLeadId(obj){
-      // Accept any common variant the backend might use
       const id = obj?.id ?? obj?.ID ?? obj?.Id ?? obj?.iD ?? obj?.leadId ?? '';
       return String(id).trim();
     }
@@ -229,11 +227,9 @@
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
 
-      // Static backdrop: clicking outside should NOT close the modal
+      // static backdrop
       const modal = document.getElementById('leadModal');
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) e.stopPropagation(); // swallow backdrop clicks
-      });
+      modal.addEventListener('click', (e) => { if (e.target === modal) e.stopPropagation(); });
 
       loadLeads();
       loadCompanyLists();
@@ -265,8 +261,8 @@
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
         allLeads = data.leads || [];
-        displayLeads(allLeads);
         updateRepFilter();
+        filterLeads(); // ← render using current dropdowns (default = Active)
       }catch(err){
         console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
@@ -340,7 +336,7 @@
 
     function createLeadRow(lead){
       const row = document.createElement('tr');
-      const leadId = safeLeadId(lead); // robust id
+      const leadId = safeLeadId(lead);
 
       const dateAdded = formatDate(lead.dateAdded);
       const followUp = formatDate(lead.followUp);
@@ -552,16 +548,11 @@
 
     async function archiveLead(btnEl, leadId){
       const id = String(leadId || '').trim();
-      if (!id){
-        showToast('Could not determine lead ID — refresh and try again.', 'error');
-        return;
-      }
+      if (!id){ showToast('Could not determine lead ID — refresh and try again.', 'error'); return; }
       if (!confirm('Archive this lead?')) return;
 
-      // Disable the clicked button to prevent double taps
       const prevHtml = btnEl.innerHTML;
-      btnEl.disabled = true;
-      btnEl.innerHTML = 'Archiving…';
+      btnEl.disabled = true; btnEl.innerHTML = 'Archiving…';
 
       try{
         const url = WEB_APP_URL + '?action=archiveLead&leadId=' + encodeURIComponent(id);
@@ -578,13 +569,12 @@
         if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
 
         showToast('Lead archived', 'success');
-        await loadLeads(); // refresh list
+        await loadLeads(); // list re-renders with current filter (Active)
       }catch(err){
         console.error(err);
         showToast('Error archiving lead: ' + err.message, 'error');
       }finally{
-        btnEl.disabled = false;
-        btnEl.innerHTML = prevHtml;
+        btnEl.disabled = false; btnEl.innerHTML = prevHtml;
       }
     }
 
@@ -606,7 +596,6 @@
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
-    // Expose
     window.openAddLeadModal = openAddLeadModal;
     window.editLead = editLead;
     window.archiveLead = archiveLead;
