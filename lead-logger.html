@@ -208,7 +208,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // ====== CONFIG: Use your deployed Apps Script URL ======
+    // ====== CONFIG ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
     let allLeads = [];
@@ -219,15 +219,20 @@
     let formInitialSnapshot = '';
     let formDirty = false;
 
+    // --- Utilities ---
+    function safeLeadId(obj){
+      // Accept any common variant the backend might use
+      const id = obj?.id ?? obj?.ID ?? obj?.Id ?? obj?.iD ?? obj?.leadId ?? '';
+      return String(id).trim();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
+
       // Static backdrop: clicking outside should NOT close the modal
       const modal = document.getElementById('leadModal');
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          // swallow clicks on backdrop; do nothing
-          e.stopPropagation();
-        }
+        if (e.target === modal) e.stopPropagation(); // swallow backdrop clicks
       });
 
       loadLeads();
@@ -335,7 +340,7 @@
 
     function createLeadRow(lead){
       const row = document.createElement('tr');
-      const leadId = Number(lead.id || lead.ID || lead.iD);
+      const leadId = safeLeadId(lead); // robust id
 
       const dateAdded = formatDate(lead.dateAdded);
       const followUp = formatDate(lead.followUp);
@@ -357,8 +362,8 @@
         appointmentDate,
         notes,
         `<div class="action-buttons">
-           <button class="btn btn-small" style="background:#2563eb" onclick="editLead(${leadId})">Edit</button>
-           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(${leadId})">Archive</button>
+           <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
          </div>`
       ];
 
@@ -421,11 +426,10 @@
     }
 
     function editLead(leadId){
-      leadId = Number(leadId);
-      const lead = (allLeads || []).find(l => Number(l.id || l.ID || l.iD) === leadId);
+      const lead = (allLeads || []).find(l => safeLeadId(l) === String(leadId));
       if (!lead) return;
 
-      currentEditId = leadId;
+      currentEditId = safeLeadId(lead);
       document.getElementById('modalTitle').textContent = 'Edit Lead';
 
       document.getElementById('businessUnit').value = lead.businessUnit || '';
@@ -518,10 +522,10 @@
         const isUpdate = !!currentEditId;
         const action = isUpdate ? 'updateLead' : 'addLead';
         const url = WEB_APP_URL + '?action=' + encodeURIComponent(action)
-          + (isUpdate ? ('&leadId=' + Number(currentEditId)) : '');
+          + (isUpdate ? ('&leadId=' + encodeURIComponent(String(currentEditId))) : '');
 
         const payload = isUpdate
-          ? { action:'updateLead', leadId:Number(currentEditId), updates:lead }
+          ? { action:'updateLead', leadId:String(currentEditId), updates:lead }
           : { action:'addLead',   lead:lead };
 
         const res = await fetch(url, {
@@ -535,7 +539,7 @@
         if (out.status !== 'success') throw new Error(out.message || 'Save failed');
 
         showToast(isUpdate ? 'Lead updated!' : 'Lead added!', 'success');
-        formDirty = false; // prevent discard prompt on programmatic close
+        formDirty = false;
         closeModal();
         await loadLeads();
       }catch(err){
@@ -546,27 +550,42 @@
       }
     }
 
-    function archiveLead(leadId){
+    async function archiveLead(btnEl, leadId){
+      const id = String(leadId || '').trim();
+      if (!id){
+        showToast('Could not determine lead ID — refresh and try again.', 'error');
+        return;
+      }
       if (!confirm('Archive this lead?')) return;
-      leadId = Number(leadId);
-      const url = WEB_APP_URL + '?action=archiveLead&leadId=' + leadId;
-      const payload = { action:'archiveLead', leadId };
 
-      fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-        body: JSON.stringify(payload)
-      })
-      .then(r => r.json())
-      .then(out => {
+      // Disable the clicked button to prevent double taps
+      const prevHtml = btnEl.innerHTML;
+      btnEl.disabled = true;
+      btnEl.innerHTML = 'Archiving…';
+
+      try{
+        const url = WEB_APP_URL + '?action=archiveLead&leadId=' + encodeURIComponent(id);
+        const payload = { action:'archiveLead', leadId:id };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Network ${res.status}`);
+        const out = await res.json();
         if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
+
         showToast('Lead archived', 'success');
-        loadLeads();
-      })
-      .catch(err => {
+        await loadLeads(); // refresh list
+      }catch(err){
         console.error(err);
         showToast('Error archiving lead: ' + err.message, 'error');
-      });
+      }finally{
+        btnEl.disabled = false;
+        btnEl.innerHTML = prevHtml;
+      }
     }
 
     function showToast(msg, type='success'){
@@ -587,7 +606,7 @@
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
-    // No backdrop-close anymore. Only explicit buttons can close.
+    // Expose
     window.openAddLeadModal = openAddLeadModal;
     window.editLead = editLead;
     window.archiveLead = archiveLead;
