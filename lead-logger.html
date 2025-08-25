@@ -249,7 +249,7 @@
       }
     }
 
-  async function loadCompanyLists(){
+async function loadCompanyLists(){
   try{
     const res = await fetch(WEB_APP_URL + '?action=getCompanies');
     const data = await res.json();
