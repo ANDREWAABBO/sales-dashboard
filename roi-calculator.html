@@ -1,93 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);min-height:100vh;padding:20px;color:#333}
-  .calculator-container{max-width:1200px;margin:0 auto;background:rgba(255,255,255,.98);border-radius:20px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:fadeIn .8s ease-out}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-  .header{margin-bottom:30px;border-bottom:3px solid #1e3a8a;padding-bottom:20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-  .header h1{font-size:2.1em;color:#1e3a8a;font-weight:700}
-  .header p{font-size:1em;color:#64748b}
-  .toolbar{display:flex;gap:10px;align-items:center}
-  .btn{display:inline-block;padding:10px 16px;background:#1e3a8a;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;font-size:.95em;border:none;cursor:pointer;transition:.2s}
-  .btn:hover{background:#1e40af;transform:translateY(-1px);box-shadow:0 8px 16px rgba(30,58,138,.3)}
-  .btn-ghost{background:#eef2ff;color:#1e3a8a;border:1px solid #c7d2fe}
-  .btn-ghost:hover{background:#e0e7ff}
-  .btn-danger{background:#dc2626}
-  .btn-danger:hover{background:#b91c1c}
-  .disclaimer{background:#fef3c7;border:2px solid #f59e0b;padding:12px;border-radius:10px;margin-bottom:20px;text-align:center;color:#92400e;font-weight:600}
-  .calculator-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
-  .input-section{background:#f8fafc;padding:20px;border-radius:15px;border:2px solid #e2e8f0}
-  .section-title{font-size:1.15em;font-weight:700;color:#1e3a8a;margin-bottom:14px}
-  .form-group{margin-bottom:14px}
-  .form-group label{display:block;margin-bottom:6px;color:#374151;font-weight:600;font-size:.92em}
-  .form-group input,.form-group select{width:100%;padding:10px 12px;border:2px solid #d1d5db;border-radius:8px;font-size:.98em;background:#fff}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .results-section{grid-column:1 / -1;background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);padding:22px;border-radius:15px;border:3px solid #1e3a8a;margin-top:10px}
-  .results-title{font-size:1.35em;font-weight:700;color:#1e3a8a;margin-bottom:16px;text-align:center}
-  .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:20px}
-  .result-card{background:#fff;padding:16px;border-radius:12px;text-align:center;border:2px solid #e5e7eb}
-  .result-label{font-size:.85em;color:#6b7280;margin-bottom:6px;font-weight:600}
-  .result-value{font-size:1.4em;font-weight:700;color:#1e3a8a}
-  .result-value.positive{color:#059669}.result-value.negative{color:#dc2626}
-  .timeline-section{background:#fff;padding:16px;border-radius:12px;border:2px solid #e5e7eb}
-  .timeline-title{font-size:1.1em;font-weight:700;color:#1e3a8a;margin-bottom:12px;text-align:center}
-  .timeline-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-  .timeline-item{background:#f8fafc;padding:12px;border-radius:8px;text-align:center;border:1px solid #e5e7eb}
-  .timeline-period{font-size:.85em;color:#6b7280;margin-bottom:4px;font-weight:600}
-  .timeline-profit{font-size:1.1em;font-weight:700;color:#059669}
-  .scaling-section{grid-column:1 / -1;background:#fef7ff;padding:18px;border-radius:15px;border:2px solid #a855f7;margin-top:10px}
-  .scaling-title{font-size:1.1em;font-weight:700;color:#7c3aed;margin-bottom:12px;text-align:center}
-  .scaling-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-  .scaling-item{background:#fff;padding:12px;border-radius:10px;text-align:center;border:2px solid #e5e7eb}
-  .scaling-fridges{font-size:1em;font-weight:700;color:#7c3aed;margin-bottom:6px}
-  .scaling-profit{font-size:1em;font-weight:600;color:#059669}
-  .download-section{text-align:center;margin-top:20px;padding:18px;background:#f1f5f9;border-radius:12px}
-  .loading-overlay{position:fixed;inset:0;background:rgba(30,58,138,.9);display:flex;justify-content:center;align-items:center;z-index:10000}
-  .loading-content{background:#fff;padding:28px;border-radius:20px;text-align:center;max-width:420px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-  .spinner{display:inline-block;width:36px;height:36px;border:4px solid #f3f4f6;border-top:4px solid #1e3a8a;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:12px}
-  @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;justify-content:center;align-items:center;z-index:11000}
-  .modal{background:#fff;border-radius:14px;max-width:720px;width:92%;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-  .muted{color:#6b7280}
-  /* Manage list */
-  .token-list{display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow:auto}
-  .token-item{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
-  .token-meta{min-width:0}
-  .token-meta .title{font-weight:700}
-  .token-actions{display:flex;gap:8px;flex-wrap:wrap}
-  @media (max-width: 768px){
-    .calculator-grid{grid-template-columns:1fr}
-    .form-row{grid-template-columns:1fr}
-    .calculator-container{padding:20px}
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      min-height: 100vh; padding: 20px; color: #333;
+    }
+    .calculator-container{
+      max-width: 1200px; margin: 0 auto; background: rgba(255,255,255,0.98);
+      border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: fadeIn 0.8s ease-out;
+    }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(30px)} to {opacity:1; transform:translateY(0)} }
+    .header{ text-align:center; margin-bottom:40px; border-bottom:3px solid #1e3a8a; padding-bottom:30px; }
+    .header h1{ font-size:2.5em; color:#1e3a8a; margin-bottom:10px; font-weight:700; }
+    .header p{ font-size:1.2em; color:#64748b; margin-bottom:5px; }
+    .disclaimer{
+      background:#fef3c7; border:2px solid #f59e0b; padding:15px; border-radius:10px;
+      margin-bottom:30px; text-align:center; color:#92400e; font-weight:600;
+    }
+    .calculator-grid{ display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px; }
+    .input-section{
+      background:#f8fafc; padding:25px; border-radius:15px; border:2px solid #e2e8f0; transition:all .3s ease;
+    }
+    .input-section:hover{ border-color:#1e3a8a; box-shadow:0 5px 15px rgba(30,58,138,0.1); }
+    .section-title{ font-size:1.3em; font-weight:700; color:#1e3a8a; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+    .form-group{ margin-bottom:20px; }
+    .form-group label{ display:block; margin-bottom:8px; color:#374151; font-weight:600; font-size:.95em; }
+    .form-group input, .form-group select{
+      width:100%; padding:12px 15px; border:2px solid #d1d5db; border-radius:8px; font-size:1em;
+      transition:all .3s ease; background:white;
+    }
+    .form-group input:focus, .form-group select:focus{
+      outline:none; border-color:#1e3a8a; box-shadow:0 0 0 3px rgba(30,58,138,.1);
+    }
+    .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .results-section{
+      grid-column:1 / -1; background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);
+      padding:30px; border-radius:15px; border:3px solid #1e3a8a; margin-top:20px;
+    }
+    .results-title{ font-size:1.8em; font-weight:700; color:#1e3a8a; margin-bottom:25px; text-align:center; }
+    .results-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; margin-bottom:30px; }
+    .result-card{ background:white; padding:20px; border-radius:12px; text-align:center; border:2px solid #e5e7eb; transition:all .3s ease; }
+    .result-card:hover{ transform:translateY(-2px); box-shadow:0 8px 25px rgba(0,0,0,.1); }
+    .result-label{ font-size:.9em; color:#6b7280; margin-bottom:8px; font-weight:600; }
+    .result-value{ font-size:1.8em; font-weight:700; color:#1e3a8a; }
+    .result-value.positive{ color:#059669; }
+    .result-value.negative{ color:#dc2626; }
+    .timeline-section{ background:white; padding:25px; border-radius:12px; border:2px solid #e5e7eb; margin-top:20px; }
+    .timeline-title{ font-size:1.4em; font-weight:700; color:#1e3a8a; margin-bottom:20px; text-align:center; }
+    .timeline-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:15px; }
+    .timeline-item{ background:#f8fafc; padding:15px; border-radius:8px; text-align:center; border:1px solid #e5e7eb; }
+    .timeline-period{ font-size:.9em; color:#6b7280; margin-bottom:5px; font-weight:600; }
+    .timeline-profit{ font-size:1.3em; font-weight:700; color:#059669; }
+    .download-section{ text-align:center; margin-top:30px; padding:25px; background:#f1f5f9; border-radius:12px; }
+    .btn{
+      display:inline-block; padding:15px 30px; background:#1e3a8a; color:white; text-decoration:none; border-radius:8px;
+      font-weight:600; font-size:1.1em; border:none; cursor:pointer; transition:all .3s ease; margin:0 10px;
+    }
+    .btn:hover{ background:#1e40af; transform:translateY(-2px); box-shadow:0 8px 20px rgba(30,58,138,.3); }
+    .btn-secondary{ background:#059669; }
+    .btn-secondary:hover{ background:#047857; }
+    .scaling-section{ grid-column:1 / -1; background:#fef7ff; padding:25px; border-radius:15px; border:2px solid #a855f7; margin-top:20px; }
+    .scaling-title{ font-size:1.4em; font-weight:700; color:#7c3aed; margin-bottom:20px; text-align:center; }
+    .scaling-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:15px; }
+    .scaling-item{ background:white; padding:15px; border-radius:10px; text-align:center; border:2px solid #e5e7eb; }
+    .scaling-fridges{ font-size:1.2em; font-weight:700; color:#7c3aed; margin-bottom:8px; }
+    .scaling-profit{ font-size:1.1em; font-weight:600; color:#059669; }
+
+    .expired-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.8); display:flex; justify-content:center; align-items:center; z-index:10000;
+    }
+    .expired-modal{
+      background:white; padding:40px; border-radius:20px; text-align:center; max-width:500px; margin:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
+    }
+    .expired-modal h2{ color:#dc2626; margin-bottom:20px; font-size:1.8em; }
+    .expired-modal p{ color:#6b7280; margin-bottom:25px; font-size:1.1em; line-height:1.6; }
+
+    .loading-overlay{
+      position:fixed; inset:0; background:rgba(30,58,138,.9); display:flex; justify-content:center; align-items:center; z-index:10000;
+    }
+    .loading-content{
+      background:white; padding:40px; border-radius:20px; text-align:center; max-width:400px; margin:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
+    }
+    .spinner{ display:inline-block; width:40px; height:40px; border:4px solid #f3f4f6; border-top:4px solid #1e3a8a; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:20px; }
+    @keyframes spin{ 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+    @media (max-width: 768px){
+      .calculator-grid{ grid-template-columns:1fr; }
+      .form-row{ grid-template-columns:1fr; }
+      .calculator-container{ padding:20px; }
+      .header h1{ font-size:2em; }
+    }
+  </style>
 </head>
 <body>
-  <!-- Loading -->
+  <!-- Loading Screen -->
   <div id="loadingOverlay" class="loading-overlay">
     <div class="loading-content">
       <div class="spinner"></div>
-      <h3 style="color:#1e3a8a;margin-bottom:6px;">Loading ROI Calculator...</h3>
-      <p class="muted">Validating access and retrieving latest data</p>
+      <h3 style="color:#1e3a8a; margin-bottom:10px;">Loading ROI Calculator...</h3>
+      <p style="color:#6b7280;">Validating access and retrieving latest data</p>
     </div>
   </div>
 
   <div id="calculatorContent" class="calculator-container" style="display:none;">
     <div class="header">
-      <div>
-        <h1>Smart Food Fridge ROI Calculator</h1>
-        <p>Quantum Solutions — Advanced Food Service Technology</p>
-      </div>
-      <div class="toolbar">
-        <button class="btn btn-ghost" id="shareBtn">Share / Get Link</button>
-        <button class="btn btn-ghost" id="manageBtn">Manage Links</button>
-      </div>
+      <h1>Smart Food Fridge ROI Calculator</h1>
+      <p>Quantum Solutions - Advanced Food Service Technology</p>
+      <p style="font-size:.9em; color:#6b7280;">Calculate your return on investment with precision</p>
     </div>
 
     <div class="disclaimer">
@@ -95,7 +123,7 @@
     </div>
 
     <div class="calculator-grid">
-      <!-- Inputs: Business -->
+      <!-- Business Assumptions -->
       <div class="input-section">
         <div class="section-title">Business Assumptions</div>
 
@@ -143,7 +171,7 @@
         </div>
       </div>
 
-      <!-- Inputs: Costs -->
+      <!-- Operational Costs -->
       <div class="input-section">
         <div class="section-title">Operational Costs</div>
 
@@ -168,15 +196,22 @@
           <input type="number" id="miscCosts" value="0" min="0" max="500">
         </div>
 
-        <div style="background:#e0f2fe;padding:12px;border-radius:8px;margin-top:10px;">
-          <h4 style="color:#0369a1;margin-bottom:6px;">Fixed Costs (per fridge):</h4>
-          <div class="muted" id="fixedCostsSummary">Loading...</div>
+        <!-- NEW: Service Fee -->
+        <div class="form-group">
+          <label for="serviceFee">Monthly Service Fee Charged to Client (per fridge)</label>
+          <input type="number" id="serviceFee" value="0" min="0" step="1">
+        </div>
+
+        <div style="background:#e0f2fe; padding:15px; border-radius:8px; margin-top:20px;">
+          <h4 style="color:#0369a1; margin-bottom:10px;">Fixed Costs & Fees (per fridge):</h4>
+          <div style="font-size:.9em; color:#0369a1;" id="fixedCostsSummary">Loading...</div>
         </div>
       </div>
 
       <!-- Results -->
       <div class="results-section">
         <div class="results-title">Financial Performance</div>
+
         <div class="results-grid">
           <div class="result-card">
             <div class="result-label">Monthly Revenue</div>
@@ -218,423 +253,352 @@
     </div>
 
     <div class="download-section">
-      <h3 style="margin-bottom:14px;color:#374151;">Export Your Analysis</h3>
-      <button class="btn" id="pdfBtn">Download PDF Report</button>
-      <button class="btn btn-ghost" id="shareResultsBtn">Share Results</button>
+      <h3 style="margin-bottom:20px; color:#374151;">Export Your Analysis</h3>
+      <button class="btn" onclick="generatePDFReport()">Download PDF Report</button>
+      <button class="btn btn-secondary" onclick="shareResults()">Share Results</button>
     </div>
   </div>
 
-  <!-- Share overlay -->
-  <div id="shareOverlay" class="overlay">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>Share / Get Link</h3>
-        <button class="btn btn-ghost" id="shareClose">Close</button>
-      </div>
-      <p class="muted" style="margin-bottom:8px;">A 7-day access link has been created for you. Copy it and send to your client.</p>
-      <div class="form-row" style="grid-template-columns:1fr auto;">
-        <input id="shareUrlBox" type="text" readonly style="padding:10px;border:2px solid #e2e8f0;border-radius:8px;">
-        <button class="btn" id="copyShareBtn">Copy</button>
-      </div>
-    </div>
-  </div>
+  <script>
+    // Backend endpoint (deployed Apps Script Web App)
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
 
-  <!-- Manage overlay -->
-  <div id="manageOverlay" class="overlay">
-    <div class="modal">
-      <div class="modal-head">
-        <h3>Manage Links</h3>
-        <button class="btn btn-ghost" id="manageClose">Close</button>
-      </div>
-      <div class="form-row" style="margin-bottom:10px;">
-        <div class="form-group" style="margin:0;">
-          <label for="filterCreatedBy">Created By</label>
-          <input id="filterCreatedBy" type="text" placeholder="Operator name">
-        </div>
-        <div style="display:flex;align-items:flex-end;gap:8px;">
-          <button class="btn" id="refreshTokensBtn">Refresh</button>
-        </div>
-      </div>
-      <div class="token-list" id="tokenList">
-        <div class="muted">Loading…</div>
-      </div>
-    </div>
-  </div>
+    let baseRates = null;
+    let accessToken = null;
+    let accessValidated = false;
 
-<script>
-/* =========================
-   CONFIG & JSONP HELPER
-   ========================= */
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
-function jsonpRequest(action, params = {}) {
-  const cb = 'cb_' + Math.random().toString(36).slice(2);
-  params.action = action; params.callback = cb;
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    const q = new URLSearchParams(params).toString();
-    s.src = `${GAS_URL}?${q}`;
-    const timeout = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 15000);
-    function cleanup(){ clearTimeout(timeout); delete window[cb]; s.remove(); }
-    window[cb] = (payload)=>{ cleanup(); resolve(payload); };
-    s.onerror = ()=>{ cleanup(); reject(new Error('Network/JSONP error')); };
-    document.head.appendChild(s);
-  });
-}
-
-/* =========================
-   GLOBAL STATE
-   ========================= */
-let baseRates = null;
-let accessToken = null;
-let accessValidated = false;
-
-/* =========================
-   INITIALIZE
-   ========================= */
-document.addEventListener('DOMContentLoaded', initializeCalculator);
-
-async function initializeCalculator(){
-  // Hook up toolbar buttons
-  document.getElementById('shareBtn').addEventListener('click', openShareFlow);
-  document.getElementById('manageBtn').addEventListener('click', openManage);
-  document.getElementById('shareClose').addEventListener('click', ()=>toggleOverlay('shareOverlay', false));
-  document.getElementById('manageClose').addEventListener('click', ()=>toggleOverlay('manageOverlay', false));
-  document.getElementById('refreshTokensBtn').addEventListener('click', loadTokens);
-  document.getElementById('copyShareBtn').addEventListener('click', () => {
-    const v = document.getElementById('shareUrlBox').value || '';
-    copyTextToClipboard(v).then(()=>alert('Copied to clipboard'));
-  });
-
-  // Inputs: recalc on change
-  document.querySelectorAll('input').forEach(inp=>{
-    inp.addEventListener('change', handleInputChange);
-    inp.addEventListener('input', ()=>{ inp.style.borderColor = '#1e3a8a'; setTimeout(()=>inp.style.borderColor='#d1d5db', 400); });
-  });
-
-  // Export buttons
-  document.getElementById('pdfBtn').addEventListener('click', ()=>{ trackUsage('pdf_download_requested'); alert('PDF Report generation coming soon.'); });
-  document.getElementById('shareResultsBtn').addEventListener('click', ()=>{ trackUsage('share_results_requested'); alert('Results sharing coming soon.'); });
-
-  // Parse token
-  const urlParams = new URLSearchParams(location.search);
-  accessToken = urlParams.get('token');
-
-  try {
-    if (accessToken) {
-      // Shared Link Mode
-      const v = await jsonpRequest('validateAccess', { token: accessToken });
-      if (v.status !== 'success') throw new Error(v.message || 'Access denied');
-      accessValidated = true;
-
-      const br = await jsonpRequest('getBaseRates', { token: accessToken });
-      baseRates = (br.status==='success' && br.data && br.data.baseRates) ? br.data.baseRates : getDefaultRates();
-    } else {
-      // Operator Mode (no token): use defaults, still track usage anonymously
-      accessValidated = true;
-      baseRates = getDefaultRates();
-    }
-  } catch(err){
-    console.error(err);
-    showFatal('Unable to load calculator. Please try again or contact support.');
-    return;
-  }
-
-  // Apply defaults & compute once
-  applyBaseRates();
-  document.getElementById('loadingOverlay').style.display = 'none';
-  document.getElementById('calculatorContent').style.display = 'block';
-  updateCalculations();
-  trackUsage('calculator_loaded');
-}
-
-/* =========================
-   SHARE / MANAGE LINKS
-   ========================= */
-function getOperatorName(){ return localStorage.getItem('dashboardUser') || 'Operator'; }
-function toggleOverlay(id, show){ const el=document.getElementById(id); if(el) el.style.display = show?'flex':'none'; }
-function copyTextToClipboard(text){
-  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(text);
-  const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); return Promise.resolve();
-}
-
-async function openShareFlow(){
-  try{
-    const resp = await jsonpRequest('generateToken', {
-      clientName: 'Shared via Dashboard',
-      createdBy: getOperatorName()
+    window.addEventListener('DOMContentLoaded', async () => {
+      await initializeCalculator();
+      // live-change recompute
+      document.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('change', updateCalculations);
+        inp.addEventListener('input', function(){
+          this.style.borderColor = '#1e3a8a';
+          setTimeout(() => { this.style.borderColor = '#d1d5db'; }, 500);
+        });
+      });
+      document.getElementById('foodPercent').addEventListener('change', updatePercentages);
+      document.getElementById('beveragePercent').addEventListener('change', updatePercentages);
     });
-    if (resp.status!=='success') throw new Error(resp.message || 'Unable to generate link');
 
-    const token = resp.data?.token || resp.token;
-    const shareUrl = `${location.origin}${location.pathname}?token=${encodeURIComponent(token)}`;
-    const box = document.getElementById('shareUrlBox');
-    if (box){ box.value = shareUrl; box.focus(); box.select(); }
-    await copyTextToClipboard(shareUrl);
-    toggleOverlay('shareOverlay', true);
-  }catch(err){
-    alert('Could not create link. Please try again.');
-    console.error(err);
-  }
-}
+    async function initializeCalculator(){
+      try{
+        const urlParams = new URLSearchParams(window.location.search);
+        accessToken = urlParams.get('token');
 
-function openManage(){
-  // prime filter with operator name if empty
-  const f = document.getElementById('filterCreatedBy');
-  if (f && !f.value) f.value = getOperatorName();
-  toggleOverlay('manageOverlay', true);
-  loadTokens();
-}
+        if (!accessToken){
+          // Operator mode (no token): still load base rates & show calculator
+          baseRates = await getBaseRates(null);
+          applyBaseRates();
+          document.getElementById('loadingOverlay').style.display = 'none';
+          document.getElementById('calculatorContent').style.display = 'block';
+          updateCalculations();
+          return;
+        }
 
-async function loadTokens(){
-  const list = document.getElementById('tokenList');
-  if (!list) return;
-  list.innerHTML = '<div class="muted">Loading...</div>';
+        const accessValidation = await validateAccess(accessToken);
+        if (!accessValidation.valid){
+          if (accessValidation.expired) showExpiredModal();
+          else showExpiredModal(accessValidation.message || 'Invalid access token.');
+          return;
+        }
 
-  const createdBy = (document.getElementById('filterCreatedBy')?.value || '').trim();
-  try{
-    const resp = await jsonpRequest('listTokens', {
-      createdBy, onlyActive: 'false', maxRows: '50'
-    });
-    list.innerHTML = '';
-    if (resp.status!=='success'){ throw new Error(resp.message || 'Failed to load tokens'); }
-    const items = resp.data?.tokens || [];
-    if (!items.length){ list.innerHTML = '<div class="muted">No tokens found.</div>'; return; }
-    items.forEach(t => list.appendChild(buildTokenRow(t)));
-  }catch(err){
-    list.innerHTML = '<div class="muted">Error loading tokens.</div>';
-    console.error(err);
-  }
-}
-function buildTokenRow(t){
-  const row = document.createElement('div'); row.className='token-item';
-  const meta = document.createElement('div'); meta.className='token-meta';
-  const title = document.createElement('div'); title.className='title'; title.textContent = t.clientName || '(no client name)';
-  const sub = document.createElement('div'); sub.className='muted';
-  sub.textContent = `Created: ${fmtDate(t.createdDate)} • Expires: ${fmtDate(t.expiresAt)} • Accesses: ${t.accessCount ?? 0}`;
-  meta.appendChild(title); meta.appendChild(sub);
+        baseRates = await getBaseRates(accessToken);
+        applyBaseRates();
+        trackUsage('calculator_loaded');
 
-  const actions = document.createElement('div'); actions.className='token-actions';
-  const copyBtn = document.createElement('button'); copyBtn.className='btn btn-ghost'; copyBtn.textContent='Copy Link';
-  copyBtn.addEventListener('click', ()=>{
-    const url = `${location.origin}${location.pathname}?token=${encodeURIComponent(t.token)}`;
-    copyTextToClipboard(url).then(()=>alert('Link copied'));
-  });
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('calculatorContent').style.display = 'block';
 
-  const revokeBtn = document.createElement('button'); revokeBtn.className='btn btn-danger'; revokeBtn.textContent='Revoke';
-  revokeBtn.addEventListener('click', async ()=>{
-    if (!confirm('Revoke this link?')) return;
-    revokeBtn.disabled = true;
-    try{
-      const r = await jsonpRequest('deactivateToken', { token: t.token });
-      if (r.status!=='success') throw new Error(r.message||'Revoke failed');
-      row.style.opacity = .5;
-      row.querySelectorAll('button').forEach(b=>b.disabled=true);
-      alert('Link revoked.');
-    }catch(err){
-      revokeBtn.disabled=false;
-      alert('Failed to revoke link.');
-      console.error(err);
+        updateCalculations();
+        accessValidated = true;
+      }catch(err){
+        console.error('Initialization error:', err);
+        showExpiredModal('Unable to load calculator. Please try again or contact support.');
+      }
     }
-  });
 
-  if (t.active===false){ copyBtn.disabled=true; revokeBtn.disabled=true; row.style.opacity=.6; }
-  actions.appendChild(copyBtn); actions.appendChild(revokeBtn);
-  row.appendChild(meta); row.appendChild(actions);
-  return row;
-}
-function fmtDate(d){ try{return new Date(d).toLocaleString()}catch(_){return d||''} }
-
-/* =========================
-   BACKUP RATES & APPLY
-   ========================= */
-function getDefaultRates(){
-  return {
-    fixedCosts: {
-      cellular: 25,
-      licenseFee: 175,
-      rfidTagsPerTag: 0.18,
-      engageTransactionFee: 0.15,
-      gatewayTransactionFee: 0.07,
-      merchantAccountPercent: 2.5,
-      merchantAccountSwipeFee: 0.03
-    },
-    defaults: {
-      transactions: 330,
-      foodPrice: 10.00,
-      foodPercent: 90,
-      beveragePrice: 3.99,
-      beveragePercent: 10,
-      margin: 60,
-      spoilage: 0,
-      financing: 295,
-      laborRate: 20,
-      laborHours: 0.75
+    async function validateAccess(token){
+      try{
+        if (!token) return { valid:true }; // operator mode
+        const r = await fetch(`${BACKEND_URL}?action=validateAccess&token=${encodeURIComponent(token)}`);
+        const j = await r.json();
+        if (j.status === 'success') return { valid:true, ...j.data };
+        return { valid:false, expired: j.data?.expired || false, message: j.message };
+      }catch(e){
+        console.error('Access validation error:', e);
+        return { valid:false, expired:false, message:'Connection error' };
+      }
     }
-  };
-}
-function applyBaseRates(){
-  const d = baseRates?.defaults || getDefaultRates().defaults;
-  document.getElementById('transactions').value = d.transactions;
-  document.getElementById('foodPrice').value = d.foodPrice;
-  document.getElementById('foodPercent').value = d.foodPercent;
-  document.getElementById('beveragePrice').value = d.beveragePrice;
-  document.getElementById('beveragePercent').value = d.beveragePercent;
-  document.getElementById('margin').value = d.margin;
-  document.getElementById('spoilage').value = d.spoilage;
-  document.getElementById('financing').value = d.financing;
-  document.getElementById('laborRate').value = d.laborRate;
-  document.getElementById('laborHours').value = d.laborHours;
 
-  const f = baseRates?.fixedCosts || getDefaultRates().fixedCosts;
-  document.getElementById('fixedCostsSummary').innerHTML =
-    `• Cellular: $${f.cellular}/month<br>
-     • License Fee: $${f.licenseFee}/month<br>
-     • Transaction Fees: Variable by usage<br>
-     • RFID Tags: $${f.rfidTagsPerTag} per tag`;
-}
+    async function getBaseRates(token){
+      try{
+        const url = token
+          ? `${BACKEND_URL}?action=getBaseRates&token=${encodeURIComponent(token)}`
+          : `${BACKEND_URL}?action=getBaseRates`;
+        const r = await fetch(url);
+        const j = await r.json();
+        if (j.status === 'success') return j.data.baseRates;
+        throw new Error(j.message || 'Failed to get base rates');
+      }catch(e){
+        console.warn('Falling back to default base rates:', e);
+        return getDefaultRates();
+      }
+    }
 
-/* =========================
-   CALCULATIONS
-   ========================= */
-function handleInputChange(e){
-  if (e.target.id==='foodPercent'){
-    const fp = parseFloat(e.target.value)||0;
-    document.getElementById('beveragePercent').value = Math.max(0, 100 - fp);
-  }
-  updateCalculations();
-}
-function updateCalculations(){
-  if (!accessValidated) return;
-  const inputs = {
-    fridgeCount: parseInt(document.getElementById('fridgeCount').value)||1,
-    transactions: parseInt(document.getElementById('transactions').value)||330,
-    foodPrice: parseFloat(document.getElementById('foodPrice').value)||10,
-    foodPercent: parseFloat(document.getElementById('foodPercent').value)||90,
-    beveragePrice: parseFloat(document.getElementById('beveragePrice').value)||3.99,
-    beveragePercent: parseFloat(document.getElementById('beveragePercent').value)||10,
-    margin: parseFloat(document.getElementById('margin').value)||60,
-    spoilage: parseFloat(document.getElementById('spoilage').value)||0,
-    financing: parseFloat(document.getElementById('financing').value)||295,
-    laborRate: parseFloat(document.getElementById('laborRate').value)||20,
-    laborHours: parseFloat(document.getElementById('laborHours').value)||0.75,
-    miscCosts: parseFloat(document.getElementById('miscCosts').value)||0
-  };
-  const results = calculateROI(inputs);
-  displayResults(results);
-  generateTimeline(results, inputs);
-  generateScaling(inputs);
-  trackUsage('calculation_performed', inputs);
-}
-function calculateROI(inputs){
-  const per = calculatePerFridge(inputs);
-  return {
-    monthlyRevenue: per.monthlyRevenue * inputs.fridgeCount,
-    monthlyCosts: per.monthlyCosts * inputs.fridgeCount,
-    monthlyProfit: per.monthlyProfit * inputs.fridgeCount,
-    annualProfit: per.monthlyProfit * inputs.fridgeCount * 12,
-    roi: per.roi,
-    paybackMonths: per.paybackMonths,
-    perFridgeProfit: per.monthlyProfit
-  };
-}
-function calculatePerFridge(inputs){
-  const rates = baseRates?.fixedCosts || getDefaultRates().fixedCosts;
-  const avgTransactionValue = (inputs.foodPrice * inputs.foodPercent / 100) +
-                              (inputs.beveragePrice * inputs.beveragePercent / 100);
-  const monthlyRevenue = inputs.transactions * avgTransactionValue;
-  const cogs = monthlyRevenue * ((100 - inputs.margin)/100);
-  const rfidTagsCost = inputs.transactions * rates.rfidTagsPerTag;
-  const transactionFees = inputs.transactions * (rates.engageTransactionFee + rates.gatewayTransactionFee);
-  const merchantFees = (monthlyRevenue * rates.merchantAccountPercent / 100) +
-                       (inputs.transactions * rates.merchantAccountSwipeFee);
-  const fixedCosts = rates.cellular + rates.licenseFee + rfidTagsCost + transactionFees + merchantFees;
-  const spoilageCost = monthlyRevenue * (inputs.spoilage/100);
-  const laborCost = inputs.laborRate * inputs.laborHours * 4.33; // weeks/mo
+    function applyBaseRates(){
+      if (!baseRates) return;
+      const d = baseRates.defaults || {};
 
-  const totalCosts = cogs + fixedCosts + spoilageCost + laborCost + inputs.miscCosts;
-  const monthlyProfit = monthlyRevenue - totalCosts;
+      // Defaults
+      document.getElementById('transactions').value   = d.transactions ?? 330;
+      document.getElementById('foodPrice').value      = d.foodPrice ?? 10.00;
+      document.getElementById('foodPercent').value    = d.foodPercent ?? 90;
+      document.getElementById('beveragePrice').value  = d.beveragePrice ?? 3.99;
+      document.getElementById('beveragePercent').value= d.beveragePercent ?? 10;
+      document.getElementById('margin').value         = d.margin ?? 60;
+      document.getElementById('spoilage').value       = d.spoilage ?? 0;
+      document.getElementById('financing').value      = d.financing ?? 295;
+      document.getElementById('laborRate').value      = d.laborRate ?? 20;
+      document.getElementById('laborHours').value     = d.laborHours ?? 0.75;
+      document.getElementById('serviceFee').value     = d.serviceFee ?? 0;
 
-  const monthlyProfitPreFin = monthlyProfit + inputs.financing;
-  const initialInvestment = 7500;
-  const roi = (monthlyProfitPreFin * 12 / initialInvestment) * 100;
-  const paybackMonths = initialInvestment / (monthlyProfitPreFin || 1);
+      const f = baseRates.fixedCosts || {};
+      document.getElementById('fixedCostsSummary').innerHTML = [
+        `• Cellular: $${f.cellular ?? 25}/month`,
+        `• License Fee: $${f.licenseFee ?? 175}/month`,
+        `• Engage & Gateway Fees: $${(f.engageTransactionFee ?? 0.15)+(f.gatewayTransactionFee ?? 0.07)} per transaction`,
+        `• Merchant Interchange: ${(f.merchantAccountPercent ?? 2.5)}% of product sales`,
+        `• Merchant Swipe Fee: $${f.merchantAccountSwipeFee ?? 0.03} per transaction`,
+        `• RFID Tags: $${f.rfidTagsPerTag ?? 0.18} per tag`
+      ].join('<br>');
+    }
 
-  return {
-    monthlyRevenue,
-    monthlyCosts: totalCosts + inputs.financing,
-    monthlyProfit: monthlyProfit - inputs.financing,
-    roi, paybackMonths
-  };
-}
-function displayResults(r){
-  document.getElementById('monthlyRevenue').textContent = fmtMoney(r.monthlyRevenue);
-  document.getElementById('monthlyCosts').textContent = fmtMoney(r.monthlyCosts);
-  const pe = document.getElementById('monthlyProfit');
-  pe.textContent = fmtMoney(r.monthlyProfit);
-  pe.className = 'result-value ' + (r.monthlyProfit >= 0 ? 'positive':'negative');
-  const ae = document.getElementById('annualProfit');
-  ae.textContent = fmtMoney(r.annualProfit);
-  ae.className = 'result-value ' + (r.annualProfit >= 0 ? 'positive':'negative');
-  document.getElementById('roiPercent').textContent = (isFinite(r.roi)? r.roi.toFixed(1):0) + '%';
-  document.getElementById('paybackPeriod').textContent = (isFinite(r.paybackMonths)? Math.round(r.paybackMonths):'–') + ' months';
-}
-function generateTimeline(results, inputs){
-  const el = document.getElementById('timelineGrid'); el.innerHTML='';
-  const periods = [
-    { label:'Year 1', months:12 },
-    { label:'Year 2', months:24 },
-    { label:'Year 3', months:36 },
-    { label:'Post-Financing', months:48 }
-  ];
-  periods.forEach(p=>{
-    const card = document.createElement('div'); card.className='timeline-item';
-    const lab = document.createElement('div'); lab.className='timeline-period'; lab.textContent=p.label;
-    const val = document.createElement('div'); val.className='timeline-profit';
-    const profit = (p.label==='Post-Financing') ? (results.monthlyProfit + inputs.financing)*12 : results.monthlyProfit*p.months;
-    val.textContent = fmtMoney(profit);
-    card.appendChild(lab); card.appendChild(val); el.appendChild(card);
-  });
-}
-function generateScaling(inputs){
-  const el = document.getElementById('scalingGrid'); el.innerHTML='';
-  [1,3,5,10,20].forEach(n=>{
-    const r = calculateROI({ ...inputs, fridgeCount:n });
-    const card = document.createElement('div'); card.className='scaling-item';
-    const a = document.createElement('div'); a.className='scaling-fridges'; a.textContent = `${n} Fridge${n>1?'s':''}`;
-    const b = document.createElement('div'); b.className='scaling-profit'; b.textContent = `${fmtMoney(r.monthlyProfit)}/month`;
-    card.appendChild(a); card.appendChild(b); el.appendChild(card);
-  });
-}
-function fmtMoney(x){
-  return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:0,maximumFractionDigits:0}).format(x||0);
-}
+    async function trackUsage(action, inputData=null){
+      if (!accessValidated || !accessToken) return;
+      try{
+        const params = new URLSearchParams({
+          action: 'trackUsage',
+          token: accessToken,
+          actionName: action,
+          userAgent: navigator.userAgent
+        });
+        if (inputData) params.append('inputs', JSON.stringify(inputData));
+        fetch(`${BACKEND_URL}?${params.toString()}`);
+      }catch(e){
+        console.warn('Analytics tracking failed:', e);
+      }
+    }
 
-/* =========================
-   TRACKING (JSONP, fire/forget)
-   ========================= */
-function trackUsage(action, inputs){
-  try{
-    const params = { action:'trackUsage', token: accessToken || '', actionName: action, userAgent: navigator.userAgent };
-    if (inputs) params.inputs = JSON.stringify(inputs);
-    jsonpRequest('trackUsage', params).catch(()=>{});
-  }catch(_){}
-}
+    function showExpiredModal(msg){
+      const message = msg || 'Your access to this ROI Calculator has expired. Please contact your Quantum Solutions representative to request renewed access.';
+      const overlay = document.createElement('div');
+      overlay.className = 'expired-overlay';
+      overlay.innerHTML = `
+        <div class="expired-modal">
+          <h2>Access Expired</h2>
+          <p>${message}</p>
+          <button class="btn" onclick="window.close()">Close</button>
+        </div>`;
+      document.body.appendChild(overlay);
+    }
 
-/* =========================
-   ERROR HANDLING
-   ========================= */
-function showFatal(msg){
-  const o=document.getElementById('loadingOverlay');
-  if (o) o.querySelector('.loading-content').innerHTML =
-    `<h3 style="color:#fff;margin-bottom:6px;">Access Error</h3><p style="color:#fff">${msg}</p>`;
-}
+    function getDefaultRates(){
+      return {
+        fixedCosts: {
+          cellular: 25,
+          licenseFee: 175,
+          rfidTagsPerTag: 0.18,
+          engageTransactionFee: 0.15,
+          gatewayTransactionFee: 0.07,
+          merchantAccountPercent: 2.5,
+          merchantAccountSwipeFee: 0.03
+        },
+        defaults: {
+          transactions: 330,
+          foodPrice: 10.00,
+          foodPercent: 90,
+          beveragePrice: 3.99,
+          beveragePercent: 10,
+          margin: 60,
+          spoilage: 0,
+          financing: 295,
+          laborRate: 20,
+          laborHours: 0.75,
+          serviceFee: 0
+        }
+      };
+    }
 
-/* Close overlay when clicking outside modal */
-document.addEventListener('click', (e)=>{
-  const s=document.getElementById('shareOverlay'), m=document.getElementById('manageOverlay');
-  if (e.target===s) toggleOverlay('shareOverlay',false);
-  if (e.target===m) toggleOverlay('manageOverlay',false);
-});
-</script>
+    function updatePercentages(){
+      const fp = parseFloat(document.getElementById('foodPercent').value) || 0;
+      const bp = Math.max(0, 100 - fp);
+      document.getElementById('beveragePercent').value = bp;
+      updateCalculations();
+    }
+
+    function updateCalculations(){
+      const inputs = {
+        fridgeCount:  parseInt(document.getElementById('fridgeCount').value) || 1,
+        transactions: parseInt(document.getElementById('transactions').value) || 330,
+        foodPrice:    parseFloat(document.getElementById('foodPrice').value) || 10.00,
+        foodPercent:  parseFloat(document.getElementById('foodPercent').value) || 90,
+        beveragePrice:parseFloat(document.getElementById('beveragePrice').value) || 3.99,
+        beveragePercent: parseFloat(document.getElementById('beveragePercent').value) || 10,
+        margin:       parseFloat(document.getElementById('margin').value) || 60,
+        spoilage:     parseFloat(document.getElementById('spoilage').value) || 0,
+        financing:    parseFloat(document.getElementById('financing').value) || 295,
+        laborRate:    parseFloat(document.getElementById('laborRate').value) || 20,
+        laborHours:   parseFloat(document.getElementById('laborHours').value) || 0.75,
+        miscCosts:    parseFloat(document.getElementById('miscCosts').value) || 0,
+        serviceFee:   parseFloat(document.getElementById('serviceFee').value) || 0
+      };
+
+      const results = calculateROI(inputs);
+      displayResults(results);
+      generateTimeline(results, inputs);
+      generateScaling(inputs);
+
+      trackUsage('calculation_performed', inputs);
+    }
+
+    function calculateROI(inputs){
+      const per = calculatePerFridge(inputs);
+      return {
+        monthlyRevenue: per.monthlyRevenue * inputs.fridgeCount,
+        monthlyCosts:   per.monthlyCosts   * inputs.fridgeCount,
+        monthlyProfit:  per.monthlyProfit  * inputs.fridgeCount,
+        annualProfit:   per.monthlyProfit  * inputs.fridgeCount * 12,
+        roi: per.roi,
+        paybackMonths: per.paybackMonths,
+        perFridgeProfit: per.monthlyProfit
+      };
+    }
+
+    // UPDATED: serviceFee is revenue with no COGS/fees
+    function calculatePerFridge(inputs){
+      const rates = (baseRates && baseRates.fixedCosts) || getDefaultRates().fixedCosts;
+
+      // Product revenue from transactions
+      const avgTransactionValue =
+        (inputs.foodPrice * inputs.foodPercent / 100) +
+        (inputs.beveragePrice * inputs.beveragePercent / 100);
+      const productRevenue = inputs.transactions * avgTransactionValue;
+
+      // Service fee: extra monthly revenue (no COGS/fees)
+      const monthlyRevenue = productRevenue + inputs.serviceFee;
+
+      // COGS only on product revenue
+      const cogs = productRevenue * ((100 - inputs.margin) / 100);
+
+      // Transaction-related fees based on transactions/product revenue
+      const rfidTagsCost   = inputs.transactions * (rates.rfidTagsPerTag ?? 0.18);
+      const transactionFees= inputs.transactions * ((rates.engageTransactionFee ?? 0.15) + (rates.gatewayTransactionFee ?? 0.07));
+      const merchantFees   =
+        (productRevenue * ((rates.merchantAccountPercent ?? 2.5) / 100)) +
+        (inputs.transactions * (rates.merchantAccountSwipeFee ?? 0.03));
+
+      const fixedCosts = (rates.cellular ?? 25) + (rates.licenseFee ?? 175) + rfidTagsCost + transactionFees + merchantFees;
+
+      const spoilageCost = productRevenue * ((inputs.spoilage || 0) / 100);
+      const laborCost    = inputs.laborRate * inputs.laborHours * 4.33; // weeks/month
+
+      const totalCosts   = cogs + fixedCosts + spoilageCost + laborCost + inputs.miscCosts;
+      const monthlyProfit = monthlyRevenue - totalCosts;
+
+      // ROI (pre-financing) and payback
+      const monthlyProfitPreFinancing = monthlyProfit + inputs.financing;
+      const initialInvestment = 7500;
+      const roi = (monthlyProfitPreFinancing * 12 / initialInvestment) * 100;
+      const paybackMonths = initialInvestment / (monthlyProfitPreFinancing || 1);
+
+      return {
+        monthlyRevenue,
+        monthlyCosts: totalCosts + inputs.financing,
+        monthlyProfit: monthlyProfit - inputs.financing,
+        roi,
+        paybackMonths
+      };
+    }
+
+    function displayResults(results){
+      document.getElementById('monthlyRevenue').textContent = formatCurrency(results.monthlyRevenue);
+      document.getElementById('monthlyCosts').textContent   = formatCurrency(results.monthlyCosts);
+
+      const profitEl = document.getElementById('monthlyProfit');
+      profitEl.textContent = formatCurrency(results.monthlyProfit);
+      profitEl.className = 'result-value ' + (results.monthlyProfit >= 0 ? 'positive' : 'negative');
+
+      const annualEl = document.getElementById('annualProfit');
+      annualEl.textContent = formatCurrency(results.annualProfit);
+      annualEl.className = 'result-value ' + (results.annualProfit >= 0 ? 'positive' : 'negative');
+
+      document.getElementById('roiPercent').textContent = results.roi.toFixed(1) + '%';
+      document.getElementById('paybackPeriod').textContent = Math.round(results.paybackMonths) + ' months';
+    }
+
+    function generateTimeline(results, inputs){
+      const container = document.getElementById('timelineGrid');
+      container.innerHTML = '';
+
+      const periods = [
+        { label: 'Year 1', months: 12 },
+        { label: 'Year 2', months: 24 },
+        { label: 'Year 3', months: 36 },
+        { label: 'Post-Financing', months: 48 }
+      ];
+
+      periods.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'timeline-item';
+
+        let profit;
+        if (p.label === 'Post-Financing'){
+          profit = (results.monthlyProfit + (parseFloat(document.getElementById('financing').value) || 0)) * 12;
+        } else {
+          profit = results.monthlyProfit * p.months;
+        }
+
+        item.innerHTML = `
+          <div class="timeline-period">${p.label}</div>
+          <div class="timeline-profit">${formatCurrency(profit)}</div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function generateScaling(inputs){
+      const scaling = document.getElementById('scalingGrid');
+      scaling.innerHTML = '';
+
+      [1,3,5,10,20].forEach(n => {
+        const scaled = { ...inputs, fridgeCount: n };
+        const res = calculateROI(scaled);
+        const item = document.createElement('div');
+        item.className = 'scaling-item';
+        item.innerHTML = `
+          <div class="scaling-fridges">${n} Fridge${n>1 ? 's':''}</div>
+          <div class="scaling-profit">${formatCurrency(res.monthlyProfit)}/month</div>
+        `;
+        scaling.appendChild(item);
+      });
+    }
+
+    function formatCurrency(amount){
+      return new Intl.NumberFormat('en-US', {
+        style:'currency', currency:'USD', minimumFractionDigits:0, maximumFractionDigits:0
+      }).format(amount);
+    }
+
+    function generatePDFReport(){
+      trackUsage('pdf_download_requested');
+      alert('PDF Report generation coming soon! This will create a comprehensive analysis document with your calculations, assumptions, and Quantum Solutions branding.');
+    }
+
+    function shareResults(){
+      trackUsage('share_results_requested');
+      alert('Results sharing coming soon! This will generate a summary link you can share with stakeholders.');
+    }
+  </script>
 </body>
 </html>
