@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .calculator-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #1e3a8a;
+            padding-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .disclaimer {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .input-section:hover {
+            border-color: #1e3a8a;
+            box-shadow: 0 5px 15px rgba(30, 58, 138, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 30px;
+            border-radius: 15px;
+            border: 3px solid #1e3a8a;
+            margin-top: 20px;
+        }
+
+        .results-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-label {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .result-value.positive {
+            color: #059669;
+        }
+
+        .result-value.negative {
+            color: #dc2626;
+        }
+
+        .timeline-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            margin-top: 20px;
+        }
+
+        .timeline-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .timeline-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .timeline-period {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .timeline-profit {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #059669;
+        }
+
+        .download-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f1f5f9;
+            border-radius: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #1e3a8a;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.3);
+        }
+
+        .btn-secondary {
+            background: #059669;
+        }
+
+        .btn-secondary:hover {
+            background: #047857;
+        }
+
+        .scaling-section {
+            grid-column: 1 / -1;
+            background: #fef7ff;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #a855f7;
+            margin-top: 20px;
+        }
+
+        .scaling-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .scaling-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .scaling-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+        }
+
+        .scaling-fridges {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 8px;
+        }
+
+        .scaling-profit {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #059669;
+        }
+
+        .expired-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .expired-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            margin: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .expired-modal h2 {
+            color: #dc2626;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .expired-modal p {
+            color: #6b7280;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .calculator-container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-container">
+        <div class="header">
+            <h1>🍎 Smart Food Fridge ROI Calculator</h1>
+            <p>Quantum Solutions - Advanced Food Service Technology</p>
+            <p style="font-size: 0.9em; color: #6b7280;">Calculate your return on investment with precision</p>
+        </div>
+
+        <div class="disclaimer">
+            ⚠️ These are estimated calculations. True profit is determined by your actual business model and operational factors.
+        </div>
+
+        <div class="calculator-grid">
+            <!-- Business Assumptions Section -->
+            <div class="input-section">
+                <div class="section-title">
+                    📊 Business Assumptions
+                </div>
+                
+                <div class="form-group">
+                    <label for="fridgeCount">Number of Fridges</label>
+                    <input type="number" id="fridgeCount" value="1" min="1" max="50" onchange="updateCalculations()">
+                </div>
+
+                <div class="form-group">
+                    <label for="transactions">Monthly Transactions (per fridge)</label>
+                    <input type="number" id="transactions" value="330" min="50" max="1000" onchange="updateCalculations()">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="foodPrice">Food Price per Sale</label>
+                        <input type="number" id="foodPrice" value="10.00" step="0.25" min="5" max="25" onchange="updateCalculations()">
+                    </div>
+                    <div class="form-group">
+                        <label for="foodPercent">Food Sales %</label>
+                        <input type="number" id="foodPercent" value="90" min="0" max="100" onchange="updatePercentages(); updateCalculations()">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="beveragePrice">Beverage Price per Sale</label>
+                        <input type="number" id="beveragePrice" value="3.99" step="0.25" min="1" max="10" onchange="updateCalculations()">
+                    </div>
+                    <div class="form-group">
+                        <label for="beveragePercent">Beverage Sales %</label>
+                        <input type="number" id="beveragePercent" value="10" min="0" max="100" onchange="updatePercentages(); updateCalculations()">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="margin">Your Profit Margin %</label>
+                        <input type="number" id="margin" value="60" min="20" max="80" onchange="updateCalculations()">
+                    </div>
+                    <div class="form-group">
+                        <label for="spoilage">Spoilage %</label>
+                        <input type="number" id="spoilage" value="0" min="0" max="20" step="0.5" onchange="updateCalculations()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Costs Section -->
+            <div class="input-section">
+                <div class="section-title">
+                    💰 Operational Costs
+                </div>
+
+                <div class="form-group">
+                    <label for="financing">Monthly Financing Payment</label>
+                    <input type="number" id="financing" value="295" min="0" max="1000" onchange="updateCalculations()">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="laborRate">Labor Rate ($/hour)</label>
+                        <input type="number" id="laborRate" value="20" min="10" max="50" onchange="updateCalculations()">
+                    </div>
+                    <div class="form-group">
+                        <label for="laborHours">Hours per Week (per fridge)</label>
+                        <input type="number" id="laborHours" value="0.75" step="0.25" min="0" max="10" onchange="updateCalculations()">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="miscCosts">Miscellaneous Monthly Costs</label>
+                    <input type="number" id="miscCosts" value="0" min="0" max="500" onchange="updateCalculations()">
+                </div>
+
+                <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <h4 style="color: #0369a1; margin-bottom: 10px;">Fixed Costs (per fridge):</h4>
+                    <div style="font-size: 0.9em; color: #0369a1;">
+                        • Cellular: $25/month<br>
+                        • License Fee: $175/month<br>
+                        • Transaction Fees: ~$157/month<br>
+                        • RFID Tags: ~$59/month
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section">
+                <div class="results-title">📈 Financial Performance</div>
+                
+                <div class="results-grid">
+                    <div class="result-card">
+                        <div class="result-label">Monthly Revenue</div>
+                        <div class="result-value" id="monthlyRevenue">$0</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Monthly Costs</div>
+                        <div class="result-value" id="monthlyCosts">$0</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Monthly Net Profit</div>
+                        <div class="result-value" id="monthlyProfit">$0</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Annual Net Profit</div>
+                        <div class="result-value" id="annualProfit">$0</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">ROI %</div>
+                        <div class="result-value" id="roiPercent">0%</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Payback Period</div>
+                        <div class="result-value" id="paybackPeriod">0 months</div>
+                    </div>
+                </div>
+
+                <div class="timeline-section">
+                    <div class="timeline-title">📅 Multi-Year Projection</div>
+                    <div class="timeline-grid" id="timelineGrid">
+                        <!-- Timeline items will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scaling Analysis -->
+            <div class="scaling-section">
+                <div class="scaling-title">🔄 Scaling Analysis</div>
+                <div class="scaling-grid" id="scalingGrid">
+                    <!-- Scaling items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <h3 style="margin-bottom: 20px; color: #374151;">📋 Export Your Analysis</h3>
+            <button class="btn" onclick="generatePDFReport()">📄 Download PDF Report</button>
+            <button class="btn btn-secondary" onclick="shareResults()">🔗 Share Results</button>
+        </div>
+    </div>
+
+    <script>
+        // Fixed costs per fridge (monthly)
+        const FIXED_COSTS = {
+            cellular: 25,
+            licenseFee: 175,
+            rfidTags: 0.18, // per tag
+            engageTransactionFee: 0.15, // per transaction
+            gatewayTransactionFee: 0.07, // per transaction
+            merchantAccountPercent: 2.5, // percentage
+            merchantAccountSwipeFee: 0.03 // per transaction
+        };
+
+        // Check for access expiration on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            checkAccessExpiration();
+            updateCalculations();
+        });
+
+        function checkAccessExpiration() {
+            // This would normally check against your Google Sheets backend
+            // For demo purposes, we'll simulate a 7-day expiration
+            const calculatorCreated = new Date('2025-01-25'); // Replace with actual creation date from backend
+            const expirationDate = new Date(calculatorCreated.getTime() + (7 * 24 * 60 * 60 * 1000));
+            const now = new Date();
+
+            if (now > expirationDate) {
+                showExpiredModal();
+                return false;
+            }
+            
+            // Track usage (minimal analytics)
+            trackUsage();
+            return true;
+        }
+
+        function showExpiredModal() {
+            const overlay = document.createElement('div');
+            overlay.className = 'expired-overlay';
+            overlay.innerHTML = `
+                <div class="expired-modal">
+                    <h2>🔒 Access Expired</h2>
+                    <p>Your access to this ROI Calculator has expired.</p>
+                    <p>Please contact your Quantum Solutions representative to request renewed access.</p>
+                    <button class="btn" onclick="window.close()">Close</button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function trackUsage() {
+            // Minimal analytics - just log usage
+            const usage = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                referrer: document.referrer
+            };
+            // This would send to your Google Apps Script endpoint
+            console.log('Calculator accessed:', usage);
+        }
+
+        function updatePercentages() {
+            const foodPercent = parseFloat(document.getElementById('foodPercent').value);
+            const beveragePercent = 100 - foodPercent;
+            document.getElementById('beveragePercent').value = beveragePercent;
+        }
+
+        function updateCalculations() {
+            const inputs = {
+                fridgeCount: parseInt(document.getElementById('fridgeCount').value) || 1,
+                transactions: parseInt(document.getElementById('transactions').value) || 330,
+                foodPrice: parseFloat(document.getElementById('foodPrice').value) || 10.00,
+                foodPercent: parseFloat(document.getElementById('foodPercent').value) || 90,
+                beveragePrice: parseFloat(document.getElementById('beveragePrice').value) || 3.99,
+                beveragePercent: parseFloat(document.getElementById('beveragePercent').value) || 10,
+                margin: parseFloat(document.getElementById('margin').value) || 60,
+                spoilage: parseFloat(document.getElementById('spoilage').value) || 0,
+                financing: parseFloat(document.getElementById('financing').value) || 295,
+                laborRate: parseFloat(document.getElementById('laborRate').value) || 20,
+                laborHours: parseFloat(document.getElementById('laborHours').value) || 0.75,
+                miscCosts: parseFloat(document.getElementById('miscCosts').value) || 0
+            };
+
+            // Calculate per fridge, then multiply by number of fridges
+            const results = calculateROI(inputs);
+            displayResults(results, inputs);
+            generateTimeline(results, inputs);
+            generateScaling(inputs);
+        }
+
+        function calculateROI(inputs) {
+            const perFridge = calculatePerFridge(inputs);
+            
+            return {
+                monthlyRevenue: perFridge.monthlyRevenue * inputs.fridgeCount,
+                monthlyCosts: perFridge.monthlyCosts * inputs.fridgeCount,
+                monthlyProfit: perFridge.monthlyProfit * inputs.fridgeCount,
+                annualProfit: perFridge.monthlyProfit * inputs.fridgeCount * 12,
+                roi: perFridge.roi,
+                paybackMonths: perFridge.paybackMonths,
+                perFridgeProfit: perFridge.monthlyProfit
+            };
+        }
+
+        function calculatePerFridge(inputs) {
+            // Revenue calculation
+            const avgTransactionValue = (inputs.foodPrice * inputs.foodPercent / 100) + 
+                                      (inputs.beveragePrice * inputs.beveragePercent / 100);
+            const monthlyRevenue = inputs.transactions * avgTransactionValue;
+            
+            // Cost of Goods Sold
+            const cogs = monthlyRevenue * ((100 - inputs.margin) / 100);
+            
+            // Fixed operational costs
+            const rfidTagsCost = inputs.transactions * FIXED_COSTS.rfidTags;
+            const transactionFees = inputs.transactions * (FIXED_COSTS.engageTransactionFee + FIXED_COSTS.gatewayTransactionFee);
+            const merchantFees = (monthlyRevenue * FIXED_COSTS.merchantAccountPercent / 100) + 
+                               (inputs.transactions * FIXED_COSTS.merchantAccountSwipeFee);
+            
+            const fixedCosts = FIXED_COSTS.cellular + FIXED_COSTS.licenseFee + rfidTagsCost + 
+                             transactionFees + merchantFees;
+            
+            // Variable costs
+            const spoilageCost = monthlyRevenue * (inputs.spoilage / 100);
+            const laborCost = inputs.laborRate * inputs.laborHours * 4.33; // weeks per month
+            
+            const totalCosts = cogs + fixedCosts + spoilageCost + laborCost + inputs.miscCosts;
+            const monthlyProfit = monthlyRevenue - totalCosts;
+            
+            // ROI calculation (excluding financing for ROI calculation)
+            const monthlyProfitPreFinancing = monthlyProfit + inputs.financing;
+            const initialInvestment = 7500; // Smart Food Fridge cost
+            const roi = (monthlyProfitPreFinancing * 12 / initialInvestment) * 100;
+            
+            // Payback period calculation
+            const paybackMonths = initialInvestment / monthlyProfitPreFinancing;
+
+            return {
+                monthlyRevenue: monthlyRevenue,
+                monthlyCosts: totalCosts + inputs.financing,
+                monthlyProfit: monthlyProfit - inputs.financing,
+                roi: roi,
+                paybackMonths: paybackMonths
+            };
+        }
+
+        function displayResults(results, inputs) {
+            document.getElementById('monthlyRevenue').textContent = formatCurrency(results.monthlyRevenue);
+            document.getElementById('monthlyCosts').textContent = formatCurrency(results.monthlyCosts);
+            
+            const profitElement = document.getElementById('monthlyProfit');
+            profitElement.textContent = formatCurrency(results.monthlyProfit);
+            profitElement.className = 'result-value ' + (results.monthlyProfit >= 0 ? 'positive' : 'negative');
+            
+            const annualElement = document.getElementById('annualProfit');
+            annualElement.textContent = formatCurrency(results.annualProfit);
+            annualElement.className = 'result-value ' + (results.annualProfit >= 0 ? 'positive' : 'negative');
+            
+            document.getElementById('roiPercent').textContent = results.roi.toFixed(1) + '%';
+            document.getElementById('paybackPeriod').textContent = Math.round(results.paybackMonths) + ' months';
+        }
+
+        function generateTimeline(results, inputs) {
+            const timeline = document.getElementById('timelineGrid');
+            timeline.innerHTML = '';
+            
+            // Calculate profits for different periods
+            const periods = [
+                { label: 'Year 1', months: 12 },
+                { label: 'Year 2', months: 24 },
+                { label: 'Year 3', months: 36 },
+                { label: 'Post-Financing', months: 48 } // Assuming 4 year financing
+            ];
+            
+            periods.forEach(period => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                
+                let profit;
+                if (period.label === 'Post-Financing') {
+                    // After financing is paid off
+                    profit = (results.monthlyProfit + inputs.financing) * 12;
+                } else {
+                    profit = results.monthlyProfit * period.months;
+                }
+                
+                item.innerHTML = `
+                    <div class="timeline-period">${period.label}</div>
+                    <div class="timeline-profit">${formatCurrency(profit)}</div>
+                `;
+                timeline.appendChild(item);
+            });
+        }
+
+        function generateScaling(inputs) {
+            const scaling = document.getElementById('scalingGrid');
+            scaling.innerHTML = '';
+            
+            const scales = [1, 3, 5, 10, 20];
+            
+            scales.forEach(fridgeCount => {
+                const scaledInputs = { ...inputs, fridgeCount: fridgeCount };
+                const results = calculateROI(scaledInputs);
+                
+                const item = document.createElement('div');
+                item.className = 'scaling-item';
+                
+                item.innerHTML = `
+                    <div class="scaling-fridges">${fridgeCount} Fridge${fridgeCount > 1 ? 's' : ''}</div>
+                    <div class="scaling-profit">${formatCurrency(results.monthlyProfit)}/month</div>
+                `;
+                scaling.appendChild(item);
+            });
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function generatePDFReport() {
+            // This would generate a professional PDF report
+            alert('PDF Report generation coming soon! This will create a comprehensive analysis document with your calculations, assumptions, and Quantum Solutions branding.');
+        }
+
+        function shareResults() {
+            // This would create a shareable link to the results
+            alert('Results sharing coming soon! This will generate a summary link you can share with stakeholders.');
+        }
+
+        // Add some visual feedback for input changes
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.style.borderColor = '#1e3a8a';
+                setTimeout(() => {
+                    this.style.borderColor = '#d1d5db';
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>
