@@ -894,7 +894,7 @@ function addLogoutButton() {
 
     const loggedInUser = sessionStorage.getItem('dashboardUser'); 
 
-     
+      if (loggedInUser) localStorage.setItem('dashboardUser', loggedInUser);
 
     // Remove existing logout button if any 
 
@@ -960,11 +960,10 @@ function openUserProfile() {
 
   
 
-function logout() { 
-
-    sessionStorage.clear(); 
-
-    window.location.href = 'index.html'; 
+function logout() {
+    sessionStorage.clear();
+    localStorage.removeItem('dashboardUser');   // ← add this
+    window.location.href = 'index.html';
 
 } 
 
