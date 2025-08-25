@@ -688,38 +688,135 @@
     function openManage(){ document.getElementById('manageOverlay').style.display='flex'; loadTokens(); }
     function closeManage(){ document.getElementById('manageOverlay').style.display='none'; }
 
-    async function loadTokens(){
-      const tokenList = document.getElementById('tokenList');
-      tokenList.innerHTML = '<div class="muted">Loading…</div>';
-      const createdBy = document.getElementById('filterCreatedBy').value.trim();
-      try{
-        const resp = await jsonpRequest('listTokens', {
-          createdBy,
-          onlyActive: 'false',  // show all
-          maxRows: '50'
-        });
-        if (resp.status !== 'success') throw new Error(resp.message || 'Failed to load tokens');
-        const items = resp.data.tokens || [];
-        if (!items.length){ tokenList.innerHTML = '<div class="muted">No tokens found.</div>'; return; }
-        tokenList.innerHTML = items.map(t => {
-          const active = !!t.active;
-          return `
-            <div class="token-item">
-              <div>
-                <div class="token-meta"><strong>${t.clientName || '(no client name)'}</strong> <span class="badge ${active?'badge-green':'badge-gray'}">${active?'Active':'Inactive'}</span></div>
-                <div class="token-meta muted">Created: ${t.createdDate ? new Date(t.createdDate).toLocaleString() : '—'} · Expires: ${t.expiresAt ? new Date(t.expiresAt).toLocaleString() : '—'}</div>
-                <div class="token-meta muted">Created By: ${t.createdBy || '—'} · Accesses: ${t.accessCount ?? 0}</div>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-ghost" onclick="copyDirect('${t.shareUrl.replace(/'/g,\"\\'\")}')">Copy Link</button>
-                ${active ? `<button class="btn btn-danger" onclick="revokeToken('${t.token}')">Revoke</button>` : ''}
-              </div>
-            </div>`;
-        }).join('');
-      }catch(err){
-        tokenList.innerHTML = `<div class="muted">Error: ${err.message}</div>`;
-      }
+ <script>
+// Replace your current loadTokens() with this version
+async function loadTokens() {
+  const tokenList = document.getElementById('tokenList');
+  const createdBy = (document.getElementById('filterCreatedBy')?.value || '').trim();
+
+  tokenList.innerHTML = '<div class="muted">Loading...</div>';
+
+  try {
+    const resp = await jsonpRequest('listTokens', {
+      createdBy,
+      onlyActive: 'false',           // list all
+      maxRows: '50'
+    });
+    if (resp.status !== 'success') throw new Error(resp.message || 'Failed to load tokens');
+
+    const items = (resp.data && Array.isArray(resp.data.tokens)) ? resp.data.tokens : [];
+
+    tokenList.textContent = '';
+    if (!items.length) {
+      tokenList.innerHTML = '<div class="muted">No tokens found.</div>';
+      return;
     }
+
+    items.forEach(t => {
+      const isActive = (t.active === true || t.active === 'TRUE' || t.active === 1);
+
+      // Row container
+      const row = document.createElement('div');
+      row.className = 'token-item';
+
+      // Top line: name + badges
+      const meta1 = document.createElement('div');
+      meta1.className = 'token-meta';
+
+      const name = document.createElement('strong');
+      name.textContent = t.clientName || '(no client name)';
+      meta1.appendChild(name);
+
+      meta1.appendChild(document.createTextNode(' '));
+
+      const activeBadge = document.createElement('span');
+      activeBadge.className = 'badge ' + (isActive ? 'badge-success' : 'badge-muted');
+      activeBadge.textContent = isActive ? 'Active' : 'Revoked';
+      meta1.appendChild(activeBadge);
+
+      meta1.appendChild(document.createTextNode(' '));
+
+      const expBadge = document.createElement('span');
+      expBadge.className = 'badge badge-muted';
+      expBadge.textContent = 'Expires ' + (t.expiresAt ? new Date(t.expiresAt).toLocaleString() : '—');
+      meta1.appendChild(expBadge);
+
+      // Second line: meta
+      const meta2 = document.createElement('div');
+      meta2.className = 'token-meta muted';
+      const createdDateStr = t.createdDate ? new Date(t.createdDate).toLocaleString() : '—';
+      meta2.textContent =
+        `Created: ${createdDateStr} · By: ${t.createdBy || '—'} · Accesses: ${t.accessCount ?? 0}`;
+
+      // Action buttons
+      const actions = document.createElement('div');
+      actions.style.display = 'flex';
+      actions.style.gap = '8px';
+      actions.style.flexWrap = 'wrap';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn btn-ghost';
+      copyBtn.textContent = 'Copy Link';
+      copyBtn.addEventListener('click', () => {
+        const shareUrl = t.shareUrl || `${location.origin}${location.pathname}?token=${t.token}`;
+        if (navigator.clipboard?.writeText) {
+          navigator.clipboard.writeText(shareUrl)
+            .then(() => { if (typeof showToast === 'function') showToast('Link copied to clipboard'); })
+            .catch(() => fallbackCopy(shareUrl));
+        } else {
+          fallbackCopy(shareUrl);
+        }
+      });
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (_) {}
+        document.body.removeChild(ta);
+        if (typeof showToast === 'function') showToast('Link copied to clipboard');
+      }
+
+      actions.appendChild(copyBtn);
+
+      if (isActive) {
+        const revokeBtn = document.createElement('button');
+        revokeBtn.className = 'btn btn-danger';
+        revokeBtn.textContent = 'Revoke';
+        revokeBtn.addEventListener('click', () => revokeToken(t.token));
+        actions.appendChild(revokeBtn);
+      }
+
+      // Assemble row
+      row.appendChild(meta1);
+      row.appendChild(meta2);
+      row.appendChild(actions);
+      tokenList.appendChild(row);
+    });
+
+  } catch (err) {
+    tokenList.innerHTML = `<div class="muted">Error: ${err.message}</div>`;
+    console.error('loadTokens error', err);
+  }
+}
+
+// Safe revoke (uses your existing jsonpRequest)
+async function revokeToken(token) {
+  if (!token) return;
+  if (!confirm('Revoke this link? Users with this URL will immediately lose access.')) return;
+
+  try {
+    const resp = await jsonpRequest('deactivateToken', { token });
+    if (resp.status !== 'success') throw new Error(resp.message || 'Failed to revoke token');
+    if (typeof showToast === 'function') showToast('Link revoked');
+    await loadTokens();
+  } catch (e) {
+    alert('Unable to revoke: ' + e.message);
+  }
+}
+</script>
+
 
     function copyDirect(text){
       const ta = document.createElement('textarea');
