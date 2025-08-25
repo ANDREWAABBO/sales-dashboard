@@ -1678,11 +1678,12 @@ function openQuantumAboutUs() {
 
   
 
-        function openQuantumROICalculator() { 
-
-            alert('ROI Calculator coming soon!'); 
-
-        } 
+    function openQuantumROICalculator() {
+  // Opens Operator Mode (no token). From there you can “Share / Get Link”.
+  window.open('roi-calculator.html', '_blank'); 
+  // If the file lives in a subfolder, use the correct path, e.g.:
+  // window.open('/tools/roi-calculator.html', '_blank');
+}
 
   
 
