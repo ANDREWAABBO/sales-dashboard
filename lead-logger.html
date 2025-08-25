@@ -124,7 +124,7 @@
             <option value="">Select...</option>
             <option value="Abbondanza Vending">Abbondanza Vending</option>
             <option value="Quantum Solutions">Quantum Solutions</option>
-          </select>
+          </select>ss
         </div>
 
         <div class="form-group">
@@ -249,12 +249,12 @@
       }
     }
 
-   async function loadCompanyLists(){
+  async function loadCompanyLists(){
   try{
     const res = await fetch(WEB_APP_URL + '?action=getCompanies');
     const data = await res.json();
-    if (data.status !== 'success') return;
-
+    if (data.status !== 'success') throw new Error('API returned non-success status');
+    
     // Company name suggestions
     knownCompanies = Array.isArray(data.companies) ? data.companies : [];
     const dl = document.getElementById('companySuggestions');
@@ -262,31 +262,42 @@
     knownCompanies.forEach(name => {
       const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt);
     });
-
-    // ✅ Empty-aware fallback for Business Units
-    const unitsFromApi   = Array.isArray(data.businessUnits) ? data.businessUnits : [];
+    
+    // Business Units - always include both default options
+    const unitsFromApi = Array.isArray(data.businessUnits) ? data.businessUnits : [];
     const unitsFromLeads = [...new Set((allLeads||[]).map(l => l.businessUnit).filter(Boolean))];
-    const units = (unitsFromApi.length ? unitsFromApi
-                 : (unitsFromLeads.length ? unitsFromLeads
-                 : ['Abbondanza Vending','Quantum Solutions'])).sort();
-
+    const defaultUnits = ['Abbondanza Vending', 'Quantum Solutions'];
+    
+    // Combine all sources and remove duplicates
+    const allUnits = [...new Set([...defaultUnits, ...unitsFromApi, ...unitsFromLeads])];
+    const units = allUnits.sort();
+    
     // Filter dropdown
     const sel = document.getElementById('companyFilter');
     sel.innerHTML = '<option value="">All Business Units</option>';
     units.forEach(u => {
       const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
     });
-
+    
     // Modal dropdown (keep form in sync too)
     const bu = document.getElementById('businessUnit');
     const current = bu.value;
     bu.innerHTML = '<option value="">Select...</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
     if (current) bu.value = current;  // preserve selection if editing
+    
   }catch(e){
-    console.warn('getCompanies failed (using defaults).', e);
+    console.warn('getCompanies failed, using defaults:', e);
     const fallback = ['Abbondanza Vending','Quantum Solutions'];
+    
+    // Filter dropdown
     const sel = document.getElementById('companyFilter');
     sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>`<option value="${u}">${u}</option>`).join('');
+    
+    // Modal dropdown
+    const bu = document.getElementById('businessUnit');
+    const current = bu.value;
+    bu.innerHTML = '<option value="">Select...</option>' + fallback.map(u => `<option value="${u}">${u}</option>`).join('');
+    if (current) bu.value = current;
   }
 }
 
