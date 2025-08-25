@@ -336,57 +336,74 @@
       });
     });
 
-    async function initializeCalculator() {
+   async function initializeCalculator() {
+  try {
+    // Read token from URL (shared-link mode) and operator name from dashboard
+    const urlParams = new URLSearchParams(window.location.search);
+    accessToken = (urlParams.get('token') || '').trim() || null;
+    const operatorName = localStorage.getItem('dashboardUser');
+
+    // --- OPERATOR MODE (opened from dashboard, no token needed) ---
+    if (!accessToken && operatorName) {
+      accessValidated = true; // allow UI and non-token features
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        accessToken = urlParams.get('token');
-        operatorMode = !accessToken;
-
-        if (operatorMode) {
-          // Operator: skip validation; use defaults; show operator bar
-          baseRates = getDefaultRates();
-          applyBaseRates();
-          document.getElementById('operatorBar').style.display = 'block';
-          document.getElementById('loadingOverlay').style.display = 'none';
-          document.getElementById('calculatorContent').style.display = 'block';
-          accessValidated = true; // allow calculations
-          updateCalculations();
-          return;
-        }
-
-        // Guest with token: validate via JSONP
-        const validation = await jsonpRequest('validateAccess', {
-          token: accessToken,
-          userAgent: navigator.userAgent
-        });
-
-        if (validation.status !== 'success') {
-          const expired = validation?.data?.expired;
-          showExpiredModal(expired ? null : (validation.message || 'Invalid access token.'));
-          return;
-        }
-
-        // Get base rates via JSONP
-        const rates = await jsonpRequest('getBaseRates', { token: accessToken });
-        if (rates.status === 'success') {
-          baseRates = rates.data.baseRates;
-        } else {
-          baseRates = getDefaultRates();
-        }
-
-        applyBaseRates();
-        trackUsage('calculator_loaded');
-
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('calculatorContent').style.display = 'block';
-        accessValidated = true;
-        updateCalculations();
-
-      } catch (err) {
-        console.error('Initialization error:', err);
-        showExpiredModal('Unable to load calculator. Please try again or contact support.');
+        // Try to pull base rates from backend; fall back to defaults if unreachable
+        baseRates = await getBaseRates('operator');
+      } catch (e) {
+        console.warn('Falling back to default base rates (operator mode).', e);
+        baseRates = getDefaultRates();
       }
+
+      applyBaseRates();
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('calculatorContent').style.display = 'block';
+      updateCalculations();
+      return; // important: stop here; no token validation path
     }
+
+    // If we got here without a token, it's not operator mode → show error
+    if (!accessToken) {
+      showExpiredModal(
+        'No access token provided. Please contact your Quantum Solutions representative for access.'
+      );
+      return;
+    }
+
+    // --- SHARED LINK MODE (token present) ---
+    const accessValidation = await validateAccess(accessToken);
+    if (!accessValidation.valid) {
+      if (accessValidation.expired) {
+        showExpiredModal();
+      } else {
+        showExpiredModal(accessValidation.message || 'Invalid access token.');
+      }
+      return;
+    }
+
+    // Fetch base rates for this token (or fall back)
+    try {
+      baseRates = await getBaseRates(accessToken);
+    } catch (e) {
+      console.warn('Falling back to default base rates (token mode).', e);
+      baseRates = getDefaultRates();
+    }
+
+    applyBaseRates();
+
+    // Mark validated BEFORE tracking so analytics can record the load
+    accessValidated = true;
+    trackUsage('calculator_loaded');
+
+    // Reveal UI and run first calc
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('calculatorContent').style.display = 'block';
+    updateCalculations();
+  } catch (error) {
+    console.error('Initialization error:', error);
+    showExpiredModal('Unable to load calculator. Please try again or contact support.');
+  }
+}
+
 
     function bindOperatorButtons() {
       const shareBtn = document.getElementById('shareLinkBtn');
