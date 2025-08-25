@@ -348,6 +348,45 @@
             line-height: 1.6;
         }
 
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 58, 138, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #1e3a8a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .calculator-grid {
                 grid-template-columns: 1fr;
@@ -368,22 +407,31 @@
     </style>
 </head>
 <body>
-    <div class="calculator-container">
+    <!-- Loading Screen -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3 style="color: #1e3a8a; margin-bottom: 10px;">Loading ROI Calculator...</h3>
+            <p style="color: #6b7280;">Validating access and retrieving latest data</p>
+        </div>
+    </div>
+
+    <div id="calculatorContent" class="calculator-container" style="display: none;">
         <div class="header">
-            <h1>🍎 Smart Food Fridge ROI Calculator</h1>
+            <h1>Smart Food Fridge ROI Calculator</h1>
             <p>Quantum Solutions - Advanced Food Service Technology</p>
             <p style="font-size: 0.9em; color: #6b7280;">Calculate your return on investment with precision</p>
         </div>
 
         <div class="disclaimer">
-            ⚠️ These are estimated calculations. True profit is determined by your actual business model and operational factors.
+            These are estimated calculations. True profit is determined by your actual business model and operational factors.
         </div>
 
         <div class="calculator-grid">
             <!-- Business Assumptions Section -->
             <div class="input-section">
                 <div class="section-title">
-                    📊 Business Assumptions
+                    Business Assumptions
                 </div>
                 
                 <div class="form-group">
@@ -433,7 +481,7 @@
             <!-- Operational Costs Section -->
             <div class="input-section">
                 <div class="section-title">
-                    💰 Operational Costs
+                    Operational Costs
                 </div>
 
                 <div class="form-group">
@@ -459,18 +507,15 @@
 
                 <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 20px;">
                     <h4 style="color: #0369a1; margin-bottom: 10px;">Fixed Costs (per fridge):</h4>
-                    <div style="font-size: 0.9em; color: #0369a1;">
-                        • Cellular: $25/month<br>
-                        • License Fee: $175/month<br>
-                        • Transaction Fees: ~$157/month<br>
-                        • RFID Tags: ~$59/month
+                    <div style="font-size: 0.9em; color: #0369a1;" id="fixedCostsSummary">
+                        Loading...
                     </div>
                 </div>
             </div>
 
             <!-- Results Section -->
             <div class="results-section">
-                <div class="results-title">📈 Financial Performance</div>
+                <div class="results-title">Financial Performance</div>
                 
                 <div class="results-grid">
                     <div class="result-card">
@@ -500,7 +545,7 @@
                 </div>
 
                 <div class="timeline-section">
-                    <div class="timeline-title">📅 Multi-Year Projection</div>
+                    <div class="timeline-title">Multi-Year Projection</div>
                     <div class="timeline-grid" id="timelineGrid">
                         <!-- Timeline items will be populated by JavaScript -->
                     </div>
@@ -509,7 +554,7 @@
 
             <!-- Scaling Analysis -->
             <div class="scaling-section">
-                <div class="scaling-title">🔄 Scaling Analysis</div>
+                <div class="scaling-title">Scaling Analysis</div>
                 <div class="scaling-grid" id="scalingGrid">
                     <!-- Scaling items will be populated by JavaScript -->
                 </div>
@@ -517,70 +562,198 @@
         </div>
 
         <div class="download-section">
-            <h3 style="margin-bottom: 20px; color: #374151;">📋 Export Your Analysis</h3>
-            <button class="btn" onclick="generatePDFReport()">📄 Download PDF Report</button>
-            <button class="btn btn-secondary" onclick="shareResults()">🔗 Share Results</button>
+            <h3 style="margin-bottom: 20px; color: #374151;">Export Your Analysis</h3>
+            <button class="btn" onclick="generatePDFReport()">Download PDF Report</button>
+            <button class="btn btn-secondary" onclick="shareResults()">Share Results</button>
         </div>
     </div>
 
     <script>
-        // Fixed costs per fridge (monthly)
-        const FIXED_COSTS = {
-            cellular: 25,
-            licenseFee: 175,
-            rfidTags: 0.18, // per tag
-            engageTransactionFee: 0.15, // per transaction
-            gatewayTransactionFee: 0.07, // per transaction
-            merchantAccountPercent: 2.5, // percentage
-            merchantAccountSwipeFee: 0.03 // per transaction
-        };
+        // Backend configuration
+        const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
+        
+        // Global variables
+        let baseRates = null;
+        let accessToken = null;
+        let accessValidated = false;
 
-        // Check for access expiration on page load
-        window.addEventListener('DOMContentLoaded', function() {
-            checkAccessExpiration();
-            updateCalculations();
+        // Initialize calculator on page load
+        window.addEventListener('DOMContentLoaded', async function() {
+            await initializeCalculator();
         });
 
-        function checkAccessExpiration() {
-            // This would normally check against your Google Sheets backend
-            // For demo purposes, we'll simulate a 7-day expiration
-            const calculatorCreated = new Date('2025-01-25'); // Replace with actual creation date from backend
-            const expirationDate = new Date(calculatorCreated.getTime() + (7 * 24 * 60 * 60 * 1000));
-            const now = new Date();
+        async function initializeCalculator() {
+            try {
+                // Extract token from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                accessToken = urlParams.get('token');
+                
+                if (!accessToken) {
+                    showExpiredModal('No access token provided. Please contact your Quantum Solutions representative for access.');
+                    return;
+                }
 
-            if (now > expirationDate) {
-                showExpiredModal();
-                return false;
+                // Validate access token
+                const accessValidation = await validateAccess(accessToken);
+                
+                if (!accessValidation.valid) {
+                    if (accessValidation.expired) {
+                        showExpiredModal();
+                    } else {
+                        showExpiredModal(accessValidation.message || 'Invalid access token.');
+                    }
+                    return;
+                }
+
+                // Get base rates from backend
+                baseRates = await getBaseRates(accessToken);
+                
+                // Apply base rates to form
+                applyBaseRates();
+                
+                // Track successful access
+                trackUsage('calculator_loaded');
+                
+                // Show calculator interface
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('calculatorContent').style.display = 'block';
+                
+                // Perform initial calculations
+                updateCalculations();
+                
+                accessValidated = true;
+
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showExpiredModal('Unable to load calculator. Please try again or contact support.');
             }
-            
-            // Track usage (minimal analytics)
-            trackUsage();
-            return true;
         }
 
-        function showExpiredModal() {
+        async function validateAccess(token) {
+            try {
+                const response = await fetch(`${BACKEND_URL}?action=validateAccess&token=${encodeURIComponent(token)}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    return { valid: true, ...result.data };
+                } else {
+                    return { 
+                        valid: false, 
+                        expired: result.data?.expired || false,
+                        message: result.message 
+                    };
+                }
+            } catch (error) {
+                console.error('Access validation error:', error);
+                return { valid: false, expired: false, message: 'Connection error' };
+            }
+        }
+
+        async function getBaseRates(token) {
+            try {
+                const response = await fetch(`${BACKEND_URL}?action=getBaseRates&token=${encodeURIComponent(token)}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    return result.data.baseRates;
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Error getting base rates:', error);
+                // Return default rates if backend fails
+                return getDefaultRates();
+            }
+        }
+
+        function applyBaseRates() {
+            if (!baseRates) return;
+            
+            const defaults = baseRates.defaults;
+            
+            // Apply default values to form inputs
+            document.getElementById('transactions').value = defaults.transactions || 330;
+            document.getElementById('foodPrice').value = defaults.foodPrice || 10.00;
+            document.getElementById('foodPercent').value = defaults.foodPercent || 90;
+            document.getElementById('beveragePrice').value = defaults.beveragePrice || 3.99;
+            document.getElementById('beveragePercent').value = defaults.beveragePercent || 10;
+            document.getElementById('margin').value = defaults.margin || 60;
+            document.getElementById('spoilage').value = defaults.spoilage || 0;
+            document.getElementById('financing').value = defaults.financing || 295;
+            document.getElementById('laborRate').value = defaults.laborRate || 20;
+            document.getElementById('laborHours').value = defaults.laborHours || 0.75;
+
+            // Update fixed costs display
+            const fixedCosts = baseRates.fixedCosts;
+            document.getElementById('fixedCostsSummary').innerHTML = `
+                • Cellular: $${fixedCosts.cellular}/month<br>
+                • License Fee: $${fixedCosts.licenseFee}/month<br>
+                • Transaction Fees: Variable by usage<br>
+                • RFID Tags: $${fixedCosts.rfidTagsPerTag} per tag
+            `;
+        }
+
+        async function trackUsage(action, inputData = null) {
+            if (!accessValidated || !accessToken) return;
+            
+            try {
+                const params = new URLSearchParams({
+                    action: 'trackUsage',
+                    token: accessToken,
+                    action: action,
+                    userAgent: navigator.userAgent
+                });
+                
+                if (inputData) {
+                    params.append('inputs', JSON.stringify(inputData));
+                }
+                
+                fetch(`${BACKEND_URL}?${params.toString()}`);
+                // Fire and forget - don't block UI for analytics
+            } catch (error) {
+                console.warn('Analytics tracking failed:', error);
+            }
+        }
+
+        function showExpiredModal(customMessage = null) {
+            const message = customMessage || 'Your access to this ROI Calculator has expired. Please contact your Quantum Solutions representative to request renewed access.';
+            
             const overlay = document.createElement('div');
             overlay.className = 'expired-overlay';
             overlay.innerHTML = `
                 <div class="expired-modal">
-                    <h2>🔒 Access Expired</h2>
-                    <p>Your access to this ROI Calculator has expired.</p>
-                    <p>Please contact your Quantum Solutions representative to request renewed access.</p>
+                    <h2>Access Expired</h2>
+                    <p>${message}</p>
                     <button class="btn" onclick="window.close()">Close</button>
                 </div>
             `;
             document.body.appendChild(overlay);
         }
 
-        function trackUsage() {
-            // Minimal analytics - just log usage
-            const usage = {
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent,
-                referrer: document.referrer
+        function getDefaultRates() {
+            return {
+                fixedCosts: {
+                    cellular: 25,
+                    licenseFee: 175,
+                    rfidTagsPerTag: 0.18,
+                    engageTransactionFee: 0.15,
+                    gatewayTransactionFee: 0.07,
+                    merchantAccountPercent: 2.5,
+                    merchantAccountSwipeFee: 0.03
+                },
+                defaults: {
+                    transactions: 330,
+                    foodPrice: 10.00,
+                    foodPercent: 90,
+                    beveragePrice: 3.99,
+                    beveragePercent: 10,
+                    margin: 60,
+                    spoilage: 0,
+                    financing: 295,
+                    laborRate: 20,
+                    laborHours: 0.75
+                }
             };
-            // This would send to your Google Apps Script endpoint
-            console.log('Calculator accessed:', usage);
         }
 
         function updatePercentages() {
@@ -590,6 +763,8 @@
         }
 
         function updateCalculations() {
+            if (!accessValidated) return;
+            
             const inputs = {
                 fridgeCount: parseInt(document.getElementById('fridgeCount').value) || 1,
                 transactions: parseInt(document.getElementById('transactions').value) || 330,
@@ -605,11 +780,13 @@
                 miscCosts: parseFloat(document.getElementById('miscCosts').value) || 0
             };
 
-            // Calculate per fridge, then multiply by number of fridges
             const results = calculateROI(inputs);
             displayResults(results, inputs);
             generateTimeline(results, inputs);
             generateScaling(inputs);
+            
+            // Track calculation usage
+            trackUsage('calculation_performed', inputs);
         }
 
         function calculateROI(inputs) {
@@ -627,6 +804,8 @@
         }
 
         function calculatePerFridge(inputs) {
+            const rates = baseRates?.fixedCosts || getDefaultRates().fixedCosts;
+            
             // Revenue calculation
             const avgTransactionValue = (inputs.foodPrice * inputs.foodPercent / 100) + 
                                       (inputs.beveragePrice * inputs.beveragePercent / 100);
@@ -636,12 +815,12 @@
             const cogs = monthlyRevenue * ((100 - inputs.margin) / 100);
             
             // Fixed operational costs
-            const rfidTagsCost = inputs.transactions * FIXED_COSTS.rfidTags;
-            const transactionFees = inputs.transactions * (FIXED_COSTS.engageTransactionFee + FIXED_COSTS.gatewayTransactionFee);
-            const merchantFees = (monthlyRevenue * FIXED_COSTS.merchantAccountPercent / 100) + 
-                               (inputs.transactions * FIXED_COSTS.merchantAccountSwipeFee);
+            const rfidTagsCost = inputs.transactions * rates.rfidTagsPerTag;
+            const transactionFees = inputs.transactions * (rates.engageTransactionFee + rates.gatewayTransactionFee);
+            const merchantFees = (monthlyRevenue * rates.merchantAccountPercent / 100) + 
+                               (inputs.transactions * rates.merchantAccountSwipeFee);
             
-            const fixedCosts = FIXED_COSTS.cellular + FIXED_COSTS.licenseFee + rfidTagsCost + 
+            const fixedCosts = rates.cellular + rates.licenseFee + rfidTagsCost + 
                              transactionFees + merchantFees;
             
             // Variable costs
@@ -688,12 +867,11 @@
             const timeline = document.getElementById('timelineGrid');
             timeline.innerHTML = '';
             
-            // Calculate profits for different periods
             const periods = [
                 { label: 'Year 1', months: 12 },
                 { label: 'Year 2', months: 24 },
                 { label: 'Year 3', months: 36 },
-                { label: 'Post-Financing', months: 48 } // Assuming 4 year financing
+                { label: 'Post-Financing', months: 48 }
             ];
             
             periods.forEach(period => {
@@ -702,7 +880,6 @@
                 
                 let profit;
                 if (period.label === 'Post-Financing') {
-                    // After financing is paid off
                     profit = (results.monthlyProfit + inputs.financing) * 12;
                 } else {
                     profit = results.monthlyProfit * period.months;
@@ -747,16 +924,16 @@
         }
 
         function generatePDFReport() {
-            // This would generate a professional PDF report
+            trackUsage('pdf_download_requested');
             alert('PDF Report generation coming soon! This will create a comprehensive analysis document with your calculations, assumptions, and Quantum Solutions branding.');
         }
 
         function shareResults() {
-            // This would create a shareable link to the results
+            trackUsage('share_results_requested');
             alert('Results sharing coming soon! This will generate a summary link you can share with stakeholders.');
         }
 
-        // Add some visual feedback for input changes
+        // Add visual feedback for input changes
         document.querySelectorAll('input').forEach(input => {
             input.addEventListener('input', function() {
                 this.style.borderColor = '#1e3a8a';
