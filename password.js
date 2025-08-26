@@ -326,36 +326,46 @@
   }
 
   // --- Event handlers ------------------------------------------------------
-  function setupLoginHandler() {
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const username = document.getElementById('loginUsername').value.trim();
-      const password = document.getElementById('loginPassword').value;
+ function setupLoginHandler() {
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
 
-      try {
-        const response = await fetch(CFG.USER_MANAGEMENT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
-        });
-        const result = await response.json();
+    const btn = this.querySelector('button[type="submit"]');
+    const original = btn.innerHTML;
+    if (!btn.disabled) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span> Logging in…';
+    }
 
-        if (result.success) {
-          sessionStorage.setItem('dashboardAuth', 'true');
-          sessionStorage.setItem('dashboardUser', result.username || username);
-          sessionStorage.setItem('userEmail', result.email || '');
-          sessionStorage.setItem('userCompany', result.company || '');
-          document.getElementById('loginOverlay')?.remove();
-          addLogoutButton();
-          showMessage('Login successful!', 'success');
-        } else {
-          showError(result.message || 'Invalid username or password');
-        }
-      } catch (_) {
-        showError('Connection error. Please try again.');
+    try {
+      const response = await fetch(CFG.USER_MANAGEMENT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        sessionStorage.setItem('dashboardAuth', 'true');
+        sessionStorage.setItem('dashboardUser', result.username || username);
+        sessionStorage.setItem('userEmail', result.email || '');
+        sessionStorage.setItem('userCompany', result.company || '');
+        document.getElementById('loginOverlay')?.remove();
+        addLogoutButton();
+        showMessage('Login successful!', 'success');
+      } else {
+        showError(result.message || 'Invalid username or password');
+        btn.disabled = false; btn.innerHTML = original;
       }
-    });
-  }
+    } catch (_) {
+      showError('Connection error. Please try again.');
+      btn.disabled = false; btn.innerHTML = original;
+    }
+  });
+}
+
 
   function setupRegisterHandler() {
     document.getElementById('registerForm').addEventListener('submit', async function (e) {
