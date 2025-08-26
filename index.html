@@ -526,6 +526,154 @@
             });
         }
 
+
+
+
+
+
+        
+// --- Password Reset (modal-driven) -----------------------------------------
+
+// show this only while testing if you still want to see raw tokens:
+window.SHOW_RESET_TOKEN_FOR_TESTING = false;
+
+// Opens a small modal that asks for email/username and requests a reset link
+function openForgotPassword() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'block';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <h3>Reset your password</h3>
+    <div class="form-group">
+      <label for="fpEmail">Email or Username</label>
+      <input type="text" id="fpEmail" placeholder="you@example.com" />
+      <small>We’ll email you a reset link if the account exists.</small>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" id="fpSendBtn">Send reset link</button>
+    </div>
+    <div id="fpMsg" style="margin-top:12px;font-size:0.95em;"></div>
+  `;
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('fpEmail').focus(), 50);
+
+  document.getElementById('fpSendBtn').onclick = async () => {
+    const id = (document.getElementById('fpEmail').value || '').trim();
+    const msg = document.getElementById('fpMsg');
+    if (!id) { msg.style.color = '#dc3545'; msg.textContent = 'Please enter your email or username.'; return; }
+
+    const btn = document.getElementById('fpSendBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Sending...';
+
+    try {
+      const base = location.origin + location.pathname; // page that will open the reset modal
+      const body = `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}&resetUrlBase=${encodeURIComponent(base)}`;
+      const resp = await fetch(USER_MANAGEMENT_URL, {
+        method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body
+      });
+      const data = await resp.json();
+      msg.style.color = '#059669';
+      msg.textContent = 'If an account exists, a reset link has been sent. Please check your email.';
+      if (data.resetToken && window.SHOW_RESET_TOKEN_FOR_TESTING) {
+        const t = document.createElement('div');
+        t.style.cssText = 'margin-top:8px;color:#64748b;font-size:0.9em;word-break:break-all;';
+        t.textContent = `Testing token: ${data.resetToken}`;
+        msg.appendChild(t);
+      }
+    } catch (e) {
+      msg.style.color = '#dc3545';
+      msg.textContent = 'Could not send reset link. Please try again.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send reset link';
+    }
+  };
+}
+
+// Opens a modal to accept a new password using a token (usually from email link)
+function openResetWithToken(token) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'block';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <h3>Choose a new password</h3>
+    <div class="form-group">
+      <label for="rpNew">New Password</label>
+      <input type="password" id="rpNew" placeholder="8+ chars, upper/lower/number/special" />
+    </div>
+    <div class="form-group">
+      <label for="rpConfirm">Confirm New Password</label>
+      <input type="password" id="rpConfirm" placeholder="Repeat new password" />
+    </div>
+    <div class="modal-buttons">
+      <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" id="rpSubmit">Reset Password</button>
+    </div>
+    <div id="rpMsg" style="margin-top:12px;font-size:0.95em;"></div>
+  `;
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('rpNew').focus(), 50);
+
+  document.getElementById('rpSubmit').onclick = async () => {
+    const p1 = document.getElementById('rpNew').value;
+    const p2 = document.getElementById('rpConfirm').value;
+    const msg = document.getElementById('rpMsg');
+    if (p1 !== p2) { msg.style.color = '#dc3545'; msg.textContent = 'Passwords do not match.'; return; }
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
+    if (!re.test(p1)) { msg.style.color = '#dc3545'; msg.textContent = 'Password must be 8+ chars and include upper, lower, number, special.'; return; }
+
+    const btn = document.getElementById('rpSubmit');
+    btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Updating...';
+
+    try {
+      const body = `action=resetpassword&token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(p1)}`;
+      const resp = await fetch(USER_MANAGEMENT_URL, {
+        method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body
+      });
+      const data = await resp.json();
+      if (data.success) {
+        msg.style.color = '#059669'; msg.textContent = 'Password updated. You can now log in.';
+        setTimeout(()=>{ overlay.remove(); showLoginFormInModal(); }, 1200);
+      } else {
+        msg.style.color = '#dc3545'; msg.textContent = data.message || 'Reset failed.';
+      }
+    } catch (e) {
+      msg.style.color = '#dc3545'; msg.textContent = 'Connection error. Please try again.';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Reset Password';
+    }
+  };
+}
+
+// If the page is opened with ?resetToken=XYZ, auto-open the reset modal.
+function bootstrapResetFromURL() {
+  try {
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get('resetToken') || url.searchParams.get('token') || '';
+    if (token) {
+      showLoginForm();                       // ensure login overlay exists
+      setTimeout(()=>openResetWithToken(token), 50);
+      history.replaceState(null, '', window.location.pathname); // strip token from URL
+      return true;
+    }
+  } catch(_){}
+  return false;
+}
+// ---------------------------------------------------------------------------
+
+
+        
+
+        
+
         function showError(message) {
             const errorDiv = document.getElementById('authError');
             const successDiv = document.getElementById('authSuccess');
@@ -608,11 +756,12 @@
         `;
         document.head.appendChild(userMgmtCSS);
 
-        window.addEventListener('DOMContentLoaded', function() {
-            if (checkAuth()) {
-                addLogoutButton();
-            }
-        });
+   window.addEventListener('DOMContentLoaded', function () {
+  const handled = bootstrapResetFromURL(); // NEW: open reset modal if URL has token
+  if (!handled && checkAuth()) {
+    addLogoutButton();
+  }
+});
 
         function switchCompany(company) {
             document.querySelectorAll('.company-btn').forEach(btn => { btn.classList.remove('active'); });
