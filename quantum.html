@@ -1677,12 +1677,41 @@ function openQuantumAboutUs() {
 
   
 
-    function openQuantumROICalculator() {
-  // Opens Operator Mode (no token). From there you can “Share / Get Link”.
-  window.open('roi-calculator.html', '_blank'); 
-  // If the file lives in a subfolder, use the correct path, e.g.:
-  // window.open('/tools/roi-calculator.html', '_blank');
+<script>
+function openQuantumROICalculator() {
+  // Close any existing overlay
+  const existing = document.querySelector('.modal-overlay.roi-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay roi-overlay';
+  overlay.style.display = 'block';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '1200px';
+  modal.style.height = '90vh';
+  modal.style.display = 'flex';
+  modal.style.flexDirection = 'column';
+
+  // Use the local file so it keeps your deep blue theme and Operator Mode
+  const src = 'roi-calculator.html';
+
+  modal.innerHTML = `
+    <div style="padding: 14px 16px; background:#f7fafc; border-radius: 20px 20px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0;">
+      <h3 style="margin:0; color:#1e3a8a; font-size:1.2em;">ROI Calculator</h3>
+      <button class="close-btn" onclick="document.querySelector('.roi-overlay').remove()">✕</button>
+    </div>
+    <div style="flex:1; padding: 12px; overflow:hidden;">
+      <iframe src="${src}" width="100%" height="100%" style="border:none; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08);" allowfullscreen></iframe>
+    </div>
+  `;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 }
+</script>
+
 
   
 
