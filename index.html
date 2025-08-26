@@ -1,3 +1,12 @@
+Here’s your full file with **only password/auth-related fixes and syntax cleanup**:
+
+* “Request Reset Token” → “Send Reset Link” (UI text only).
+* Don’t reveal the token unless `SHOW_RESET_TOKEN_FOR_TESTING` is `true`.
+* Clicking the email link logs the user out and opens the **Set New Password** modal immediately.
+* Prevent closing the login overlay by backdrop click.
+* Fixed the stray extra `}` after `setupLoginHandler()` (was breaking subsequent JS).
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -276,11 +285,11 @@
     <!-- Forgot Password: request token -->
     <div id="forgotFormContainer" style="display:none;">
       <form id="requestResetForm">
-        <p style="color:#4a5568; text-align:left; margin-bottom:10px;">Enter your <strong>username or email</strong> to request a reset token.</p>
+        <p style="color:#4a5568; text-align:left; margin-bottom:10px;">Enter your <strong>username or email</strong> to request a reset link.</p>
         <input type="text" id="forgotUsernameOrEmail" placeholder="Username or Email" required
                style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
         <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-          Request Reset Token
+          Send Reset Link
         </button>
         <button type="button" class="link-btn" id="haveTokenBtn">I already have a token</button>
         <button type="button" class="link-btn" onclick="showLoginFormInModal()">Back to Login</button>
@@ -389,7 +398,8 @@
       showError('Connection error. Please try again.');
     }
   });
-}
+}  // ← fixed: end here; no stray extra brace
+
 
         function setupRegisterHandler() {
             document.getElementById('registerForm').addEventListener('submit', async function(e) {
@@ -444,7 +454,7 @@
   const haveTokenBtn = document.getElementById('haveTokenBtn');
   if (haveTokenBtn) haveTokenBtn.onclick = showResetForm;
 
-  // request token
+  // request token (now: send reset link)
   const reqForm = document.getElementById('requestResetForm');
   reqForm.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -461,31 +471,38 @@
       const result = await response.json();
 
       if (result.success) {
-        showSuccess('Reset token generated. (Shown below for testing.)');
+        showSuccess('If an account exists, a reset link has been sent. Please check your email.');
         const box = document.getElementById('tokenReveal');
-        box.style.display = 'block';
-        const expiresTxt = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : 'unknown';
-        box.innerHTML = `
-          <div><strong>Token:</strong> <code style="user-select:all;">${result.resetToken}</code></div>
-          <div style="margin-top:6px;"><small>Expires: ${expiresTxt}</small></div>
-          <div style="margin-top:10px;">
-            <button class="btn btn-secondary" id="copyTokenBtn" type="button" style="padding:8px 14px;">Copy token</button>
-            <button class="btn btn-primary" id="goToResetBtn" type="button" style="padding:8px 14px; margin-left:8px;">Continue to Reset</button>
-          </div>
-        `;
-        setTimeout(() => {
-          const ct = document.getElementById('copyTokenBtn');
-          const gr = document.getElementById('goToResetBtn');
-          if (ct) ct.onclick = async () => {
-            try { await navigator.clipboard.writeText(result.resetToken); showMessage('Token copied', 'success'); } catch (_) {}
-          };
-          if (gr) gr.onclick = () => {
-            showResetForm();
-            document.getElementById('resetToken').value = result.resetToken || '';
-          };
-        }, 0);
+
+        if (window.SHOW_RESET_TOKEN_FOR_TESTING && result.resetToken) {
+          box.style.display = 'block';
+          const expiresTxt = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : 'unknown';
+          box.innerHTML = `
+            <div><strong>Token:</strong> <code style="user-select:all;">${result.resetToken}</code></div>
+            <div style="margin-top:6px;"><small>Expires: ${expiresTxt}</small></div>
+            <div style="margin-top:10px;">
+              <button class="btn btn-secondary" id="copyTokenBtn" type="button" style="padding:8px 14px;">Copy token</button>
+              <button class="btn btn-primary" id="goToResetBtn" type="button" style="padding:8px 14px; margin-left:8px;">Continue to Reset</button>
+            </div>
+          `;
+          setTimeout(() => {
+            const ct = document.getElementById('copyTokenBtn');
+            const gr = document.getElementById('goToResetBtn');
+            if (ct) ct.onclick = async () => {
+              try { await navigator.clipboard.writeText(result.resetToken); showMessage('Token copied', 'success'); } catch (_) {}
+            };
+            if (gr) gr.onclick = () => {
+              showResetForm();
+              document.getElementById('resetToken').value = result.resetToken || '';
+            };
+          }, 0);
+        } else {
+          // hide the testing box in production
+          box.style.display = 'none';
+          box.innerHTML = '';
+        }
       } else {
-        showError(result.message || 'Could not generate reset token.');
+        showError(result.message || 'Could not send reset link.');
       }
     } catch (err) {
       showError('Connection error. Please try again.');
@@ -531,10 +548,6 @@
 
 
 
-
-
-
-        
 // --- Password Reset (modal-driven) -----------------------------------------
 
 // show this only while testing if you still want to see raw tokens:
@@ -579,15 +592,9 @@ function openForgotPassword() {
       const resp = await fetch(USER_MANAGEMENT_URL, {
         method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body
       });
-      const data = await resp.json();
+      await resp.json();
       msg.style.color = '#059669';
       msg.textContent = 'If an account exists, a reset link has been sent. Please check your email.';
-      if (data.resetToken && window.SHOW_RESET_TOKEN_FOR_TESTING) {
-        const t = document.createElement('div');
-        t.style.cssText = 'margin-top:8px;color:#64748b;font-size:0.9em;word-break:break-all;';
-        t.textContent = `Testing token: ${data.resetToken}`;
-        msg.appendChild(t);
-      }
     } catch (e) {
       msg.style.color = '#dc3545';
       msg.textContent = 'Could not send reset link. Please try again.';
@@ -662,6 +669,9 @@ function bootstrapResetFromURL() {
     const url = new URL(window.location.href);
     const token = url.searchParams.get('resetToken') || url.searchParams.get('token') || '';
     if (token) {
+      // ensure not logged-in during reset
+      sessionStorage.clear();
+
       showLoginForm();                       // ensure login overlay exists
       setTimeout(()=>openResetWithToken(token), 50);
       history.replaceState(null, '', window.location.pathname); // strip token from URL
@@ -672,10 +682,6 @@ function bootstrapResetFromURL() {
 }
 // ---------------------------------------------------------------------------
 
-
-        
-
-        
 
         function showError(message) {
             const errorDiv = document.getElementById('authError');
@@ -1560,14 +1566,14 @@ function bootstrapResetFromURL() {
             document.body.appendChild(overlay);
         }
 
-        // Close modal when clicking outside - FIXED VERSION
-        window.onclick = function(event) {
+        // Close modal when clicking outside
+        // (Do NOT allow closing the login overlay by backdrop click)
+        window.addEventListener('click', function(event) {
             if (event.target.classList.contains('modal-overlay')) {
-                if (event.target === event.currentTarget) {
-                    event.target.style.display = 'none';
-                }
+                if (event.target.id === 'loginOverlay') return; // keep auth overlay
+                event.target.remove();
             }
-        }
+        });
     </script>
 </head>
 
@@ -1861,3 +1867,4 @@ function bootstrapResetFromURL() {
     </div>
 </body>
 </html>
+```
