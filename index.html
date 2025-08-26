@@ -1568,14 +1568,17 @@ function bootstrapResetFromURL() {
 <body>
     <!-- Company Switcher -->
     <div class="company-switcher">
-        <button class="company-btn active" onclick="switchCompany('abbondanza')">
-            <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
-            <span>Abbondanza Vending LLC</span>
+        <button class="company-btn active" onclick="switchCompany('abbondanza', event)">
+         <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
+          <span>Abbondanza Vending LLC</span>
         </button>
-        <button class="company-btn" onclick="switchCompany('quantum')">
-            <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
-            <span>Quantum Solutions</span>
-        </button>
+        
+       <button class="company-btn" onclick="switchCompany('quantum', event)">
+    <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
+    <span>Quantum Solutions</span>
+       </button>
+
+        
     </div>
 
     <div class="dashboard-container">
