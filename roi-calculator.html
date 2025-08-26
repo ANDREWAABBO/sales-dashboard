@@ -457,7 +457,9 @@ function update(){
   const totalRevenue = salesRevenue + serviceRev;
   const monthlyCosts = pf.totalCosts     * i.fridgeCount;
   const monthlyNet   = pf.netSheet       * i.fridgeCount;
-  const annual       = monthlyNet * 12;
+
+  // >>> ONLY CHANGE MADE: add service fee x 12 x fridgeCount to the annual <<<
+  const annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
   setText('kpiServiceRevenue',usd2(serviceRev));
