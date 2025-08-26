@@ -450,7 +450,8 @@
                     const response = await fetch(USER_MANAGEMENT_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}`
+                        const base = location.origin + location.pathname; // page that will open the reset modal
+                         body: `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}&resetUrlBase=${encodeURIComponent(base)}`
                     });
                     const result = await response.json();
 
