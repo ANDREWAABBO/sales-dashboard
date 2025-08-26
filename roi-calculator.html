@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
+
+<!-- NEW: shared auth (login lives on index; this page only checks in operator mode) -->
+<script defer src="password.js"></script>
+
 <style>
   :root{
     --brand:#1e3a8a; --brand-2:#3b82f6; --ink:#0f172a; --muted:#64748b;
@@ -311,6 +315,9 @@ async function init(){
   const p = new URLSearchParams(location.search);
   accessToken = p.get('token');
   operatorMode = !accessToken;
+
+  // NEW: require login ONLY in operator mode (no token); guests with token bypass login
+  if (operatorMode && window.Auth && !Auth.checkAuth()) return;
 
   document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Guest Link';
   document.getElementById('modeTag').title = operatorMode ? 'No token in URL → Operator Mode' : 'Viewing with a time-limited token';
