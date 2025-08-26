@@ -582,7 +582,7 @@
   function routeFromURL() {
     try {
       const url = new URL(window.location.href);
-      const token = url.searchParams.get('resetToken') || url.searchParams.get('token') || '';
+      const token = url.searchParams.get('resetToken') || url.searchParams.get('pwReset') || '';
       if (token) {
         sessionStorage.clear();     // ensure not logged-in during reset
         showLoginForm();            // ensure modal exists (and topmost z-index)
