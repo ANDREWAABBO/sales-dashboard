@@ -90,7 +90,25 @@
       width: 90%; text-align: center;
     `;
 
-    loginModal.innerHTML = `
+    loginModal.innerHTML = buildLoginViewHTML();
+
+    loginOverlay.appendChild(loginModal);
+    document.body.appendChild(loginOverlay);
+
+    // Prevent backdrop-close for this overlay (protect against page-level handlers)
+    loginOverlay.addEventListener('click', (e) => {
+      if (e.target === loginOverlay) e.stopPropagation();
+    });
+
+    // Hooks for the default login view
+    wireLoginViewHandlers();
+
+    setTimeout(() => document.getElementById('loginUsername')?.focus(), 50);
+    return false;
+  }
+
+  function buildLoginViewHTML() {
+    return `
       <div style="margin-bottom: 30px;">
         <h2 style="color:#1e3a8a;margin-bottom:10px;font-size:1.8em;">Dashboard Access</h2>
         <p style="color:#64748b;font-size:1.1em;">Login or create a new account</p>
@@ -154,7 +172,7 @@
         </form>
       </div>
 
-      <!-- Reset Password with token -->
+      <!-- Reset Password (manual token entry) -->
       <div id="resetFormContainer" style="display:none;">
         <form id="resetPasswordForm">
           <input type="text" id="resetToken" placeholder="Paste your reset token" required
@@ -175,16 +193,10 @@
       <div id="authError" style="color:#dc3545;margin-top:15px;display:none;font-size:1em;"></div>
       <div id="authSuccess" style="color:#059669;margin-top:15px;display:none;font-size:1em;"></div>
     `;
+  }
 
-    loginOverlay.appendChild(loginModal);
-    document.body.appendChild(loginOverlay);
-
-    // Prevent backdrop-close for this overlay (protect against page-level handlers)
-    loginOverlay.addEventListener('click', (e) => {
-      if (e.target === loginOverlay) e.stopPropagation();
-    });
-
-    // Hooks
+  function wireLoginViewHandlers() {
+    // Buttons that swap sections
     const regBtn = document.getElementById('showRegisterBtn');
     if (regBtn) regBtn.onclick = showRegisterForm;
 
@@ -194,9 +206,6 @@
     setupLoginHandler();
     setupRegisterHandler();
     setupForgotHandlers();
-
-    setTimeout(() => document.getElementById('loginUsername')?.focus(), 50);
-    return false;
   }
 
   function showRegisterForm() {
@@ -211,6 +220,9 @@
     document.getElementById('registerFormContainer').style.display = 'none';
     const f = document.getElementById('forgotFormContainer'); if (f) f.style.display = 'none';
     const r = document.getElementById('resetFormContainer'); if (r) r.style.display = 'none';
+    // If we had a token-mode container, remove it
+    const tm = document.getElementById('tokenModeReset');
+    if (tm) tm.remove();
     document.getElementById('loginFormContainer').style.display = 'block';
     setTimeout(() => document.getElementById('loginUsername')?.focus(), 50);
   }
@@ -219,6 +231,8 @@
     document.getElementById('loginFormContainer').style.display = 'none';
     document.getElementById('registerFormContainer').style.display = 'none';
     document.getElementById('resetFormContainer').style.display = 'none';
+    const tm = document.getElementById('tokenModeReset');
+    if (tm) tm.remove();
     document.getElementById('forgotFormContainer').style.display = 'block';
     setTimeout(() => document.getElementById('forgotUsernameOrEmail')?.focus(), 50);
   }
@@ -227,8 +241,88 @@
     document.getElementById('loginFormContainer').style.display = 'none';
     document.getElementById('registerFormContainer').style.display = 'none';
     document.getElementById('forgotFormContainer').style.display = 'none';
+    const tm = document.getElementById('tokenModeReset');
+    if (tm) tm.remove();
     document.getElementById('resetFormContainer').style.display = 'block';
     setTimeout(() => document.getElementById('resetToken')?.focus(), 50);
+  }
+
+  // Render a "Set New Password" view *inside the same modal* using a token from URL
+  function showResetFormWithToken(tokenFromURL) {
+    // Ensure overlay exists
+    if (!document.getElementById('loginOverlay')) showLoginForm();
+
+    const modal = document.getElementById('loginModal');
+    if (!modal) return;
+
+    // Hide other containers, inject token-mode container
+    const containers = ['loginFormContainer','registerFormContainer','forgotFormContainer','resetFormContainer'];
+    containers.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    const old = document.getElementById('tokenModeReset'); if (old) old.remove();
+
+    const wrap = document.createElement('div');
+    wrap.id = 'tokenModeReset';
+    wrap.innerHTML = `
+      <h3 style="margin-bottom:12px;">Set a New Password</h3>
+      <p style="color:#64748b;margin-bottom:16px;">Enter a new password for your account.</p>
+      <div class="form-group" style="text-align:left;margin-bottom:12px;">
+        <input id="authNewPass" type="password" placeholder="New Password (8+ chars, upper/lower/number/special)"
+               autocomplete="new-password"
+               style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:10px;font-size:1.05em;">
+      </div>
+      <div class="form-group" style="text-align:left;">
+        <input id="authNewPass2" type="password" placeholder="Confirm New Password"
+               autocomplete="new-password"
+               style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:10px;font-size:1.05em;">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button class="btn btn-primary" id="authDoReset" style="flex:2;background:#059669;">Update Password</button>
+        <button class="btn btn-secondary" id="authCancelReset" style="flex:1;background:#64748b;">Cancel</button>
+      </div>
+      <div id="authResetMsg" style="margin-top:12px;font-size:14px;color:#64748b;"></div>
+    `;
+    modal.appendChild(wrap);
+
+    const cancelBtn = wrap.querySelector('#authCancelReset');
+    cancelBtn.onclick = showLoginFormInModal;
+
+    const doReset = async () => {
+      const p1 = wrap.querySelector('#authNewPass').value.trim();
+      const p2 = wrap.querySelector('#authNewPass2').value.trim();
+      const msg = wrap.querySelector('#authResetMsg');
+
+      if (!p1 || !p2) { msg.textContent = 'Please enter and confirm your new password.'; return; }
+      if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
+      if (!PASSWORD_COMPLEXITY.test(p1)) { msg.textContent = 'Password must be 8+ chars incl. upper, lower, number, special.'; return; }
+      msg.innerHTML = '<span class="loading-spinner"></span> Updating password…';
+
+      try {
+        const res = await fetch(CFG.USER_MANAGEMENT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `action=resetpassword&token=${encodeURIComponent(tokenFromURL)}&newPassword=${encodeURIComponent(p1)}`
+        });
+        const j = await res.json().catch(() => ({}));
+        if (j.success) {
+          msg.style.color = '#059669';
+          msg.textContent = 'Password updated. You can now log in.';
+          // Strip token from URL so refresh won't reopen this view
+          const url = new URL(location.href);
+          url.searchParams.delete('resetToken'); url.searchParams.delete('token');
+          history.replaceState({}, '', url.toString());
+          setTimeout(() => showLoginFormInModal(), 800);
+        } else {
+          msg.style.color = '#dc2626';
+          msg.textContent = j.message || 'Unable to update password.';
+        }
+      } catch (e) {
+        msg.style.color = '#dc2626';
+        msg.textContent = 'Connection error. Please try again.';
+      }
+    };
+
+    wrap.querySelector('#authDoReset').onclick = doReset;
+    setTimeout(() => wrap.querySelector('#authNewPass')?.focus(), 50);
   }
 
   // --- Event handlers ------------------------------------------------------
@@ -345,7 +439,6 @@
         if (result.success) {
           showSuccess('If an account exists, a reset link has been sent. Please check your email.');
 
-          // Only show the token box while testing
           const box = document.getElementById('tokenReveal');
           if (CFG.SHOW_RESET_TOKEN_FOR_TESTING && result.resetToken) {
             box.style.display = 'block';
@@ -382,7 +475,7 @@
       }
     });
 
-    // Submit new password (token flow)
+    // Submit new password (manual token flow)
     const resetForm = document.getElementById('resetPasswordForm');
     resetForm.addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -419,7 +512,7 @@
     });
   }
 
-  // --- Optional small modal helpers (not required by main flow) ------------
+  // --- Optional small modal helpers (legacy helpers remain available) ------
   function openForgotPassword() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -470,73 +563,21 @@
     };
   }
 
+  // Legacy helper kept for compatibility (now unused by router)
   function openResetWithToken(token) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.style.display = 'block';
-
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <h3>Choose a new password</h3>
-      <div class="form-group">
-        <label for="rpNew">New Password</label>
-        <input type="password" id="rpNew" placeholder="8+ chars, upper/lower/number/special" />
-      </div>
-      <div class="form-group">
-        <label for="rpConfirm">Confirm New Password</label>
-        <input type="password" id="rpConfirm" placeholder="Repeat new password" />
-      </div>
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-        <button class="btn btn-primary" id="rpSubmit">Reset Password</button>
-      </div>
-      <div id="rpMsg" style="margin-top:12px;font-size:0.95em;"></div>
-    `;
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    setTimeout(() => document.getElementById('rpNew')?.focus(), 50);
-
-    document.getElementById('rpSubmit').onclick = async () => {
-      const p1 = document.getElementById('rpNew').value;
-      const p2 = document.getElementById('rpConfirm').value;
-      const msg = document.getElementById('rpMsg');
-      if (p1 !== p2) { msg.style.color = '#dc3545'; msg.textContent = 'Passwords do not match.'; return; }
-      if (!PASSWORD_COMPLEXITY.test(p1)) { msg.style.color = '#dc3545'; msg.textContent = 'Password must be 8+ chars and include upper, lower, number, special.'; return; }
-
-      const btn = document.getElementById('rpSubmit');
-      btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Updating...';
-
-      try {
-        const body = `action=resetpassword&token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(p1)}`;
-        const resp = await fetch(CFG.USER_MANAGEMENT_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body
-        });
-        const data = await resp.json();
-        if (data.success) {
-          msg.style.color = '#059669'; msg.textContent = 'Password updated. You can now log in.';
-          setTimeout(() => { overlay.remove(); showLoginFormInModal(); }, 1000);
-        } else {
-          msg.style.color = '#dc3545'; msg.textContent = data.message || 'Reset failed.';
-        }
-      } catch (_) {
-        msg.style.color = '#dc3545'; msg.textContent = 'Connection error. Please try again.';
-      } finally {
-        btn.disabled = false; btn.textContent = 'Reset Password';
-      }
-    };
+    showResetFormWithToken(token);
   }
 
-  // --- Reset via email link -----------------------------------------------
-  function bootstrapResetFromURL() {
+  // --- Routing: handle ?resetToken=... ------------------------------------
+  function routeFromURL() {
     try {
       const url = new URL(window.location.href);
       const token = url.searchParams.get('resetToken') || url.searchParams.get('token') || '';
       if (token) {
-        sessionStorage.clear();            // ensure not logged-in during reset
-        showLoginForm();                   // create overlay
-        setTimeout(() => openResetWithToken(token), 50);
-        history.replaceState(null, '', window.location.pathname); // strip token
+        sessionStorage.clear();     // ensure not logged-in during reset
+        showLoginForm();            // ensure modal exists (and topmost z-index)
+        // Render token-based reset UI *inside* the login modal (no second overlay)
+        showResetFormWithToken(token);
         return true;
       }
     } catch (_) {}
@@ -597,10 +638,10 @@
     },
     showLoginForm,
     openForgotPassword,      // optional helper
-    openResetWithToken,      // optional helper
+    openResetWithToken,      // optional helper (wraps new UI)
     addLogoutButton,
     logout,
-    bootstrapResetFromURL,
+    routeFromURL,
   };
 
   // expose for pages that already call checkAuth()/logout()
@@ -610,8 +651,12 @@
 
   // --- Auto-init on page load ---------------------------------------------
   document.addEventListener('DOMContentLoaded', function () {
-    const handled = Auth.bootstrapResetFromURL();  // open reset modal if URL has token
-    if (!handled && Auth.checkAuth()) {
+    injectKeyframeCSS();
+    // If URL contains a reset token, open the "Set New Password" view first.
+    if (Auth.routeFromURL()) return;
+
+    // Otherwise, normal auth gate.
+    if (Auth.checkAuth()) {
       Auth.addLogoutButton();
     }
   });
