@@ -207,121 +207,126 @@
             return true;
         }
 
-        function showLoginForm() {
-            const loginOverlay = document.createElement('div');
-            loginOverlay.id = 'loginOverlay';
-            loginOverlay.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center;
-                align-items: center; z-index: 99999; backdrop-filter: blur(5px);
-            `;
+ function showLoginForm() {
+  const loginOverlay = document.createElement('div');
+  loginOverlay.id = 'loginOverlay';
+  loginOverlay.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center;
+    align-items: center; z-index: 99999; backdrop-filter: blur(5px);
+  `;
 
-            const loginModal = document.createElement('div');
-            loginModal.id = 'loginModal';
-            loginModal.style.cssText = `
-                background: white; padding: 40px; border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); max-width: 450px;
-                width: 90%; text-align: center;
-            `;
+  const loginModal = document.createElement('div');
+  loginModal.id = 'loginModal';
+  loginModal.style.cssText = `
+    background: white; padding: 40px; border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); max-width: 450px;
+    width: 90%; text-align: center;
+  `;
 
-            loginModal.innerHTML = `
-                <div style="margin-bottom: 30px;">
-                    <h2 style="color: #1e3a8a; margin-bottom: 10px; font-size: 1.8em;">Dashboard Access</h2>
-                    <p style="color: #64748b; font-size: 1.1em;">Login or create a new account</p>
-                </div>
+  loginModal.innerHTML = `
+    <div style="margin-bottom: 30px;">
+      <h2 style="color: #1e3a8a; margin-bottom: 10px; font-size: 1.8em;">Dashboard Access</h2>
+      <p style="color: #64748b; font-size: 1.1em;">Login or create a new account</p>
+    </div>
 
-                <!-- Login Form -->
-                <div id="loginFormContainer">
-                    <form id="loginForm" style="margin-bottom: 10px;">
-                        <input type="text" id="loginUsername" placeholder="Username or Email" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="password" id="loginPassword" placeholder="Password" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 8px;">
-                            Login
-                        </button>
-                    </form>
+    <!-- Login Form -->
+    <div id="loginFormContainer">
+      <form id="loginForm" style="margin-bottom: 10px;">
+        <input type="text" id="loginUsername" placeholder="Username or Email" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="password" id="loginPassword" placeholder="Password" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 8px;">
+          Login
+        </button>
+      </form>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px;">
-                        <button class="link-btn" id="forgotLink">Forgot password?</button>
-                        <button class="link-btn" id="showRegisterBtn">Create account</button>
-                    </div>
-                </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px;">
+        <button class="link-btn" id="forgotLink">Forgot password?</button>
+        <button class="link-btn" id="showRegisterBtn">Create account</button>
+      </div>
+    </div>
 
-                <!-- Registration Form (hidden initially) -->
-                <div id="registerFormContainer" style="display: none;">
-                    <form id="registerForm">
-                        <input type="text" id="regUsername" placeholder="Choose Username" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="email" id="regEmail" placeholder="Email Address" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="password" id="regPassword" placeholder="Choose Password (8+ chars, upper/lower/number/special)" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="password" id="regConfirmPassword" placeholder="Confirm Password" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="text" id="regCompany" placeholder="Company Name" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 20px;">
+    <!-- Registration Form (hidden initially) -->
+    <div id="registerFormContainer" style="display: none;">
+      <form id="registerForm">
+        <input type="text" id="regUsername" placeholder="Choose Username" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="email" id="regEmail" placeholder="Email Address" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="password" id="regPassword" placeholder="Choose Password (8+ chars, upper/lower/number/special)" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="password" id="regConfirmPassword" placeholder="Confirm Password" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="text" id="regCompany" placeholder="Company Name" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 20px;">
 
-                        <button type="submit" style="width: 100%; padding: 15px; background: #059669; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
-                            Create Account
-                        </button>
+        <button type="submit" style="width: 100%; padding: 15px; background: #059669; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 15px;">
+          Create Account
+        </button>
 
-                        <button type="button" onclick="showLoginFormInModal()"
-                                style="width: 100%; padding: 10px; background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1em; cursor: pointer;">
-                            Back to Login
-                        </button>
-                    </form>
-                </div>
+        <button type="button" onclick="showLoginFormInModal()"
+                style="width: 100%; padding: 10px; background: transparent; color: #64748b; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1em; cursor: pointer;">
+          Back to Login
+        </button>
+      </form>
+    </div>
 
-                <!-- Forgot Password: request token -->
-                <div id="forgotFormContainer" style="display:none;">
-                    <form id="requestResetForm">
-                        <p style="color:#4a5568; text-align:left; margin-bottom:10px;">Enter your <strong>username or email</strong> to request a reset token.</p>
-                        <input type="text" id="forgotUsernameOrEmail" placeholder="Username or Email" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-                            Request Reset Token
-                        </button>
-                        <button type="button" class="link-btn" id="haveTokenBtn">I already have a token</button>
-                        <button type="button" class="link-btn" onclick="showLoginFormInModal()">Back to Login</button>
-                        <div id="tokenReveal" style="display:none; background:#f7fafc; border:1px dashed #cbd5e1; padding:12px; border-radius:10px; text-align:left; margin-top:10px;"></div>
-                    </form>
-                </div>
+    <!-- Forgot Password: request token -->
+    <div id="forgotFormContainer" style="display:none;">
+      <form id="requestResetForm">
+        <p style="color:#4a5568; text-align:left; margin-bottom:10px;">Enter your <strong>username or email</strong> to request a reset token.</p>
+        <input type="text" id="forgotUsernameOrEmail" placeholder="Username or Email" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <button type="submit" style="width: 100%; padding: 15px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+          Request Reset Token
+        </button>
+        <button type="button" class="link-btn" id="haveTokenBtn">I already have a token</button>
+        <button type="button" class="link-btn" onclick="showLoginFormInModal()">Back to Login</button>
+        <div id="tokenReveal" style="display:none; background:#f7fafc; border:1px dashed #cbd5e1; padding:12px; border-radius:10px; text-align:left; margin-top:10px;"></div>
+      </form>
+    </div>
 
-                <!-- Reset Password with token -->
-                <div id="resetFormContainer" style="display:none;">
-                    <form id="resetPasswordForm">
-                        <input type="text" id="resetToken" placeholder="Paste your reset token" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="password" id="resetNewPassword" placeholder="New Password (8+ chars, upper/lower/number/special)" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
-                        <input type="password" id="resetConfirmPassword" placeholder="Confirm New Password" required
-                               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+    <!-- Reset Password with token -->
+    <div id="resetFormContainer" style="display:none;">
+      <form id="resetPasswordForm">
+        <input type="text" id="resetToken" placeholder="Paste your reset token" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="password" id="resetNewPassword" placeholder="New Password (8+ chars, upper/lower/number/special)" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
+        <input type="password" id="resetConfirmPassword" placeholder="Confirm New Password" required
+               style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.1em; margin-bottom: 15px;">
 
-                        <button type="submit" style="width: 100%; padding: 15px; background: #059669; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-                            Reset Password
-                        </button>
-                        <button type="button" class="link-btn" onclick="showForgotRequestForm()">Need a token?</button>
-                        <button type="button" class="link-btn" onclick="showLoginFormInModal()">Back to Login</button>
-                    </form>
-                </div>
+        <button type="submit" style="width: 100%; padding: 15px; background: #059669; color: white; border: none; border-radius: 10px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+          Reset Password
+        </button>
+        <button type="button" class="link-btn" onclick="showForgotRequestForm()">Need a token?</button>
+        <button type="button" class="link-btn" onclick="showLoginFormInModal()">Back to Login</button>
+      </form>
+    </div>
 
-                <div id="authError" style="color: #dc3545; margin-top: 15px; display: none; font-size: 1em;"></div>
-                <div id="authSuccess" style="color: #059669; margin-top: 15px; display: none; font-size: 1em;"></div>
-            `;
+    <div id="authError" style="color: #dc3545; margin-top: 15px; display: none; font-size: 1em;"></div>
+    <div id="authSuccess" style="color: #059669; margin-top: 15px; display: none; font-size: 1em;"></div>
+  `;
 
-            loginOverlay.appendChild(loginModal);
-            document.body.appendChild(loginOverlay);
+  loginOverlay.appendChild(loginModal);
+  document.body.appendChild(loginOverlay);
 
-            // Setup form handlers
-            setupLoginHandler();
-            setupRegisterHandler();
-            setupForgotHandlers();
+  // ✅ Wire up the "Create account" button to show the register form
+  const regBtn = document.getElementById('showRegisterBtn');
+  if (regBtn) regBtn.onclick = showRegisterForm;
 
-            // Focus on username
-            setTimeout(() => document.getElementById('loginUsername').focus(), 100);
-            return false;
-        }
+  // Setup form handlers
+  setupLoginHandler();
+  setupRegisterHandler();
+  setupForgotHandlers();
+
+  // Focus on username
+  setTimeout(() => document.getElementById('loginUsername').focus(), 100);
+  return false;
+}
+
 
         function showRegisterForm() {
             document.getElementById('loginFormContainer').style.display = 'none';
@@ -362,10 +367,11 @@
                 const password = document.getElementById('loginPassword').value;
 
                 try {
+                    const base = location.origin + location.pathname; // page that will open the reset modal
                     const response = await fetch(USER_MANAGEMENT_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                   body: `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}&resetUrlBase=${encodeURIComponent(base)}`
                     });
                     const result = await response.json();
 
