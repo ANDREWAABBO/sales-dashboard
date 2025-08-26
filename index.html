@@ -361,35 +361,38 @@
         }
 
         function setupLoginHandler() {
-            document.getElementById('loginForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const username = document.getElementById('loginUsername').value.trim();
-                const password = document.getElementById('loginPassword').value;
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
 
-                try {
-                    const base = location.origin + location.pathname; // page that will open the reset modal
-                    const response = await fetch(USER_MANAGEMENT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                   body: `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}&resetUrlBase=${encodeURIComponent(base)}`
-                    });
-                    const result = await response.json();
+    try {
+      const response = await fetch(USER_MANAGEMENT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+      });
+      const result = await response.json();
 
-                    if (result.success) {
-                        sessionStorage.setItem('dashboardAuth', 'true');
-                        sessionStorage.setItem('dashboardUser', result.username || username);
-                        sessionStorage.setItem('userEmail', result.email || '');
-                        sessionStorage.setItem('userCompany', result.company || '');
-                        document.getElementById('loginOverlay').remove();
-                        addLogoutButton();
-                        showMessage('Login successful!', 'success');
-                    } else {
-                        showError(result.message || 'Invalid username or password');
-                    }
-                } catch (error) {
-                    showError('Connection error. Please try again.');
-                }
-            });
+      if (result.success) {
+        sessionStorage.setItem('dashboardAuth', 'true');
+        sessionStorage.setItem('dashboardUser', result.username || username);
+        sessionStorage.setItem('userEmail', result.email || '');
+        sessionStorage.setItem('userCompany', result.company || '');
+        document.getElementById('loginOverlay').remove();
+        addLogoutButton();
+        showMessage('Login successful!', 'success');
+      } else {
+        showError(result.message || 'Invalid username or password');
+      }
+    } catch (error) {
+      showError('Connection error. Please try again.');
+    }
+  });
+}
+
+
+        
         }
 
         function setupRegisterHandler() {
@@ -438,100 +441,97 @@
 
         // === Forgot / Reset handlers ===
         function setupForgotHandlers() {
-            // link buttons
-            const forgotLink = document.getElementById('forgotLink');
-            if (forgotLink) forgotLink.onclick = showForgotRequestForm;
+  // link buttons
+  const forgotLink = document.getElementById('forgotLink');
+  if (forgotLink) forgotLink.onclick = showForgotRequestForm;
 
-            const haveTokenBtn = document.getElementById('haveTokenBtn');
-            if (haveTokenBtn) haveTokenBtn.onclick = showResetForm;
+  const haveTokenBtn = document.getElementById('haveTokenBtn');
+  if (haveTokenBtn) haveTokenBtn.onclick = showResetForm;
 
-            // request token
-            const reqForm = document.getElementById('requestResetForm');
-            reqForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const id = document.getElementById('forgotUsernameOrEmail').value.trim();
-                if (!id) return showError('Please enter your username or email.');
+  // request token
+  const reqForm = document.getElementById('requestResetForm');
+  reqForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const id = document.getElementById('forgotUsernameOrEmail').value.trim();
+    if (!id) return showError('Please enter your username or email.');
 
-                try {
-                    const response = await fetch(USER_MANAGEMENT_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        const base = location.origin + location.pathname; // page that will open the reset modal
-                         body: `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}&resetUrlBase=${encodeURIComponent(base)}`
-                    });
-                    const result = await response.json();
+    try {
+      const base = location.origin + location.pathname; // page that will open the reset modal
+      const response = await fetch(USER_MANAGEMENT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=requestpasswordreset&usernameOrEmail=${encodeURIComponent(id)}&resetUrlBase=${encodeURIComponent(base)}`
+      });
+      const result = await response.json();
 
-                    if (result.success) {
-                        showSuccess('Reset token generated. (Shown below for testing.)');
-                        const box = document.getElementById('tokenReveal');
-                        box.style.display = 'block';
-                        const expiresTxt = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : 'unknown';
-                        box.innerHTML = `
-                            <div><strong>Token:</strong> <code style="user-select:all;">${result.resetToken}</code></div>
-                            <div style="margin-top:6px;"><small>Expires: ${expiresTxt}</small></div>
-                            <div style="margin-top:10px;">
-                                <button class="btn btn-secondary" id="copyTokenBtn" type="button" style="padding:8px 14px;">Copy token</button>
-                                <button class="btn btn-primary" id="goToResetBtn" type="button" style="padding:8px 14px; margin-left:8px;">Continue to Reset</button>
-                            </div>
-                        `;
-                        setTimeout(() => {
-                            const ct = document.getElementById('copyTokenBtn');
-                            const gr = document.getElementById('goToResetBtn');
-                            if (ct) ct.onclick = async () => {
-                                try {
-                                    await navigator.clipboard.writeText(result.resetToken);
-                                    showMessage('Token copied', 'success');
-                                } catch(_) {}
-                            };
-                            if (gr) gr.onclick = () => {
-                                showResetForm();
-                                document.getElementById('resetToken').value = result.resetToken || '';
-                            };
-                        }, 0);
-                    } else {
-                        showError(result.message || 'Could not generate reset token.');
-                    }
-                } catch (err) {
-                    showError('Connection error. Please try again.');
-                }
-            });
+      if (result.success) {
+        showSuccess('Reset token generated. (Shown below for testing.)');
+        const box = document.getElementById('tokenReveal');
+        box.style.display = 'block';
+        const expiresTxt = result.expiresAt ? new Date(result.expiresAt).toLocaleString() : 'unknown';
+        box.innerHTML = `
+          <div><strong>Token:</strong> <code style="user-select:all;">${result.resetToken}</code></div>
+          <div style="margin-top:6px;"><small>Expires: ${expiresTxt}</small></div>
+          <div style="margin-top:10px;">
+            <button class="btn btn-secondary" id="copyTokenBtn" type="button" style="padding:8px 14px;">Copy token</button>
+            <button class="btn btn-primary" id="goToResetBtn" type="button" style="padding:8px 14px; margin-left:8px;">Continue to Reset</button>
+          </div>
+        `;
+        setTimeout(() => {
+          const ct = document.getElementById('copyTokenBtn');
+          const gr = document.getElementById('goToResetBtn');
+          if (ct) ct.onclick = async () => {
+            try { await navigator.clipboard.writeText(result.resetToken); showMessage('Token copied', 'success'); } catch (_) {}
+          };
+          if (gr) gr.onclick = () => {
+            showResetForm();
+            document.getElementById('resetToken').value = result.resetToken || '';
+          };
+        }, 0);
+      } else {
+        showError(result.message || 'Could not generate reset token.');
+      }
+    } catch (err) {
+      showError('Connection error. Please try again.');
+    }
+  });
 
-            // submit new password
-            const resetForm = document.getElementById('resetPasswordForm');
-            resetForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const token = document.getElementById('resetToken').value.trim();
-                const pw = document.getElementById('resetNewPassword').value;
-                const conf = document.getElementById('resetConfirmPassword').value;
+  // submit new password
+  const resetForm = document.getElementById('resetPasswordForm');
+  resetForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const token = document.getElementById('resetToken').value.trim();
+    const pw = document.getElementById('resetNewPassword').value;
+    const conf = document.getElementById('resetConfirmPassword').value;
 
-                if (!token) return showError('Reset token is required.');
-                if (pw !== conf) return showError('Passwords do not match.');
-                if (!PASSWORD_COMPLEXITY.test(pw)) {
-                    return showError('New password must be 8+ chars and include upper, lower, number, and special character.');
-                }
+    if (!token) return showError('Reset token is required.');
+    if (pw !== conf) return showError('Passwords do not match.');
+    if (!PASSWORD_COMPLEXITY.test(pw)) {
+      return showError('New password must be 8+ chars and include upper, lower, number, and special character.');
+    }
 
-                try {
-                    const response = await fetch(USER_MANAGEMENT_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=resetpassword&token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(pw)}`
-                    });
-                    const result = await response.json();
+    try {
+      const response = await fetch(USER_MANAGEMENT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `action=resetpassword&token=${encodeURIComponent(token)}&newPassword=${encodeURIComponent(pw)}`
+      });
+      const result = await response.json();
 
-                    if (result.success) {
-                        showSuccess('Password has been reset. Please login with your new password.');
-                        setTimeout(() => {
-                            showLoginFormInModal();
-                            document.getElementById('loginPassword').focus();
-                        }, 1200);
-                    } else {
-                        showError(result.message || 'Reset failed.');
-                    }
-                } catch (err) {
-                    showError('Connection error. Please try again.');
-                }
-            });
-        }
+      if (result.success) {
+        showSuccess('Password has been reset. Please login with your new password.');
+        setTimeout(() => {
+          showLoginFormInModal();
+          document.getElementById('loginPassword').focus();
+        }, 1200);
+      } else {
+        showError(result.message || 'Reset failed.');
+      }
+    } catch (err) {
+      showError('Connection error. Please try again.');
+    }
+  });
+}
 
 
 
