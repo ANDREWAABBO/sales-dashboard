@@ -659,15 +659,25 @@
   global.checkAuth = Auth.checkAuth;
   global.logout = Auth.logout;
 
-  // --- Auto-init on page load ---------------------------------------------
-  document.addEventListener('DOMContentLoaded', function () {
-    injectKeyframeCSS();
-    // If URL contains a reset token, open the "Set New Password" view first.
-    if (Auth.routeFromURL()) return;
+  
 
-    // Otherwise, normal auth gate.
-    if (Auth.checkAuth()) {
-      Auth.addLogoutButton();
-    }
-  });
+  // --- Auto-init on page load ---------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+  // Only react to ?resetToken (NOT ?token=… which is used by ROI share links)
+  const handled = Auth.bootstrapResetFromURL();
+
+  // If a share token is present, don't auto-open the login modal.
+  let hasShareToken = false;
+  try {
+    const u = new URL(window.location.href);
+    hasShareToken = u.searchParams.has('token'); // ROI guest token
+  } catch (_) {}
+
+  if (!handled && !hasShareToken && Auth.checkAuth()) {
+    Auth.addLogoutButton();
+  }
+});
+
+
+  
 })(window);
