@@ -159,10 +159,6 @@
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-    .form-checkbox { display: flex; align-items: center; gap: 10px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 2px solid #e2e8f0; transition: all 0.3s ease; }
-    .form-checkbox:hover { border-color: #1e3a8a; }
-    .form-checkbox input[type="checkbox"] { width: auto; margin: 0; }
-
     .pricing-summary { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 20px; border-radius: 15px; margin: 20px 0; border: 2px solid #1e3a8a; }
     .pricing-summary h4 { margin: 0 0 15px 0; color: #2d3748; font-size: 1.3em; text-align: center; }
 
@@ -184,510 +180,6 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
-
-  <script>
-    // Kick off shared auth (no UI/logic changes to this page)
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.Auth && Auth.checkAuth()) Auth.addLogoutButton();
-    });
-
-    // ========== Quantum: “How We Stack Up” materials ==========
-    function openQuantumAboutUs() {
-      const existingOverlay = document.querySelector('.modal-overlay');
-      if (existingOverlay) existingOverlay.remove();
-
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-
-      const materials = [
-        { title: 'Restaurant Industry Trends Report', id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', description: 'Current market trends and insights for the restaurant industry', type: 'pdf' },
-        { title: 'Maximizing Revenue Per Square Foot in Food Service Operations', id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', description: 'Strategies to optimize space utilization and increase profitability', type: 'pdf' },
-        { title: 'Fresh Food Fridge Spec Sheet', id: '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas', description: 'Technical specifications and features of our Smart Food Fridge', type: 'slides' },
-        { title: 'Food Fridge Executive Overview', id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE', description: 'High-level overview and business benefits for decision makers', type: 'pdf' },
-        { title: 'Commercial Real Estate Premium Food Amenities', id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0', description: 'How premium food amenities enhance commercial property value', type: 'pdf' },
-        { title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', description: 'Comprehensive technical documentation and frequently asked questions', type: 'pdf' },
-        { title: 'Food Fridge Presentation Slide Deck With Proposal Example', id: '19hC90aDJgAQCiNOPACjzhxEdFoE2iaUMpfirP3kAgzs', description: 'Robust presentation with how to use videos and proposal', type: 'slides' }
-      ];
-
-      modal.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">
-          <h3 style="margin:0;color:#2d3748;font-size:1.8em;">How We Stack Up - Marketing Materials</h3>
-          <button class="close-btn" onclick="closeModal()">✕</button>
-        </div>
-        <div style="display:grid;gap:20px;">
-          ${materials.map(material => {
-            let viewUrl, downloadUrl;
-            switch(material.type) {
-              case 'slides':
-                viewUrl = \`https://docs.google.com/presentation/d/\${material.id}/preview\`;
-                downloadUrl = \`https://docs.google.com/presentation/d/\${material.id}/export/pdf\`;
-                break;
-              case 'docs':
-                viewUrl = \`https://docs.google.com/document/d/\${material.id}/preview\`;
-                downloadUrl = \`https://docs.google.com/document/d/\${material.id}/export?format=pdf\`;
-                break;
-              case 'sheets':
-                viewUrl = \`https://docs.google.com/spreadsheets/d/\${material.id}/preview\`;
-                downloadUrl = \`https://docs.google.com/spreadsheets/d/\${material.id}/export?format=pdf\`;
-                break;
-              default:
-                viewUrl = \`https://drive.google.com/file/d/\${material.id}/view\`;
-                downloadUrl = \`https://drive.google.com/uc?export=download&id=\${material.id}\`;
-            }
-            return `
-              <div style="background:#f8fafc;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;">
-                <div style="margin-bottom:20px;">
-                  <h4 style="margin:0 0 10px 0;color:#1e3a8a;font-size:1.2em;font-weight:600;">${material.title}</h4>
-                  <p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">${material.description}</p>
-                </div>
-                <div style="display:flex;gap:15px;flex-wrap:wrap;">
-                  <button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>
-                  <button class="btn btn-secondary" onclick="window.open('${downloadUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">📥 Download</button>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>
-      `;
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-    }
-
-    function closeModal() {
-      const overlay = document.querySelector('.modal-overlay');
-      if (overlay) overlay.remove();
-    }
-
-    // ========== Quantum Proposal Generator ==========
-    function openQuantumProposalGenerator() {
-      const existingModal = document.getElementById('quantumProposalModal');
-      if (existingModal) existingModal.style.display = 'none';
-      setTimeout(() => {
-        const modal = document.getElementById('quantumProposalModal');
-        if (modal) {
-          modal.style.display = 'block';
-          updateQuantumPricingSummary();
-          const generateBtn = document.getElementById('generateQuantumBtn');
-          if (generateBtn) {
-            const newBtn = generateBtn.cloneNode(true);
-            generateBtn.parentNode.replaceChild(newBtn, generateBtn);
-            newBtn.addEventListener('click', generateQuantumProposal);
-          }
-        }
-      }, 100);
-    }
-
-    function closeQuantumModal(id) {
-      const m = document.getElementById(id);
-      if (m) m.style.display = 'none';
-    }
-
-    function updateCustomerType() {
-      const customerType = document.getElementById('customerType').value;
-      const scannerCount = document.getElementById('scannerCount');
-      scannerCount.value = (customerType === 'new') ? 1 : 0;
-      updateQuantumPricingSummary();
-    }
-
-    function calculateFreight() {
-      const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
-      const customerZip = document.getElementById('customerZip').value;
-
-      let baseFreight;
-      if (fridgeCount === 1) baseFreight = 895;
-      else if (fridgeCount === 2) baseFreight = 1400;
-      else if (fridgeCount === 3) baseFreight = 1800;
-      else baseFreight = fridgeCount * 550;
-
-      let distanceMultiplier = 1.0;
-      if (customerZip) {
-        const zipCode = parseInt(customerZip);
-        if (zipCode >= 20000 && zipCode <= 39999) distanceMultiplier = 1.2;
-        else if (zipCode >= 40000) distanceMultiplier = 1.5;
-      }
-      return Math.round(baseFreight * distanceMultiplier);
-    }
-
-    function updateQuantumPricingSummary() {
-      const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
-      const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
-      const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
-      const vinylWrap = false;
-      const goldSupport = false;
-
-      const fridgePrice = 7500;
-      const scannerPrice = 455;
-      const rfidRollPrice = 180;
-      const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50);
-      const freight = calculateFreight();
-
-      const fridgeTotal = fridgeCount * fridgePrice;
-      const scannerTotal = scannerCount * scannerPrice;
-      const rfidTotal = rfidRolls * rfidRollPrice;
-      const wrapTotal = vinylWrap ? wrapPrice : 0;
-
-      const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + freight;
-
-      const monthlyLicense = fridgeCount * 175;
-      const monthlyLTE = fridgeCount * 25;
-      const monthlyGold = goldSupport ? (fridgeCount * 39) : 0;
-      const monthlyTotal = monthlyLicense + monthlyLTE + monthlyGold;
-
-      let summaryHTML = `
-        <div style="margin-bottom:15px;">
-          <h4 style="color:#1e3a8a;margin-bottom:10px;">One-Time Costs</h4>
-          <div>Food Fridges (${fridgeCount}): $${fridgeTotal.toLocaleString()}</div>`;
-      if (scannerCount > 0) summaryHTML += `<div>RFID Scanners (${scannerCount}): $${scannerTotal.toLocaleString()}</div>`;
-      if (rfidRolls > 0) summaryHTML += `<div>RFID Tags (${rfidRolls} rolls): $${rfidTotal.toLocaleString()}</div>`;
-      if (vinylWrap) summaryHTML += `<div>Vinyl Wrap: $${wrapTotal.toLocaleString()}</div>`;
-      summaryHTML += `
-          <div>Freight: $${freight.toLocaleString()}</div>
-          <div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
-            One-Time Total: $${oneTimeTotal.toLocaleString()}
-          </div>
-        </div>
-        <div>
-          <h4 style="color:#1e3a8a;margin-bottom:10px;">Monthly Recurring</h4>
-          <div>License Fees: $${monthlyLicense.toLocaleString()}/month</div>
-          <div>LTE Service: $${monthlyLTE.toLocaleString()}/month</div>`;
-      if (goldSupport) summaryHTML += `<div>Gold Support: $${monthlyGold.toLocaleString()}/month</div>`;
-      summaryHTML += `
-          <div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
-            Monthly Total: $${monthlyTotal.toLocaleString()}/month
-          </div>
-        </div>`;
-      document.getElementById('quantumPricingSummary').innerHTML = summaryHTML;
-    }
-
-    async function generateQuantumProposal(event) {
-      if (event) { event.preventDefault(); event.stopPropagation(); }
-      const submitBtn = document.getElementById('generateQuantumBtn');
-      const originalText = submitBtn.innerHTML;
-      if (submitBtn.disabled) return;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
-
-      try {
-        const formData = {
-          companyName: document.getElementById('quantumCompanyName').value,
-          contactName: document.getElementById('quantumContactName').value || '',
-          customerAddress: document.getElementById('customerAddress').value,
-          customerZip: document.getElementById('customerZip').value,
-          preparedBy: document.getElementById('quantumPreparedBy').value,
-          preparedByPhone: document.getElementById('quantumPreparedByPhone').value,
-          preparedByEmail: document.getElementById('quantumPreparedByEmail').value,
-          customerType: document.getElementById('customerType').value,
-          fridgeCount: document.getElementById('quantumFridgeCount').value,
-          scannerCount: document.getElementById('scannerCount').value,
-          rfidRolls: document.getElementById('rfidRolls').value || '0',
-          vinylWrap: 'No',
-          goldSupport: 'No'
-        };
-        if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
-          throw new Error('Please fill in all required fields.');
-        }
-
-        const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
-        const params = new URLSearchParams();
-        Object.keys(formData).forEach(key => params.append(key, formData[key]));
-
-        const response = await fetch(`${QUANTUM_PROPOSAL_URL}?${params.toString()}`);
-        const result = await response.json();
-
-        if (result.status === 'success') {
-          closeQuantumModal('quantumProposalModal');
-          showQuantumPopup(`
-            <div class="success-popup">
-              <h3>✅ Proposal Generated Successfully!</h3>
-              <p>Your Smart Food Fridge proposal has been created and saved to Library.</p>
-              <p><strong>Company:</strong> ${formData.companyName}</p>
-              <p><strong>Configuration:</strong> ${formData.fridgeCount} fridges, ${formData.scannerCount} scanners</p>
-              <p><strong>Total Cost:</strong> $${result.data.pricing.oneTimeTotal.toLocaleString()} one-time + $${result.data.pricing.monthlyTotal}/month</p>
-              <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
-                <button class="btn btn-primary" onclick="window.open('${result.pdfUrl}', '_blank')" style="padding:12px 24px;">📄 View PDF</button>
-                <button class="btn btn-secondary" onclick="window.open('${result.pdfUrl.replace('/view?', '/export?format=pdf&')}', '_blank')" style="padding:12px 24px;">📥 Download</button>
-              </div>
-            </div>
-          `, 'success');
-        } else {
-          throw new Error(result.message || 'Failed to generate proposal');
-        }
-      } catch (error) {
-        showQuantumPopup(`
-          <div class="error-popup">
-            <h3>❌ Error Generating Proposal</h3>
-            <p>${error.message}</p>
-            <p>Please try again or contact support if the problem persists.</p>
-          </div>
-        `, 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-      }
-    }
-
-    function showQuantumPopup(content, type) {
-      const popup = document.createElement('div');
-      popup.className = 'modal-overlay';
-      popup.innerHTML = `
-        <div class="modal" style="max-width:600px;">
-          ${content}
-          <div style="margin-top:20px;text-align:center;">
-            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
-          </div>
-        </div>`;
-      popup.style.display = 'block';
-      document.body.appendChild(popup);
-      if (type === 'success') setTimeout(() => { if (popup.parentNode) popup.remove(); }, 15000);
-    }
-
-    function openQuantumMasterAgreement() {
-      const existingOverlay = document.querySelector('.modal-overlay');
-      if (existingOverlay) existingOverlay.remove();
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1200px';
-      modal.style.height = '90vh';
-      modal.style.display = 'flex';
-      modal.style.flexDirection = 'column';
-
-      const docId = '1ChcyX_PUlX48AhzAkNtsDWduamgQHomYSYM9LVwd3FA';
-      const pdfUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
-      const viewerUrl = `https://docs.google.com/document/d/${docId}/preview`;
-
-      modal.innerHTML = `
-        <div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
-          <h3 style="margin:0;color:#2d3748;font-size:1.3em;">Master Services Agreement (Food Fridge)</h3>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <button class="btn btn-secondary" onclick="window.open('${pdfUrl}','_blank')" style="padding:10px 20px;">📥 Download PDF</button>
-            <button class="close-btn" onclick="closeModal()">✕</button>
-          </div>
-        </div>
-        <div style="flex:1;padding:20px;overflow:hidden;">
-          <iframe src="${viewerUrl}" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>
-        </div>`;
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-    }
-
-    function openQuantumROICalculator() {
-      const existing = document.querySelector('.modal-overlay.roi-overlay');
-      if (existing) existing.remove();
-
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay roi-overlay';
-      overlay.style.display = 'block';
-
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1200px';
-      modal.style.height = '90vh';
-      modal.style.display = 'flex';
-      modal.style.flexDirection = 'column';
-
-      const src = 'roi-calculator.html';
-      modal.innerHTML = `
-        <div style="padding:14px 16px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
-          <h3 style="margin:0;color:#1e3a8a;font-size:1.2em;">ROI Calculator</h3>
-          <button class="close-btn" onclick="document.querySelector('.roi-overlay').remove()">✕</button>
-        </div>
-        <div style="flex:1;padding:12px;overflow:hidden;">
-          <iframe src="${src}" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.08);" allowfullscreen></iframe>
-        </div>`;
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-    }
-
-    function openQuantumLeadLogger() { window.location.href = 'lead-logger.html'; }
-
-    // ========== Quantum Proposal Viewer ==========
-    function openQuantumProposalViewer() {
-      const existingOverlay = document.querySelector('.proposal-viewer-overlay');
-      if (existingOverlay) existingOverlay.remove();
-
-      window.allQuantumProposals = null;
-
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay proposal-viewer-overlay';
-      overlay.style.display = 'block';
-
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1000px';
-
-      modal.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">
-          <h3 style="margin:0;color:#2d3748;font-size:1.8em;">Quantum Proposal Library</h3>
-          <button class="close-btn" onclick="closeQuantumProposalViewer()">✕</button>
-        </div>
-        <div style="margin-bottom:20px;position:relative;">
-          <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."
-                 style="width:100%;padding:15px 45px 15px 15px;font-size:16px;border:2px solid #e2e8f0;border-radius:10px;transition:all .3s ease;"
-                 onkeyup="filterQuantumProposals()"
-                 onfocus="this.style.borderColor='#1e3a8a'"
-                 onblur="this.style.borderColor='#e2e8f0'">
-          <button id="clearQuantumSearchBtn"
-                  onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();"
-                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">×</button>
-        </div>
-        <div id="quantumProposalsList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
-          <div style="text-align:center;padding:40px;">
-            <div class="loading-spinner"></div>
-            <p style="margin-top:20px;color:#718096;">Loading proposals from library...</p>
-          </div>
-        </div>`;
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      setTimeout(() => { loadQuantumProposalsFromDrive(); }, 100);
-    }
-
-    function closeQuantumProposalViewer() {
-      const overlay = document.querySelector('.proposal-viewer-overlay');
-      if (overlay) overlay.remove();
-    }
-
-    async function loadQuantumProposalsFromDrive() {
-      try {
-        const callbackName = 'quantumProposalsCallback_' + Date.now();
-        const promise = new Promise((resolve, reject) => {
-          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
-          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 20000);
-        });
-
-        const script = document.createElement('script');
-        const url = `https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec?action=getProposals&callback=${callbackName}`;
-        script.src = url;
-
-        script.onerror = () => {
-          delete window[callbackName];
-          const proposalsList = document.getElementById('quantumProposalsList');
-          if (proposalsList) {
-            proposalsList.innerHTML = `
-              <div style="text-align:center;padding:40px;">
-                <p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load proposals.</p>
-                <button class="btn btn-primary" onclick="loadQuantumProposalsFromDrive()">Try Again</button>
-              </div>`;
-          }
-        };
-
-        document.body.appendChild(script);
-        const data = await promise;
-        document.body.removeChild(script);
-
-        if (data.status === 'success') {
-          const sortedProposals = (data.proposals || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
-          window.allQuantumProposals = sortedProposals;
-          displayQuantumProposals(sortedProposals);
-        } else {
-          throw new Error(data.message || 'Failed to load proposals');
-        }
-      } catch (error) {
-        const proposalsList = document.getElementById('quantumProposalsList');
-        if (proposalsList) {
-          proposalsList.innerHTML = `
-            <div style="text-align:center;padding:40px;">
-              <p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load proposals.</p>
-              <p style="color:#718096;margin-bottom:20px;">Error: ${error.message}</p>
-              <button class="btn btn-primary" onclick="loadQuantumProposalsFromDrive()">Try Again</button>
-            </div>`;
-        }
-      }
-    }
-
-    function displayQuantumProposals(proposals) {
-      const proposalsList = document.getElementById('quantumProposalsList');
-      if (!proposalsList) return;
-      if (proposals.length === 0) {
-        proposalsList.innerHTML = `<div style="text-align:center;padding:40px;color:#718096;"><p>No proposals found in the library.</p></div>`;
-        return;
-      }
-      proposalsList.innerHTML = proposals.map(proposal => `
-        <div class="proposal-item" style="background:white;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.05);"
-             onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
-             onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
-            <div style="flex:1;min-width:200px;">
-              <h4 style="margin:0 0 8px 0;color:#2d3748;font-size:18px;">${proposal.companyName}</h4>
-              <p style="margin:0;color:#718096;font-size:14px;">
-                ${proposal.name}<br>
-                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
-              </p>
-            </div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-              <button class="btn btn-primary" onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📄 View</button>
-              <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📥 Download</button>
-            </div>
-          </div>
-        </div>`).join('');
-    }
-
-    function filterQuantumProposals() {
-      const searchInput = document.getElementById('quantumProposalSearch');
-      const term = (searchInput.value || '').toLowerCase();
-      const proposalsList = document.getElementById('quantumProposalsList');
-      const clearBtn = document.getElementById('clearQuantumSearchBtn');
-      clearBtn.style.display = term.length > 0 ? 'block' : 'none';
-
-      if (!window.allQuantumProposals || window.allQuantumProposals.length === 0) return;
-      if (!term) { displayQuantumProposals(window.allQuantumProposals); return; }
-
-      const filtered = window.allQuantumProposals.filter(p =>
-        p.companyName.toLowerCase().includes(term) || p.name.toLowerCase().includes(term)
-      );
-      if (filtered.length === 0) {
-        proposalsList.innerHTML = `
-          <div style="text-align:center;padding:40px;color:#718096;">
-            <p style="font-size:18px;">No proposals found matching "<strong>${term}</strong>"</p>
-            <p style="margin-top:10px;">Try searching for a different company name.</p>
-          </div>`;
-      } else {
-        displayQuantumProposals(filtered);
-      }
-    }
-
-    function viewQuantumProposalPDF(fileId, companyName) {
-      closeQuantumProposalViewer();
-
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-
-      const pdfModal = document.createElement('div');
-      pdfModal.className = 'modal';
-      pdfModal.style.maxWidth = '1200px';
-      pdfModal.style.height = '90vh';
-      pdfModal.style.display = 'flex';
-      pdfModal.style.flexDirection = 'column';
-
-      const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview?usp=embed`;
-
-      pdfModal.innerHTML = `
-        <div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
-          <h3 style="margin:0;color:#2d3748;font-size:1.3em;">Proposal for ${companyName}</h3>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <button class="btn btn-primary" onclick="closeModal(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">Back to Library</button>
-            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding:10px 20px;">Download</button>
-          </div>
-        </div>
-        <div style="flex:1;padding:20px;overflow:hidden;">
-          <iframe src="${viewerUrl}" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>
-        </div>`;
-      overlay.appendChild(pdfModal);
-      document.body.appendChild(overlay);
-    }
-
-    // Close any generic overlay when clicking the backdrop (doesn't affect login overlay)
-    window.onclick = function (event) {
-      if (event.target.classList.contains('modal-overlay')) closeModal();
-    };
-  </script>
 </head>
 
 <body>
@@ -697,7 +189,7 @@
       <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
       <span>Abbondanza Vending LLC</span>
     </a>
-    <button class="company-btn active">
+    <button class="company-btn active" type="button">
       <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
       <span>Quantum Solutions</span>
     </button>
@@ -714,34 +206,34 @@
       <div class="card">
         <h2>How We Stack Up</h2>
         <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
-        <button onclick="openQuantumAboutUs()" class="btn">View Materials</button>
+        <button onclick="openQuantumAboutUs()" class="btn" type="button">View Materials</button>
       </div>
 
       <div class="card">
         <h2>Proposal Management</h2>
         <p>Create and access Smart Food Fridge proposals with comprehensive pricing analysis and searchable library.</p>
         <div style="display:flex;gap:15px;margin-top:18px;">
-          <button onclick="openQuantumProposalGenerator()" class="btn" style="flex:1;">Generate Proposal</button>
-          <button onclick="openQuantumProposalViewer()" class="btn" style="flex:1;">View Library</button>
+          <button onclick="openQuantumProposalGenerator()" class="btn" style="flex:1;" type="button">Generate Proposal</button>
+          <button onclick="openQuantumProposalViewer()" class="btn" style="flex:1;" type="button">View Library</button>
         </div>
       </div>
 
       <div class="card">
         <h2>Master Service Agreement</h2>
         <p>Print to sign comprehensive service agreements for enterprise clients and partnerships.</p>
-        <button onclick="openQuantumMasterAgreement()" class="btn">View Agreement</button>
+        <button onclick="openQuantumMasterAgreement()" class="btn" type="button">View Agreement</button>
       </div>
 
       <div class="card">
         <h2>ROI Calculator</h2>
         <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p>
-        <button onclick="openQuantumROICalculator()" class="btn">Open Calculator</button>
+        <button onclick="openQuantumROICalculator()" class="btn" type="button">Open Calculator</button>
       </div>
 
       <div class="card">
         <h2>Lead Logger</h2>
         <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
-        <button onclick="openQuantumLeadLogger()" class="btn">Open Lead Logger</button>
+        <button onclick="openQuantumLeadLogger()" class="btn" type="button">Open Lead Logger</button>
       </div>
     </div>
   </div>
@@ -839,10 +331,506 @@
       </div>
 
       <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeQuantumModal('quantumProposalModal')" style="flex:1;background:#64748b;">Cancel</button>
+        <button class="btn btn-secondary" onclick="closeQuantumModal('quantumProposalModal')" style="flex:1;background:#64748b;" type="button">Cancel</button>
         <button class="btn btn-primary" id="generateQuantumBtn" type="button" onclick="generateQuantumProposal()">Generate Proposal PDF</button>
       </div>
     </div>
   </div>
+
+  <!-- App script: expose handlers on window so inline on* can find them -->
+  <script>
+    // Kick off shared auth (no UI/logic changes to this page)
+    document.addEventListener('DOMContentLoaded', () => {
+      try { if (window.Auth && Auth.checkAuth()) Auth.addLogoutButton(); } catch(e){ console.warn(e); }
+    });
+
+    // Expose everything used by inline HTML attributes:
+    window.openQuantumAboutUs = function openQuantumAboutUs() {
+      const existingOverlay = document.querySelector('.modal-overlay');
+      if (existingOverlay) existingOverlay.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+
+      const materials = [
+        { title: 'Restaurant Industry Trends Report', id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', description: 'Current market trends and insights for the restaurant industry', type: 'pdf' },
+        { title: 'Maximizing Revenue Per Square Foot in Food Service Operations', id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', description: 'Strategies to optimize space utilization and increase profitability', type: 'pdf' },
+        { title: 'Fresh Food Fridge Spec Sheet', id: '1RO1IXd032eCKM4z4gr09QSouIyGXA8R74PSXj5afIas', description: 'Technical specifications and features of our Smart Food Fridge', type: 'slides' },
+        { title: 'Food Fridge Executive Overview', id: '1YFa7vPZC89YE4OM5wW5LTGwF5WD3lZAE', description: 'High-level overview and business benefits for decision makers', type: 'pdf' },
+        { title: 'Commercial Real Estate Premium Food Amenities', id: '1eUfU0i5WD9KEg46biTguBCyQef_OxBi0', description: 'How premium food amenities enhance commercial property value', type: 'pdf' },
+        { title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', description: 'Comprehensive technical documentation and frequently asked questions', type: 'pdf' },
+        { title: 'Food Fridge Presentation Slide Deck With Proposal Example', id: '19hC90aDJgAQCiNOPACjzhxEdFoE2iaUMpfirP3kAgzs', description: 'Robust presentation with how to use videos and proposal', type: 'slides' }
+      ];
+
+      const cards = materials.map(m => {
+        let viewUrl, downloadUrl;
+        if (m.type === 'slides') { viewUrl = `https://docs.google.com/presentation/d/${m.id}/preview`; downloadUrl = `https://docs.google.com/presentation/d/${m.id}/export/pdf`; }
+        else if (m.type === 'docs') { viewUrl = `https://docs.google.com/document/d/${m.id}/preview`; downloadUrl = `https://docs.google.com/document/d/${m.id}/export?format=pdf`; }
+        else if (m.type === 'sheets') { viewUrl = `https://docs.google.com/spreadsheets/d/${m.id}/preview`; downloadUrl = `https://docs.google.com/spreadsheets/d/${m.id}/export?format=pdf`; }
+        else { viewUrl = `https://drive.google.com/file/d/${m.id}/view`; downloadUrl = `https://drive.google.com/uc?export=download&id=${m.id}`; }
+        return (
+          '<div style="background:#f8fafc;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;">' +
+            '<div style="margin-bottom:20px;">' +
+              `<h4 style="margin:0 0 10px 0;color:#1e3a8a;font-size:1.2em;font-weight:600;">${m.title}</h4>` +
+              `<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">${m.description}</p>` +
+            '</div>' +
+            '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
+              `<button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>` +
+              `<button class="btn btn-secondary" onclick="window.open('${downloadUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">📥 Download</button>` +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      modal.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
+          '<h3 style="margin:0;color:#2d3748;font-size:1.8em;">How We Stack Up - Marketing Materials</h3>' +
+          '<button class="close-btn" onclick="closeModal()">✕</button>' +
+        '</div>' +
+        `<div style="display:grid;gap:20px;">${cards}</div>`;
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    };
+
+    window.closeModal = function closeModal() {
+      const overlay = document.querySelector('.modal-overlay');
+      if (overlay) overlay.remove();
+    };
+
+    window.openQuantumProposalGenerator = function openQuantumProposalGenerator() {
+      const existingModal = document.getElementById('quantumProposalModal');
+      if (existingModal) existingModal.style.display = 'none';
+      setTimeout(() => {
+        const modal = document.getElementById('quantumProposalModal');
+        if (modal) {
+          modal.style.display = 'block';
+          updateQuantumPricingSummary();
+          const generateBtn = document.getElementById('generateQuantumBtn');
+          if (generateBtn) {
+            const newBtn = generateBtn.cloneNode(true);
+            generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+            newBtn.addEventListener('click', generateQuantumProposal);
+          }
+        }
+      }, 100);
+    };
+
+    window.closeQuantumModal = function closeQuantumModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.style.display = 'none';
+    };
+
+    window.updateCustomerType = function updateCustomerType() {
+      const customerType = document.getElementById('customerType').value;
+      const scannerCount = document.getElementById('scannerCount');
+      scannerCount.value = (customerType === 'new') ? 1 : 0;
+      updateQuantumPricingSummary();
+    };
+
+    function calculateFreight() {
+      const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
+      const customerZip = document.getElementById('customerZip').value;
+
+      let baseFreight;
+      if (fridgeCount === 1) baseFreight = 895;
+      else if (fridgeCount === 2) baseFreight = 1400;
+      else if (fridgeCount === 3) baseFreight = 1800;
+      else baseFreight = fridgeCount * 550;
+
+      let distanceMultiplier = 1.0;
+      if (customerZip) {
+        const zipCode = parseInt(customerZip);
+        if (zipCode >= 20000 && zipCode <= 39999) distanceMultiplier = 1.2;
+        else if (zipCode >= 40000) distanceMultiplier = 1.5;
+      }
+      return Math.round(baseFreight * distanceMultiplier);
+    }
+
+    window.updateQuantumPricingSummary = function updateQuantumPricingSummary() {
+      const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
+      const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
+      const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
+      const vinylWrap = false;
+      const goldSupport = false;
+
+      const fridgePrice = 7500;
+      const scannerPrice = 455;
+      const rfidRollPrice = 180;
+      const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50);
+      const freight = calculateFreight();
+
+      const fridgeTotal = fridgeCount * fridgePrice;
+      const scannerTotal = scannerCount * scannerPrice;
+      const rfidTotal = rfidRolls * rfidRollPrice;
+      const wrapTotal = vinylWrap ? wrapPrice : 0;
+
+      const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + freight;
+
+      const monthlyLicense = fridgeCount * 175;
+      const monthlyLTE = fridgeCount * 25;
+      const monthlyGold = goldSupport ? (fridgeCount * 39) : 0;
+      const monthlyTotal = monthlyLicense + monthlyLTE + monthlyGold;
+
+      let html = `
+        <div style="margin-bottom:15px;">
+          <h4 style="color:#1e3a8a;margin-bottom:10px;">One-Time Costs</h4>
+          <div>Food Fridges (${fridgeCount}): $${fridgeTotal.toLocaleString()}</div>`;
+      if (scannerCount > 0) html += `<div>RFID Scanners (${scannerCount}): $${scannerTotal.toLocaleString()}</div>`;
+      if (rfidRolls > 0) html += `<div>RFID Tags (${rfidRolls} rolls): $${rfidTotal.toLocaleString()}</div>`;
+      if (vinylWrap) html += `<div>Vinyl Wrap: $${wrapTotal.toLocaleString()}</div>`;
+      html += `
+          <div>Freight: $${freight.toLocaleString()}</div>
+          <div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
+            One-Time Total: $${oneTimeTotal.toLocaleString()}
+          </div>
+        </div>
+        <div>
+          <h4 style="color:#1e3a8a;margin-bottom:10px;">Monthly Recurring</h4>
+          <div>License Fees: $${monthlyLicense.toLocaleString()}/month</div>
+          <div>LTE Service: $${monthlyLTE.toLocaleString()}/month</div>`;
+      if (goldSupport) html += `<div>Gold Support: $${monthlyGold.toLocaleString()}/month</div>`;
+      html += `
+          <div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
+            Monthly Total: $${monthlyTotal.toLocaleString()}/month
+          </div>
+        </div>`;
+      document.getElementById('quantumPricingSummary').innerHTML = html;
+    };
+
+    window.generateQuantumProposal = async function generateQuantumProposal(event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
+      const submitBtn = document.getElementById('generateQuantumBtn');
+      const originalText = submitBtn.innerHTML;
+      if (submitBtn.disabled) return;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+
+      try {
+        const formData = {
+          companyName: document.getElementById('quantumCompanyName').value,
+          contactName: document.getElementById('quantumContactName').value || '',
+          customerAddress: document.getElementById('customerAddress').value,
+          customerZip: document.getElementById('customerZip').value,
+          preparedBy: document.getElementById('quantumPreparedBy').value,
+          preparedByPhone: document.getElementById('quantumPreparedByPhone').value,
+          preparedByEmail: document.getElementById('quantumPreparedByEmail').value,
+          customerType: document.getElementById('customerType').value,
+          fridgeCount: document.getElementById('quantumFridgeCount').value,
+          scannerCount: document.getElementById('scannerCount').value,
+          rfidRolls: document.getElementById('rfidRolls').value || '0',
+          vinylWrap: 'No',
+          goldSupport: 'No'
+        };
+        if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
+          throw new Error('Please fill in all required fields.');
+        }
+
+        const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
+        const params = new URLSearchParams();
+        Object.keys(formData).forEach(key => params.append(key, formData[key]));
+
+        const response = await fetch(`${QUANTUM_PROPOSAL_URL}?${params.toString()}`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          closeQuantumModal('quantumProposalModal');
+          showQuantumPopup(`
+            <div class="success-popup">
+              <h3>✅ Proposal Generated Successfully!</h3>
+              <p>Your Smart Food Fridge proposal has been created and saved to Library.</p>
+              <p><strong>Company:</strong> ${formData.companyName}</p>
+              <p><strong>Configuration:</strong> ${formData.fridgeCount} fridges, ${formData.scannerCount} scanners</p>
+              <p><strong>Total Cost:</strong> $${result.data.pricing.oneTimeTotal.toLocaleString()} one-time + $${result.data.pricing.monthlyTotal}/month</p>
+              <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
+                <button class="btn btn-primary" onclick="window.open('${result.pdfUrl}', '_blank')" style="padding:12px 24px;">📄 View PDF</button>
+                <button class="btn btn-secondary" onclick="window.open('${result.pdfUrl.replace('/view?', '/export?format=pdf&')}', '_blank')" style="padding:12px 24px;">📥 Download</button>
+              </div>
+            </div>
+          `, 'success');
+        } else {
+          throw new Error(result.message || 'Failed to generate proposal');
+        }
+      } catch (error) {
+        showQuantumPopup(`
+          <div class="error-popup">
+            <h3>❌ Error Generating Proposal</h3>
+            <p>${error.message}</p>
+            <p>Please try again or contact support if the problem persists.</p>
+          </div>
+        `, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    };
+
+    window.showQuantumPopup = function showQuantumPopup(content, type) {
+      const popup = document.createElement('div');
+      popup.className = 'modal-overlay';
+      popup.innerHTML = `
+        <div class="modal" style="max-width:600px;">
+          ${content}
+          <div style="margin-top:20px;text-align:center;">
+            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+          </div>
+        </div>`;
+      popup.style.display = 'block';
+      document.body.appendChild(popup);
+      if (type === 'success') setTimeout(() => { if (popup.parentNode) popup.remove(); }, 15000);
+    };
+
+    window.openQuantumMasterAgreement = function openQuantumMasterAgreement() {
+      const existingOverlay = document.querySelector('.modal-overlay');
+      if (existingOverlay) existingOverlay.remove();
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.maxWidth = '1200px';
+      modal.style.height = '90vh';
+      modal.style.display = 'flex';
+      modal.style.flexDirection = 'column';
+
+      const docId = '1ChcyX_PUlX48AhzAkNtsDWduamgQHomYSYM9LVwd3FA';
+      const pdfUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
+      const viewerUrl = `https://docs.google.com/document/d/${docId}/preview`;
+
+      modal.innerHTML = `
+        <div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
+          <h3 style="margin:0;color:#2d3748;font-size:1.3em;">Master Services Agreement (Food Fridge)</h3>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-secondary" onclick="window.open('${pdfUrl}','_blank')" style="padding:10px 20px;">📥 Download PDF</button>
+            <button class="close-btn" onclick="closeModal()">✕</button>
+          </div>
+        </div>
+        <div style="flex:1;padding:20px;overflow:hidden;">
+          <iframe src="${viewerUrl}" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>
+        </div>`;
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    };
+
+    window.openQuantumROICalculator = function openQuantumROICalculator() {
+      const existing = document.querySelector('.modal-overlay.roi-overlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay roi-overlay';
+      overlay.style.display = 'block';
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.maxWidth = '1200px';
+      modal.style.height = '90vh';
+      modal.style.display = 'flex';
+      modal.style.flexDirection = 'column';
+
+      const src = 'roi-calculator.html';
+      modal.innerHTML = `
+        <div style="padding:14px 16px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
+          <h3 style="margin:0;color:#1e3a8a;font-size:1.2em;">ROI Calculator</h3>
+          <button class="close-btn" onclick="document.querySelector('.roi-overlay').remove()">✕</button>
+        </div>
+        <div style="flex:1;padding:12px;overflow:hidden;">
+          <iframe src="${src}" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.08);" allowfullscreen></iframe>
+        </div>`;
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    };
+
+    window.openQuantumLeadLogger = function openQuantumLeadLogger() {
+      window.location.href = 'lead-logger.html';
+    };
+
+    window.openQuantumProposalViewer = function openQuantumProposalViewer() {
+      const existingOverlay = document.querySelector('.proposal-viewer-overlay');
+      if (existingOverlay) existingOverlay.remove();
+
+      window.allQuantumProposals = null;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay proposal-viewer-overlay';
+      overlay.style.display = 'block';
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.maxWidth = '1000px';
+
+      modal.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">
+          <h3 style="margin:0;color:#2d3748;font-size:1.8em;">Quantum Proposal Library</h3>
+          <button class="close-btn" onclick="closeQuantumProposalViewer()">✕</button>
+        </div>
+        <div style="margin-bottom:20px;position:relative;">
+          <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."
+                 style="width:100%;padding:15px 45px 15px 15px;font-size:16px;border:2px solid #e2e8f0;border-radius:10px;transition:all .3s ease;"
+                 onkeyup="filterQuantumProposals()"
+                 onfocus="this.style.borderColor='#1e3a8a'"
+                 onblur="this.style.borderColor='#e2e8f0'">
+          <button id="clearQuantumSearchBtn"
+                  onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">×</button>
+        </div>
+        <div id="quantumProposalsList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
+          <div style="text-align:center;padding:40px;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top:20px;color:#718096;">Loading proposals from library...</p>
+          </div>
+        </div>`;
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      setTimeout(() => { loadQuantumProposalsFromDrive(); }, 100);
+    };
+
+    window.closeQuantumProposalViewer = function closeQuantumProposalViewer() {
+      const overlay = document.querySelector('.proposal-viewer-overlay');
+      if (overlay) overlay.remove();
+    };
+
+    async function loadQuantumProposalsFromDrive() {
+      try {
+        const callbackName = 'quantumProposalsCallback_' + Date.now();
+        const promise = new Promise((resolve, reject) => {
+          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
+          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 20000);
+        });
+
+        const script = document.createElement('script');
+        const url = `https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec?action=getProposals&callback=${callbackName}`;
+        script.src = url;
+
+        script.onerror = () => {
+          delete window[callbackName];
+          const proposalsList = document.getElementById('quantumProposalsList');
+          if (proposalsList) {
+            proposalsList.innerHTML = `
+              <div style="text-align:center;padding:40px;">
+                <p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load proposals.</p>
+                <button class="btn btn-primary" onclick="openQuantumProposalViewer()">Try Again</button>
+              </div>`;
+          }
+        };
+
+        document.body.appendChild(script);
+        const data = await promise;
+        document.body.removeChild(script);
+
+        if (data.status === 'success') {
+          const sortedProposals = (data.proposals || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+          window.allQuantumProposals = sortedProposals;
+          displayQuantumProposals(sortedProposals);
+        } else {
+          throw new Error(data.message || 'Failed to load proposals');
+        }
+      } catch (error) {
+        const proposalsList = document.getElementById('quantumProposalsList');
+        if (proposalsList) {
+          proposalsList.innerHTML = `
+            <div style="text-align:center;padding:40px;">
+              <p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load proposals.</p>
+              <p style="color:#718096;margin-bottom:20px;">Error: ${error.message}</p>
+              <button class="btn btn-primary" onclick="openQuantumProposalViewer()">Try Again</button>
+            </div>`;
+        }
+      }
+    }
+
+    function displayQuantumProposals(proposals) {
+      const proposalsList = document.getElementById('quantumProposalsList');
+      if (!proposalsList) return;
+      if (proposals.length === 0) {
+        proposalsList.innerHTML = `<div style="text-align:center;padding:40px;color:#718096;"><p>No proposals found in the library.</p></div>`;
+        return;
+      }
+      proposalsList.innerHTML = proposals.map(proposal => `
+        <div class="proposal-item" style="background:white;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.05);"
+             onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+             onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
+            <div style="flex:1;min-width:200px;">
+              <h4 style="margin:0 0 8px 0;color:#2d3748;font-size:18px;">${proposal.companyName}</h4>
+              <p style="margin:0;color:#718096;font-size:14px;">
+                ${proposal.name}<br>
+                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+              </p>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button class="btn btn-primary" onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📄 View</button>
+              <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📥 Download</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    window.filterQuantumProposals = function filterQuantumProposals() {
+      const searchInput = document.getElementById('quantumProposalSearch');
+      const term = (searchInput.value || '').toLowerCase();
+      const proposalsList = document.getElementById('quantumProposalsList');
+      const clearBtn = document.getElementById('clearQuantumSearchBtn');
+      clearBtn.style.display = term.length > 0 ? 'block' : 'none';
+
+      if (!window.allQuantumProposals || window.allQuantumProposals.length === 0) return;
+      if (!term) { displayQuantumProposals(window.allQuantumProposals); return; }
+
+      const filtered = window.allQuantumProposals.filter(p =>
+        p.companyName.toLowerCase().includes(term) || p.name.toLowerCase().includes(term)
+      );
+      if (filtered.length === 0) {
+        proposalsList.innerHTML = `
+          <div style="text-align:center;padding:40px;color:#718096;">
+            <p style="font-size:18px;">No proposals found matching "<strong>${term}</strong>"</p>
+            <p style="margin-top:10px;">Try searching for a different company name.</p>
+          </div>`;
+      } else {
+        displayQuantumProposals(filtered);
+      }
+    };
+
+    window.viewQuantumProposalPDF = function viewQuantumProposalPDF(fileId, companyName) {
+      closeQuantumProposalViewer();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+
+      const pdfModal = document.createElement('div');
+      pdfModal.className = 'modal';
+      pdfModal.style.maxWidth = '1200px';
+      pdfModal.style.height = '90vh';
+      pdfModal.style.display = 'flex';
+      pdfModal.style.flexDirection = 'column';
+
+      const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview?usp=embed`;
+
+      pdfModal.innerHTML = `
+        <div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
+          <h3 style="margin:0;color:#2d3748;font-size:1.3em;">Proposal for ${companyName}</h3>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-primary" onclick="closeModal(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">Back to Library</button>
+            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding:10px 20px;">Download</button>
+          </div>
+        </div>
+        <div style="flex:1;padding:20px;overflow:hidden;">
+          <iframe src="${viewerUrl}" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>
+        </div>`;
+      overlay.appendChild(pdfModal);
+      document.body.appendChild(overlay);
+    };
+
+    // Close any generic overlay when clicking the backdrop (doesn't affect login overlay)
+    // Use addEventListener instead of overwriting window.onclick, to avoid conflicts.
+    document.addEventListener('click', function (event) {
+      if (event.target.classList && event.target.classList.contains('modal-overlay')) {
+        closeModal();
+      }
+    });
+  </script>
 </body>
 </html>
