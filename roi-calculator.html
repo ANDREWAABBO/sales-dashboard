@@ -38,16 +38,16 @@
   .kpi{background:#fff;border:2px solid var(--line);border-radius:10px;text-align:center;padding:16px}
   .kpi .l{color:#6b7280;font-weight:600;font-size:12px;margin-bottom:6px}
   .kpi .v{font-weight:800;color:var(--brand);font-size:20px}
-  .kpi .v.positive{color:var(--good)} .kpi .v.negative{color:var(--bad)}
+  .kpi .v.positive{color:#059669} .kpi .v.negative{color:#dc2626}
   .projection{margin:0 20px 18px;padding:16px;border:2px solid var(--line);border-radius:12px;background:#fff}
-  .projection h4{margin:0 0 10px;color:var(--brand);text-align:center}
+  .projection h4{margin:0 0 10px;color:#1e3a8a;text-align:center}
   .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   @media (max-width:840px){.pg{grid-template-columns:1fr}}
   .mini{background:#f8fafc;border:2px solid var(--line);border-radius:10px;padding:14px;text-align:center}
   .mini .l{font-size:12px;color:#6b7280}
-  .mini .v{font-size:16px;font-weight:800;color:var(--good)}
+  .mini .v{font-size:16px;font-weight:800;color:#059669}
   .breakdown{margin:0 20px 20px;background:#fff;border:2px solid var(--line);border-radius:12px;overflow:hidden}
-  .bd-h{padding:12px 14px;border-bottom:2px solid var(--line);font-weight:800;color:var(--brand)}
+  .bd-h{padding:12px 14px;border-bottom:2px solid var(--line);font-weight:800;color:#1e3a8a}
   table{width:100%;border-collapse:collapse;font-size:14px}
   thead th{background:#f8fafc;color:#374151;font-weight:700;font-size:12px;padding:10px;border-bottom:1px solid var(--line)}
   tbody td{padding:10px;border-bottom:1px solid var(--line)}
@@ -57,7 +57,7 @@
   .footerBtns{display:flex;gap:10px;justify-content:center;padding:8px 20px 20px}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000}
   .modal{background:#fff;border-radius:14px;max-width:520px;width:92%;padding:18px;border:2px solid var(--line)}
-  .modal h4{margin:0 0 12px;color:var(--brand)}
+  .modal h4{margin:0 0 12px;color:#1e3a8a}
   .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
   .pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-weight:700}
   .tableBadge{font-size:11px;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#3730a3}
@@ -230,7 +230,7 @@
         <tbody id="breakdownBody"><tr><td colspan="3" class="subtle">Enter inputs to see a detailed cost breakdown…</td></tr></tbody>
       </table>
       <div class="subtle">
-        “Monthly Net Profit” mirrors the sheet: Sales − COGS − <em>Total Costs</em> (cellular, license, RFID, Engage Transactions Fees, Gateway Transactions Fees, merchant %, swipe) − Financing + Service Fee.  
+        “Monthly Net Profit” = (Sales + Service Fee) − (COGS + <em>Total Costs</em> + Financing + Spoilage).  
         Spoilage is calculated at mixed COGS (not retail).
       </div>
     </div>
@@ -420,9 +420,7 @@ function calcPerFridge(inputs){
 
   const totalCosts = costsNoFinance + financing;
 
-  // "Sheet-style" monthly net profit:
-  // Net = (Sales + Service) - (COGS + TotalCostsBlock + Financing)
-  // where TotalCostsBlock matches the sheet's "Total Costs" section.
+  // FIX: include spoilageCost in the net calculation
   let totalCostsBlock =
       (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
@@ -434,7 +432,7 @@ function calcPerFridge(inputs){
 
   const netSheet =
       (salesRevenue + serviceRevenue) -
-      (cogs + totalCostsBlock + (IN_NET_INCLUDE_FINANCING ? financing : 0));
+      (cogs + spoilageCost + totalCostsBlock + (IN_NET_INCLUDE_FINANCING ? financing : 0));
 
   return {
     salesRevenue, serviceRevenue,
@@ -458,7 +456,7 @@ function update(){
   const monthlyCosts = pf.totalCosts     * i.fridgeCount;
   const monthlyNet   = pf.netSheet       * i.fridgeCount;
 
-  // >>> ONLY CHANGE MADE: add service fee x 12 x fridgeCount to the annual <<<
+  // (kept per your last request) annual adds service fee x 12
   const annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
