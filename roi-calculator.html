@@ -47,7 +47,7 @@
   .mini .l{font-size:12px;color:#6b7280}
   .mini .v{font-size:16px;font-weight:800;color:#059669}
   .breakdown{margin:0 20px 20px;background:#fff;border:2px solid var(--line);border-radius:12px;overflow:hidden}
-  .bd-h{padding:12px 14px;border-bottom:2px solid var(--line);font-weight:800;color:#1e3a8a}
+  .bd-h{padding:12px 14px;border-bottom:2px solid var(--line);font-weight:800;color:var(--brand)}
   table{width:100%;border-collapse:collapse;font-size:14px}
   thead th{background:#f8fafc;color:#374151;font-weight:700;font-size:12px;padding:10px;border-bottom:1px solid var(--line)}
   tbody td{padding:10px;border-bottom:1px solid var(--line)}
@@ -229,10 +229,6 @@
         </thead>
         <tbody id="breakdownBody"><tr><td colspan="3" class="subtle">Enter inputs to see a detailed cost breakdown…</td></tr></tbody>
       </table>
-      <div class="subtle">
-        “Monthly Net Profit” = (Sales + Service Fee) − (COGS + <em>Total Costs</em> + Financing + Spoilage).  
-        Spoilage is calculated at mixed COGS (not retail).
-      </div>
     </div>
 
     <div class="footerBtns">
@@ -284,7 +280,7 @@
 =========================== */
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
 
-/* “What the sheet includes in Total Costs” switches (tune if you update the sheet) */
+/* “What the sheet includes in Total Costs” switches */
 const IN_NET_INCLUDE_CELLULAR   = true;
 const IN_NET_INCLUDE_LICENSE    = true;
 const IN_NET_INCLUDE_RFID       = true;
@@ -292,7 +288,8 @@ const IN_NET_INCLUDE_ENGAGE     = true;
 const IN_NET_INCLUDE_GATEWAY    = true;
 const IN_NET_INCLUDE_MERCHANT   = true;
 const IN_NET_INCLUDE_SWIPE      = true;
-/* Financing is applied in Monthly Net Profit (sheet includes it) */
+const IN_NET_INCLUDE_LABOR      = true;   // NEW: include labor in net
+const IN_NET_INCLUDE_MISC       = true;   // NEW: include misc in net
 const IN_NET_INCLUDE_FINANCING  = true;
 
 let baseRates = {
@@ -420,7 +417,7 @@ function calcPerFridge(inputs){
 
   const totalCosts = costsNoFinance + financing;
 
-  // FIX: include spoilageCost in the net calculation
+  // Monthly Net Profit = (Sales + Service) − (COGS + Spoilage + TotalCostsBlock + Financing)
   let totalCostsBlock =
       (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
@@ -428,7 +425,9 @@ function calcPerFridge(inputs){
       (IN_NET_INCLUDE_ENGAGE   ? engage   : 0) +
       (IN_NET_INCLUDE_GATEWAY  ? gateway  : 0) +
       (IN_NET_INCLUDE_MERCHANT ? merchantPct : 0) +
-      (IN_NET_INCLUDE_SWIPE    ? swipe    : 0);
+      (IN_NET_INCLUDE_SWIPE    ? swipe    : 0) +
+      (IN_NET_INCLUDE_LABOR    ? labor    : 0) +     // NEW
+      (IN_NET_INCLUDE_MISC     ? misc     : 0);      // NEW
 
   const netSheet =
       (salesRevenue + serviceRevenue) -
@@ -456,7 +455,7 @@ function update(){
   const monthlyCosts = pf.totalCosts     * i.fridgeCount;
   const monthlyNet   = pf.netSheet       * i.fridgeCount;
 
-  // (kept per your last request) annual adds service fee x 12
+  // Annual adds service fee x 12 (per your spec)
   const annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
@@ -512,10 +511,10 @@ function renderBreakdown(pf, inputs){
   addRow('Merchant % Fee (2.50% of sales)',    pf.merchantPct,    pf.merchantPct*fc);
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
-  addRow('Labor',                               pf.labor,          pf.labor*fc);
-  addRow('Miscellaneous',                       pf.misc,           pf.misc*fc);
-  addRow('Financing',                            pf.financing,      pf.financing*fc);
-  addRow('Total Costs (incl. financing)',       pf.totalCosts,     pf.totalCosts*fc, 'b-total');
+  addRow('Labor',                              pf.labor,          pf.labor*fc);
+  addRow('Miscellaneous',                      pf.misc,           pf.misc*fc);
+  addRow('Financing',                          pf.financing,      pf.financing*fc);
+  addRow('Total Costs (incl. financing)',      pf.totalCosts,     pf.totalCosts*fc, 'b-total');
 
   addSec('Revenue (for reference)');
   const foodRev = inputs.transactions * (inputs.foodPercent/100)     * inputs.foodPrice;
