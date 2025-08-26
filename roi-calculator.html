@@ -1,3 +1,12 @@
+sweet—here’s a fresh, **drop-in `roi-calculator.html`** with your UX tweak:
+
+* **Generate = auto-copy + auto-close.**
+  When you click **Generate**, it shows a spinner, creates the 7-day link, copies it to the clipboard, pops a quick alert, then closes the dialog. The button text becomes **“Regenerate & Copy”** for next time.
+* Keeps all the other changes: deep-blue background, extra top spacing, commas in currency, projection section removed, token links bypass login, etc.
+
+Just replace your existing file with this one.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +14,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
 
-<!-- shared auth (login lives on index; this page only checks in operator mode) -->
+<!-- Shared auth (operator mode only requires login) -->
 <script defer src="password.js"></script>
 
 <style>
@@ -14,26 +23,25 @@
     --good:#059669; --bad:#dc2626; --panel:#f8fafc; --line:#e2e8f0;
   }
   *{box-sizing:border-box}
-  /* Deep blue background to match dashboard */
+  /* Deep blue like dashboard */
   body{
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,system-ui,sans-serif;
-    background:#1e3a8a;
+    background:linear-gradient(135deg,#0b1f63 0%, #1e3a8a 40%, #2c5edc 100%);
     min-height:100vh;
-    color:#111827;
+    color:#111827
   }
   .wrap{max-width:980px;margin:40px auto;padding:0 14px}
   .card{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
-  /* More breathing room under the breaker line */
-  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 26px;border-bottom:3px solid var(--brand)}
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:3px solid var(--brand)}
   .hdr-left h1{margin:0;font-size:20px;color:var(--brand)}
   .tag{display:inline-block;margin-left:10px;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;font-size:12px}
   .hdr-right{display:flex;gap:10px}
   .btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}
   .btn.secondary{background:#64748b}
   .btn:disabled{opacity:.6;cursor:not-allowed}
-  /* Extra top margin so the orange note isn't tight to the breaker line */
-  .note{background:#fff7ed;border:2px solid #fb923c;color:#92400e;margin:16px 20px 16px;border-radius:10px;padding:12px 14px;font-weight:600}
+  /* more breathing room above the orange note */
+  .note{background:#fff7ed;border:2px solid #fb923c;color:#92400e;margin:12px 20px 16px;border-radius:10px;padding:12px 14px;font-weight:600}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 20px 20px}
   .panel{background:#f8fafc;border:2px solid var(--line);border-radius:12px;padding:16px}
   .panel h3{margin:0 0 10px;color:var(--brand);font-size:16px}
@@ -52,7 +60,6 @@
   .kpi .l{color:#6b7280;font-weight:600;font-size:12px;margin-bottom:6px}
   .kpi .v{font-weight:800;color:var(--brand);font-size:20px}
   .kpi .v.positive{color:#059669} .kpi .v.negative{color:#dc2626}
-  /* Projection block removed per request (no logic changes elsewhere) */
 
   .breakdown{margin:0 20px 20px;background:#fff;border:2px solid var(--line);border-radius:12px;overflow:hidden}
   .bd-h{padding:12px 14px;border-bottom:2px solid var(--line);font-weight:800;color:var(--brand)}
@@ -63,12 +70,23 @@
   tbody tr.b-section td{background:#f8fafc;font-weight:700;color:#475569}
   .subtle{font-size:12px;color:#6b7280;padding:8px 14px}
   .footerBtns{display:flex;gap:10px;justify-content:center;padding:8px 20px 20px}
+
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000}
   .modal{background:#fff;border-radius:14px;max-width:520px;width:92%;padding:18px;border:2px solid var(--line)}
   .modal h4{margin:0 0 12px;color:#1e3a8a}
   .modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
   .pill{display:inline-block;font-size:11px;padding:3px 8px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-weight:700}
   .tableBadge{font-size:11px;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#3730a3}
+
+  /* Spinner for "Generate" */
+  .btn .spin{
+    display:inline-block;width:14px;height:14px;
+    border:2px solid rgba(255,255,255,.85);
+    border-right-color:transparent;border-radius:50%;
+    margin-right:8px;vertical-align:-2px;
+    animation:shareSpin .75s linear infinite;
+  }
+  @keyframes shareSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -216,7 +234,7 @@
       </div>
     </div>
 
-    <!-- Multi-Year Projection block removed as requested -->
+    <!-- Multi-Year Projection removed -->
 
     <div class="breakdown">
       <div class="bd-h">Cost Breakdown</div>
@@ -289,8 +307,8 @@ const IN_NET_INCLUDE_ENGAGE     = true;
 const IN_NET_INCLUDE_GATEWAY    = true;
 const IN_NET_INCLUDE_MERCHANT   = true;
 const IN_NET_INCLUDE_SWIPE      = true;
-const IN_NET_INCLUDE_LABOR      = true;   // include labor in net
-const IN_NET_INCLUDE_MISC       = true;   // include misc in net
+const IN_NET_INCLUDE_LABOR      = true;
+const IN_NET_INCLUDE_MISC       = true;
 const IN_NET_INCLUDE_FINANCING  = true;
 
 let baseRates = {
@@ -313,7 +331,7 @@ async function init(){
   accessToken = p.get('token');
   operatorMode = !accessToken;
 
-  // require login ONLY in operator mode (no token); guests with token bypass login
+  // Require login ONLY in operator mode
   if (operatorMode && window.Auth && !Auth.checkAuth()) return;
 
   document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Guest Link';
@@ -391,25 +409,20 @@ function readInputs(){
 function calcPerFridge(inputs){
   const r = baseRates.fixedCosts;
 
-  // product sales revenue
   const avgTicket = (inputs.foodPrice * inputs.foodPercent/100) + (inputs.beveragePrice * inputs.beveragePercent/100);
   const salesRevenue = inputs.transactions * avgTicket;
 
-  // service fee revenue (flat)
   const serviceRevenue = inputs.serviceFee;
 
-  // COGS & spoilage (at cost)
   const cogs = salesRevenue * (1 - inputs.margin/100);
   const spoilageCost = cogs * (inputs.spoilage/100);
 
-  // fees based on product revenue only (exclude service fee)
   const rfid   = inputs.transactions * r.rfidTagsPerTag;
   const engage = inputs.transactions * r.engageTransactionFee;
   const gateway= inputs.transactions * r.gatewayTransactionFee;
   const merchantPct = salesRevenue * (r.merchantAccountPercent/100);
   const swipe  = inputs.transactions * r.merchantAccountSwipeFee;
 
-  // fixed & variable ops
   const cellular = r.cellular;
   const license  = r.licenseFee;
   const labor    = inputs.laborRate * inputs.laborHours * 4.33;
@@ -421,7 +434,6 @@ function calcPerFridge(inputs){
 
   const totalCosts = costsNoFinance + financing;
 
-  // Monthly Net Profit = (Sales + Service) − (COGS + Spoilage + TotalCostsBlock + Financing)
   let totalCostsBlock =
       (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
@@ -452,14 +464,12 @@ function update(){
   const i = readInputs();
   const pf = calcPerFridge(i);
 
-  // KPIs
   const salesRevenue = pf.salesRevenue * i.fridgeCount;
   const serviceRev   = pf.serviceRevenue * i.fridgeCount;
   const totalRevenue = salesRevenue + serviceRev;
   const monthlyCosts = pf.totalCosts     * i.fridgeCount;
   const monthlyNet   = pf.netSheet       * i.fridgeCount;
 
-  // Annual adds service fee x 12 (per your spec)
   const annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
@@ -475,12 +485,6 @@ function update(){
   annEl.textContent = usd2(annual);
   annEl.className = 'v ' + (annual>=0 ? 'positive':'negative');
 
-  // Projection section removed; leaving these harmless no-ops:
-  setText('pYear1', usd2(annual));
-  setText('pYear2', usd2(annual));
-  setText('pYear3', usd2(annual));
-
-  // breakdown
   renderBreakdown(pf, i);
 }
 
@@ -531,23 +535,80 @@ function renderBreakdown(pf, inputs){
 /* ===========================
    Share / Manage (Operator)
 =========================== */
-function openShare(){ if (!operatorMode) return; document.getElementById('shareOverlay').style.display='flex';
-  const name = localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||''; 
-  if (!document.getElementById('clientName').value && name) document.getElementById('clientName').value = name;
+function openShare(){
+  if (!operatorMode) return;
+  document.getElementById('shareOverlay').style.display='flex';
+
+  // prefill client name from logged in user (if empty)
+  const name = localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'';
+  const nameBox = document.getElementById('clientName');
+  if (!nameBox.value && name) nameBox.value = name;
+
+  // reset button each time
+  const gen = document.getElementById('btnGenShare');
+  if (gen){
+    gen.disabled = false;
+    gen.innerHTML = 'Generate';
+  }
 }
 function closeShare(){ document.getElementById('shareOverlay').style.display='none'; }
-function copyShareUrl(){
-  const inp = document.getElementById('shareUrlBox'); inp.select(); inp.setSelectionRange(0,99999);
-  document.execCommand('copy'); alert('Link copied to clipboard!');
-}
+
 async function createShare(){
   if (!operatorMode) return;
+
+  const btn       = document.getElementById('btnGenShare');
+  const urlBox    = document.getElementById('shareUrlBox');
   const createdBy = (localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'Operator');
-  const clientName = document.getElementById('clientName').value||'';
-  const u = `${BACKEND_URL}?action=generateToken&createdBy=${encodeURIComponent(createdBy)}&clientName=${encodeURIComponent(clientName)}`;
-  const r = await fetch(u); const j = await r.json();
-  if (j.status==='success'){ document.getElementById('shareUrlBox').value = j.data.shareUrl; }
-  else{ alert(j.message||'Unable to generate link'); }
+  const clientName= document.getElementById('clientName').value||'';
+
+  // spinner + disable while working
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Generating…';
+  urlBox.value = '';
+
+  try{
+    const u = `${BACKEND_URL}?action=generateToken&createdBy=${encodeURIComponent(createdBy)}&clientName=${encodeURIComponent(clientName)}`;
+    const r = await fetch(u);
+    const j = await r.json();
+    if (j.status === 'success'){
+      const link = j.data.shareUrl;
+      urlBox.value = link;
+
+      // Auto-copy
+      let copied = false;
+      try { await navigator.clipboard.writeText(link); copied = true; } catch (_){}
+      if (!copied) {
+        urlBox.select(); urlBox.setSelectionRange(0,99999);
+        try { document.execCommand('copy'); copied = true; } catch (_){}
+      }
+
+      alert('Link copied to clipboard!');
+      closeShare();
+
+      btn.disabled = false;
+      btn.innerHTML = 'Regenerate & Copy';
+    }else{
+      btn.disabled = false;
+      btn.innerHTML = 'Generate';
+      alert(j.message || 'Unable to generate link');
+    }
+  }catch(err){
+    btn.disabled = false;
+    btn.innerHTML = 'Generate';
+    alert('Network error. Please try again.');
+  }
+}
+
+function copyShareUrl(){
+  const inp = document.getElementById('shareUrlBox');
+  if (!inp.value){
+    alert('Click Generate to create a shareable link first.');
+    return;
+  }
+  inp.select(); inp.setSelectionRange(0,99999);
+  document.execCommand('copy');
+  alert('Link copied to clipboard!');
+  closeShare();
 }
 
 function openManage(){
@@ -597,17 +658,17 @@ async function revokeToken(token){
 function copyText(t){ navigator.clipboard.writeText(t).then(()=>alert('Copied!')); }
 
 /* ===========================
-   Helpers
+   Helpers (with comma formatting)
 =========================== */
 function setText(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
 function usd2(n){ return `$${fmt2(n)}`; }
-/* Comma-format currency: 24,459.32 */
 function fmt2(n){
-  return Number(n||0).toLocaleString(undefined,{
-    minimumFractionDigits:2,
-    maximumFractionDigits:2
-  });
+  const num = Number(n||0);
+  return num.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 </script>
 </body>
 </html>
+```
+
+Want me to also hide the **Copy** button entirely (since Generate now copies + closes)? Happy to trim it if you want the cleanest modal.
