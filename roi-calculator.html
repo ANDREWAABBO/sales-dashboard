@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Smart Food Fridge ROI Calculator - Quantum Solutions</title>
 
-<!-- NEW: shared auth (login lives on index; this page only checks in operator mode) -->
+<!-- shared auth (login lives on index; this page only checks in operator mode) -->
 <script defer src="password.js"></script>
 
 <style>
@@ -14,17 +14,26 @@
     --good:#059669; --bad:#dc2626; --panel:#f8fafc; --line:#e2e8f0;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,system-ui,sans-serif;background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);min-height:100vh;color:#111827}
+  /* Deep blue background to match dashboard */
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,system-ui,sans-serif;
+    background:#1e3a8a;
+    min-height:100vh;
+    color:#111827;
+  }
   .wrap{max-width:980px;margin:40px auto;padding:0 14px}
   .card{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
-  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:3px solid var(--brand)}
+  /* More breathing room under the breaker line */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 26px;border-bottom:3px solid var(--brand)}
   .hdr-left h1{margin:0;font-size:20px;color:var(--brand)}
   .tag{display:inline-block;margin-left:10px;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;font-size:12px}
   .hdr-right{display:flex;gap:10px}
   .btn{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}
   .btn.secondary{background:#64748b}
   .btn:disabled{opacity:.6;cursor:not-allowed}
-  .note{background:#fff7ed;border:2px solid #fb923c;color:#92400e;margin:0 20px 16px;border-radius:10px;padding:12px 14px;font-weight:600}
+  /* Extra top margin so the orange note isn't tight to the breaker line */
+  .note{background:#fff7ed;border:2px solid #fb923c;color:#92400e;margin:16px 20px 16px;border-radius:10px;padding:12px 14px;font-weight:600}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 20px 20px}
   .panel{background:#f8fafc;border:2px solid var(--line);border-radius:12px;padding:16px}
   .panel h3{margin:0 0 10px;color:var(--brand);font-size:16px}
@@ -43,13 +52,8 @@
   .kpi .l{color:#6b7280;font-weight:600;font-size:12px;margin-bottom:6px}
   .kpi .v{font-weight:800;color:var(--brand);font-size:20px}
   .kpi .v.positive{color:#059669} .kpi .v.negative{color:#dc2626}
-  .projection{margin:0 20px 18px;padding:16px;border:2px solid var(--line);border-radius:12px;background:#fff}
-  .projection h4{margin:0 0 10px;color:#1e3a8a;text-align:center}
-  .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  @media (max-width:840px){.pg{grid-template-columns:1fr}}
-  .mini{background:#f8fafc;border:2px solid var(--line);border-radius:10px;padding:14px;text-align:center}
-  .mini .l{font-size:12px;color:#6b7280}
-  .mini .v{font-size:16px;font-weight:800;color:#059669}
+  /* Projection block removed per request (no logic changes elsewhere) */
+
   .breakdown{margin:0 20px 20px;background:#fff;border:2px solid var(--line);border-radius:12px;overflow:hidden}
   .bd-h{padding:12px 14px;border-bottom:2px solid var(--line);font-weight:800;color:var(--brand)}
   table{width:100%;border-collapse:collapse;font-size:14px}
@@ -212,14 +216,7 @@
       </div>
     </div>
 
-    <div class="projection">
-      <h4>Multi-Year Projection (Annual Net Profit)</h4>
-      <div class="pg">
-        <div class="mini"><div class="l">Year 1</div><div id="pYear1" class="v">$0.00</div></div>
-        <div class="mini"><div class="l">Year 2</div><div id="pYear2" class="v">$0.00</div></div>
-        <div class="mini"><div class="l">Year 3</div><div id="pYear3" class="v">$0.00</div></div>
-      </div>
-    </div>
+    <!-- Multi-Year Projection block removed as requested -->
 
     <div class="breakdown">
       <div class="bd-h">Cost Breakdown</div>
@@ -292,8 +289,8 @@ const IN_NET_INCLUDE_ENGAGE     = true;
 const IN_NET_INCLUDE_GATEWAY    = true;
 const IN_NET_INCLUDE_MERCHANT   = true;
 const IN_NET_INCLUDE_SWIPE      = true;
-const IN_NET_INCLUDE_LABOR      = true;   // NEW: include labor in net
-const IN_NET_INCLUDE_MISC       = true;   // NEW: include misc in net
+const IN_NET_INCLUDE_LABOR      = true;   // include labor in net
+const IN_NET_INCLUDE_MISC       = true;   // include misc in net
 const IN_NET_INCLUDE_FINANCING  = true;
 
 let baseRates = {
@@ -316,7 +313,7 @@ async function init(){
   accessToken = p.get('token');
   operatorMode = !accessToken;
 
-  // NEW: require login ONLY in operator mode (no token); guests with token bypass login
+  // require login ONLY in operator mode (no token); guests with token bypass login
   if (operatorMode && window.Auth && !Auth.checkAuth()) return;
 
   document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Guest Link';
@@ -433,8 +430,8 @@ function calcPerFridge(inputs){
       (IN_NET_INCLUDE_GATEWAY  ? gateway  : 0) +
       (IN_NET_INCLUDE_MERCHANT ? merchantPct : 0) +
       (IN_NET_INCLUDE_SWIPE    ? swipe    : 0) +
-      (IN_NET_INCLUDE_LABOR    ? labor    : 0) +     // NEW
-      (IN_NET_INCLUDE_MISC     ? misc     : 0);      // NEW
+      (IN_NET_INCLUDE_LABOR    ? labor    : 0) +
+      (IN_NET_INCLUDE_MISC     ? misc     : 0);
 
   const netSheet =
       (salesRevenue + serviceRevenue) -
@@ -478,7 +475,7 @@ function update(){
   annEl.textContent = usd2(annual);
   annEl.className = 'v ' + (annual>=0 ? 'positive':'negative');
 
-  // simple year view (non-cumulative)
+  // Projection section removed; leaving these harmless no-ops:
   setText('pYear1', usd2(annual));
   setText('pYear2', usd2(annual));
   setText('pYear3', usd2(annual));
@@ -535,7 +532,7 @@ function renderBreakdown(pf, inputs){
    Share / Manage (Operator)
 =========================== */
 function openShare(){ if (!operatorMode) return; document.getElementById('shareOverlay').style.display='flex';
-  const name = localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'';
+  const name = localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||''; 
   if (!document.getElementById('clientName').value && name) document.getElementById('clientName').value = name;
 }
 function closeShare(){ document.getElementById('shareOverlay').style.display='none'; }
@@ -604,7 +601,13 @@ function copyText(t){ navigator.clipboard.writeText(t).then(()=>alert('Copied!')
 =========================== */
 function setText(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
 function usd2(n){ return `$${fmt2(n)}`; }
-function fmt2(n){ return Number(n||0).toFixed(2); }
+/* Comma-format currency: 24,459.32 */
+function fmt2(n){
+  return Number(n||0).toLocaleString(undefined,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
 </script>
 </body>
 </html>
