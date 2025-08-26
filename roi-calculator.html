@@ -194,8 +194,8 @@
       <!-- row 2 -->
       <div class="rg2">
         <div class="kpi">
-          <div class="l">Gross Profit (Sales − COGS)</div>
-          <div id="kpiGross" class="v">$0.00</div>
+          <div class="l">Total Revenue (Sales + Service Fee)</div>
+          <div id="kpiTotalRevenue" class="v">$0.00</div>
         </div>
         <div class="kpi">
           <div class="l">Monthly Net Profit</div>
@@ -230,9 +230,8 @@
         <tbody id="breakdownBody"><tr><td colspan="3" class="subtle">Enter inputs to see a detailed cost breakdown…</td></tr></tbody>
       </table>
       <div class="subtle">
-        Note: “Total Costs (incl. financing)” matches the “Monthly Costs” card.  
-        Service fee is treated as revenue (not a cost) and appears in the KPI row and Revenue section below.  
-        Spoilage is calculated at <em>mixed COGS (not retail)</em>.
+        “Monthly Net Profit” mirrors the sheet: Sales − COGS − <em>Total Costs</em> (cellular, license, RFID, Engage Transactions Fees, Gateway Transactions Fees, merchant %, swipe) − Financing + Service Fee.  
+        Spoilage is calculated at mixed COGS (not retail).
       </div>
     </div>
 
@@ -284,8 +283,17 @@
    Backend configuration
 =========================== */
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
-const INITIAL_INVESTMENT = 7500;
-const CUMULATIVE_PROJECTION = false;
+
+/* “What the sheet includes in Total Costs” switches (tune if you update the sheet) */
+const IN_NET_INCLUDE_CELLULAR   = true;
+const IN_NET_INCLUDE_LICENSE    = true;
+const IN_NET_INCLUDE_RFID       = true;
+const IN_NET_INCLUDE_ENGAGE     = true;
+const IN_NET_INCLUDE_GATEWAY    = true;
+const IN_NET_INCLUDE_MERCHANT   = true;
+const IN_NET_INCLUDE_SWIPE      = true;
+/* Financing is applied in Monthly Net Profit (sheet includes it) */
+const IN_NET_INCLUDE_FINANCING  = true;
 
 let baseRates = {
   fixedCosts:{
@@ -412,14 +420,27 @@ function calcPerFridge(inputs){
 
   const totalCosts = costsNoFinance + financing;
 
-  // profits
-  const grossProfit = salesRevenue - cogs;                // matches your 1861.00 default
-  const netProfit   = salesRevenue - totalCosts + serviceRevenue;
+  // "Sheet-style" monthly net profit:
+  // Net = (Sales + Service) - (COGS + TotalCostsBlock + Financing)
+  // where TotalCostsBlock matches the sheet's "Total Costs" section.
+  let totalCostsBlock =
+      (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
+      (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
+      (IN_NET_INCLUDE_RFID     ? rfid     : 0) +
+      (IN_NET_INCLUDE_ENGAGE   ? engage   : 0) +
+      (IN_NET_INCLUDE_GATEWAY  ? gateway  : 0) +
+      (IN_NET_INCLUDE_MERCHANT ? merchantPct : 0) +
+      (IN_NET_INCLUDE_SWIPE    ? swipe    : 0);
+
+  const netSheet =
+      (salesRevenue + serviceRevenue) -
+      (cogs + totalCostsBlock + (IN_NET_INCLUDE_FINANCING ? financing : 0));
 
   return {
-    salesRevenue, serviceRevenue, grossProfit,
+    salesRevenue, serviceRevenue,
     cogs, spoilageCost, cellular, license, rfid, engage, gateway, merchantPct, swipe, labor, misc, financing,
-    totalCosts
+    totalCosts,
+    netSheet
   };
 }
 
@@ -433,28 +454,28 @@ function update(){
   // KPIs
   const salesRevenue = pf.salesRevenue * i.fridgeCount;
   const serviceRev   = pf.serviceRevenue * i.fridgeCount;
+  const totalRevenue = salesRevenue + serviceRev;
   const monthlyCosts = pf.totalCosts     * i.fridgeCount;
-  const gross        = pf.grossProfit    * i.fridgeCount;
-  const net          = (pf.salesRevenue - pf.totalCosts + pf.serviceRevenue) * i.fridgeCount;
-  const annual       = net * 12;
+  const monthlyNet   = pf.netSheet       * i.fridgeCount;
+  const annual       = monthlyNet * 12;
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
   setText('kpiServiceRevenue',usd2(serviceRev));
   setText('kpiCosts',         usd2(monthlyCosts));
-  setText('kpiGross',         usd2(gross));
+  setText('kpiTotalRevenue',  usd2(totalRevenue));
 
   const netEl = document.getElementById('kpiNet');
-  netEl.textContent = usd2(net);
-  netEl.className = 'v ' + (net>=0 ? 'positive':'negative');
+  netEl.textContent = usd2(monthlyNet);
+  netEl.className = 'v ' + (monthlyNet>=0 ? 'positive':'negative');
 
   const annEl = document.getElementById('kpiAnnual');
   annEl.textContent = usd2(annual);
   annEl.className = 'v ' + (annual>=0 ? 'positive':'negative');
 
-  // projection (annual per year, non-cumulative)
-  let y1 = annual, y2 = annual, y3 = annual;
-  if (CUMULATIVE_PROJECTION){ y2 = y1*2; y3 = y1*3; }
-  setText('pYear1', usd2(y1)); setText('pYear2', usd2(y2)); setText('pYear3', usd2(y3));
+  // simple year view (non-cumulative)
+  setText('pYear1', usd2(annual));
+  setText('pYear2', usd2(annual));
+  setText('pYear3', usd2(annual));
 
   // breakdown
   renderBreakdown(pf, i);
@@ -497,7 +518,6 @@ function renderBreakdown(pf, inputs){
   addRow('Total Costs (incl. financing)',       pf.totalCosts,     pf.totalCosts*fc, 'b-total');
 
   addSec('Revenue (for reference)');
-  // split revenues for clarity
   const foodRev = inputs.transactions * (inputs.foodPercent/100)     * inputs.foodPrice;
   const bevRev  = inputs.transactions * (inputs.beveragePercent/100) * inputs.beveragePrice;
   addRow('Food Revenue',          foodRev,         foodRev*fc);
