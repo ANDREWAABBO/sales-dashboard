@@ -764,19 +764,23 @@ function bootstrapResetFromURL() {
   }
 });
 
-        function switchCompany(company) {
-            document.querySelectorAll('.company-btn').forEach(btn => { btn.classList.remove('active'); });
-            const clickedBtn = event.target.closest('.company-btn');
-            clickedBtn.classList.add('active');
+        function switchCompany(company, ev) {
+  // remove "active" from all buttons
+  document.querySelectorAll('.company-btn').forEach(btn => btn.classList.remove('active'));
 
-            const title = document.getElementById('dashboard-title');
-            if (company === 'abbondanza') {
-                title.textContent = 'Abbondanza Sales Force';
-            } else if (company === 'quantum') {
-                title.textContent = 'Quantum Solutions Dashboard';
-                window.location.href = 'quantum.html';
-            }
-        }
+  // add "active" to the button that was actually clicked
+  const clickedBtn = ev?.currentTarget || ev?.target?.closest('.company-btn');
+  if (clickedBtn) clickedBtn.classList.add('active');
+
+  // update heading / navigate
+  const title = document.getElementById('dashboard-title');
+  if (company === 'abbondanza') {
+    title.textContent = 'Abbondanza Sales Force';
+  } else if (company === 'quantum') {
+    title.textContent = 'Quantum Solutions Dashboard';
+    window.location.href = 'quantum.html';
+  }
+}
 
         // PDF Functions
         function openProductListPDF() {
