@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Account Login</title>
+  <title>Quantum Solutions — Sign in</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
-    :root { --bg:#153e9f; --card:#fff; --ink:#1f2937; }
+    :root { --bg:#153e9f; --card:#fff; --ink:#1f2937; --muted:#6b7280; }
     * { box-sizing: border-box; }
     body {
       margin:0; min-height:100vh; display:grid; place-items:center;
@@ -19,44 +19,48 @@
       background:var(--card); width:100%; max-width:520px; border-radius:16px;
       padding:28px; box-shadow:0 12px 40px rgba(0,0,0,.25);
     }
-    h1 { margin:0 0 12px; font-size:28px; }
-    p.muted { margin:0 0 18px; color:#6b7280; }
+    h1 { margin:0 0 6px; font-size:26px; text-align:center; }
+    p.muted { margin:0 0 18px; color:var(--muted); text-align:center; }
     form { display:grid; gap:12px; }
     label { font-weight:600; font-size:14px; }
     input {
       width:100%; border:1px solid #e5e7eb; border-radius:10px; padding:12px 14px; font-size:16px;
     }
-    .row { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
-    .btn {
-      appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:700; font-size:16px;
-      background:#111827; color:white; cursor:pointer;
-    }
-    .btn.secondary { background:#374151; }
-    .btn.link { background:transparent; color:#111827; text-decoration:underline; padding:0; }
-    .stack { display:grid; gap:10px; }
+    .tabs { display:grid; gap:6px; justify-items:center; margin-bottom:14px; }
+    .link { background:none; border:none; color:#111827; text-decoration:underline; cursor:pointer; font-weight:700; }
     .hidden { display:none !important; }
-    .msg { border-radius:10px; padding:10px 12px; font-size:14px; }
+    .msg { border-radius:10px; padding:10px 12px; font-size:14px; margin-bottom:12px; }
     .msg.ok { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
     .msg.err { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
-    small.hint { color:#6b7280; display:block; margin-top:4px; }
-    .center { text-align:center; }
+    small.hint { color:var(--muted); display:block; margin-top:4px; }
+    .stack { display:grid; gap:10px; }
+    .btn {
+      appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:700; font-size:16px;
+      background:#111827; color:white; cursor:pointer; display:grid; grid-auto-flow:column; gap:10px; align-items:center; justify-content:center;
+    }
+    .btn:disabled { opacity:.65; cursor:not-allowed; }
+    .btn.secondary { background:#374151; }
+    .spinner {
+      width:16px; height:16px; border:2px solid rgba(255,255,255,.35); border-top-color:white; border-radius:50%;
+      animation:spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
   </style>
 </head>
 
-<!-- IMPORTANT: keep data-page="login" here so the guard knows this is the login page -->
+<!-- mark as login page -->
 <body data-page="login">
   <div class="card">
-    <h1 class="center">Quantum Solutions — Sign in</h1>
-    <p class="muted center">Use your dashboard credentials to continue.</p>
+    <h1>Quantum Solutions — Sign in</h1>
+    <p class="muted">Use your dashboard credentials to continue.</p>
 
     <div id="alert" class="msg hidden"></div>
 
-    <!-- Tabs -->
-    <div class="stack center" style="margin-bottom:14px;">
-      <button class="btn link" id="tab-login">Login</button>
-      <button class="btn link" id="tab-register">Create account</button>
-      <button class="btn link" id="tab-forgot">Forgot password</button>
-      <button class="btn link" id="tab-reset">Reset with token</button>
+    <div class="tabs">
+      <button class="link" id="tab-login">Login</button>
+      <button class="link" id="tab-register">Create account</button>
+      <button class="link" id="tab-forgot">Forgot password</button>
+      <button class="link" id="tab-reset">Reset with token</button>
     </div>
 
     <!-- LOGIN -->
@@ -67,19 +71,17 @@
       <label>Password
         <input id="login-password" type="password" required />
       </label>
-      <button class="btn" type="submit" id="btn-login">Login</button>
+      <button class="btn" type="submit" id="btn-login">
+        <span class="spinner hidden" id="spin-login"></span>
+        <span id="txt-login">Login</span>
+      </button>
     </form>
 
     <!-- REGISTER -->
     <form id="form-register" class="hidden" autocomplete="off">
-      <div class="row">
-        <label>Username
-          <input id="reg-username" required />
-        </label>
-        <label>Company
-          <input id="reg-company" placeholder="Optional" />
-        </label>
-      </div>
+      <label>Username
+        <input id="reg-username" required />
+      </label>
       <label>Email
         <input id="reg-email" type="email" required />
       </label>
@@ -87,18 +89,27 @@
         <input id="reg-password" type="password" required />
         <small class="hint">At least 8 chars with upper, lower, number, and special.</small>
       </label>
-      <button class="btn" type="submit" id="btn-register">Create account</button>
+      <label>Company
+        <input id="reg-company" placeholder="Optional" />
+      </label>
+      <button class="btn" type="submit" id="btn-register">
+        <span class="spinner hidden" id="spin-register"></span>
+        <span id="txt-register">Create Account</span>
+      </button>
     </form>
 
-    <!-- FORGOT (request token) -->
+    <!-- FORGOT -->
     <form id="form-forgot" class="hidden" autocomplete="off">
       <label>Username or Email
         <input id="forgot-id" required />
       </label>
-      <button class="btn" type="submit" id="btn-forgot">Send reset token</button>
+      <button class="btn" type="submit" id="btn-forgot">
+        <span class="spinner hidden" id="spin-forgot"></span>
+        <span id="txt-forgot">Send reset token</span>
+      </button>
     </form>
 
-    <!-- RESET (apply token) -->
+    <!-- RESET -->
     <form id="form-reset" class="hidden" autocomplete="off">
       <label>Reset token
         <input id="reset-token" required />
@@ -107,200 +118,197 @@
         <input id="reset-password" type="password" required />
         <small class="hint">At least 8 chars with upper, lower, number, and special.</small>
       </label>
-      <button class="btn" type="submit" id="btn-reset">Set new password</button>
+      <button class="btn" type="submit" id="btn-reset">
+        <span class="spinner hidden" id="spin-reset"></span>
+        <span id="txt-reset">Set new password</span>
+      </button>
     </form>
 
-    <div class="stack center" style="margin-top:16px;">
+    <div class="stack" style="margin-top:16px;">
       <button class="btn secondary" id="btn-go-dashboard" type="button">Go to Dashboard</button>
       <button class="btn secondary" id="btn-logout" type="button">Logout</button>
     </div>
   </div>
 
   <script>
-    // ====== CONFIG ======
-    // 1) Replace with your deployed Apps Script Web App URL:
+    // ==== CONFIG ====
     const USER_MANAGEMENT_URL = '<<PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE>>';
-    // 2) Where to send users AFTER successful login:
     const DASHBOARD_URL = './quantum.html';
 
-    // ====== SMALL UTILS ======
-    const q = sel => document.querySelector(sel);
+    // ==== UTILS ====
+    const q = (s)=>document.querySelector(s);
     const alertBox = q('#alert');
-
     function showMsg(text, ok=false) {
       alertBox.classList.remove('hidden','ok','err');
-      alertBox.classList.add('msg', ok ? 'ok' : 'err');
+      alertBox.classList.add(ok?'ok':'err','msg');
       alertBox.textContent = text;
     }
-    function clearMsg() {
-      alertBox.classList.add('hidden');
-      alertBox.textContent = '';
+    function clearMsg(){ alertBox.classList.add('hidden'); alertBox.textContent=''; }
+
+    function setLoading(btnEl, spinEl, txtEl, on) {
+      btnEl.disabled = !!on;
+      spinEl.classList.toggle('hidden', !on);
+      txtEl.style.opacity = on ? .9 : 1;
     }
 
-    // Client-side complexity (mirrors backend)
+    // Client-side complexity
     const PASSWORD_COMPLEXITY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$/;
 
-    // JSONP helper (avoids CORS)
-    function jsonp(url, params = {}) {
+    // JSONP helper
+    function jsonp(url, params={}) {
       return new Promise((resolve, reject) => {
-        const cbName = 'cb_' + Math.random().toString(36).slice(2);
+        const cb = 'cb_' + Math.random().toString(36).slice(2);
         const s = document.createElement('script');
-        const query = new URLSearchParams({ ...params, callback: cbName }).toString();
-        const full = url + (url.includes('?') ? '&' : '?') + query;
-        window[cbName] = (data) => { resolve(data); cleanup(); };
+        const usp = new URLSearchParams({ ...params, callback: cb }).toString();
+        const full = url + (url.includes('?') ? '&' : '?') + usp;
+        let done = false;
+        window[cb] = (data)=>{ if(!done){ done=true; resolve(data); cleanup(); } };
         s.src = full;
-        s.onerror = () => { reject(new Error('Network error')); cleanup(); };
+        s.onerror = ()=>{ if(!done){ done=true; reject(new Error('network')); cleanup(); } };
         document.body.appendChild(s);
-        function cleanup() {
-          delete window[cbName];
-          s.remove();
-        }
+        function cleanup(){ delete window[cb]; s.remove(); }
+        // Safety timeout
+        setTimeout(()=>{ if(!done){ done=true; reject(new Error('timeout')); cleanup(); } }, 15000);
       });
     }
 
-    // ====== AUTH STORAGE ======
-    function saveSession(user) {
-      localStorage.setItem('authUser', JSON.stringify(user));
-    }
-    function getSession() {
-      try { return JSON.parse(localStorage.getItem('authUser') || 'null'); }
-      catch { return null; }
-    }
-    function clearSession() {
-      localStorage.removeItem('authUser');
-    }
+    // Session helpers
+    function saveSession(u){ localStorage.setItem('authUser', JSON.stringify(u)); }
+    function getSession(){ try { return JSON.parse(localStorage.getItem('authUser')||'null'); } catch { return null; } }
+    function clearSession(){ localStorage.removeItem('authUser'); }
 
-    // ====== TABS ======
-    const tabs = {
-      login: q('#form-login'),
-      register: q('#form-register'),
-      forgot: q('#form-forgot'),
-      reset: q('#form-reset'),
-    };
-    function showTab(name) {
-      Object.values(tabs).forEach(el => el.classList.add('hidden'));
-      tabs[name].classList.remove('hidden');
-      clearMsg();
-    }
-    q('#tab-login').onclick = () => showTab('login');
-    q('#tab-register').onclick = () => showTab('register');
-    q('#tab-forgot').onclick = () => showTab('forgot');
-    q('#tab-reset').onclick = () => showTab('reset');
+    // Tabs
+    const tabs = { login:q('#form-login'), register:q('#form-register'), forgot:q('#form-forgot'), reset:q('#form-reset') };
+    function showTab(name){ Object.values(tabs).forEach(e=>e.classList.add('hidden')); tabs[name].classList.remove('hidden'); clearMsg(); }
+    q('#tab-login').onclick = ()=>showTab('login');
+    q('#tab-register').onclick = ()=>showTab('register');
+    q('#tab-forgot').onclick = ()=>showTab('forgot');
+    q('#tab-reset').onclick = ()=>showTab('reset');
 
-    // ====== FORM HANDLERS ======
+    // LOGIN
     q('#form-login').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsg();
+      e.preventDefault(); clearMsg();
       const id = q('#login-username').value.trim();
       const pw = q('#login-password').value;
       if (!id || !pw) return showMsg('Please fill both fields.');
+
+      setLoading(q('#btn-login'), q('#spin-login'), q('#txt-login'), true);
       try {
-        // Backend expects action=login and username=<id>
         const res = await jsonp(USER_MANAGEMENT_URL, { action:'login', username:id, password:pw });
         if (res.success) {
           saveSession({ username:res.username, email:res.email, company:res.company, ts:Date.now() });
           showMsg('Login successful. Redirecting…', true);
-          setTimeout(() => location.href = DASHBOARD_URL, 400);
+          setTimeout(()=>location.href = DASHBOARD_URL, 300);
         } else {
           showMsg(res.message || 'Login failed');
         }
-      } catch (err) { showMsg('Network error during login'); }
+      } catch (err) {
+        showMsg('Network error during login');
+      } finally {
+        setLoading(q('#btn-login'), q('#spin-login'), q('#txt-login'), false);
+      }
     });
 
+    // REGISTER
     q('#form-register').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsg();
+      e.preventDefault(); clearMsg();
       const username = q('#reg-username').value.trim();
       const email    = q('#reg-email').value.trim();
-      const company  = q('#reg-company').value.trim();
       const password = q('#reg-password').value;
+      const company  = q('#reg-company').value.trim();
 
       if (!username || !email || !password) return showMsg('All fields are required');
       if (!PASSWORD_COMPLEXITY.test(password)) {
         return showMsg('Password must be 8+ chars and include upper, lower, number, special');
       }
+
+      setLoading(q('#btn-register'), q('#spin-register'), q('#txt-register'), true);
       try {
-        // Backend expects action=register (username,email,password,company)
-        const res = await jsonp(USER_MANAGEMENT_URL, {
-          action:'register', username, email, password, company
-        });
+        const res = await jsonp(USER_MANAGEMENT_URL, { action:'register', username, email, password, company });
         if (res.success) {
-          showMsg('Account created. You can sign in now.', true);
-          showTab('login');
-          q('#login-username').value = username;
+          showTab('login'); showMsg('Account created. Please sign in.', true);
+          q('#login-username').value = username || email;
+          q('#login-password').focus();
         } else {
-          showMsg(res.message || 'Registration failed');
+          const msg = (res.message||'').toLowerCase();
+          if (msg.includes('already registered') || msg.includes('already exists')) {
+            showTab('login');
+            showMsg('Account already exists. Sign in or use “Forgot password”.');
+            q('#login-username').value = username || email;
+            q('#login-password').focus();
+          } else {
+            showMsg(res.message || 'Registration failed');
+          }
         }
       } catch { showMsg('Network error during registration'); }
+      finally {
+        setLoading(q('#btn-register'), q('#spin-register'), q('#txt-register'), false);
+      }
     });
 
+    // FORGOT (request reset token)
     q('#form-forgot').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsg();
+      e.preventDefault(); clearMsg();
       const id = q('#forgot-id').value.trim();
       if (!id) return showMsg('Enter your username or email');
+
+      setLoading(q('#btn-forgot'), q('#spin-forgot'), q('#txt-forgot'), true);
       try {
-        // IMPORTANT: your backend uses action=requestpasswordreset and param usernameOrEmail
-        const res = await jsonp(USER_MANAGEMENT_URL, { action:'requestpasswordreset', usernameOrEmail:id });
+        // Call canonical action first
+        let res = await jsonp(USER_MANAGEMENT_URL, { action:'requestpasswordreset', usernameOrEmail:id });
+        // If backend hasn’t been patched yet, try legacy alias
+        if (!res || (res && res.message === 'Invalid action')) {
+          res = await jsonp(USER_MANAGEMENT_URL, { action:'requestreset', usernameOrEmail:id });
+        }
         if (res.success) {
-          showMsg('Reset token generated. Check your email (or copy from sheet).', true);
-          // If you want to show the token for testing (remove in prod):
-          if (res.resetToken) showMsg('Reset token: ' + res.resetToken, true);
+          showMsg('Reset token generated. Check your email (or admin sheet).', true);
+          // For testing you can display token:  showMsg('Token: ' + res.resetToken, true);
           showTab('reset');
+          q('#reset-token').focus();
         } else {
           showMsg(res.message || 'Could not generate reset token');
         }
-      } catch { showMsg('Network error requesting reset'); }
+      } catch {
+        showMsg('Network error requesting reset');
+      } finally {
+        setLoading(q('#btn-forgot'), q('#spin-forgot'), q('#txt-forgot'), false);
+      }
     });
 
+    // RESET (apply token)
     q('#form-reset').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      clearMsg();
+      e.preventDefault(); clearMsg();
       const token = q('#reset-token').value.trim();
       const pw    = q('#reset-password').value;
       if (!token || !pw) return showMsg('Token and new password required');
       if (!PASSWORD_COMPLEXITY.test(pw)) {
         return showMsg('New password must be 8+ chars and include upper, lower, number, special');
       }
+
+      setLoading(q('#btn-reset'), q('#spin-reset'), q('#txt-reset'), true);
       try {
-        // Backend expects action=resetpassword with token & newPassword
         const res = await jsonp(USER_MANAGEMENT_URL, { action:'resetpassword', token, newPassword:pw });
         if (res.success) {
           showMsg('Password reset. Please log in.', true);
-          showTab('login');
+          showTab('login'); q('#login-password').focus();
         } else {
           showMsg(res.message || 'Could not reset password');
         }
-      } catch { showMsg('Network error resetting password'); }
+      } catch {
+        showMsg('Network error resetting password');
+      } finally {
+        setLoading(q('#btn-reset'), q('#spin-reset'), q('#txt-reset'), false);
+      }
     });
 
-    // Go to dashboard
+    // Nav buttons
     q('#btn-go-dashboard').onclick = () => {
-      // Optional: soft guard — if not logged in, explain
       if (!getSession()) return showMsg('Please log in first.');
       location.href = DASHBOARD_URL;
     };
+    q('#btn-logout').onclick = () => { clearSession(); showMsg('Logged out. You can sign in below.', true); showTab('login'); };
 
-    // Logout (for convenience if user lands here)
-    q('#btn-logout').onclick = () => {
-      clearSession();
-      showMsg('Logged out. You can sign in below.', true);
-      showTab('login');
-    };
-
-    // ====== PAGE-GUARD NOTE ======
-    // This page is the LOGIN page (data-page="login"), so NO guard runs here.
-    // On protected pages (e.g., quantum.html), include this small guard script:
-    //
-    //   (function guard(){
-    //     if (document.body.dataset.page === 'login') return; // not protected
-    //     const u = localStorage.getItem('authUser');
-    //     if (!u) { alert('Please login first. Redirecting to login page…'); location.href = './index.html'; }
-    //   })();
-    //
-    // That avoids the redirect loop you hit earlier.
-
-    // Default to login tab
+    // Default tab
     showTab('login');
   </script>
 </body>
