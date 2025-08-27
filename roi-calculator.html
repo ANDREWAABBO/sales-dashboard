@@ -78,6 +78,15 @@
     animation:shareSpin .75s linear infinite;
   }
   @keyframes shareSpin{to{transform:rotate(360deg)}}
+
+  /* Quick toast used after auto-copy */
+  .toast{
+    position:fixed; top:20px; right:20px; z-index:100000;
+    background:#059669; color:#fff; padding:14px 18px; border-radius:10px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25); font-weight:700; max-width:320px;
+    animation:toastIn .25s ease-out both;
+  }
+  @keyframes toastIn{from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -262,7 +271,7 @@
       <input id="shareUrlBox" type="text" readonly placeholder="Click Generate to create link">
     </div>
     <div class="actions">
-      <button class="btn secondary" onclick="copyShareUrl()">Copy</button>
+      <!-- Copy button removed (auto-copy on Generate) -->
       <button class="btn" id="btnGenShare">Generate</button>
       <button class="btn secondary" onclick="closeShare()">Close</button>
     </div>
@@ -565,7 +574,7 @@ async function createShare(){
       const link = j.data.shareUrl;
       urlBox.value = link;
 
-      // Auto-copy
+      // Auto-copy (two strategies)
       let copied = false;
       try { await navigator.clipboard.writeText(link); copied = true; } catch (_){}
       if (!copied) {
@@ -573,8 +582,14 @@ async function createShare(){
         try { document.execCommand('copy'); copied = true; } catch (_){}
       }
 
-      alert('Link copied to clipboard!');
-      closeShare();
+      if (copied) {
+        closeShare();
+        toast('Guest link copied. It’s valid for 7 days — share it with your client.');
+      } else {
+        // If copy failed (rare), keep modal open and instruct
+        urlBox.focus();
+        toast('Couldn’t auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
+      }
 
       btn.disabled = false;
       btn.innerHTML = 'Regenerate & Copy';
@@ -588,18 +603,6 @@ async function createShare(){
     btn.innerHTML = 'Generate';
     alert('Network error. Please try again.');
   }
-}
-
-function copyShareUrl(){
-  const inp = document.getElementById('shareUrlBox');
-  if (!inp.value){
-    alert('Click Generate to create a shareable link first.');
-    return;
-  }
-  inp.select(); inp.setSelectionRange(0,99999);
-  document.execCommand('copy');
-  alert('Link copied to clipboard!');
-  closeShare();
 }
 
 function openManage(){
@@ -646,7 +649,7 @@ async function revokeToken(token){
   const j = await r.json();
   if (j.status==='success'){ loadTokens(); } else { alert(j.message||'Failed to revoke'); }
 }
-function copyText(t){ navigator.clipboard.writeText(t).then(()=>alert('Copied!')); }
+function copyText(t){ navigator.clipboard.writeText(t).then(()=>toast('Copied!')); }
 
 /* ===========================
    Helpers (with comma formatting)
@@ -656,6 +659,17 @@ function usd2(n){ return `$${fmt2(n)}`; }
 function fmt2(n){
   const num = Number(n||0);
   return num.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+/* Tiny toast helper */
+function toast(message, kind='success'){
+  const d = document.createElement('div');
+  d.className = 'toast';
+  d.textContent = message;
+  if (kind==='warn'){ d.style.background = '#f59e0b'; }
+  if (kind==='error'){ d.style.background = '#dc2626'; }
+  document.body.appendChild(d);
+  setTimeout(()=>{ d.style.opacity='0'; d.style.transition='opacity .25s'; setTimeout(()=>d.remove(), 250); }, 2600);
 }
 </script>
 </body>
