@@ -1,0 +1,80 @@
+<!-- /sales-dashboard/userbar.js -->
+<script>
+// Simple reusable user bar
+(function () {
+  function injectStyles() {
+    if (document.getElementById('ub-styles')) return;
+    const css = `
+      .userbar{position:fixed;top:10px;right:12px;z-index:2000;display:flex;align-items:center;gap:10px;
+        background:#fff;color:#0f172a;padding:8px 12px;border:1px solid #e2e8f0;border-radius:999px;
+        box-shadow:0 8px 24px rgba(0,0,0,.12);font-weight:600}
+      .userbar .username{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .userbar .userdot{width:8px;height:8px;border-radius:50%;background:#22c55e}
+      .userbar .btn-sm{background:#1e3a8a;color:#fff;border:none;padding:6px 10px;font-size:12px;border-radius:8px;cursor:pointer}
+      .userbar .btn-sm:disabled{opacity:.6;cursor:not-allowed}
+    `;
+    const s = document.createElement('style');
+    s.id = 'ub-styles';
+    s.textContent = css;
+    document.head.appendChild(s);
+  }
+
+  function getName() {
+    let n = localStorage.getItem('dashboardUser') || sessionStorage.getItem('dashboardUser') || '';
+    try { if (window.Auth && Auth.getCurrentUserName) n = Auth.getCurrentUserName() || n; } catch(_) {}
+    try { if (!n && window.Auth && Auth.user && Auth.user.username) n = Auth.user.username; } catch(_) {}
+    return n;
+  }
+
+  function isLoggedIn() {
+    try { if (window.Auth && typeof Auth.isLoggedIn === 'function') return !!Auth.isLoggedIn(); } catch(_) {}
+    return !!(localStorage.getItem('dashboardUser') || sessionStorage.getItem('dashboardUser'));
+  }
+
+  function logout(redirect) {
+    try { if (window.Auth && typeof Auth.logout === 'function') Auth.logout(); } catch(_) {}
+    localStorage.removeItem('dashboardUser');
+    sessionStorage.removeItem('dashboardUser');
+    location.href = redirect || 'index.html';
+  }
+
+  function mount(opts) {
+    opts = opts || {};
+    const hideForGuests = ('hideForGuests' in opts) ? opts.hideForGuests : true;
+    const redirectOnLogout = opts.redirectOnLogout || 'index.html';
+    const hasToken = !!new URLSearchParams(location.search).get('token'); // guest links
+
+    if (hideForGuests && hasToken) return; // hide on guest/token views
+    if (!isLoggedIn()) return;
+
+    injectStyles();
+
+    // host
+    let host = document.getElementById('userbar-root');
+    if (!host) {
+      host = document.createElement('div');
+      host.id = 'userbar-root';
+      document.body.appendChild(host);
+    }
+    host.className = 'userbar';
+    host.innerHTML = `
+      <span class="userdot"></span>
+      <span class="username" id="ubName"></span>
+      <button class="btn-sm" id="ubLogout">Logout</button>
+    `;
+
+    document.getElementById('ubName').textContent = getName() || 'Logged in';
+    document.getElementById('ubLogout').onclick = () => logout(redirectOnLogout);
+  }
+
+  window.UserBar = {
+    init(options) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => mount(options));
+      } else {
+        mount(options);
+      }
+    }
+  };
+})();
+</script>
