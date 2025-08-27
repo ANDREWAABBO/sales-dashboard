@@ -5,16 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sales Team Dashboard</title>
 
-    <!-- Load auth first, then the user bar -->
-  <script defer src="password.js"></script>
-  <script defer src="user-bar.js"></script>
-</head>
-<body>
-  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
 
+  <!-- Page styles (unchanged) -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -55,6 +51,7 @@
       align-items: center;
       gap: 12px;
       backdrop-filter: blur(10px);
+      text-decoration: none;
     }
 
     .company-btn:hover {
@@ -182,6 +179,304 @@
     .link-btn:hover { text-decoration: underline; }
   </style>
 
+  <!-- Optional override config for password.js (must be BEFORE password.js) -->
+  <script>
+    window.AUTH_CONFIG = {
+      USER_MANAGEMENT_URL: 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec',
+      SHOW_RESET_TOKEN_FOR_TESTING: false
+    };
+  </script>
+
+  <!-- Auth first, then the user bar -->
+  <script defer src="password.js"></script>
+  <script defer src="user-bar.js"></script>
+</head>
+<body>
+
+  <!-- Company Switcher -->
+  <div class="company-switcher">
+    <button class="company-btn active" onclick="switchCompany('abbondanza', event)">
+      <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
+      <span>Abbondanza Vending LLC</span>
+    </button>
+
+    <button class="company-btn" onclick="switchCompany('quantum', event)">
+      <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
+      <span>Quantum Solutions</span>
+    </button>
+  </div>
+
+  <div class="dashboard-container">
+    <div class="header">
+      <h1 id="dashboard-title">Abbondanza Sales Force</h1>
+      <p>Access all your sales resources in one place</p>
+    </div>
+
+    <!-- Abbondanza Dashboard - 5 Cards Vertical Stack -->
+    <div class="quantum-grid">
+      <div class="card">
+        <h2>About Us - How We Work</h2>
+        <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
+        <div style="display: flex; gap: 15px; margin-top: 18px;">
+          <button onclick="openPDFViewer()" class="btn" style="flex: 1;">View</button>
+          <button onclick="downloadPresentationPDF()" class="btn" style="flex: 1;">Download</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Product List</h2>
+        <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
+        <div style="display: flex; gap: 15px; margin-top: 18px;">
+          <button onclick="openProductListPDF()" class="btn" style="flex: 1;">View</button>
+          <button onclick="downloadProductListPDF()" class="btn" style="flex: 1;">Download</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Proposal Management</h2>
+        <p>Create customized PDF proposals instantly and access generated proposals library with searchable database.</p>
+        <div style="display: flex; gap: 15px; margin-top: 18px;">
+          <button onclick="openProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
+          <button onclick="openProposalViewer()" class="btn" style="flex: 1;">View Library</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Service Agreement Management</h2>
+        <p>Generate subsidy agreements with automated pricing calculations and access all service agreements library.</p>
+        <div style="display: flex; gap: 15px; margin-top: 18px;">
+          <button onclick="generateServiceAgreement()" class="btn" style="flex: 1;">Create Agreement</button>
+          <button onclick="openServiceAgreementViewer()" class="btn" style="flex: 1;">View Library</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Lead Logger</h2>
+        <p>Log and track sales leads with follow-up management and status tracking.</p>
+        <a href="lead-logger.html" class="btn">Open Lead Logger</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Proposal Generator Modal -->
+  <div id="proposalModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Generate Fresh Food Solutions Proposal</h3>
+
+      <div class="form-group">
+        <label for="companyName">Company Name *</label>
+        <input type="text" id="companyName" name="companyName" required>
+      </div>
+
+      <div class="form-group">
+        <label for="contactName">Contact Name (Optional)</label>
+        <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="preparedBy">Your Name *</label>
+          <input type="text" id="preparedBy" name="preparedBy" required>
+        </div>
+
+        <div class="form-group">
+          <label for="preparedByPhone">Your Phone *</label>
+          <input type="tel" id="preparedByPhone" name="preparedByPhone" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="preparedByEmail">Your Email *</label>
+        <input type="email" id="preparedByEmail" name="preparedByEmail" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fridgeCount">Number of Fridges *</label>
+          <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
+        </div>
+
+        <div class="form-group">
+          <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
+          <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
+            <option value="395">$395/month</option>
+            <option value="495">$495/month</option>
+            <option value="595">$595/month</option>
+            <option value="695">$695/month</option>
+            <option value="795" selected>$795/month</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
+        <input type="number" id="deliveryFee" name="deliveryFee" min="0" max="5000" step="50" placeholder="$0.00" onchange="updatePricingSummary();">
+        <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small>
+      </div>
+
+      <div class="pricing-summary">
+        <h4>Pricing Summary</h4>
+        <div class="pricing-display" id="pricingSummary">
+          Monthly Total: $795/month<br>
+          Setup Fee: $295 (one-time)
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
+        <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Agreement Modal -->
+  <div id="serviceAgreementModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Generate Service Agreement</h3>
+
+      <div class="form-group">
+        <label for="serviceCompanyName">Company Name *</label>
+        <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
+      </div>
+
+      <div class="form-group">
+        <label for="serviceContactName">Contact Name (Optional)</label>
+        <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
+      </div>
+
+      <div class="form-group">
+        <label for="serviceStreet">Street Address *</label>
+        <input type="text" id="serviceStreet" name="serviceStreet" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="serviceCity">City *</label>
+          <input type="text" id="serviceCity" name="serviceCity" required>
+        </div>
+
+        <div class="form-group">
+          <label for="serviceState">State *</label>
+          <select id="serviceState" name="serviceState" required>
+            <option value="">Select State</option>
+            <option value="MA" selected>MA</option>
+            <option value="NH">NH</option>
+            <option value="ME">ME</option>
+            <option value="VT">VT</option>
+            <option value="RI">RI</option>
+            <option value="CT">CT</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="serviceZip">Zip Code *</label>
+        <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="servicePreparedBy">Your Name *</label>
+          <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
+        </div>
+
+        <div class="form-group">
+          <label for="servicePreparedByPhone">Your Phone *</label>
+          <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="servicePreparedByEmail">Your Email *</label>
+        <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="serviceFridgeCount">Total Kiosks to Install *</label>
+          <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
+        </div>
+
+        <div class="form-group">
+          <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>
+          <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">
+            <option value="395">$395/month</option>
+            <option value="495">$495/month</option>
+            <option value="595">$595/month</option>
+            <option value="695">$695/month</option>
+            <option value="795" selected>$795/month</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="subsidyPercentage">Subsidy Percentage *</label>
+          <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">
+            <option value="0" selected>0%</option>
+            <option value="10">10%</option>
+            <option value="20">20%</option>
+            <option value="25">25%</option>
+            <option value="30">30%</option>
+            <option value="40">40%</option>
+            <option value="50">50%</option>
+            <option value="60">60%</option>
+            <option value="70">70%</option>
+            <option value="75">75%</option>
+            <option value="80">80%</option>
+            <option value="90">90%</option>
+            <option value="100">100%</option>
+          </select>
+          <small>Discount on purchases billed back to company</small>
+        </div>
+
+        <div class="form-group">
+          <label for="freeMonths">Free Months</label>
+          <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">
+            <option value="0" selected>No free months</option>
+            <option value="1">1 month free</option>
+            <option value="2">2 months free</option>
+            <option value="3">3 months free</option>
+            <option value="4">4 months free</option>
+            <option value="5">5 months free</option>
+            <option value="6">6 months free</option>
+          </select>
+          <small>Service fee waived for initial months</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="installDate">Install Date</label>
+          <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">
+          <small>Leave blank for TBD</small>
+        </div>
+
+        <div class="form-group">
+          <label for="firstBillDate">First Bill Date</label>
+          <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">
+          <small>Auto-calculated based on install date and free months</small>
+        </div>
+      </div>
+
+      <div class="pricing-summary">
+        <h4>Agreement Summary</h4>
+        <div class="pricing-display" id="servicePricingSummary">
+          Total Kiosks: 1<br>
+          Monthly Service Fee: $795.00<br>
+          Subsidy: 0% discount<br>
+          Monthly Subsidy Amount: $0.00
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
+        <button class="btn btn-primary" id="generateServiceBtn" type="button" onclick="generateServiceAgreementPDF()">Generate Service Agreement PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App script (unchanged logic) -->
   <script>
     /* ====== App Endpoints ====== */
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
@@ -862,300 +1157,5 @@
       }
     });
   </script>
-
-  <!-- Optional override config for password.js -->
-  <script>
-    window.AUTH_CONFIG = {
-      USER_MANAGEMENT_URL: 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec',
-      SHOW_RESET_TOKEN_FOR_TESTING: false
-    };
-  </script>
-  <!-- Auth module -->
-  <script src="password.js" defer></script>
-</head>
-
-<body>
-  <!-- Company Switcher -->
-  <div class="company-switcher">
-    <button class="company-btn active" onclick="switchCompany('abbondanza', event)">
-      <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
-      <span>Abbondanza Vending LLC</span>
-    </button>
-
-    <button class="company-btn" onclick="switchCompany('quantum', event)">
-      <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
-      <span>Quantum Solutions</span>
-    </button>
-  </div>
-
-  <div class="dashboard-container">
-    <div class="header">
-      <h1 id="dashboard-title">Abbondanza Sales Force</h1>
-      <p>Access all your sales resources in one place</p>
-    </div>
-
-    <!-- Abbondanza Dashboard - 5 Cards Vertical Stack -->
-    <div class="quantum-grid">
-      <div class="card">
-        <h2>About Us - How We Work</h2>
-        <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="openPDFViewer()" class="btn" style="flex: 1;">View</button>
-          <button onclick="downloadPresentationPDF()" class="btn" style="flex: 1;">Download</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Product List</h2>
-        <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="openProductListPDF()" class="btn" style="flex: 1;">View</button>
-          <button onclick="downloadProductListPDF()" class="btn" style="flex: 1;">Download</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Proposal Management</h2>
-        <p>Create customized PDF proposals instantly and access generated proposals library with searchable database.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="openProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
-          <button onclick="openProposalViewer()" class="btn" style="flex: 1;">View Library</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Service Agreement Management</h2>
-        <p>Generate subsidy agreements with automated pricing calculations and access all service agreements library.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="generateServiceAgreement()" class="btn" style="flex: 1;">Create Agreement</button>
-          <button onclick="openServiceAgreementViewer()" class="btn" style="flex: 1;">View Library</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Lead Logger</h2>
-        <p>Log and track sales leads with follow-up management and status tracking.</p>
-        <a href="lead-logger.html" class="btn">Open Lead Logger</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Proposal Generator Modal -->
-  <div id="proposalModal" class="modal-overlay">
-    <div class="modal">
-      <h3>Generate Fresh Food Solutions Proposal</h3>
-
-      <div class="form-group">
-        <label for="companyName">Company Name *</label>
-        <input type="text" id="companyName" name="companyName" required>
-      </div>
-
-      <div class="form-group">
-        <label for="contactName">Contact Name (Optional)</label>
-        <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="preparedBy">Your Name *</label>
-          <input type="text" id="preparedBy" name="preparedBy" required>
-        </div>
-
-        <div class="form-group">
-          <label for="preparedByPhone">Your Phone *</label>
-          <input type="tel" id="preparedByPhone" name="preparedByPhone" required>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="preparedByEmail">Your Email *</label>
-        <input type="email" id="preparedByEmail" name="preparedByEmail" required>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="fridgeCount">Number of Fridges *</label>
-          <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
-        </div>
-
-        <div class="form-group">
-          <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
-          <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
-            <option value="395">$395/month</option>
-            <option value="495">$495/month</option>
-            <option value="595">$595/month</option>
-            <option value="695">$695/month</option>
-            <option value="795" selected>$795/month</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
-        <input type="number" id="deliveryFee" name="deliveryFee" min="0" max="5000" step="50" placeholder="$0.00" onchange="updatePricingSummary();">
-        <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small>
-      </div>
-
-      <div class="pricing-summary">
-        <h4>Pricing Summary</h4>
-        <div class="pricing-display" id="pricingSummary">
-          Monthly Total: $795/month<br>
-          Setup Fee: $295 (one-time)
-        </div>
-      </div>
-
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-        <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Service Agreement Modal -->
-  <div id="serviceAgreementModal" class="modal-overlay">
-    <div class="modal">
-      <h3>Generate Service Agreement</h3>
-
-      <div class="form-group">
-        <label for="serviceCompanyName">Company Name *</label>
-        <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
-      </div>
-
-      <div class="form-group">
-        <label for="serviceContactName">Contact Name (Optional)</label>
-        <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
-      </div>
-
-      <div class="form-group">
-        <label for="serviceStreet">Street Address *</label>
-        <input type="text" id="serviceStreet" name="serviceStreet" required>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="serviceCity">City *</label>
-          <input type="text" id="serviceCity" name="serviceCity" required>
-        </div>
-
-        <div class="form-group">
-          <label for="serviceState">State *</label>
-          <select id="serviceState" name="serviceState" required>
-            <option value="">Select State</option>
-            <option value="MA" selected>MA</option>
-            <option value="NH">NH</option>
-            <option value="ME">ME</option>
-            <option value="VT">VT</option>
-            <option value="RI">RI</option>
-            <option value="CT">CT</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="serviceZip">Zip Code *</label>
-        <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="servicePreparedBy">Your Name *</label>
-          <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
-        </div>
-
-        <div class="form-group">
-          <label for="servicePreparedByPhone">Your Phone *</label>
-          <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="servicePreparedByEmail">Your Email *</label>
-        <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="serviceFridgeCount">Total Kiosks to Install *</label>
-          <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
-        </div>
-
-        <div class="form-group">
-          <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>
-          <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">
-            <option value="395">$395/month</option>
-            <option value="495">$495/month</option>
-            <option value="595">$595/month</option>
-            <option value="695">$695/month</option>
-            <option value="795" selected>$795/month</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="subsidyPercentage">Subsidy Percentage *</label>
-          <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">
-            <option value="0" selected>0%</option>
-            <option value="10">10%</option>
-            <option value="20">20%</option>
-            <option value="25">25%</option>
-            <option value="30">30%</option>
-            <option value="40">40%</option>
-            <option value="50">50%</option>
-            <option value="60">60%</option>
-            <option value="70">70%</option>
-            <option value="75">75%</option>
-            <option value="80">80%</option>
-            <option value="90">90%</option>
-            <option value="100">100%</option>
-          </select>
-          <small>Discount on purchases billed back to company</small>
-        </div>
-
-        <div class="form-group">
-          <label for="freeMonths">Free Months</label>
-          <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">
-            <option value="0" selected>No free months</option>
-            <option value="1">1 month free</option>
-            <option value="2">2 months free</option>
-            <option value="3">3 months free</option>
-            <option value="4">4 months free</option>
-            <option value="5">5 months free</option>
-            <option value="6">6 months free</option>
-          </select>
-          <small>Service fee waived for initial months</small>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="installDate">Install Date</label>
-          <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">
-          <small>Leave blank for TBD</small>
-        </div>
-
-        <div class="form-group">
-          <label for="firstBillDate">First Bill Date</label>
-          <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">
-          <small>Auto-calculated based on install date and free months</small>
-        </div>
-      </div>
-
-      <div class="pricing-summary">
-        <h4>Agreement Summary</h4>
-        <div class="pricing-display" id="servicePricingSummary">
-          Total Kiosks: 1<br>
-          Monthly Service Fee: $795.00<br>
-          Subsidy: 0% discount<br>
-          Monthly Subsidy Amount: $0.00
-        </div>
-      </div>
-
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
-        <button class="btn btn-primary" id="generateServiceBtn" type="button" onclick="generateServiceAgreementPDF()">Generate Service Agreement PDF</button>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
