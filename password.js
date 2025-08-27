@@ -659,25 +659,24 @@
   global.checkAuth = Auth.checkAuth;
   global.logout = Auth.logout;
 
-  
+
 
   // --- Auto-init on page load ---------------------------------------------
-document.addEventListener('DOMContentLoaded', function () {
-  // Only react to ?resetToken (NOT ?token=… which is used by ROI share links)
-  const handled = Auth.bootstrapResetFromURL();
+  document.addEventListener('DOMContentLoaded', function () {
+    // Only react to ?resetToken (NOT ?token=… which is used by ROI share links)
+    const handled = Auth.routeFromURL();
 
-  // If a share token is present, don't auto-open the login modal.
-  let hasShareToken = false;
-  try {
-    const u = new URL(window.location.href);
-    hasShareToken = u.searchParams.has('token'); // ROI guest token
-  } catch (_) {}
+    // If a share token is present, don't auto-open the login modal.
+    let hasShareToken = false;
+    try {
+      const u = new URL(window.location.href);
+      hasShareToken = u.searchParams.has('token'); // ROI guest token
+    } catch (_) {}
 
-  if (!handled && !hasShareToken && Auth.checkAuth()) {
-    Auth.addLogoutButton();
-  }
-});
+    if (!handled && !hasShareToken && Auth.checkAuth()) {
+      Auth.addLogoutButton();
+    }
+  });
 
 
-  
 })(window);
