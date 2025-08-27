@@ -1,3 +1,6 @@
+Here’s the full file with the scripts added in the `<head>` (auth first, then the user bar) and no other logic/UI changes.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +12,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Optional override config for password.js (must be BEFORE password.js) -->
+  <script>
+    window.AUTH_CONFIG = {
+      USER_MANAGEMENT_URL: 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec',
+      SHOW_RESET_TOKEN_FOR_TESTING: false
+    };
+  </script>
+
+  <!-- Auth first, then the user bar -->
+  <script defer src="password.js"></script>
+  <script defer src="userbar.js?v=1"></script>
 
   <!-- Page styles (unchanged) -->
   <style>
@@ -178,18 +193,6 @@
     .link-btn { background: transparent; border: none; color: #1e3a8a; font-weight: 600; cursor: pointer; padding: 8px 0; }
     .link-btn:hover { text-decoration: underline; }
   </style>
-
-  <!-- Optional override config for password.js (must be BEFORE password.js) -->
-  <script>
-    window.AUTH_CONFIG = {
-      USER_MANAGEMENT_URL: 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec',
-      SHOW_RESET_TOKEN_FOR_TESTING: false
-    };
-  </script>
-
-  <!-- Auth first, then the user bar -->
-  <script defer src="password.js"></script>
-  <script defer src="user-bar.js"></script>
 </head>
 <body>
 
@@ -1159,3 +1162,4 @@
   </script>
 </body>
 </html>
+```
