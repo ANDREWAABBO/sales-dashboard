@@ -1,3 +1,6 @@
+yep — looks like that reply got clipped. Here’s the **complete file**, with the **only change** being the safe `UserBar.init(...)` on `DOMContentLoaded` (so it won’t run before `userbar.js?v=1` is ready). No other logic/UI changes.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -818,10 +821,13 @@
   <!-- Reusable Username + Logout pill (shared across pages) -->
   <script defer src="userbar.js?v=1"></script>
   <script>
-    // Show the username + Logout pill at top-right; hide for guest token links
-    if (window.UserBar && typeof UserBar.init === 'function') {
-      UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
-    }
+    // Ensure init runs after userbar.js is ready even with 'defer'
+    window.addEventListener('DOMContentLoaded', function () {
+      if (window.UserBar && typeof UserBar.init === 'function') {
+        UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
+      }
+    });
   </script>
 </body>
 </html>
+```
