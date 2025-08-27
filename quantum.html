@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
 
-  <!-- Shared auth (login/register/reset + user menu) -->
+  <!-- Shared auth (login/register/reset) -->
   <script defer src="password.js"></script>
 
   <style>
@@ -123,19 +123,6 @@
     }
     .btn:hover::after { width: 300px; height: 300px; }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4); background: #1e40af; }
-
-    .logout-btn {
-      background: white !important;
-      color: black !important;
-      font-weight: 700 !important;
-      border: 2px solid rgba(255, 255, 255, 0.3) !important;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
-    }
-    .logout-btn:hover {
-      background: #f0f0f0 !important;
-      transform: scale(1.05) !important;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
-    }
 
     /* Modal Styles */
     .modal-overlay {
@@ -339,11 +326,6 @@
 
   <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
-    // Kick off shared auth (no UI/logic changes to this page)
-    document.addEventListener('DOMContentLoaded', () => {
-      try { if (window.Auth && Auth.checkAuth()) Auth.addLogoutButton(); } catch(e){ console.warn(e); }
-    });
-
     // Expose everything used by inline HTML attributes:
     window.openQuantumAboutUs = function openQuantumAboutUs() {
       const existingOverlay = document.querySelector('.modal-overlay');
@@ -632,7 +614,8 @@
       modal.style.display = 'flex';
       modal.style.flexDirection = 'column';
 
-      const src = 'roi-calculator.html';
+      // Cache-bust the ROI iframe to avoid stale code
+      const src = 'roi-calculator.html?v=' + Date.now();
       modal.innerHTML = `
         <div style="padding:14px 16px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">
           <h3 style="margin:0;color:#1e3a8a;font-size:1.2em;">ROI Calculator</h3>
@@ -825,12 +808,20 @@
     };
 
     // Close any generic overlay when clicking the backdrop (doesn't affect login overlay)
-    // Use addEventListener instead of overwriting window.onclick, to avoid conflicts.
     document.addEventListener('click', function (event) {
       if (event.target.classList && event.target.classList.contains('modal-overlay')) {
         closeModal();
       }
     });
+  </script>
+
+  <!-- Reusable Username + Logout pill (shared across pages) -->
+  <script defer src="userbar.js?v=1"></script>
+  <script>
+    // Show the username + Logout pill at top-right; hide for guest token links
+    if (window.UserBar && typeof UserBar.init === 'function') {
+      UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
+    }
   </script>
 </body>
 </html>
