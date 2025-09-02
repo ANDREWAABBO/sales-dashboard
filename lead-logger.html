@@ -9,10 +9,12 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
-    .container{max-width:95%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
+    .container{max-width:98%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
     h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.2rem}
 
-    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px}
+    /* STICKY CONTROLS - Stay at top when scrolling */
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px;position:sticky;top:0;z-index:100;background:rgba(255,255,255,.98);padding:15px 0;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+    
     .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.2s;text-decoration:none;display:inline-block}
     .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.35);background:#1e40af}
     .btn-secondary{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
@@ -20,9 +22,9 @@
     select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .2s}
     select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
 
-    /* --- TABLE: single row separator, no "wonky" lines --- */
-    .table-container{overflow-x:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-    table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed}
+    /* IMPROVED TABLE WITH SCROLLING */
+    .table-container{overflow:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:70vh;position:relative}
+    table{width:100%;border-collapse:collapse;background:#fff;min-width:1400px}
     th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:1px solid #cbd5e1}
     td{padding:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;border-bottom:none;vertical-align:middle}
     tbody tr{border-bottom:1px solid #e2e8f0}
@@ -61,8 +63,8 @@
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
     .form-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
     .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
-    .action-buttons{display:flex;gap:8px}
-    .btn-small{padding:6px 12px;font-size:12px;border-radius:6px}
+    .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-small{padding:6px 12px;font-size:12px;border-radius:6px;white-space:nowrap}
     #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
     #leadModal .form-actions{position:sticky;bottom:0;background:#fff;padding-top:12px;margin-top:12px;border-top:1px solid #e2e8f0;z-index:1}
 
@@ -77,6 +79,14 @@
     .pricing-info{background:#f0f8ff;padding:15px;border-radius:8px;margin:15px 0;border:2px solid #b3d9ff}
     .pricing-info h3{margin:0 0 10px 0;color:#2c5aa0;font-size:1.2em}
     .pricing-display{font-size:16px;color:#2c5aa0;font-weight:bold}
+
+    /* DELETE CONFIRMATION MODAL */
+    .delete-modal .modal-content{max-width:500px;text-align:center}
+    .delete-modal h2{color:#e53e3e;margin-bottom:20px}
+    .delete-modal .company-name{background:#f8d7da;padding:10px;border-radius:8px;margin:15px 0;font-weight:bold;color:#721c24}
+    .delete-modal input{text-align:center;font-size:16px;font-weight:bold;margin:15px 0}
+    .btn-danger{background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)}
+    .btn-danger:hover{background:linear-gradient(135deg,#c53030 0%,#9b2c2c 100%)}
   </style>
 </head>
 <body>
@@ -292,6 +302,30 @@
     </div>
   </div>
 
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal delete-modal" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close" onclick="closeDeleteModal()">&times;</span>
+      <h2>⚠️ Delete Lead Permanently</h2>
+      <p style="color:#4a5568;margin-bottom:15px;">This action cannot be undone. The lead will be permanently deleted from the database.</p>
+      
+      <div class="company-name" id="deleteCompanyName">
+        Company Name Will Show Here
+      </div>
+      
+      <p style="margin:20px 0;font-weight:600;color:#721c24;">Type "yes" to confirm deletion:</p>
+      
+      <div class="form-group">
+        <input type="text" id="deleteConfirmInput" placeholder="Type 'yes' to confirm" onkeyup="validateDeleteConfirmation()" style="border-color:#e53e3e"/>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger" onclick="confirmDeleteLead()" disabled>Delete Lead Permanently</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script>
@@ -302,6 +336,7 @@
     let currentEditId = null;
     let knownCompanies = [];
     let currentLeadForProposal = null;
+    let currentLeadToDelete = null;
 
     // Track unsaved edits in the modal
     let formInitialSnapshot = '';
@@ -482,6 +517,7 @@
            <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
            <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Generate Proposal</button>
            <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
+           <button class="btn btn-small btn-danger" onclick="openDeleteModal('${leadId}')">Delete</button>
          </div>`
       ];
 
@@ -710,6 +746,78 @@
         showToast('Error archiving lead: ' + err.message, 'error');
       }finally{
         btnEl.disabled = false; btnEl.innerHTML = prevHtml;
+      }
+    }
+
+    // ============ DELETE LEAD FUNCTIONS ============
+
+    function openDeleteModal(leadId) {
+      const lead = allLeads.find(l => safeLeadId(l) === String(leadId));
+      if (!lead) {
+        showToast('Lead not found. Please refresh the page and try again.', 'error');
+        return;
+      }
+
+      currentLeadToDelete = lead;
+      document.getElementById('deleteCompanyName').textContent = lead.companyName;
+      document.getElementById('deleteConfirmInput').value = '';
+      document.getElementById('confirmDeleteBtn').disabled = true;
+      document.getElementById('deleteModal').style.display = 'block';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      currentLeadToDelete = null;
+    }
+
+    function validateDeleteConfirmation() {
+      const input = document.getElementById('deleteConfirmInput').value.toLowerCase().trim();
+      const confirmBtn = document.getElementById('confirmDeleteBtn');
+      
+      if (input === 'yes') {
+        confirmBtn.disabled = false;
+      } else {
+        confirmBtn.disabled = true;
+      }
+    }
+
+    async function confirmDeleteLead() {
+      if (!currentLeadToDelete) {
+        showToast('No lead selected for deletion.', 'error');
+        return;
+      }
+
+      const leadId = safeLeadId(currentLeadToDelete);
+      const confirmBtn = document.getElementById('confirmDeleteBtn');
+      const originalText = confirmBtn.textContent;
+      
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Deleting...';
+
+      try {
+        const url = WEB_APP_URL + '?action=deleteLead&leadId=' + encodeURIComponent(leadId);
+        const payload = { action: 'deleteLead', leadId: leadId };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Network ${res.status}`);
+        const out = await res.json();
+        if (out.status !== 'success') throw new Error(out.message || 'Delete failed');
+
+        showToast(`Lead "${currentLeadToDelete.companyName}" deleted permanently`, 'success');
+        closeDeleteModal();
+        await loadLeads(); // Refresh the lead list
+        
+      } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Error deleting lead: ' + err.message, 'error');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
       }
     }
 
@@ -1492,6 +1600,10 @@
     window.handleFileSelect = handleFileSelect;
     window.importLeads = importLeads;
     window.exportLeadsToExcel = exportLeadsToExcel;
+    window.openDeleteModal = openDeleteModal;
+    window.closeDeleteModal = closeDeleteModal;
+    window.validateDeleteConfirmation = validateDeleteConfirmation;
+    window.confirmDeleteLead = confirmDeleteLead;
   </script>
 </body>
 </html>
