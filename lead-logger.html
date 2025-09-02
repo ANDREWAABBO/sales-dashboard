@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lead Logger - Abbondanza Sales</title>
+  <!-- Add SheetJS for Excel functionality -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
@@ -18,7 +20,7 @@
     select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .2s}
     select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
 
-    /* --- TABLE: single row separator, no “wonky” lines --- */
+    /* --- TABLE: single row separator, no "wonky" lines --- */
     .table-container{overflow-x:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
     table{width:100%;border-collapse:collapse;background:#fff;table-layout:fixed}
     th{background:#1e3a8a;color:#fff;padding:15px;text-align:left;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:1px solid #cbd5e1}
@@ -49,10 +51,13 @@
     @keyframes slideIn{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
     .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer}
     .close:hover{color:#000}
+    
+    .section-header{font-size:1.3em;font-weight:600;color:#2d3748;margin:25px 0 15px 0;padding-bottom:8px;border-bottom:2px solid #e2e8f0}
     .form-group{margin-bottom:16px}
     .form-group label{display:block;margin-bottom:6px;color:#4a5568;font-weight:600}
     .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:border-color .2s}
     .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea}
+    .form-group small{display:block;margin-top:5px;color:#718096;font-size:0.9em}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
     .form-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
     .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
@@ -60,6 +65,18 @@
     .btn-small{padding:6px 12px;font-size:12px;border-radius:6px}
     #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
     #leadModal .form-actions{position:sticky;bottom:0;background:#fff;padding-top:12px;margin-top:12px;border-top:1px solid #e2e8f0;z-index:1}
+
+    /* Import Modal Styles */
+    #importModal .modal-content{max-width:800px}
+    .file-preview{background:#f7fafc;padding:15px;border-radius:8px;margin:15px 0}
+    .file-preview table{font-size:12px;border-collapse:collapse}
+    .file-preview th{background:#1e3a8a;color:white;padding:8px;text-align:left;border:1px solid #ccc}
+    .file-preview td{border:1px solid #ccc;padding:8px}
+    
+    /* Proposal Modal Styles */
+    .pricing-info{background:#f0f8ff;padding:15px;border-radius:8px;margin:15px 0;border:2px solid #b3d9ff}
+    .pricing-info h3{margin:0 0 10px 0;color:#2c5aa0;font-size:1.2em}
+    .pricing-display{font-size:16px;color:#2c5aa0;font-weight:bold}
   </style>
 </head>
 <body>
@@ -67,9 +84,12 @@
     <h1>Lead Database</h1>
 
     <div class="controls">
-      <div style="display:flex;gap:10px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">← Back to Dashboard</button>
         <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
+        <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)">📄 Download Excel Template</button>
+        <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)">📤 Import Excel File</button>
+        <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)">📥 Export Current Leads</button>
       </div>
 
       <div class="filters">
@@ -128,7 +148,7 @@
       <form id="leadForm">
         <div class="form-group">
           <label for="businessUnit">Business Unit *</label>
-          <select id="businessUnit" name="businessUnit" required>
+          <select id="businessUnit" name="businessUnit" required onchange="toggleQuantumFields()">
             <option value="">Select...</option>
             <option value="Abbondanza Vending">Abbondanza Vending</option>
             <option value="Quantum Solutions">Quantum Solutions</option>
@@ -157,6 +177,7 @@
           <input type="email" id="emailAddress" name="emailAddress"/>
         </div>
 
+        <div class="section-header">Sales Representative Information</div>
         <div class="form-row">
           <div class="form-group">
             <label for="repName">Rep Name *</label>
@@ -170,6 +191,32 @@
               <option value="Not Qualified">Not Qualified</option>
               <option value="Dead">Dead (Archived)</option>
             </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="repPhone">Rep Phone *</label>
+            <input type="tel" id="repPhone" name="repPhone" placeholder="555-123-4567" maxlength="14" required/>
+          </div>
+          <div class="form-group">
+            <label for="repEmail">Rep Email *</label>
+            <input type="email" id="repEmail" name="repEmail" placeholder="rep@company.com" required/>
+          </div>
+        </div>
+
+        <!-- Conditional section for Quantum Solutions -->
+        <div id="quantumFieldsSection" style="display:none;">
+          <div class="section-header">Customer Location (Required for Quantum Solutions)</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="customerAddress">Customer Address</label>
+              <input type="text" id="customerAddress" name="customerAddress" placeholder="City, State"/>
+            </div>
+            <div class="form-group">
+              <label for="customerZip">Customer Zip Code</label>
+              <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345"/>
+            </div>
           </div>
         </div>
 
@@ -205,6 +252,46 @@
     </div>
   </div>
 
+  <!-- Excel Import Modal -->
+  <div id="importModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close" onclick="closeImportModal()">&times;</span>
+      <h2>Import Leads from Excel</h2>
+      
+      <div style="background:#f0f8ff;padding:20px;border-radius:8px;margin:20px 0;border:1px solid #b3d9ff;">
+        <h3 style="color:#2c5aa0;margin-bottom:10px;">Instructions:</h3>
+        <ol style="color:#4a5568;line-height:1.6;">
+          <li>Download the Excel template using the "Download Excel Template" button</li>
+          <li>Fill in your leads data (one lead per row)</li>
+          <li>Save the file and select it below</li>
+          <li>Click "Import Leads" to upload</li>
+        </ol>
+        <p style="color:#e53e3e;margin-top:10px;font-weight:600;">
+          ⚠️ Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="excelFileInput">Select Excel File (.xlsx)</label>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)"/>
+        <small>Supported formats: .xlsx, .xls</small>
+      </div>
+
+      <div id="filePreview" style="display:none;margin:20px 0;">
+        <h3>File Preview:</h3>
+        <div id="previewContent" class="file-preview" style="max-height:200px;overflow-y:auto;">
+          <!-- Preview content will be inserted here -->
+        </div>
+        <p id="previewSummary" style="color:#4a5568;margin-top:10px;"></p>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" onclick="closeImportModal()">Cancel</button>
+        <button type="button" id="importBtn" class="btn" onclick="importLeads()" disabled>Import Leads</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script>
@@ -214,6 +301,7 @@
     let allLeads = [];
     let currentEditId = null;
     let knownCompanies = [];
+    let currentLeadForProposal = null;
 
     // Track unsaved edits in the modal
     let formInitialSnapshot = '';
@@ -234,6 +322,7 @@
       loadLeads();
       loadCompanyLists();
       setupPhoneFormatting();
+      setupRepPhoneFormatting();
     });
 
     function setupPhoneFormatting(){
@@ -248,6 +337,38 @@
         const ch = String.fromCharCode(e.which);
         if (!/[0-9-]/.test(ch)) e.preventDefault();
       });
+    }
+
+    function setupRepPhoneFormatting() {
+      const repPhoneInput = document.getElementById('repPhone');
+      repPhoneInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g,'');
+        if (v.length >= 6) v = v.slice(0,3)+'-'+v.slice(3,6)+'-'+v.slice(6,10);
+        else if (v.length >= 3) v = v.slice(0,3)+'-'+v.slice(3);
+        e.target.value = v;
+      });
+      repPhoneInput.addEventListener('keypress', (e) => {
+        const ch = String.fromCharCode(e.which);
+        if (!/[0-9-]/.test(ch)) e.preventDefault();
+      });
+    }
+
+    // Show/hide Quantum fields based on business unit selection
+    function toggleQuantumFields() {
+      const businessUnit = document.getElementById('businessUnit').value;
+      const quantumSection = document.getElementById('quantumFieldsSection');
+      
+      if (businessUnit === 'Quantum Solutions') {
+        quantumSection.style.display = 'block';
+        // Make customer address required for Quantum
+        document.getElementById('customerAddress').required = true;
+        document.getElementById('customerZip').required = true;
+      } else {
+        quantumSection.style.display = 'none';
+        // Remove required for other business units
+        document.getElementById('customerAddress').required = false;
+        document.getElementById('customerZip').required = false;
+      }
     }
 
     async function loadLeads(){
@@ -359,6 +480,7 @@
         notes,
         `<div class="action-buttons">
            <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Generate Proposal</button>
            <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
          </div>`
       ];
@@ -416,6 +538,12 @@
       document.getElementById('leadForm').reset();
       document.getElementById('status').value = 'Active';
       document.getElementById('appointmentMade').value = 'No';
+      
+      // Hide Quantum fields by default
+      document.getElementById('quantumFieldsSection').style.display = 'none';
+      document.getElementById('customerAddress').required = false;
+      document.getElementById('customerZip').required = false;
+      
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
       markFormPristineAndWatch();
@@ -438,6 +566,12 @@
       document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
       document.getElementById('notes').value = lead.notes || '';
 
+      // NEW FIELDS
+      document.getElementById('repPhone').value = lead.repPhone || '';
+      document.getElementById('repEmail').value = lead.repEmail || '';
+      document.getElementById('customerAddress').value = lead.customerAddress || '';
+      document.getElementById('customerZip').value = lead.customerZip || '';
+
       if (lead.followUp){
         const d = new Date(lead.followUp);
         if (!isNaN(d)) document.getElementById('followUp').value = d.toISOString().split('T')[0];
@@ -447,6 +581,7 @@
         if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
       }
 
+      toggleQuantumFields();
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
       markFormPristineAndWatch();
@@ -578,6 +713,744 @@
       }
     }
 
+    // ============ PROPOSAL GENERATION FUNCTIONS ============
+
+    function generateProposal(leadId) {
+      const lead = allLeads.find(l => safeLeadId(l) === String(leadId));
+      if (!lead) {
+        showToast('Lead not found. Please refresh the page and try again.', 'error');
+        return;
+      }
+
+      // Store current lead for proposal generation
+      currentLeadForProposal = lead;
+
+      // Validate required fields for proposal generation
+      if (!lead.repPhone || !lead.repEmail) {
+        showToast('Missing sales rep contact information. Please edit the lead and add rep phone and email.', 'error');
+        return;
+      }
+
+      if (lead.businessUnit === 'Abbondanza Vending') {
+        showAbbondanzaProposalModal(lead);
+      } else if (lead.businessUnit === 'Quantum Solutions') {
+        // Validate Quantum-specific required fields
+        if (!lead.customerAddress || !lead.customerZip) {
+          showToast('Missing customer address information required for Quantum Solutions. Please edit the lead first.', 'error');
+          return;
+        }
+        showQuantumProposalModal(lead);
+      } else {
+        showToast('Unknown business unit. Please edit the lead and select a valid business unit.', 'error');
+      }
+    }
+
+    function showAbbondanzaProposalModal(lead) {
+      // Remove any existing proposal modals
+      document.querySelectorAll('[id$="ProposalModal"]').forEach(m => m.remove());
+      
+      // Create modal HTML
+      const modalHTML = `
+        <div id="abbondanzaProposalModal" class="modal" aria-hidden="false" style="display: block;">
+          <div class="modal-content">
+            <span class="close" onclick="closeProposalModal('abbondanzaProposalModal')">&times;</span>
+            <h2>Generate Abbondanza Proposal</h2>
+            
+            <form id="abbondanzaProposalForm">
+              <div class="form-group">
+                <label>Company Information (from lead)</label>
+                <div style="background: #f7fafc; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                  <strong>Company:</strong> ${lead.companyName}<br>
+                  <strong>Contact:</strong> ${lead.contactName || 'N/A'}<br>
+                  <strong>Rep:</strong> ${lead.repName}
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="abboFridgeCount">Number of Fridges *</label>
+                  <input type="number" id="abboFridgeCount" name="fridgeCount" min="1" value="1" required onchange="updateAbboPricing()">
+                </div>
+                <div class="form-group">
+                  <label for="abboMonthlyFee">Base Monthly Rate (1st Unit) *</label>
+                  <select id="abboMonthlyFee" name="monthlyFee" required onchange="updateAbboPricing()">
+                    <option value="395">$395/month</option>
+                    <option value="495">$495/month</option>
+                    <option value="595">$595/month</option>
+                    <option value="695">$695/month</option>
+                    <option value="795" selected>$795/month</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="abboDeliveryFee">Additional Delivery Charges (Optional)</label>
+                <input type="number" id="abboDeliveryFee" name="deliveryFee" min="0" max="5000" step="50" placeholder="0" onchange="updateAbboPricing()">
+                <small>Add extra charges for difficult deliveries or long distances. Must be in $50 increments.</small>
+              </div>
+              
+              <div class="pricing-info">
+                <h3>Pricing Summary</h3>
+                <div id="abboPricingDisplay" class="pricing-display">
+                  Monthly Total: $795/month<br>
+                  Setup Fee: $295 (one-time)
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeProposalModal('abbondanzaProposalModal')">Cancel</button>
+                <button type="button" class="btn" onclick="submitAbbondanzaProposal()">Generate Proposal PDF</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      // Add to page
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Update initial pricing
+      updateAbboPricing();
+    }
+
+    function showQuantumProposalModal(lead) {
+      // Remove any existing proposal modals
+      document.querySelectorAll('[id$="ProposalModal"]').forEach(m => m.remove());
+      
+      // Create modal HTML
+      const modalHTML = `
+        <div id="quantumProposalModal" class="modal" aria-hidden="false" style="display: block;">
+          <div class="modal-content">
+            <span class="close" onclick="closeProposalModal('quantumProposalModal')">&times;</span>
+            <h2>Generate Quantum Solutions Proposal</h2>
+            
+            <form id="quantumProposalForm">
+              <div class="form-group">
+                <label>Lead Information</label>
+                <div style="background: #f7fafc; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                  <strong>Company:</strong> ${lead.companyName}<br>
+                  <strong>Contact:</strong> ${lead.contactName || 'N/A'}<br>
+                  <strong>Address:</strong> ${lead.customerAddress}<br>
+                  <strong>Zip:</strong> ${lead.customerZip}<br>
+                  <strong>Rep:</strong> ${lead.repName}
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="quantumCustomerType">Customer Type *</label>
+                  <select id="quantumCustomerType" name="customerType" required onchange="updateQuantumPricing()">
+                    <option value="new" selected>New Customer (includes scanner)</option>
+                    <option value="existing">Existing Customer (has scanner)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="quantumFridgeCount">Number of Fridges *</label>
+                  <input type="number" id="quantumFridgeCount" name="fridgeCount" min="1" value="1" required onchange="updateQuantumPricing()">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="quantumScannerCount">RFID Scanners Needed</label>
+                  <select id="quantumScannerCount" name="scannerCount" onchange="updateQuantumPricing()">
+                    <option value="0">0 scanners</option>
+                    <option value="1" selected>1 scanner</option>
+                    <option value="2">2 scanners</option>
+                    <option value="3">3 scanners</option>
+                    <option value="4">4 scanners</option>
+                    <option value="5">5 scanners</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="quantumRfidRolls">RFID Tag Rolls (1,000 tags per roll)</label>
+                  <input type="number" id="quantumRfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricing()">
+                  <small>$180 per roll. Recommended starting quantity: 5 rolls.</small>
+                </div>
+              </div>
+              
+              <div class="pricing-info">
+                <h3>Pricing Summary</h3>
+                <div id="quantumPricingDisplay" class="pricing-display">
+                  Loading pricing...
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeProposalModal('quantumProposalModal')">Cancel</button>
+                <button type="button" class="btn" onclick="submitQuantumProposal()">Generate Proposal PDF</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      // Add to page
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Update initial pricing
+      updateQuantumPricing();
+    }
+
+    function updateAbboPricing() {
+      const fridgeCount = parseInt(document.getElementById('abboFridgeCount')?.value) || 1;
+      const basePrice = parseInt(document.getElementById('abboMonthlyFee')?.value) || 795;
+      const additionalDeliveryFee = parseInt(document.getElementById('abboDeliveryFee')?.value) || 0;
+      
+      let monthlyTotal = basePrice;
+      let baseSetupFee = 295;
+      
+      if (fridgeCount > 1) {
+        const additionalUnits = fridgeCount - 1;
+        const discountedPrice = basePrice - 100;
+        monthlyTotal = basePrice + (discountedPrice * additionalUnits);
+        baseSetupFee = 295 + (79 * additionalUnits);
+      }
+      
+      const totalSetupFee = baseSetupFee + additionalDeliveryFee;
+      
+      let pricingText = `Monthly Total: $${monthlyTotal}/month`;
+      if (fridgeCount > 1) {
+        pricingText += ` (${fridgeCount} fridges)<br>`;
+        pricingText += `First unit: $${basePrice}/month<br>`;
+        pricingText += `Additional units: $${basePrice - 100}/month each<br>`;
+      } else {
+        pricingText += '<br>';
+      }
+      pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
+      
+      const display = document.getElementById('abboPricingDisplay');
+      if (display) display.innerHTML = pricingText;
+    }
+
+    function updateQuantumPricing() {
+      const fridgeCount = parseInt(document.getElementById('quantumFridgeCount')?.value) || 1;
+      const scannerCount = parseInt(document.getElementById('quantumScannerCount')?.value) || 0;
+      const rfidRolls = parseInt(document.getElementById('quantumRfidRolls')?.value) || 0;
+      
+      // Quantum pricing constants
+      const fridgePrice = 7500;
+      const scannerPrice = 455;
+      const rfidRollPrice = 180;
+      const licenseMonthly = 175;
+      const lteMonthly = 25;
+      
+      // Calculate freight (simplified version)
+      let freight = fridgeCount * 895; // Base freight calculation
+      
+      const fridgeTotal = fridgeCount * fridgePrice;
+      const scannerTotal = scannerCount * scannerPrice;
+      const rfidTotal = rfidRolls * rfidRollPrice;
+      const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + freight;
+      
+      const monthlyLicense = fridgeCount * licenseMonthly;
+      const monthlyLTE = fridgeCount * lteMonthly;
+      const monthlyTotal = monthlyLicense + monthlyLTE;
+      
+      const pricingText = `
+        <strong>One-Time Costs:</strong><br>
+        Food Fridges (${fridgeCount}): $${fridgeTotal.toLocaleString()}<br>
+        ${scannerCount > 0 ? `RFID Scanners (${scannerCount}): $${scannerTotal.toLocaleString()}<br>` : ''}
+        ${rfidRolls > 0 ? `RFID Tags (${rfidRolls} rolls): $${rfidTotal.toLocaleString()}<br>` : ''}
+        Freight: $${freight.toLocaleString()}<br>
+        <strong>One-Time Total: $${oneTimeTotal.toLocaleString()}</strong><br><br>
+        <strong>Monthly Recurring:</strong><br>
+        License Fees: $${monthlyLicense.toLocaleString()}/month<br>
+        LTE Service: $${monthlyLTE.toLocaleString()}/month<br>
+        <strong>Monthly Total: $${monthlyTotal.toLocaleString()}/month</strong>
+      `;
+      
+      const display = document.getElementById('quantumPricingDisplay');
+      if (display) display.innerHTML = pricingText;
+    }
+
+    function closeProposalModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.remove();
+    }
+
+    function getCurrentLead() {
+      return currentLeadForProposal;
+    }
+
+    async function submitAbbondanzaProposal() {
+      const lead = getCurrentLead();
+      if (!lead) {
+        showToast('Lead data not found. Please close and try again.', 'error');
+        return;
+      }
+
+      // Get form values
+      const fridgeCount = document.getElementById('abboFridgeCount').value;
+      const monthlyFee = document.getElementById('abboMonthlyFee').value;
+      const deliveryFee = document.getElementById('abboDeliveryFee').value || '';
+
+      // Build form data for Abbondanza system
+      const formData = {
+        companyName: lead.companyName,
+        contactName: lead.contactName || '',
+        preparedBy: lead.repName,
+        preparedByPhone: lead.repPhone,
+        preparedByEmail: lead.repEmail,
+        fridgeCount: fridgeCount,
+        monthlyFee: monthlyFee,
+        deliveryFee: deliveryFee
+      };
+
+      // Show loading state
+      const submitBtn = document.querySelector('#abbondanzaProposalModal button[onclick="submitAbbondanzaProposal()"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Generating...';
+
+      try {
+        // Use your existing Abbondanza Web App URL
+        const ABBONDANZA_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
+        
+        // Build URL parameters
+        const params = new URLSearchParams();
+        Object.keys(formData).forEach(key => {
+          if (formData[key]) params.append(key, formData[key]);
+        });
+        
+        const proposalUrl = `${ABBONDANZA_URL}?${params.toString()}`;
+        
+        // Open in new tab (same as your existing dashboard)
+        window.open(proposalUrl, '_blank');
+        
+        // Close modal and show success message
+        closeProposalModal('abbondanzaProposalModal');
+        showToast(`Abbondanza proposal generation started for ${lead.companyName}. Check the new tab for results.`, 'success');
+        
+      } catch (error) {
+        console.error('Error generating Abbondanza proposal:', error);
+        showToast('Error generating proposal: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+
+    async function submitQuantumProposal() {
+      const lead = getCurrentLead();
+      if (!lead) {
+        showToast('Lead data not found. Please close and try again.', 'error');
+        return;
+      }
+
+      // Get form values
+      const customerType = document.getElementById('quantumCustomerType').value;
+      const fridgeCount = document.getElementById('quantumFridgeCount').value;
+      const scannerCount = document.getElementById('quantumScannerCount').value;
+      const rfidRolls = document.getElementById('quantumRfidRolls').value;
+
+      // Build form data for Quantum system
+      const formData = {
+        companyName: lead.companyName,
+        contactName: lead.contactName || '',
+        customerAddress: lead.customerAddress,
+        customerZip: lead.customerZip,
+        preparedBy: lead.repName,
+        preparedByPhone: lead.repPhone,
+        preparedByEmail: lead.repEmail,
+        customerType: customerType,
+        fridgeCount: fridgeCount,
+        scannerCount: scannerCount,
+        rfidRolls: rfidRolls,
+        vinylWrap: 'No', // Default values for fields not in lead
+        goldSupport: 'No'
+      };
+
+      // Show loading state
+      const submitBtn = document.querySelector('#quantumProposalModal button[onclick="submitQuantumProposal()"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Generating...';
+
+      try {
+        // Use your existing Quantum Web App URL
+        const QUANTUM_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
+        
+        const params = new URLSearchParams();
+        Object.keys(formData).forEach(key => {
+          if (formData[key]) params.append(key, formData[key]);
+        });
+
+        // Call Quantum API
+        const response = await fetch(`${QUANTUM_URL}?${params.toString()}`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          closeProposalModal('quantumProposalModal');
+          
+          // Show success message with PDF link
+          showToast(`Quantum proposal generated successfully for ${lead.companyName}!`, 'success');
+          
+          // Open PDF in new tab
+          if (result.pdfUrl) {
+            window.open(result.pdfUrl, '_blank');
+          }
+          
+        } else {
+          throw new Error(result.message || 'Failed to generate proposal');
+        }
+        
+      } catch (error) {
+        console.error('Error generating Quantum proposal:', error);
+        showToast('Error generating proposal: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+
+    // ============ EXCEL IMPORT/EXPORT FUNCTIONS ============
+
+    // Excel Template Download
+    function downloadLeadTemplate() {
+      // Define the template structure with all fields including new ones
+      const templateData = [
+        // Header row
+        [
+          'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+          'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer Zip',
+          'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
+        ],
+        // Example row with sample data
+        [
+          'Abbondanza Vending', 'Sample Company Inc', 'John Smith', '555-123-4567', 'john@samplecompany.com',
+          'Sales Rep Name', '555-987-6543', 'rep@company.com', 'Boston, MA', '02101',
+          'Active', '', 'No', '', 'Sample notes here'
+        ],
+        // Second example for Quantum
+        [
+          'Quantum Solutions', 'Tech Corp LLC', 'Jane Doe', '555-555-5555', 'jane@techcorp.com',
+          'Sales Rep Name', '555-987-6543', 'rep@company.com', 'New York, NY', '10001',
+          'Active', '', 'No', '', 'Quantum customer example'
+        ]
+      ];
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+      
+      // Set column widths for better readability
+      const colWidths = [
+        {wch: 18}, // Business Unit
+        {wch: 25}, // Company Name
+        {wch: 18}, // Contact Name
+        {wch: 15}, // Phone Number
+        {wch: 25}, // Email Address
+        {wch: 18}, // Rep Name
+        {wch: 15}, // Rep Phone
+        {wch: 25}, // Rep Email
+        {wch: 20}, // Customer Address
+        {wch: 12}, // Customer Zip
+        {wch: 12}, // Status
+        {wch: 15}, // Follow Up Date
+        {wch: 15}, // Appointment Made
+        {wch: 15}, // Appointment Date
+        {wch: 30}  // Notes
+      ];
+      ws['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Lead Template");
+      
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Lead_Import_Template_${date}.xlsx`;
+      
+      // Download the file
+      XLSX.writeFile(wb, filename);
+      
+      showToast('Excel template downloaded successfully! Fill it out and use "Import Excel File" to upload your leads.', 'success');
+    }
+
+    // Import Modal Management
+    function openImportModal() {
+      document.getElementById('importModal').style.display = 'block';
+      // Reset the modal state
+      document.getElementById('excelFileInput').value = '';
+      document.getElementById('filePreview').style.display = 'none';
+      document.getElementById('importBtn').disabled = true;
+    }
+
+    function closeImportModal() {
+      document.getElementById('importModal').style.display = 'none';
+      // Clear any stored file data
+      window.importFileData = null;
+    }
+
+    // File Selection and Preview
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('importBtn').disabled = true;
+        return;
+      }
+
+      // Check file type
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel' // .xls
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Please select a valid Excel file (.xlsx or .xls)', 'error');
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          
+          // Store the data for import
+          window.importFileData = jsonData;
+          
+          // Show preview
+          showFilePreview(jsonData);
+          
+        } catch (error) {
+          console.error('Error reading Excel file:', error);
+          showToast('Error reading Excel file. Please make sure it\'s a valid Excel file.', 'error');
+          event.target.value = '';
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+
+    function showFilePreview(data) {
+      if (!data || data.length < 2) {
+        showToast('Excel file appears to be empty or invalid.', 'error');
+        return;
+      }
+
+      const headers = data[0];
+      const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
+      
+      // Create preview HTML
+      let previewHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      
+      // Headers
+      previewHTML += '<tr style="background:#1e3a8a;color:white;">';
+      headers.forEach(header => {
+        previewHTML += `<th style="border:1px solid #ccc;padding:8px;text-align:left;">${header || ''}</th>`;
+      });
+      previewHTML += '</tr>';
+      
+      // Show first 5 rows as preview
+      const previewRows = rows.slice(0, 5);
+      previewRows.forEach(row => {
+        previewHTML += '<tr>';
+        headers.forEach((_, index) => {
+          const cellValue = row[index] || '';
+          previewHTML += `<td style="border:1px solid #ccc;padding:8px;">${String(cellValue).substring(0, 30)}${String(cellValue).length > 30 ? '...' : ''}</td>`;
+        });
+        previewHTML += '</tr>';
+      });
+      
+      previewHTML += '</table>';
+      
+      document.getElementById('previewContent').innerHTML = previewHTML;
+      document.getElementById('previewSummary').textContent = 
+        `Found ${rows.length} lead${rows.length !== 1 ? 's' : ''} to import` + 
+        (rows.length > 5 ? ` (showing first 5 rows)` : '');
+      
+      document.getElementById('filePreview').style.display = 'block';
+      document.getElementById('importBtn').disabled = false;
+    }
+
+    // Import Function
+    async function importLeads() {
+      if (!window.importFileData) {
+        showToast('No file data found. Please select a file first.', 'error');
+        return;
+      }
+
+      const importBtn = document.getElementById('importBtn');
+      const originalText = importBtn.textContent;
+      importBtn.disabled = true;
+      importBtn.textContent = 'Importing...';
+
+      try {
+        const data = window.importFileData;
+        const headers = data[0];
+        const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
+
+        // Map headers to expected field names
+        const fieldMapping = {
+          'Business Unit': 'businessUnit',
+          'Company Name': 'companyName',
+          'Contact Name': 'contactName',
+          'Phone Number': 'phoneNumber',
+          'Email Address': 'emailAddress',
+          'Rep Name': 'repName',
+          'Rep Phone': 'repPhone',
+          'Rep Email': 'repEmail',
+          'Customer Address': 'customerAddress',
+          'Customer Zip': 'customerZip',
+          'Status': 'status',
+          'Follow Up Date': 'followUp',
+          'Appointment Made': 'appointmentMade',
+          'Appointment Date': 'appointmentDate',
+          'Notes': 'notes'
+        };
+
+        const leads = [];
+        const errors = [];
+
+        rows.forEach((row, index) => {
+          const lead = {};
+          let hasRequiredFields = true;
+          const requiredFields = ['businessUnit', 'companyName', 'repName', 'repPhone', 'repEmail'];
+
+          // Map each cell to the corresponding field
+          headers.forEach((header, cellIndex) => {
+            const fieldName = fieldMapping[header];
+            if (fieldName && row[cellIndex] !== undefined && row[cellIndex] !== null) {
+              lead[fieldName] = String(row[cellIndex]).trim();
+            }
+          });
+
+          // Set defaults
+          if (!lead.status) lead.status = 'Active';
+          if (!lead.appointmentMade) lead.appointmentMade = 'No';
+
+          // Validate required fields
+          requiredFields.forEach(field => {
+            if (!lead[field]) {
+              hasRequiredFields = false;
+              errors.push(`Row ${index + 2}: Missing ${field}`);
+            }
+          });
+
+          if (hasRequiredFields) {
+            leads.push(lead);
+          }
+        });
+
+        if (errors.length > 0) {
+          console.warn('Import validation errors:', errors);
+          const errorMsg = `Found ${errors.length} error${errors.length !== 1 ? 's' : ''}:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...(and more)' : ''}`;
+          showToast(errorMsg, 'error');
+          return;
+        }
+
+        if (leads.length === 0) {
+          showToast('No valid leads found in the Excel file.', 'error');
+          return;
+        }
+
+        // Import leads one by one
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < leads.length; i++) {
+          try {
+            const response = await fetch(WEB_APP_URL + '?action=addLead', {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+              body: JSON.stringify({ action: 'addLead', lead: leads[i] })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+              successCount++;
+            } else {
+              failCount++;
+              console.error(`Failed to import lead ${i + 1}:`, result.message);
+            }
+          } catch (error) {
+            failCount++;
+            console.error(`Error importing lead ${i + 1}:`, error);
+          }
+        }
+
+        // Close modal and show results
+        closeImportModal();
+        
+        if (successCount > 0) {
+          showToast(`Successfully imported ${successCount} lead${successCount !== 1 ? 's' : ''}!${failCount > 0 ? ` (${failCount} failed)` : ''}`, 'success');
+          // Reload leads to show imported data
+          await loadLeads();
+        } else {
+          showToast('Failed to import any leads. Please check the file format and try again.', 'error');
+        }
+
+      } catch (error) {
+        console.error('Import error:', error);
+        showToast('Error during import: ' + error.message, 'error');
+      } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = originalText;
+      }
+    }
+
+    // Export current leads to Excel
+    function exportLeadsToExcel() {
+      if (!allLeads || allLeads.length === 0) {
+        showToast('No leads to export. Please add some leads first.', 'error');
+        return;
+      }
+
+      const exportData = [
+        // Headers
+        [
+          'Date Added', 'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+          'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer Zip',
+          'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
+        ]
+      ];
+
+      // Data rows
+      allLeads.forEach(lead => {
+        exportData.push([
+          lead.dateAdded || '',
+          lead.businessUnit || '',
+          lead.companyName || '',
+          lead.contactName || '',
+          lead.phoneNumber || '',
+          lead.emailAddress || '',
+          lead.repName || '',
+          lead.repPhone || '',
+          lead.repEmail || '',
+          lead.customerAddress || '',
+          lead.customerZip || '',
+          lead.status || '',
+          lead.followUp || '',
+          lead.appointmentMade || '',
+          lead.appointmentDate || '',
+          lead.notes || ''
+        ]);
+      });
+
+      // Create and download Excel file
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(exportData);
+      
+      // Set column widths
+      ws['!cols'] = [
+        {wch: 12}, {wch: 18}, {wch: 25}, {wch: 18}, {wch: 15}, {wch: 25},
+        {wch: 18}, {wch: 15}, {wch: 25}, {wch: 20}, {wch: 12},
+        {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Leads Export");
+      
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Leads_Export_${date}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      
+      showToast(`Exported ${allLeads.length} leads to ${filename}`, 'success');
+    }
+
     function showToast(msg, type='success'){
       const el = document.getElementById('toast');
       el.textContent = msg;
@@ -596,6 +1469,7 @@
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
+    // Global function exports
     window.openAddLeadModal = openAddLeadModal;
     window.editLead = editLead;
     window.archiveLead = archiveLead;
@@ -603,6 +1477,21 @@
     window.filterLeads = filterLeads;
     window.attemptCloseModal = attemptCloseModal;
     window.goToDashboard = () => { window.location.href = 'index.html'; };
+    
+    // New function exports
+    window.toggleQuantumFields = toggleQuantumFields;
+    window.generateProposal = generateProposal;
+    window.closeProposalModal = closeProposalModal;
+    window.updateAbboPricing = updateAbboPricing;
+    window.updateQuantumPricing = updateQuantumPricing;
+    window.submitAbbondanzaProposal = submitAbbondanzaProposal;
+    window.submitQuantumProposal = submitQuantumProposal;
+    window.downloadLeadTemplate = downloadLeadTemplate;
+    window.openImportModal = openImportModal;
+    window.closeImportModal = closeImportModal;
+    window.handleFileSelect = handleFileSelect;
+    window.importLeads = importLeads;
+    window.exportLeadsToExcel = exportLeadsToExcel;
   </script>
 </body>
 </html>
