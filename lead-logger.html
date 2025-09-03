@@ -490,6 +490,15 @@
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
         allLeads = data.leads || [];
+        
+        // DEBUG: Check what data we're getting from the backend
+        console.log('Loaded leads from backend:', allLeads);
+        if (allLeads.length > 0) {
+          console.log('Sample lead data:', allLeads[0]);
+          console.log('Sample lead repPhone:', allLeads[0].repPhone);
+          console.log('Sample lead repEmail:', allLeads[0].repEmail);
+        }
+        
         updateRepFilter();
         filterLeads(); // ← render using current dropdowns (default = Active)
       }catch(err){
