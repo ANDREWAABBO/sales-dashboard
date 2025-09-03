@@ -829,7 +829,7 @@
       const button = event.target;
       const originalText = button.innerHTML;
       button.disabled = true;
-      button.innerHTML = '...';
+      button.innerHTML = '<span class="loading-spinner"></span>';
       
       try {
         const callbackName = 'archiveCallback_' + Date.now();
