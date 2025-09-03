@@ -299,6 +299,7 @@
     }
 
     #clearQuantumSearchBtn {
+      position: absolute !important;
       right: 8px !important;
       top: 50% !important;
       transform: translateY(-50%) !important;
@@ -845,6 +846,8 @@
             <option value="all">All Proposals</option>
           </select>
           
+          <button onclick="loadQuantumProposalsFromDrive()" style="background:#10b981;color:white;padding:10px 16px;font-size:14px;border-radius:6px;font-weight:500;border:none;cursor:pointer;transition:all 0.3s ease;">Refresh</button>
+          
           <div style="position:relative;flex:1;">
             <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."
                    style="width:100%;"
@@ -853,8 +856,6 @@
                    onblur="this.style.borderColor='#e2e8f0'">
             <button id="clearQuantumSearchBtn" onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();">×</button>
           </div>
-          
-          <button class="btn btn-primary" onclick="closeQuantumProposalViewer(); setTimeout(openQuantumProposalGenerator, 200);" style="padding:10px 16px;font-size:14px;white-space:nowrap;">+ New Proposal</button>
         </div>
         
         <div id="quantumProposalsList" style="display:grid;gap:12px;max-height:60vh;overflow-y:auto;padding-right:4px;">
