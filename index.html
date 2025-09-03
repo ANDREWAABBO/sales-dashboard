@@ -1346,9 +1346,9 @@
                 </p>
               </div>
               <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="viewServiceAgreementPDF('${a.id}', '${a.name}')" style="padding: 10px 20px; font-size: 14px; min-width: 80px;">View</button>
-                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${a.id}', '_blank')" style="padding: 10px 20px; font-size: 14px; min-width: 80px;">Download</button>
-                <button class="btn archive-btn" onclick="toggleServiceAgreementArchive('${a.id}', '${a.status || 'active'}', event)">${archiveButtonText}</button>
+                <button class="btn btn-primary" onclick="viewServiceAgreementPDF('${a.id}', '${a.name}')" style="padding: 12px 24px; font-size: 14px; min-width: 90px;">View</button>
+                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${a.id}', '_blank')" style="padding: 12px 24px; font-size: 14px; min-width: 100px;">Download</button>
+                <button class="btn archive-btn" onclick="toggleServiceAgreementArchive('${a.id}', '${a.status || 'active'}', event)" style="padding: 12px 24px; font-size: 14px; min-width: 90px;">${archiveButtonText}</button>
               </div>
             </div>
           </div>`;
