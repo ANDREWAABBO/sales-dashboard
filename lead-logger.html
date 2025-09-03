@@ -253,6 +253,7 @@
           </div>
         </div>
 
+        <!-- FIXED: Always show Rep Phone and Email fields -->
         <div class="form-row">
           <div class="form-group">
             <label for="repPhone">Rep Phone *</label>
@@ -264,16 +265,16 @@
           </div>
         </div>
 
-        <!-- Conditional section for Quantum Solutions -->
+        <!-- Conditional section for Quantum Solutions ONLY -->
         <div id="quantumFieldsSection" style="display:none;">
           <div class="section-header">Customer Location (Required for Quantum Solutions)</div>
           <div class="form-row">
             <div class="form-group">
-              <label for="customerAddress">Customer Address</label>
+              <label for="customerAddress">Customer Address *</label>
               <input type="text" id="customerAddress" name="customerAddress" placeholder="City, State"/>
             </div>
             <div class="form-group">
-              <label for="customerZip">Customer Zip Code</label>
+              <label for="customerZip">Customer Zip Code *</label>
               <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345"/>
             </div>
           </div>
@@ -317,33 +318,31 @@
       <span class="close" onclick="closeImportModal()">&times;</span>
       <h2>Import Leads from Excel</h2>
       
-      <div class="modal-body">
-        <div style="background:#f0f8ff;padding:20px;border-radius:8px;margin:20px 0;border:1px solid #b3d9ff;">
-          <h3 style="color:#2c5aa0;margin-bottom:10px;">Instructions:</h3>
-          <ol style="color:#4a5568;line-height:1.6;">
-            <li>Download the Excel template using the "Download Excel Template" button</li>
-            <li>Fill in your leads data (one lead per row)</li>
-            <li>Save the file and select it below</li>
-            <li>Click "Import Leads" to upload</li>
-          </ol>
-          <p style="color:#e53e3e;margin-top:10px;font-weight:600;">
-            ⚠️ Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
-          </p>
-        </div>
+      <div style="background:#f0f8ff;padding:20px;border-radius:8px;margin:20px 0;border:1px solid #b3d9ff;">
+        <h3 style="color:#2c5aa0;margin-bottom:10px;">Instructions:</h3>
+        <ol style="color:#4a5568;line-height:1.6;">
+          <li>Download the Excel template using the "Download Excel Template" button</li>
+          <li>Fill in your leads data (one lead per row)</li>
+          <li>Save the file and select it below</li>
+          <li>Click "Import Leads" to upload</li>
+        </ol>
+        <p style="color:#e53e3e;margin-top:10px;font-weight:600;">
+          ⚠️ Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
+        </p>
+      </div>
 
-        <div class="form-group">
-          <label for="excelFileInput">Select Excel File (.xlsx)</label>
-          <input type="file" id="excelFileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)"/>
-          <small>Supported formats: .xlsx, .xls</small>
-        </div>
+      <div class="form-group">
+        <label for="excelFileInput">Select Excel File (.xlsx)</label>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)"/>
+        <small>Supported formats: .xlsx, .xls</small>
+      </div>
 
-        <div id="filePreview" style="display:none;margin:20px 0;">
-          <h3>File Preview:</h3>
-          <div id="previewContent" class="file-preview" style="max-height:200px;overflow-y:auto;">
-            <!-- Preview content will be inserted here -->
-          </div>
-          <p id="previewSummary" style="color:#4a5568;margin-top:10px;"></p>
+      <div id="filePreview" style="display:none;margin:20px 0;">
+        <h3>File Preview:</h3>
+        <div id="previewContent" class="file-preview" style="max-height:200px;overflow-y:auto;">
+          <!-- Preview content will be inserted here -->
         </div>
+        <p id="previewSummary" style="color:#4a5568;margin-top:10px;"></p>
       </div>
 
       <div class="form-actions">
@@ -400,14 +399,12 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, starting initialization...');
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
 
       // static backdrop
       const modal = document.getElementById('leadModal');
       modal.addEventListener('click', (e) => { if (e.target === modal) e.stopPropagation(); });
 
-      console.log('Loading leads and company lists...');
       loadLeads();
       loadCompanyLists();
       setupPhoneFormatting();
@@ -464,7 +461,7 @@
       notesTooltip.classList.remove('show');
     }
 
-    // Show/hide Quantum fields based on business unit selection
+    // FIXED: Show/hide Quantum fields based on business unit selection
     function toggleQuantumFields() {
       const businessUnit = document.getElementById('businessUnit').value;
       const quantumSection = document.getElementById('quantumFieldsSection');
@@ -484,55 +481,22 @@
 
     async function loadLeads(){
       try{
-        console.log('Starting to load leads...');
         document.getElementById('loadingState').style.display='block';
         document.getElementById('leadsTable').style.display='none';
         document.getElementById('emptyState').style.display='none';
 
-        console.log('Calling API:', WEB_APP_URL + '?action=getLeads');
-        const res = await fetch(WEB_APP_URL + '?action=getLeads', {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-        
-        console.log('Response status:', res.status);
-        console.log('Response ok:', res.ok);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        
+        const res = await fetch(WEB_APP_URL + '?action=getLeads');
         const data = await res.json();
-        console.log('Response data:', data);
-        
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
         allLeads = data.leads || [];
-        console.log('Loaded leads count:', allLeads.length);
         updateRepFilter();
         filterLeads(); // ← render using current dropdowns (default = Active)
       }catch(err){
         console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
         document.getElementById('emptyState').style.display='block';
-        
-        // Show more detailed error message
-        const emptyState = document.getElementById('emptyState');
-        emptyState.innerHTML = `
-          <h3>Error Loading Leads</h3>
-          <p style="color:#e53e3e;margin:10px 0;">${err.message}</p>
-          <p>Please check:</p>
-          <ul style="text-align:left;margin:10px auto;display:inline-block;">
-            <li>Internet connection</li>
-            <li>Google Apps Script deployment status</li>
-            <li>Web app permissions</li>
-          </ul>
-          <button class="btn" onclick="loadLeads()" style="margin-top:15px;">Retry</button>
-        `;
-        
-        showToast('Error loading leads: ' + err.message, 'error');
+        showToast('Error loading leads. ' + err.message, 'error');
       }
     }
 
@@ -722,7 +686,7 @@
       document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
       document.getElementById('notes').value = lead.notes || '';
 
-      // NEW FIELDS
+      // NEW FIELDS - Always populate these
       document.getElementById('repPhone').value = lead.repPhone || '';
       document.getElementById('repEmail').value = lead.repEmail || '';
       document.getElementById('customerAddress').value = lead.customerAddress || '';
@@ -737,6 +701,7 @@
         if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
       }
 
+      // FIXED: Call toggleQuantumFields AFTER setting businessUnit value
       toggleQuantumFields();
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
@@ -943,6 +908,7 @@
 
     // ============ PROPOSAL GENERATION FUNCTIONS ============
 
+    // FIXED: Generate Proposal - Main Router Function
     function generateProposal(leadId) {
       const lead = allLeads.find(l => safeLeadId(l) === String(leadId));
       if (!lead) {
@@ -953,7 +919,7 @@
       // Store current lead for proposal generation
       currentLeadForProposal = lead;
 
-      // Validate required fields for proposal generation
+      // FIXED: More robust validation with better error messages
       if (!lead.repPhone || !lead.repEmail) {
         showToast('Missing sales rep contact information. Please edit the lead and add rep phone and email.', 'error');
         return;
