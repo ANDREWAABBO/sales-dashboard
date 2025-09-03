@@ -166,6 +166,143 @@
       border-radius: 50%; animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Fixed proposal item styling to prevent button overlap */
+    .proposal-item {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      border: 2px solid #e2e8f0;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      min-height: 120px; /* Ensure minimum height */
+    }
+
+    .proposal-item:hover {
+      border-color: #1e3a8a;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+    .proposal-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start; /* Changed from center to flex-start */
+      flex-wrap: wrap;
+      gap: 20px; /* Increased gap */
+      min-height: 80px; /* Ensure content area has minimum height */
+    }
+
+    .proposal-text {
+      flex: 1;
+      min-width: 250px; /* Increased minimum width */
+      padding-right: 20px; /* Add right padding to create space */
+    }
+
+    .proposal-text h4 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+      font-size: 18px;
+      word-wrap: break-word; /* Handle long company names */
+      line-height: 1.3;
+    }
+
+    .proposal-text p {
+      margin: 0;
+      color: #718096;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .proposal-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0; /* Prevent buttons from shrinking */
+      align-items: flex-start; /* Align buttons to top */
+    }
+
+    .proposal-buttons .btn {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      min-width: 120px;
+      white-space: nowrap; /* Prevent text wrapping in buttons */
+    }
+
+    /* Archive filter dropdown styles */
+    .filter-container {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .archive-filter {
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 16px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 180px;
+    }
+
+    .archive-filter:focus {
+      outline: none;
+      border-color: #1e3a8a;
+    }
+
+    /* Archive button styling */
+    .archive-btn {
+      background: #f59e0b !important;
+      font-size: 14px !important;
+      padding: 10px 20px !important;
+      min-width: 100px !important;
+    }
+
+    .archive-btn:hover {
+      background: #d97706 !important;
+    }
+
+    .archived-item {
+      opacity: 0.7;
+      background: #f8fafc !important;
+    }
+
+    .archived-badge {
+      background: #f59e0b;
+      color: white;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .proposal-content {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .proposal-text {
+        padding-right: 0;
+        margin-bottom: 15px;
+      }
+
+      .proposal-buttons {
+        justify-content: flex-start;
+      }
+
+      .filter-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
   </style>
 </head>
 
@@ -326,6 +463,10 @@
 
   <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
+    // Global variables for archive functionality
+    window.allQuantumProposals = null;
+    window.currentArchiveFilter = 'active'; // 'active', 'archived', 'all'
+
     // Expose everything used by inline HTML attributes:
     window.openQuantumAboutUs = function openQuantumAboutUs() {
       const existingOverlay = document.querySelector('.modal-overlay');
@@ -637,6 +778,7 @@
       if (existingOverlay) existingOverlay.remove();
 
       window.allQuantumProposals = null;
+      window.currentArchiveFilter = 'active';
 
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay proposal-viewer-overlay';
@@ -651,16 +793,26 @@
           <h3 style="margin:0;color:#2d3748;font-size:1.8em;">Quantum Proposal Library</h3>
           <button class="close-btn" onclick="closeQuantumProposalViewer()">✕</button>
         </div>
-        <div style="margin-bottom:20px;position:relative;">
-          <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."
-                 style="width:100%;padding:15px 45px 15px 15px;font-size:16px;border:2px solid #e2e8f0;border-radius:10px;transition:all .3s ease;"
-                 onkeyup="filterQuantumProposals()"
-                 onfocus="this.style.borderColor='#1e3a8a'"
-                 onblur="this.style.borderColor='#e2e8f0'">
-          <button id="clearQuantumSearchBtn"
-                  onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();"
-                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">×</button>
+        
+        <div class="filter-container">
+          <select id="quantumArchiveFilter" class="archive-filter" onchange="changeQuantumArchiveFilter()">
+            <option value="active">Active Proposals</option>
+            <option value="archived">Archived Proposals</option>
+            <option value="all">All Proposals</option>
+          </select>
+          
+          <div style="position:relative;flex:1;">
+            <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."
+                   style="width:100%;padding:15px 45px 15px 15px;font-size:16px;border:2px solid #e2e8f0;border-radius:10px;transition:all .3s ease;"
+                   onkeyup="filterQuantumProposals()"
+                   onfocus="this.style.borderColor='#1e3a8a'"
+                   onblur="this.style.borderColor='#e2e8f0'">
+            <button id="clearQuantumSearchBtn"
+                    onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();"
+                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">×</button>
+          </div>
         </div>
+        
         <div id="quantumProposalsList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
           <div style="text-align:center;padding:40px;">
             <div class="loading-spinner"></div>
@@ -675,6 +827,42 @@
     window.closeQuantumProposalViewer = function closeQuantumProposalViewer() {
       const overlay = document.querySelector('.proposal-viewer-overlay');
       if (overlay) overlay.remove();
+    };
+
+    // Archive filter functions
+    window.changeQuantumArchiveFilter = function changeQuantumArchiveFilter() {
+      const filter = document.getElementById('quantumArchiveFilter');
+      window.currentArchiveFilter = filter.value;
+      filterQuantumProposals();
+    };
+
+    // Archive toggle function
+    window.toggleQuantumProposalArchive = function toggleQuantumProposalArchive(proposalId, currentStatus) {
+      const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
+      
+      // Update the proposal in our local data
+      if (window.allQuantumProposals) {
+        const proposal = window.allQuantumProposals.find(p => p.id === proposalId);
+        if (proposal) {
+          proposal.status = newStatus;
+          proposal.archivedDate = newStatus === 'archived' ? new Date().toISOString() : null;
+        }
+      }
+      
+      // TODO: Make API call to update the proposal status in your backend
+      // For now, we'll just update the display
+      console.log(`Proposal ${proposalId} ${newStatus === 'archived' ? 'archived' : 'unarchived'}`);
+      
+      // Refresh the display
+      filterQuantumProposals();
+      
+      // Show success message
+      showQuantumPopup(`
+        <div class="success-popup">
+          <h3>${newStatus === 'archived' ? '📁' : '📋'} Proposal ${newStatus === 'archived' ? 'Archived' : 'Restored'}</h3>
+          <p>The proposal has been ${newStatus === 'archived' ? 'archived' : 'restored'} successfully.</p>
+        </div>
+      `, 'success');
     };
 
     async function loadQuantumProposalsFromDrive() {
@@ -707,8 +895,16 @@
 
         if (data.status === 'success') {
           const sortedProposals = (data.proposals || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+          
+          // Add status field if not present (for backward compatibility)
+          sortedProposals.forEach(proposal => {
+            if (!proposal.status) {
+              proposal.status = 'active';
+            }
+          });
+          
           window.allQuantumProposals = sortedProposals;
-          displayQuantumProposals(sortedProposals);
+          filterQuantumProposals();
         } else {
           throw new Error(data.message || 'Failed to load proposals');
         }
@@ -728,28 +924,40 @@
     function displayQuantumProposals(proposals) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (!proposalsList) return;
+      
       if (proposals.length === 0) {
-        proposalsList.innerHTML = `<div style="text-align:center;padding:40px;color:#718096;"><p>No proposals found in the library.</p></div>`;
+        const filterText = window.currentArchiveFilter === 'active' ? 'active' : 
+                          window.currentArchiveFilter === 'archived' ? 'archived' : '';
+        proposalsList.innerHTML = `<div style="text-align:center;padding:40px;color:#718096;"><p>No ${filterText} proposals found in the library.</p></div>`;
         return;
       }
-      proposalsList.innerHTML = proposals.map(proposal => `
-        <div class="proposal-item" style="background:white;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.05);"
-             onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
-             onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
-            <div style="flex:1;min-width:200px;">
-              <h4 style="margin:0 0 8px 0;color:#2d3748;font-size:18px;">${proposal.companyName}</h4>
-              <p style="margin:0;color:#718096;font-size:14px;">
-                ${proposal.name}<br>
-                Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
-              </p>
+      
+      proposalsList.innerHTML = proposals.map(proposal => {
+        const isArchived = proposal.status === 'archived';
+        const archiveButtonText = isArchived ? '📋 Restore' : '📁 Archive';
+        const archiveButtonClass = isArchived ? 'btn archive-btn' : 'btn archive-btn';
+        const itemClass = isArchived ? 'proposal-item archived-item' : 'proposal-item';
+        const archivedBadge = isArchived ? '<span class="archived-badge">Archived</span>' : '';
+        
+        return `
+          <div class="${itemClass}">
+            <div class="proposal-content">
+              <div class="proposal-text">
+                <h4>${proposal.companyName}${archivedBadge}</h4>
+                <p>
+                  ${proposal.name}<br>
+                  Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
+                  ${isArchived && proposal.archivedDate ? `<br>Archived: ${new Date(proposal.archivedDate).toLocaleDateString()}` : ''}
+                </p>
+              </div>
+              <div class="proposal-buttons">
+                <button class="btn btn-primary" onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')">📄 View</button>
+                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')">📥 Download</button>
+                <button class="${archiveButtonClass}" onclick="toggleQuantumProposalArchive('${proposal.id}', '${proposal.status || 'active'}')">${archiveButtonText}</button>
+              </div>
             </div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-              <button class="btn btn-primary" onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📄 View</button>
-              <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📥 Download</button>
-            </div>
-          </div>
-        </div>`).join('');
+          </div>`;
+      }).join('');
     }
 
     window.filterQuantumProposals = function filterQuantumProposals() {
@@ -760,19 +968,32 @@
       clearBtn.style.display = term.length > 0 ? 'block' : 'none';
 
       if (!window.allQuantumProposals || window.allQuantumProposals.length === 0) return;
-      if (!term) { displayQuantumProposals(window.allQuantumProposals); return; }
 
-      const filtered = window.allQuantumProposals.filter(p =>
-        p.companyName.toLowerCase().includes(term) || p.name.toLowerCase().includes(term)
-      );
-      if (filtered.length === 0) {
+      // Filter by archive status first
+      let filteredByStatus = window.allQuantumProposals;
+      if (window.currentArchiveFilter === 'active') {
+        filteredByStatus = window.allQuantumProposals.filter(p => p.status !== 'archived');
+      } else if (window.currentArchiveFilter === 'archived') {
+        filteredByStatus = window.allQuantumProposals.filter(p => p.status === 'archived');
+      }
+      // 'all' shows everything, so no additional filtering needed
+
+      // Then filter by search term
+      let finalFiltered = filteredByStatus;
+      if (term) {
+        finalFiltered = filteredByStatus.filter(p =>
+          p.companyName.toLowerCase().includes(term) || p.name.toLowerCase().includes(term)
+        );
+      }
+
+      if (finalFiltered.length === 0 && term) {
         proposalsList.innerHTML = `
           <div style="text-align:center;padding:40px;color:#718096;">
             <p style="font-size:18px;">No proposals found matching "<strong>${term}</strong>"</p>
-            <p style="margin-top:10px;">Try searching for a different company name.</p>
+            <p style="margin-top:10px;">Try searching for a different company name or adjusting the filter.</p>
           </div>`;
       } else {
-        displayQuantumProposals(filtered);
+        displayQuantumProposals(finalFiltered);
       }
     };
 
