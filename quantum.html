@@ -836,33 +836,79 @@
       filterQuantumProposals();
     };
 
-    // Archive toggle function
-    window.toggleQuantumProposalArchive = function toggleQuantumProposalArchive(proposalId, currentStatus) {
+    // Archive toggle function with API call
+    window.toggleQuantumProposalArchive = async function toggleQuantumProposalArchive(proposalId, currentStatus) {
       const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
+      const proposal = window.allQuantumProposals ? window.allQuantumProposals.find(p => p.id === proposalId) : null;
+      const companyName = proposal ? proposal.companyName : '';
       
-      // Update the proposal in our local data
-      if (window.allQuantumProposals) {
-        const proposal = window.allQuantumProposals.find(p => p.id === proposalId);
-        if (proposal) {
-          proposal.status = newStatus;
-          proposal.archivedDate = newStatus === 'archived' ? new Date().toISOString() : null;
+      // Show loading state
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<span class="loading-spinner"></span>';
+      
+      try {
+        // Make API call to update archive status
+        const callbackName = 'archiveCallback_' + Date.now();
+        const promise = new Promise((resolve, reject) => {
+          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
+          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 10000);
+        });
+
+        const script = document.createElement('script');
+        const params = new URLSearchParams({
+          action: 'updateArchiveStatus',
+          fileId: proposalId,
+          status: newStatus,
+          companyName: companyName,
+          callback: callbackName
+        });
+        script.src = `https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec?${params.toString()}`;
+
+        script.onerror = () => {
+          delete window[callbackName];
+          throw new Error('Failed to connect to archive service');
+        };
+
+        document.body.appendChild(script);
+        const result = await promise;
+        document.body.removeChild(script);
+
+        if (result.status === 'success') {
+          // Update the proposal in our local data
+          if (window.allQuantumProposals && proposal) {
+            proposal.status = newStatus;
+            proposal.archivedDate = result.data.archivedDate;
+          }
+          
+          // Refresh the display
+          filterQuantumProposals();
+          
+          // Show success message
+          showQuantumPopup(`
+            <div class="success-popup">
+              <h3>${newStatus === 'archived' ? '📁' : '📋'} Proposal ${newStatus === 'archived' ? 'Archived' : 'Restored'}</h3>
+              <p>The proposal has been ${newStatus === 'archived' ? 'archived' : 'restored'} successfully.</p>
+            </div>
+          `, 'success');
+        } else {
+          throw new Error(result.message || 'Failed to update archive status');
         }
+      } catch (error) {
+        console.error('Archive toggle error:', error);
+        showQuantumPopup(`
+          <div class="error-popup">
+            <h3>❌ Archive Update Failed</h3>
+            <p>Unable to ${newStatus === 'archived' ? 'archive' : 'restore'} the proposal: ${error.message}</p>
+            <p>Please try again or contact support if the problem persists.</p>
+          </div>
+        `, 'error');
+      } finally {
+        // Restore button state
+        button.disabled = false;
+        button.innerHTML = originalText;
       }
-      
-      // TODO: Make API call to update the proposal status in your backend
-      // For now, we'll just update the display
-      console.log(`Proposal ${proposalId} ${newStatus === 'archived' ? 'archived' : 'unarchived'}`);
-      
-      // Refresh the display
-      filterQuantumProposals();
-      
-      // Show success message
-      showQuantumPopup(`
-        <div class="success-popup">
-          <h3>${newStatus === 'archived' ? '📁' : '📋'} Proposal ${newStatus === 'archived' ? 'Archived' : 'Restored'}</h3>
-          <p>The proposal has been ${newStatus === 'archived' ? 'archived' : 'restored'} successfully.</p>
-        </div>
-      `, 'success');
     };
 
     async function loadQuantumProposalsFromDrive() {
