@@ -956,7 +956,7 @@
       }
     };
 
-    async function loadQuantumProposalsFromDrive() {
+    window.loadQuantumProposalsFromDrive = async function loadQuantumProposalsFromDrive() {
       try {
         const callbackName = 'quantumProposalsCallback_' + Date.now();
         const promise = new Promise((resolve, reject) => {
