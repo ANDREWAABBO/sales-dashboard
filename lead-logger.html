@@ -659,7 +659,22 @@
       document.getElementById('status').value = 'Active';
       document.getElementById('appointmentMade').value = 'No';
       
-      // Hide Quantum fields by default
+      // FIXED: Clear all fields explicitly to prevent cache contamination
+      document.getElementById('businessUnit').value = '';
+      document.getElementById('companyName').value = '';
+      document.getElementById('contactName').value = '';
+      document.getElementById('phoneNumber').value = '';
+      document.getElementById('emailAddress').value = '';
+      document.getElementById('repName').value = '';
+      document.getElementById('repPhone').value = '';
+      document.getElementById('repEmail').value = '';
+      document.getElementById('customerAddress').value = '';
+      document.getElementById('customerZip').value = '';
+      document.getElementById('followUp').value = '';
+      document.getElementById('appointmentDate').value = '';
+      document.getElementById('notes').value = '';
+      
+      // Hide Quantum fields by default and remove required
       document.getElementById('quantumFieldsSection').style.display = 'none';
       document.getElementById('customerAddress').required = false;
       document.getElementById('customerZip').required = false;
