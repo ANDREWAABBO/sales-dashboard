@@ -400,12 +400,14 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, starting initialization...');
       document.getElementById('saveBtn').addEventListener('click', onSaveClick);
 
       // static backdrop
       const modal = document.getElementById('leadModal');
       modal.addEventListener('click', (e) => { if (e.target === modal) e.stopPropagation(); });
 
+      console.log('Loading leads and company lists...');
       loadLeads();
       loadCompanyLists();
       setupPhoneFormatting();
@@ -482,22 +484,55 @@
 
     async function loadLeads(){
       try{
+        console.log('Starting to load leads...');
         document.getElementById('loadingState').style.display='block';
         document.getElementById('leadsTable').style.display='none';
         document.getElementById('emptyState').style.display='none';
 
-        const res = await fetch(WEB_APP_URL + '?action=getLeads');
+        console.log('Calling API:', WEB_APP_URL + '?action=getLeads');
+        const res = await fetch(WEB_APP_URL + '?action=getLeads', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        console.log('Response status:', res.status);
+        console.log('Response ok:', res.ok);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const data = await res.json();
+        console.log('Response data:', data);
+        
         if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
 
         allLeads = data.leads || [];
+        console.log('Loaded leads count:', allLeads.length);
         updateRepFilter();
         filterLeads(); // ← render using current dropdowns (default = Active)
       }catch(err){
         console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
         document.getElementById('emptyState').style.display='block';
-        showToast('Error loading leads. ' + err.message, 'error');
+        
+        // Show more detailed error message
+        const emptyState = document.getElementById('emptyState');
+        emptyState.innerHTML = `
+          <h3>Error Loading Leads</h3>
+          <p style="color:#e53e3e;margin:10px 0;">${err.message}</p>
+          <p>Please check:</p>
+          <ul style="text-align:left;margin:10px auto;display:inline-block;">
+            <li>Internet connection</li>
+            <li>Google Apps Script deployment status</li>
+            <li>Web app permissions</li>
+          </ul>
+          <button class="btn" onclick="loadLeads()" style="margin-top:15px;">Retry</button>
+        `;
+        
+        showToast('Error loading leads: ' + err.message, 'error');
       }
     }
 
