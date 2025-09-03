@@ -167,100 +167,100 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* Fixed proposal item styling to prevent button overlap */
+    /* Clean proposal item styling matching Abbondanza */
     .proposal-item {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      border: 2px solid #e2e8f0;
+      background: #f8fafc;
+      padding: 20px 25px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
       transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      min-height: 120px; /* Ensure minimum height */
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 80px;
     }
 
     .proposal-item:hover {
+      background: #ffffff;
       border-color: #1e3a8a;
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.1);
     }
 
     .proposal-content {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start; /* Changed from center to flex-start */
-      flex-wrap: wrap;
-      gap: 20px; /* Increased gap */
-      min-height: 80px; /* Ensure content area has minimum height */
+      align-items: center;
+      width: 100%;
+      gap: 20px;
     }
 
     .proposal-text {
       flex: 1;
-      min-width: 250px; /* Increased minimum width */
-      padding-right: 20px; /* Add right padding to create space */
+      min-width: 200px;
     }
 
     .proposal-text h4 {
-      margin: 0 0 8px 0;
-      color: #2d3748;
+      margin: 0 0 4px 0;
+      color: #1e3a8a;
       font-size: 18px;
-      word-wrap: break-word; /* Handle long company names */
-      line-height: 1.3;
+      font-weight: 600;
+      word-wrap: break-word;
     }
 
     .proposal-text p {
       margin: 0;
-      color: #718096;
+      color: #64748b;
       font-size: 14px;
       line-height: 1.4;
     }
 
     .proposal-buttons {
       display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      flex-shrink: 0; /* Prevent buttons from shrinking */
-      align-items: flex-start; /* Align buttons to top */
+      gap: 10px;
+      flex-shrink: 0;
+      align-items: center;
     }
 
     .proposal-buttons .btn {
-      padding: 14px 28px;
-      font-size: 16px;
-      font-weight: 600;
-      min-width: 120px;
-      white-space: nowrap; /* Prevent text wrapping in buttons */
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      min-width: 80px;
+      white-space: nowrap;
+      border-radius: 6px;
     }
 
-    /* Archive filter dropdown styles */
+    /* Clean filter container matching Abbondanza */
     .filter-container {
       display: flex;
-      gap: 15px;
+      gap: 12px;
       align-items: center;
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
 
     .archive-filter {
-      padding: 12px 16px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 16px;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 14px;
       background: white;
       cursor: pointer;
       transition: all 0.3s ease;
-      min-width: 180px;
+      min-width: 140px;
+      color: #374151;
     }
 
     .archive-filter:focus {
       outline: none;
       border-color: #1e3a8a;
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
     }
 
-    /* Archive button styling */
+    /* Clean archive button styling */
     .archive-btn {
       background: #f59e0b !important;
-      font-size: 14px !important;
-      padding: 10px 20px !important;
-      min-width: 100px !important;
+      color: white !important;
     }
 
     .archive-btn:hover {
@@ -268,18 +268,55 @@
     }
 
     .archived-item {
-      opacity: 0.7;
-      background: #f8fafc !important;
+      opacity: 0.8;
+      background: #f1f5f9 !important;
     }
 
     .archived-badge {
       background: #f59e0b;
       color: white;
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-weight: 600;
-      margin-left: 10px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+      margin-left: 8px;
+      display: inline-block;
+    }
+
+    /* Search input styling */
+    #quantumProposalSearch {
+      padding: 10px 40px 10px 14px !important;
+      font-size: 14px !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 6px !important;
+      transition: all 0.3s ease !important;
+    }
+
+    #quantumProposalSearch:focus {
+      outline: none !important;
+      border-color: #1e3a8a !important;
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1) !important;
+    }
+
+    #clearQuantumSearchBtn {
+      right: 8px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      background: #e2e8f0 !important;
+      border: none !important;
+      border-radius: 50% !important;
+      width: 24px !important;
+      height: 24px !important;
+      cursor: pointer !important;
+      display: none !important;
+      font-size: 14px !important;
+      color: #64748b !important;
+      transition: all 0.3s ease !important;
+    }
+
+    #clearQuantumSearchBtn:hover {
+      background: #cbd5e1 !important;
+      color: #374151 !important;
     }
 
     /* Responsive adjustments */
@@ -287,20 +324,25 @@
       .proposal-content {
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
       }
 
       .proposal-text {
-        padding-right: 0;
-        margin-bottom: 15px;
+        margin-bottom: 0;
       }
 
       .proposal-buttons {
-        justify-content: flex-start;
+        justify-content: flex-end;
       }
 
       .filter-container {
         flex-direction: column;
         align-items: stretch;
+        gap: 10px;
+      }
+
+      .archive-filter {
+        min-width: auto;
       }
     }
   </style>
@@ -789,9 +831,9 @@
       modal.style.maxWidth = '1000px';
 
       modal.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">
-          <h3 style="margin:0;color:#2d3748;font-size:1.8em;">Quantum Proposal Library</h3>
-          <button class="close-btn" onclick="closeQuantumProposalViewer()">✕</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #e2e8f0;">
+          <h3 style="margin:0;color:#1e3a8a;font-size:1.5em;font-weight:600;">Proposal Library</h3>
+          <button class="close-btn" onclick="closeQuantumProposalViewer()">Close</button>
         </div>
         
         <div class="filter-container">
@@ -803,20 +845,20 @@
           
           <div style="position:relative;flex:1;">
             <input type="text" id="quantumProposalSearch" placeholder="Search by company name..."
-                   style="width:100%;padding:15px 45px 15px 15px;font-size:16px;border:2px solid #e2e8f0;border-radius:10px;transition:all .3s ease;"
+                   style="width:100%;"
                    onkeyup="filterQuantumProposals()"
                    onfocus="this.style.borderColor='#1e3a8a'"
                    onblur="this.style.borderColor='#e2e8f0'">
-            <button id="clearQuantumSearchBtn"
-                    onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();"
-                    style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">×</button>
+            <button id="clearQuantumSearchBtn" onclick="document.getElementById('quantumProposalSearch').value=''; this.style.display='none'; filterQuantumProposals();">×</button>
           </div>
+          
+          <button class="btn btn-primary" onclick="closeQuantumProposalViewer(); setTimeout(openQuantumProposalGenerator, 200);" style="padding:10px 16px;font-size:14px;white-space:nowrap;">+ New Proposal</button>
         </div>
         
-        <div id="quantumProposalsList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
+        <div id="quantumProposalsList" style="display:grid;gap:12px;max-height:60vh;overflow-y:auto;padding-right:4px;">
           <div style="text-align:center;padding:40px;">
             <div class="loading-spinner"></div>
-            <p style="margin-top:20px;color:#718096;">Loading proposals from library...</p>
+            <p style="margin-top:15px;color:#64748b;font-size:14px;">Loading proposals from library...</p>
           </div>
         </div>`;
       overlay.appendChild(modal);
@@ -974,14 +1016,13 @@
       if (proposals.length === 0) {
         const filterText = window.currentArchiveFilter === 'active' ? 'active' : 
                           window.currentArchiveFilter === 'archived' ? 'archived' : '';
-        proposalsList.innerHTML = `<div style="text-align:center;padding:40px;color:#718096;"><p>No ${filterText} proposals found in the library.</p></div>`;
+        proposalsList.innerHTML = `<div style="text-align:center;padding:40px;color:#64748b;"><p>No ${filterText} proposals found in the library.</p></div>`;
         return;
       }
       
       proposalsList.innerHTML = proposals.map(proposal => {
         const isArchived = proposal.status === 'archived';
-        const archiveButtonText = isArchived ? '📋 Restore' : '📁 Archive';
-        const archiveButtonClass = isArchived ? 'btn archive-btn' : 'btn archive-btn';
+        const archiveButtonText = isArchived ? 'Restore' : 'Archive';
         const itemClass = isArchived ? 'proposal-item archived-item' : 'proposal-item';
         const archivedBadge = isArchived ? '<span class="archived-badge">Archived</span>' : '';
         
@@ -991,15 +1032,14 @@
               <div class="proposal-text">
                 <h4>${proposal.companyName}${archivedBadge}</h4>
                 <p>
-                  ${proposal.name}<br>
                   Modified: ${proposal.modifiedTime ? new Date(proposal.modifiedTime).toLocaleDateString() : 'Unknown'}
                   ${isArchived && proposal.archivedDate ? `<br>Archived: ${new Date(proposal.archivedDate).toLocaleDateString()}` : ''}
                 </p>
               </div>
               <div class="proposal-buttons">
-                <button class="btn btn-primary" onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')">📄 View</button>
-                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')">📥 Download</button>
-                <button class="${archiveButtonClass}" onclick="toggleQuantumProposalArchive('${proposal.id}', '${proposal.status || 'active'}')">${archiveButtonText}</button>
+                <button class="btn btn-primary" onclick="viewQuantumProposalPDF('${proposal.id}', '${proposal.companyName}')">View</button>
+                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${proposal.id}', '_blank')">Download</button>
+                <button class="btn archive-btn" onclick="toggleQuantumProposalArchive('${proposal.id}', '${proposal.status || 'active'}')">${archiveButtonText}</button>
               </div>
             </div>
           </div>`;
@@ -1034,7 +1074,7 @@
 
       if (finalFiltered.length === 0 && term) {
         proposalsList.innerHTML = `
-          <div style="text-align:center;padding:40px;color:#718096;">
+          <div style="text-align:center;padding:40px;color:#64748b;">
             <p style="font-size:18px;">No proposals found matching "<strong>${term}</strong>"</p>
             <p style="margin-top:10px;">Try searching for a different company name or adjusting the filter.</p>
           </div>`;
