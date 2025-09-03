@@ -866,6 +866,19 @@
         </div>`;
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
+      
+      // Add event listener to refresh button after modal is created
+      setTimeout(() => {
+        const refreshBtn = document.getElementById('quantumRefreshBtn');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', () => {
+            console.log('Refresh button clicked');
+            loadQuantumProposalsFromDrive();
+          });
+          console.log('Refresh button event listener attached');
+        }
+      }, 100);
+      
       setTimeout(() => { loadQuantumProposalsFromDrive(); }, 100);
     };
 
