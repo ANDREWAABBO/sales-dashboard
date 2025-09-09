@@ -652,7 +652,7 @@
           viewUrl = doc.shareUrl;
           buttons = `
             <button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">New Customer Questions</button>
-            <button class="btn btn-secondary" onclick="copyToClipboard('${viewUrl}')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Share Form</button>
+            <button class="btn btn-secondary" onclick="copyToClipboard('Please Fill Out New Customer Questions: ${viewUrl}')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Share Link</button>
           `;
         } else {
           // Generate PDF exports for all other document types (no direct document access)
