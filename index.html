@@ -315,7 +315,7 @@
       <div class="card">
         <h2>Welcome Package</h2>
         <p>Comprehensive welcome materials and onboarding documents for new clients and partners.</p>
-        <button onclick="openWelcomePackageViewer()" class="btn">View Welcome Package</button>
+        <button onclick="openWelcomePackageViewer()" class="btn" type="button">View Welcome Package</button>
       </div>
 
       <div class="card">
@@ -544,7 +544,7 @@
     </div>
   </div>
 
-  <!-- App script -->
+  <!-- App script (unchanged logic) -->
   <script>
     /* ====== App Endpoints ====== */
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
@@ -911,7 +911,7 @@
               <option value="all">All Proposals</option>
             </select>
             
-            <button class="btn refresh-btn" onclick="refreshProposals()">Refresh</button>
+            <button class="btn refresh-btn" onclick="refreshProposals()">🔄 Refresh</button>
             
             <div style="position: relative; flex: 1;">
               <input type="text" id="proposalSearch" placeholder="Search by company name..."
@@ -1142,4 +1142,410 @@
       document.body.appendChild(overlay);
     }
 
-    /* ======
+    /* ====== Service Agreement ====== */
+    function generateServiceAgreement() {
+      const serviceModal = document.getElementById('serviceAgreementModal');
+      if (serviceModal) {
+        serviceModal.style.display = 'block';
+        updateServiceAgreementPricing();
+      }
+    }
+
+    function updateServiceAgreementPricing() {
+      const fridgeCount = parseInt(document.getElementById('serviceFridgeCount').value) || 1;
+      const basePrice   = parseInt(document.getElementById('serviceMonthlyFee').value) || 795;
+      const subsidyPercentage = parseInt(document.getElementById('subsidyPercentage').value) || 0;
+
+      let monthlyTotal = basePrice;
+      if (fridgeCount > 1) {
+        const additionalUnits = fridgeCount - 1;
+        const discountedPrice = basePrice - 100;
+        monthlyTotal = basePrice + (discountedPrice * additionalUnits);
+      }
+
+      const estimatedMonthlyPurchases = fridgeCount * 300;
+      const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPercentage) / 100;
+
+      let txt = `Total Kiosks: ${fridgeCount}<br>`;
+      txt += `Monthly Service Fee: ${monthlyTotal.toFixed(2)}<br>`;
+      txt += `Subsidy: ${subsidyPercentage}% discount<br>`;
+      txt += `Estimated Monthly Subsidy: ${monthlySubsidyAmount.toFixed(2)}`;
+      document.getElementById('servicePricingSummary').innerHTML = txt;
+    }
+
+    function calculateFirstBillDate() {
+      const installDate = document.getElementById('installDate').value;
+      const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;
+      const firstBillDateInput = document.getElementById('firstBillDate');
+
+      if (installDate) {
+        const install = new Date(installDate);
+        const firstBill = new Date(install);
+        firstBill.setMonth(firstBill.getMonth() + 1 + freeMonths);
+        const year = firstBill.getFullYear();
+        const month = String(firstBill.getMonth() + 1).padStart(2, '0');
+        const day = String(firstBill.getDate()).padStart(2, '0');
+        firstBillDateInput.value = `${year}-${month}-${day}`;
+      } else {
+        firstBillDateInput.value = '';
+      }
+    }
+
+    async function generateServiceAgreementPDF() {
+      const submitBtn = document.getElementById('generateServiceBtn');
+      const originalText = submitBtn.innerHTML;
+      if (submitBtn.disabled) return;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+
+      try {
+        const formData = {
+          companyName: document.getElementById('serviceCompanyName').value,
+          contactName: document.getElementById('serviceContactName').value || '',
+          street: document.getElementById('serviceStreet').value,
+          city: document.getElementById('serviceCity').value,
+          state: document.getElementById('serviceState').value,
+          zip: document.getElementById('serviceZip').value,
+          preparedBy: document.getElementById('servicePreparedBy').value,
+          preparedByPhone: document.getElementById('servicePreparedByPhone').value,
+          preparedByEmail: document.getElementById('servicePreparedByEmail').value,
+          fridgeCount: document.getElementById('serviceFridgeCount').value,
+          monthlyFee: document.getElementById('serviceMonthlyFee').value,
+          subsidyPercentage: document.getElementById('subsidyPercentage').value,
+          freeMonths: document.getElementById('freeMonths').value,
+          installDate: document.getElementById('installDate').value,
+          firstBillDate: document.getElementById('firstBillDate').value
+        };
+
+        const required = ['companyName','street','city','state','zip','preparedBy','preparedByPhone','preparedByEmail'];
+        for (const f of required) {
+          if (!formData[f]) {
+            const name = f.replace(/([A-Z])/g, ' $1').toLowerCase();
+            throw new Error(`Please fill in the ${name} field.`);
+          }
+        }
+
+        const fridgeCount = parseInt(formData.fridgeCount) || 1;
+        const basePrice   = parseInt(formData.monthlyFee) || 795;
+        const subsidyPct  = parseInt(formData.subsidyPercentage) || 0;
+
+        let monthlyTotal = basePrice;
+        if (fridgeCount > 1) {
+          const discountedPrice = basePrice - 100;
+          monthlyTotal = basePrice + (discountedPrice * (fridgeCount - 1));
+        }
+
+        const estimatedMonthlyPurchases = fridgeCount * 300;
+        const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPct) / 100;
+
+        const params = new URLSearchParams({
+          type: 'serviceAgreement',
+          customer: formData.companyName,
+          street: formData.street,
+          city: formData.city,
+          state: formData.state,
+          zip: formData.zip,
+          subsidyPercentage: formData.subsidyPercentage,
+          serviceFee: formData.monthlyFee,
+          installDate: formData.installDate,
+          totalKiosks: formData.fridgeCount,
+          firstBillDate: formData.firstBillDate,
+          freeMonths: formData.freeMonths,
+          preparedBy: formData.preparedBy,
+          preparedByPhone: formData.preparedByPhone,
+          preparedByEmail: formData.preparedByEmail,
+          contactName: formData.contactName,
+          monthlyTotal: String(monthlyTotal),
+          monthlySubsidyAmount: String(monthlySubsidyAmount),
+          estimatedMonthlyPurchases: String(estimatedMonthlyPurchases)
+        });
+
+        const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
+        window.open(url, '_blank');
+
+        closeModal('serviceAgreementModal');
+        showPopup('Service Agreement Generation Started!', 'success');
+      } catch (error) {
+        showPopup(`Error: ${error.message}`, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    }
+
+    /* ====== ENHANCED Service Agreement Library with Archive ====== */
+    function openServiceAgreementViewer() {
+      const existingOverlay = document.querySelector('.modal-overlay');
+      if (existingOverlay) existingOverlay.remove();
+
+      window.allServiceAgreements = null;
+      window.currentServiceFilter = 'active';
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+
+      const modal = document.createElement('div');
+      modal.className = 'pdf-modal';
+
+      modal.innerHTML = `
+        <div class="pdf-header">
+          <h3>Service Agreement Library</h3>
+          <button class="close-btn" onclick="closePDFViewer()">Close</button>
+        </div>
+        <div class="pdf-viewer" style="padding: 20px;">
+          <div class="filter-container">
+            <select id="serviceArchiveFilter" class="archive-filter" onchange="changeServiceArchiveFilter()">
+              <option value="active">Active Agreements</option>
+              <option value="archived">Archived Agreements</option>
+              <option value="all">All Agreements</option>
+            </select>
+            
+            <button class="btn refresh-btn" onclick="refreshServiceAgreements()">🔄 Refresh</button>
+            
+            <div style="position: relative; flex: 1;">
+              <input type="text" id="serviceAgreementSearch" placeholder="Search by company name..."
+                style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;
+                       border-radius: 10px; transition: all 0.3s ease;"
+                onkeyup="filterServiceAgreements()"
+                onfocus="this.style.borderColor='#1e3a8a'"
+                onblur="this.style.borderColor='#e2e8f0'">
+              <button id="clearServiceSearchBtn"
+                onclick="document.getElementById('serviceAgreementSearch').value=''; this.style.display='none'; filterServiceAgreements();"
+                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;
+                       cursor: pointer; display: none; transition: all 0.3s ease; font-size: 18px; color: #4a5568;">×</button>
+            </div>
+          </div>
+
+          <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
+            <div style="text-align: center; padding: 40px;">
+              <div class="loading-spinner"></div>
+              <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p>
+            </div>
+          </div>
+        </div>`;
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      setTimeout(() => { loadServiceAgreementsFromDrive(); }, 100);
+    }
+
+    // NEW: Service Agreement Archive Functions
+    window.changeServiceArchiveFilter = function() {
+      const filter = document.getElementById('serviceArchiveFilter');
+      window.currentServiceFilter = filter.value;
+      filterServiceAgreements();
+    };
+
+    window.refreshServiceAgreements = function() {
+      window.allServiceAgreements = null;
+      loadServiceAgreementsFromDrive();
+    };
+
+    window.toggleServiceAgreementArchive = async function(agreementId, currentStatus, event) {
+      const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
+      const agreement = window.allServiceAgreements ? window.allServiceAgreements.find(a => a.id === agreementId) : null;
+      const companyName = agreement ? agreement.name : '';
+      
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '...';
+      
+      try {
+        const callbackName = 'serviceArchiveCallback_' + Date.now();
+        const promise = new Promise((resolve, reject) => {
+          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
+          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 10000);
+        });
+
+        const script = document.createElement('script');
+        const params = new URLSearchParams({
+          action: 'updateArchiveStatus',
+          fileId: agreementId,
+          status: newStatus,
+          companyName: companyName,
+          callback: callbackName
+        });
+        script.src = `${SERVICE_AGREEMENTS_API_URL}?${params.toString()}`;
+        script.onerror = () => {
+          delete window[callbackName];
+          throw new Error('Failed to connect to archive service');
+        };
+
+        document.body.appendChild(script);
+        const result = await promise;
+        document.body.removeChild(script);
+
+        if (result.status === 'success') {
+          if (window.allServiceAgreements && agreement) {
+            agreement.status = newStatus;
+            agreement.archivedDate = result.data.archivedDate;
+          }
+          filterServiceAgreements();
+          showPopup(`Service agreement ${newStatus === 'archived' ? 'archived' : 'restored'} successfully!`, 'success');
+        } else {
+          throw new Error(result.message || 'Failed to update archive status');
+        }
+      } catch (error) {
+        console.error('Service archive error:', error);
+        showPopup(`Archive update failed: ${error.message}`, 'error');
+      } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+      }
+    };
+
+    async function loadServiceAgreementsFromDrive() {
+      try {
+        const callbackName = 'serviceAgreementsCallback_' + Date.now();
+        const promise = new Promise((resolve, reject) => {
+          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
+          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 20000);
+        });
+
+        const script = document.createElement('script');
+        script.src = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;
+        script.onerror = () => {
+          delete window[callbackName];
+          const list = document.getElementById('serviceAgreementsList');
+          if (list) {
+            list.innerHTML = `
+              <div style="text-align: center; padding: 40px;">
+                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
+                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
+              </div>`;
+          }
+        };
+
+        document.body.appendChild(script);
+        const data = await promise;
+        document.body.removeChild(script);
+
+        if (data.status === 'success') {
+          const sorted = (data.serviceAgreements || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+          sorted.forEach(agreement => {
+            if (!agreement.status) {
+              agreement.status = 'active';
+            }
+          });
+          window.allServiceAgreements = sorted;
+          filterServiceAgreements();
+        } else {
+          throw new Error(data.message || 'Failed to load service agreements');
+        }
+      } catch (error) {
+        const list = document.getElementById('serviceAgreementsList');
+        if (list) {
+          list.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+              <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
+              <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
+              <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
+            </div>`;
+        }
+      }
+    }
+
+    function displayServiceAgreements(agreements) {
+      const list = document.getElementById('serviceAgreementsList');
+      if (!list) return;
+      if (agreements.length === 0) {
+        const filterText = window.currentServiceFilter === 'active' ? 'active' : 
+                          window.currentServiceFilter === 'archived' ? 'archived' : '';
+        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #718096;"><p>No ${filterText} service agreements found.</p></div>`;
+        return;
+      }
+      
+      list.innerHTML = agreements.map(a => {
+        const isArchived = a.status === 'archived';
+        const archiveButtonText = isArchived ? 'Restore' : 'Archive';
+        const itemClass = isArchived ? 'archived-item' : '';
+        const archivedBadge = isArchived ? '<span class="archived-badge">Archived</span>' : '';
+        
+        return `
+          <div class="agreement-item ${itemClass}" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
+               onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+               onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+              <div style="flex: 1; min-width: 200px;">
+                <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${a.name}${archivedBadge}</h4>
+                <p style="margin: 0; color: #718096; font-size: 14px;">
+                  Modified: ${a.modifiedTime ? new Date(a.modifiedTime).toLocaleDateString() : 'Unknown'}
+                  ${isArchived && a.archivedDate ? `<br>Archived: ${new Date(a.archivedDate).toLocaleDateString()}` : ''}
+                </p>
+              </div>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="viewServiceAgreementPDF('${a.id}', '${a.name}')" style="padding: 12px 24px; font-size: 14px; min-width: 90px;">View</button>
+                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${a.id}', '_blank')" style="padding: 12px 24px; font-size: 14px; min-width: 100px;">Download</button>
+                <button class="btn archive-btn" onclick="toggleServiceAgreementArchive('${a.id}', '${a.status || 'active'}', event)" style="padding: 12px 24px; font-size: 14px; min-width: 90px;">${archiveButtonText}</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function filterServiceAgreements() {
+      const input = document.getElementById('serviceAgreementSearch');
+      const term = input ? input.value.toLowerCase() : '';
+      const clearBtn = document.getElementById('clearServiceSearchBtn');
+      if (clearBtn) clearBtn.style.display = term.length > 0 ? 'block' : 'none';
+      if (!window.allServiceAgreements || window.allServiceAgreements.length === 0) return;
+
+      // Filter by archive status first
+      let filteredByStatus = window.allServiceAgreements;
+      if (window.currentServiceFilter === 'active') {
+        filteredByStatus = window.allServiceAgreements.filter(a => a.status !== 'archived');
+      } else if (window.currentServiceFilter === 'archived') {
+        filteredByStatus = window.allServiceAgreements.filter(a => a.status === 'archived');
+      }
+
+      // Then filter by search term
+      let finalFiltered = filteredByStatus;
+      if (term) {
+        finalFiltered = filteredByStatus.filter(a => a.name.toLowerCase().includes(term));
+      }
+
+      displayServiceAgreements(finalFiltered);
+    }
+
+    function viewServiceAgreementPDF(fileId, fileName) {
+      closePDFViewer();
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+
+      const pdfModal = document.createElement('div');
+      pdfModal.className = 'pdf-modal';
+      const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+
+      pdfModal.innerHTML = `
+        <div class="pdf-header">
+          <h3>${fileName}</h3>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);" style="padding: 10px 20px;">Back to Library</button>
+            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding: 10px 20px;">Download</button>
+          </div>
+        </div>
+        <div class="pdf-viewer"><iframe src="${viewerUrl}" allowfullscreen></iframe></div>`;
+      overlay.appendChild(pdfModal);
+      document.body.appendChild(overlay);
+    }
+
+    /* ====== Backdrop close for all overlays (ignore auth overlay) ====== */
+    window.addEventListener('click', function (event) {
+      if (event.target.classList.contains('modal-overlay') && event.target.id !== 'loginOverlay') {
+        event.target.remove();
+      }
+    });
+  </script>
+
+  <!-- Reusable Username + Logout pill (init call only) -->
+  <script>
+    if (window.UserBar && typeof UserBar.init === 'function') {
+      UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
+    }
+  </script>
+</body>
+</html>
