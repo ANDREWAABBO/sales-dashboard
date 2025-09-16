@@ -314,7 +314,7 @@ const IN_NET_INCLUDE_FINANCING  = true;
 let baseRates = {
   fixedCosts:{
     cellular:25, licenseFee:175, rfidTagsPerTag:0.18,
-    engageTransactionFee:0.15, gatewayTransactionFee:0.07,
+    engageTransactionFee:0.15, gatewayTransactionFee:0.13,
     merchantAccountPercent:2.5, merchantAccountSwipeFee:0.03
   }
 };
@@ -515,7 +515,7 @@ function renderBreakdown(pf, inputs){
   addRow('Cellular',                           pf.cellular,       pf.cellular*fc);
   addRow('License Fee',                        pf.license,        pf.license*fc);
   addRow('Engage <b>Transactions</b> Fees ($0.15/tx)',   pf.engage,         pf.engage*fc);
-  addRow('Gateway <b>Transactions</b> Fees ($0.07/tx)',  pf.gateway,        pf.gateway*fc);
+  addRow('Gateway <b>Transactions</b> Fees ($0.13/tx)',  pf.gateway,        pf.gateway*fc);
   addRow('Merchant % Fee (2.50% of sales)',    pf.merchantPct,    pf.merchantPct*fc);
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
