@@ -189,7 +189,7 @@
             • Cellular: $25.00 /month<br>
             • License Fee: $175.00 /month<br>
             • Engage <b>Transactions</b> Fees <i>($0.15/tx)</i><br>
-            • Gateway <b>Transactions</b> Fees <i>($0.07/tx)</i><br>
+            • Gateway <b>Transactions</b> Fees <i>($0.13/tx)</i><br>
             • Merchant Interchange: 2.50% of sales revenue<br>
             • Merchant Swipe Fee: $0.03 per tx<br>
             • RFID Tags: $0.18 per tag
@@ -231,6 +231,14 @@
           <div class="l">Annual Net Profit</div>
           <div id="kpiAnnual" class="v positive">$0.00</div>
         </div>
+      </div>
+    </div>
+
+    <!-- NEW: Annual Net Profit Without Financing section -->
+    <div class="results" style="margin-top: 16px;">
+      <div class="kpi" style="max-width: 400px; margin: 0 auto;">
+        <div class="l">Annual Net Profit Without Financing</div>
+        <div id="kpiAnnualNoFinancing" class="v positive">$0.00</div>
       </div>
     </div>
 
@@ -283,7 +291,7 @@
   <div class="modal" style="max-width:720px">
     <h4>Manage Links</h4>
     <div class="fg">
-      <label>Filter by “Created By”</label>
+      <label>Filter by "Created By"</label>
       <input id="filterCreatedBy" type="text" placeholder="(optional)">
     </div>
     <div id="tokenList" class="subtle">Loading…</div>
@@ -299,7 +307,7 @@
 =========================== */
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
 
-/* “What the sheet includes in Total Costs” switches */
+/* "What the sheet includes in Total Costs" switches */
 const IN_NET_INCLUDE_CELLULAR   = true;
 const IN_NET_INCLUDE_LICENSE    = true;
 const IN_NET_INCLUDE_RFID       = true;
@@ -472,6 +480,10 @@ function update(){
 
   const annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
 
+  // NEW: Calculate annual without financing
+  const monthlyNetNoFinancing = monthlyNet + (pf.financing * i.fridgeCount); // Add back financing
+  const annualNoFinancing = (monthlyNetNoFinancing * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
+
   setText('kpiSalesRevenue',  usd2(salesRevenue));
   setText('kpiServiceRevenue',usd2(serviceRev));
   setText('kpiCosts',         usd2(monthlyCosts));
@@ -484,6 +496,13 @@ function update(){
   const annEl = document.getElementById('kpiAnnual');
   annEl.textContent = usd2(annual);
   annEl.className = 'v ' + (annual>=0 ? 'positive':'negative');
+
+  // NEW: Update the annual without financing display
+  const annNoFinEl = document.getElementById('kpiAnnualNoFinancing');
+  if (annNoFinEl) {
+    annNoFinEl.textContent = usd2(annualNoFinancing);
+    annNoFinEl.className = 'v ' + (annualNoFinancing>=0 ? 'positive':'negative');
+  }
 
   renderBreakdown(pf, i);
 }
@@ -584,11 +603,11 @@ async function createShare(){
 
       if (copied) {
         closeShare();
-        toast('Guest link copied. It’s valid for 7 days — share it with your client.');
+        toast('Guest link copied. It's valid for 7 days — share it with your client.');
       } else {
         // If copy failed (rare), keep modal open and instruct
         urlBox.focus();
-        toast('Couldn’t auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
+        toast('Couldn't auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
       }
 
       btn.disabled = false;
