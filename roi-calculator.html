@@ -381,13 +381,20 @@ function hideLoading() {
 }
 
 async function init(){
+  // Set a fallback timeout to ensure spinner is hidden no matter what
+  const fallbackTimeout = setTimeout(() => {
+    console.log('Fallback: hiding loading spinner after timeout');
+    hideLoading();
+  }, 5000);
+
   try {
     const p = new URLSearchParams(location.search);
     accessToken = p.get('token');
     operatorMode = !accessToken;
 
     // Require login ONLY in operator mode
-    if (operatorMode && window.Auth && !Auth.checkAuth()) {
+    if (operatorMode && window.Auth && typeof window.Auth.checkAuth === 'function' && !Auth.checkAuth()) {
+      clearTimeout(fallbackTimeout);
       hideLoading();
       return;
     }
@@ -400,9 +407,9 @@ async function init(){
     const s1 = document.getElementById('btnShare'); const s2 = document.getElementById('btnShare2');
     if (s1) s1.onclick = openShare;
     if (s2) s2.onclick = openShare;
-    document.getElementById('btnManage').onclick = openManage;
-    document.getElementById('btnGenShare').onclick = createShare;
-    document.getElementById('btnPDF').onclick = () => alert('PDF export coming soon 😊');
+    if (document.getElementById('btnManage')) document.getElementById('btnManage').onclick = openManage;
+    if (document.getElementById('btnGenShare')) document.getElementById('btnGenShare').onclick = createShare;
+    if (document.getElementById('btnPDF')) document.getElementById('btnPDF').onclick = () => alert('PDF export coming soon 😊');
 
     // inputs -> recalc
     document.querySelectorAll('input').forEach(el=>{
@@ -418,11 +425,18 @@ async function init(){
       const url = `${BACKEND_URL}?action=getBaseRates${accessToken?`&token=${encodeURIComponent(accessToken)}`:''}`;
       const j = await (await fetch(url)).json();
       if (j.status==='success' && j.data && j.data.baseRates) baseRates = j.data.baseRates;
-    }catch(_){}
+    }catch(err){
+      console.log('Backend fetch failed, using default rates:', err);
+    }
+    
     renderFixedCosts();
     syncPercents();
     update();
+    
+  } catch (error) {
+    console.error('Error in init:', error);
   } finally {
+    clearTimeout(fallbackTimeout);
     hideLoading();
   }
 }
