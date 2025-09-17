@@ -87,9 +87,52 @@
     animation:toastIn .25s ease-out both;
   }
   @keyframes toastIn{from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)}}
+
+  /* Loading overlay for initial page load */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(30, 58, 138, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    color: white;
+  }
+
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
+<!-- Loading overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading ROI Calculator...</div>
+</div>
+
 <div class="wrap">
   <div class="card">
     <div class="hdr">
@@ -283,7 +326,7 @@
   <div class="modal" style="max-width:720px">
     <h4>Manage Links</h4>
     <div class="fg">
-      <label>Filter by “Created By”</label>
+      <label>Filter by "Created By"</label>
       <input id="filterCreatedBy" type="text" placeholder="(optional)">
     </div>
     <div id="tokenList" class="subtle">Loading…</div>
@@ -299,7 +342,7 @@
 =========================== */
 const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
 
-/* “What the sheet includes in Total Costs” switches */
+/* "What the sheet includes in Total Costs" switches */
 const IN_NET_INCLUDE_CELLULAR   = true;
 const IN_NET_INCLUDE_LICENSE    = true;
 const IN_NET_INCLUDE_RFID       = true;
@@ -322,48 +365,66 @@ let accessToken = null;
 let operatorMode = true;
 
 /* ===========================
-   Init
+   Init with Loading Spinner
 =========================== */
 window.addEventListener('DOMContentLoaded', init);
 
+function hideLoading() {
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.opacity = '0';
+    loadingOverlay.style.transition = 'opacity 0.3s ease-out';
+    setTimeout(() => {
+      loadingOverlay.style.display = 'none';
+    }, 300);
+  }
+}
+
 async function init(){
-  const p = new URLSearchParams(location.search);
-  accessToken = p.get('token');
-  operatorMode = !accessToken;
+  try {
+    const p = new URLSearchParams(location.search);
+    accessToken = p.get('token');
+    operatorMode = !accessToken;
 
-  // Require login ONLY in operator mode
-  if (operatorMode && window.Auth && !Auth.checkAuth()) return;
-
-  document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Guest Link';
-  document.getElementById('modeTag').title = operatorMode ? 'No token in URL → Operator Mode' : 'Viewing with a time-limited token';
-  document.getElementById('opButtons').style.display = operatorMode ? 'flex' : 'none';
-
-  // wire buttons
-  const s1 = document.getElementById('btnShare'); const s2 = document.getElementById('btnShare2');
-  if (s1) s1.onclick = openShare;
-  if (s2) s2.onclick = openShare;
-  document.getElementById('btnManage').onclick = openManage;
-  document.getElementById('btnGenShare').onclick = createShare;
-  document.getElementById('btnPDF').onclick = () => alert('PDF export coming soon 😊');
-
-  // inputs -> recalc
-  document.querySelectorAll('input').forEach(el=>{
-    el.addEventListener('input', ()=>{ if (el.id==='foodPercent'){ syncPercents(); } update(); });
-  });
-
-  // try to fetch base rates from backend (token optional)
-  try{
-    if (accessToken){
-      const res = await fetch(`${BACKEND_URL}?action=validateAccess&token=${encodeURIComponent(accessToken)}`);
-      const ok = await res.json(); if (ok.status!=='success') throw new Error('Invalid token');
+    // Require login ONLY in operator mode
+    if (operatorMode && window.Auth && !Auth.checkAuth()) {
+      hideLoading();
+      return;
     }
-    const url = `${BACKEND_URL}?action=getBaseRates${accessToken?`&token=${encodeURIComponent(accessToken)}`:''}`;
-    const j = await (await fetch(url)).json();
-    if (j.status==='success' && j.data && j.data.baseRates) baseRates = j.data.baseRates;
-  }catch(_){}
-  renderFixedCosts();
-  syncPercents();
-  update();
+
+    document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Guest Link';
+    document.getElementById('modeTag').title = operatorMode ? 'No token in URL → Operator Mode' : 'Viewing with a time-limited token';
+    document.getElementById('opButtons').style.display = operatorMode ? 'flex' : 'none';
+
+    // wire buttons
+    const s1 = document.getElementById('btnShare'); const s2 = document.getElementById('btnShare2');
+    if (s1) s1.onclick = openShare;
+    if (s2) s2.onclick = openShare;
+    document.getElementById('btnManage').onclick = openManage;
+    document.getElementById('btnGenShare').onclick = createShare;
+    document.getElementById('btnPDF').onclick = () => alert('PDF export coming soon 😊');
+
+    // inputs -> recalc
+    document.querySelectorAll('input').forEach(el=>{
+      el.addEventListener('input', ()=>{ if (el.id==='foodPercent'){ syncPercents(); } update(); });
+    });
+
+    // try to fetch base rates from backend (token optional)
+    try{
+      if (accessToken){
+        const res = await fetch(`${BACKEND_URL}?action=validateAccess&token=${encodeURIComponent(accessToken)}`);
+        const ok = await res.json(); if (ok.status!=='success') throw new Error('Invalid token');
+      }
+      const url = `${BACKEND_URL}?action=getBaseRates${accessToken?`&token=${encodeURIComponent(accessToken)}`:''}`;
+      const j = await (await fetch(url)).json();
+      if (j.status==='success' && j.data && j.data.baseRates) baseRates = j.data.baseRates;
+    }catch(_){}
+    renderFixedCosts();
+    syncPercents();
+    update();
+  } finally {
+    hideLoading();
+  }
 }
 
 function syncPercents(){
@@ -425,7 +486,7 @@ function calcPerFridge(inputs){
 
   const cellular = r.cellular;
   const license  = r.licenseFee;
-  const labor    = inputs.laborRate * inputs.laborHours * 4;
+  const labor    = inputs.laborRate * inputs.laborHours * 4.33;
   const misc     = inputs.miscCosts;
   const financing= inputs.financing;
 
@@ -491,7 +552,6 @@ function update(){
 /* ===========================
    Breakdown table
 =========================== */
-// Update the renderBreakdown function to show labor calculation details
 function renderBreakdown(pf, inputs){
   const tb = document.getElementById('breakdownBody');
   tb.innerHTML = '';
@@ -520,11 +580,7 @@ function renderBreakdown(pf, inputs){
   addRow('Merchant % Fee (2.50% of sales)',    pf.merchantPct,    pf.merchantPct*fc);
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
-  
-  // Updated labor row to show the calculation
-  const laborCalc = `Labor ($${inputs.laborRate}/hr × ${inputs.laborHours} hrs/week × 4 weeks)`;
-  addRow(laborCalc,                            pf.labor,          pf.labor*fc);
-  
+  addRow('Labor',                              pf.labor,          pf.labor*fc);
   addRow('Miscellaneous',                      pf.misc,           pf.misc*fc);
   addRow('Financing',                          pf.financing,      pf.financing*fc);
   addRow('Total Costs (incl. financing)',      pf.totalCosts,     pf.totalCosts*fc, 'b-total');
@@ -589,11 +645,11 @@ async function createShare(){
 
       if (copied) {
         closeShare();
-        toast('Guest link copied. It’s valid for 7 days — share it with your client.');
+        toast('Guest link copied. It's valid for 7 days — share it with your client.');
       } else {
         // If copy failed (rare), keep modal open and instruct
         urlBox.focus();
-        toast('Couldn’t auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
+        toast('Couldn't auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
       }
 
       btn.disabled = false;
@@ -679,5 +735,3 @@ function toast(message, kind='success'){
 </script>
 </body>
 </html>
-
-
