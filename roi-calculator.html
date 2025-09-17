@@ -491,6 +491,7 @@ function update(){
 /* ===========================
    Breakdown table
 =========================== */
+// Update the renderBreakdown function to show labor calculation details
 function renderBreakdown(pf, inputs){
   const tb = document.getElementById('breakdownBody');
   tb.innerHTML = '';
@@ -519,7 +520,11 @@ function renderBreakdown(pf, inputs){
   addRow('Merchant % Fee (2.50% of sales)',    pf.merchantPct,    pf.merchantPct*fc);
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
-  addRow('Labor',                              pf.labor,          pf.labor*fc);
+  
+  // Updated labor row to show the calculation
+  const laborCalc = `Labor ($${inputs.laborRate}/hr × ${inputs.laborHours} hrs/week × 4.33 weeks)`;
+  addRow(laborCalc,                            pf.labor,          pf.labor*fc);
+  
   addRow('Miscellaneous',                      pf.misc,           pf.misc*fc);
   addRow('Financing',                          pf.financing,      pf.financing*fc);
   addRow('Total Costs (incl. financing)',      pf.totalCosts,     pf.totalCosts*fc, 'b-total');
