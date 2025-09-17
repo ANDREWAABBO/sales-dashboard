@@ -522,7 +522,7 @@ function renderBreakdown(pf, inputs){
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
   
   // Updated labor row to show the calculation
-  const laborCalc = `Labor ($${inputs.laborRate}/hr × ${inputs.laborHours} hrs/week × 4.33 weeks)`;
+  const laborCalc = `Labor ($${inputs.laborRate}/hr × ${inputs.laborHours} hrs/week × 4 weeks)`;
   addRow(laborCalc,                            pf.labor,          pf.labor*fc);
   
   addRow('Miscellaneous',                      pf.misc,           pf.misc*fc);
