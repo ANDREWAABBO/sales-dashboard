@@ -328,15 +328,14 @@
         <div class="form-group">
           <label for="shippingMethod">Shipping Method *</label>
           <select id="shippingMethod" name="shippingMethod" required>
-            <option value="White Glove Standard LTL">White Glove Standard LTL</option>
-            <option value="Standard LTL" selected>Standard LTL</option>
+            <option value="">Loading shipping methods...</option>
           </select>
           <small>Select the shipping method for detailed terms and conditions.</small>
         </div>
         <div class="form-group">
           <label for="countryOfOrigin">Country of Origin *</label>
           <select id="countryOfOrigin" name="countryOfOrigin" required>
-            <option value="Canada CA" selected>Canada CA</option>
+            <option value="">Loading countries...</option>
           </select>
           <small>Select country of origin for specific shipping notices and requirements.</small>
         </div>
@@ -435,6 +434,7 @@
         if (modal) {
           modal.style.display = 'block';
           updateQuantumPricingSummary();
+          loadDropdownOptions(); // Load dynamic dropdown options
           const generateBtn = document.getElementById('generateQuantumBtn');
           if (generateBtn) {
             const newBtn = generateBtn.cloneNode(true);
@@ -444,6 +444,111 @@
         }
       }, 100);
     };
+
+    // Load dynamic dropdown options from SHIPPING NOTES tab
+    function loadDropdownOptions() {
+      const shippingMethodSelect = document.getElementById('shippingMethod');
+      const countrySelect = document.getElementById('countryOfOrigin');
+      
+      // Set loading state
+      shippingMethodSelect.innerHTML = '<option value="">Loading shipping methods...</option>';
+      countrySelect.innerHTML = '<option value="">Loading countries...</option>';
+      
+      try {
+        const callbackName = 'dropdownCallback_' + Date.now();
+        const promise = new Promise(function(resolve, reject) {
+          window[callbackName] = function(data) { 
+            delete window[callbackName]; 
+            resolve(data); 
+          };
+          setTimeout(function() { 
+            delete window[callbackName]; 
+            reject(new Error('Request timeout')); 
+          }, 10000);
+        });
+
+        const script = document.createElement('script');
+        const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
+        const url = QUANTUM_PROPOSAL_URL + '?action=getDropdownOptions&callback=' + callbackName;
+        script.src = url;
+        
+        script.onerror = function() {
+          delete window[callbackName];
+          // Fallback to default options if loading fails
+          populateDropdownsWithDefaults();
+        };
+
+        document.body.appendChild(script);
+        
+        promise.then(function(data) {
+          document.body.removeChild(script);
+          if (data.status === 'success') {
+            populateDropdowns(data.shippingMethods, data.countries);
+          } else {
+            console.warn('Failed to load dropdown options:', data.message);
+            populateDropdownsWithDefaults();
+          }
+        }).catch(function(error) {
+          console.warn('Error loading dropdown options:', error.message);
+          populateDropdownsWithDefaults();
+        });
+        
+      } catch (error) {
+        console.warn('Error setting up dropdown loading:', error.message);
+        populateDropdownsWithDefaults();
+      }
+    }
+
+    // Populate dropdowns with dynamic data
+    function populateDropdowns(shippingMethods, countries) {
+      const shippingMethodSelect = document.getElementById('shippingMethod');
+      const countrySelect = document.getElementById('countryOfOrigin');
+      
+      // Clear existing options
+      shippingMethodSelect.innerHTML = '<option value="">Select shipping method...</option>';
+      countrySelect.innerHTML = '<option value="">Select country...</option>';
+      
+      // Populate shipping methods
+      if (shippingMethods && shippingMethods.length > 0) {
+        shippingMethods.forEach(function(method) {
+          const option = document.createElement('option');
+          option.value = method;
+          option.textContent = method;
+          shippingMethodSelect.appendChild(option);
+        });
+        // Set default to first option if Standard LTL exists, otherwise first option
+        const standardLTL = shippingMethods.find(function(method) {
+          return method === 'Standard LTL';
+        });
+        shippingMethodSelect.value = standardLTL || shippingMethods[0];
+      }
+      
+      // Populate countries
+      if (countries && countries.length > 0) {
+        countries.forEach(function(country) {
+          const option = document.createElement('option');
+          option.value = country;
+          option.textContent = country;
+          countrySelect.appendChild(option);
+        });
+        // Set default to first option if Canada CA exists, otherwise first option
+        const canadaCA = countries.find(function(country) {
+          return country === 'Canada CA';
+        });
+        countrySelect.value = canadaCA || countries[0];
+      }
+      
+      console.log('Dropdown options loaded successfully');
+    }
+
+    // Fallback function with default options
+    function populateDropdownsWithDefaults() {
+      const defaultShippingMethods = ['Standard LTL', 'White Glove Standard LTL'];
+      const defaultCountries = ['Canada CA', 'United States'];
+      
+      populateDropdowns(defaultShippingMethods, defaultCountries);
+      console.log('Using default dropdown options');
+    }
 
     window.closeQuantumModal = function closeQuantumModal(id) {
       const m = document.getElementById(id);
