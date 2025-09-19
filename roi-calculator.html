@@ -7,6 +7,8 @@
 
 <!-- Shared auth (operator mode only requires login) -->
 <script defer src="password.js"></script>
+<!-- Add jsPDF library for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   :root{
@@ -283,7 +285,7 @@
   <div class="modal" style="max-width:720px">
     <h4>Manage Links</h4>
     <div class="fg">
-      <label>Filter by “Created By”</label>
+      <label>Filter by "Created By"</label>
       <input id="filterCreatedBy" type="text" placeholder="(optional)">
     </div>
     <div id="tokenList" class="subtle">Loading…</div>
@@ -297,37 +299,155 @@
 /* ===========================
    Backend configuration
 =========================== */
-const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
+var BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
 
-/* “What the sheet includes in Total Costs” switches */
-const IN_NET_INCLUDE_CELLULAR   = true;
-const IN_NET_INCLUDE_LICENSE    = true;
-const IN_NET_INCLUDE_RFID       = true;
-const IN_NET_INCLUDE_ENGAGE     = true;
-const IN_NET_INCLUDE_GATEWAY    = true;
-const IN_NET_INCLUDE_MERCHANT   = true;
-const IN_NET_INCLUDE_SWIPE      = true;
-const IN_NET_INCLUDE_LABOR      = true;
-const IN_NET_INCLUDE_MISC       = true;
-const IN_NET_INCLUDE_FINANCING  = true;
+/* "What the sheet includes in Total Costs" switches */
+var IN_NET_INCLUDE_CELLULAR   = true;
+var IN_NET_INCLUDE_LICENSE    = true;
+var IN_NET_INCLUDE_RFID       = true;
+var IN_NET_INCLUDE_ENGAGE     = true;
+var IN_NET_INCLUDE_GATEWAY    = true;
+var IN_NET_INCLUDE_MERCHANT   = true;
+var IN_NET_INCLUDE_SWIPE      = true;
+var IN_NET_INCLUDE_LABOR      = true;
+var IN_NET_INCLUDE_MISC       = true;
+var IN_NET_INCLUDE_FINANCING  = true;
 
-let baseRates = {
+var baseRates = {
   fixedCosts:{
     cellular:25, licenseFee:175, rfidTagsPerTag:0.18,
     engageTransactionFee:0.15, gatewayTransactionFee:0.13,
     merchantAccountPercent:2.5, merchantAccountSwipeFee:0.03
   }
 };
-let accessToken = null;
-let operatorMode = true;
+var accessToken = null;
+var operatorMode = true;
+
+/* ===========================
+   PDF Generation Function
+=========================== */
+function generatePDF() {
+  try {
+    if (typeof window.jspdf === 'undefined') {
+      alert('PDF library not loaded. Please refresh the page.');
+      return;
+    }
+
+    var inputs = readInputs();
+    var pf = calcPerFridge(inputs);
+    
+    var salesRevenue = pf.salesRevenue * inputs.fridgeCount;
+    var serviceRev = pf.serviceRevenue * inputs.fridgeCount;
+    var totalRevenue = salesRevenue + serviceRev;
+    var monthlyCosts = pf.totalCosts * inputs.fridgeCount;
+    var monthlyNet = pf.netSheet * inputs.fridgeCount;
+    var annual = (monthlyNet * 12) + (pf.serviceRevenue * inputs.fridgeCount * 12);
+
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF();
+
+    doc.setFillColor(30, 58, 138);
+    doc.rect(0, 0, 210, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Smart Food Fridge ROI Report', 20, 18);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Generated: ' + new Date().toLocaleDateString(), 150, 18);
+
+    doc.setTextColor(0, 0, 0);
+    var y = 45;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Executive Summary', 20, y);
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Number of Fridges: ' + inputs.fridgeCount, 20, y); y += 5;
+    doc.text('Monthly Net Profit: ' + usd2(monthlyNet), 20, y); y += 5;
+    doc.text('Annual Net Profit: ' + usd2(annual), 20, y); y += 5;
+    doc.text('Monthly Revenue: ' + usd2(totalRevenue), 20, y); y += 5;
+    doc.text('Monthly Costs: ' + usd2(monthlyCosts), 20, y); y += 12;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Business Assumptions', 20, y); y += 8;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Monthly Transactions per Fridge: ' + inputs.transactions, 20, y); y += 5;
+    doc.text('Food Price per Sale: ' + usd2(inputs.foodPrice) + ' (' + inputs.foodPercent + '% of sales)', 20, y); y += 5;
+    doc.text('Beverage Price per Sale: ' + usd2(inputs.beveragePrice) + ' (' + inputs.beveragePercent + '% of sales)', 20, y); y += 5;
+    doc.text('Profit Margin: ' + inputs.margin + '%', 20, y); y += 5;
+    doc.text('Spoilage Rate: ' + inputs.spoilage + '%', 20, y); y += 5;
+    doc.text('Monthly Service Fee: ' + usd2(inputs.serviceFee) + ' per fridge', 20, y); y += 12;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Financial Performance', 20, y); y += 10;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sales Revenue: ' + usd2(salesRevenue), 20, y); y += 5;
+    doc.text('Service Fee Revenue: ' + usd2(serviceRev), 20, y); y += 5;
+    doc.text('Total Revenue: ' + usd2(totalRevenue), 20, y); y += 5;
+    doc.text('Total Costs: ' + usd2(monthlyCosts), 20, y); y += 5;
+    doc.text('Net Profit: ' + usd2(monthlyNet), 20, y); y += 15;
+
+    if (y > 240) {
+      doc.addPage();
+      y = 30;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Cost Breakdown (Per Fridge)', 20, y); y += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('COGS: ' + usd2(pf.cogs), 20, y); y += 5;
+    doc.text('Spoilage: ' + usd2(pf.spoilageCost), 20, y); y += 5;
+    doc.text('Cellular: ' + usd2(pf.cellular), 20, y); y += 5;
+    doc.text('License Fee: ' + usd2(pf.license), 20, y); y += 5;
+    doc.text('Transaction Fees: ' + usd2(pf.engage + pf.gateway), 20, y); y += 5;
+    doc.text('Merchant Fees: ' + usd2(pf.merchantPct + pf.swipe), 20, y); y += 5;
+    doc.text('RFID Tags: ' + usd2(pf.rfid), 20, y); y += 5;
+    doc.text('Labor: ' + usd2(pf.labor), 20, y); y += 5;
+    doc.text('Financing: ' + usd2(pf.financing), 20, y); y += 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Costs: ' + usd2(pf.totalCosts), 20, y);
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text('This report contains estimated calculations. Actual results may vary.', 20, 280);
+    doc.text('Generated by Smart Food Fridge ROI Calculator - Quantum Solutions', 20, 285);
+
+    var timestamp = new Date().toISOString().slice(0, 10);
+    var filename = 'Smart-Fridge-ROI-Report-' + timestamp + '.pdf';
+    
+    doc.save(filename);
+    
+    toast('PDF downloaded to your Downloads folder!');
+
+  } catch (error) {
+    console.error('PDF Error:', error);
+    alert('Failed to generate PDF: ' + error.message);
+  }
+}
 
 /* ===========================
    Init
 =========================== */
 window.addEventListener('DOMContentLoaded', init);
 
-async function init(){
-  const p = new URLSearchParams(location.search);
+function init(){
+  var p = new URLSearchParams(location.search);
   accessToken = p.get('token');
   operatorMode = !accessToken;
 
@@ -339,56 +459,64 @@ async function init(){
   document.getElementById('opButtons').style.display = operatorMode ? 'flex' : 'none';
 
   // wire buttons
-  const s1 = document.getElementById('btnShare'); const s2 = document.getElementById('btnShare2');
+  var s1 = document.getElementById('btnShare'); var s2 = document.getElementById('btnShare2');
   if (s1) s1.onclick = openShare;
   if (s2) s2.onclick = openShare;
   document.getElementById('btnManage').onclick = openManage;
   document.getElementById('btnGenShare').onclick = createShare;
-  document.getElementById('btnPDF').onclick = () => alert('PDF export coming soon 😊');
+  document.getElementById('btnPDF').onclick = generatePDF;
 
   // inputs -> recalc
-  document.querySelectorAll('input').forEach(el=>{
-    el.addEventListener('input', ()=>{ if (el.id==='foodPercent'){ syncPercents(); } update(); });
+  document.querySelectorAll('input').forEach(function(el){
+    el.addEventListener('input', function(){ if (el.id==='foodPercent'){ syncPercents(); } update(); });
   });
 
   // try to fetch base rates from backend (token optional)
-  try{
-    if (accessToken){
-      const res = await fetch(`${BACKEND_URL}?action=validateAccess&token=${encodeURIComponent(accessToken)}`);
-      const ok = await res.json(); if (ok.status!=='success') throw new Error('Invalid token');
-    }
-    const url = `${BACKEND_URL}?action=getBaseRates${accessToken?`&token=${encodeURIComponent(accessToken)}`:''}`;
-    const j = await (await fetch(url)).json();
-    if (j.status==='success' && j.data && j.data.baseRates) baseRates = j.data.baseRates;
-  }catch(_){}
+  fetchBaseRates();
   renderFixedCosts();
   syncPercents();
   update();
 }
 
+function fetchBaseRates(){
+  try{
+    if (accessToken){
+      fetch(BACKEND_URL + '?action=validateAccess&token=' + encodeURIComponent(accessToken))
+      .then(function(res){ return res.json(); })
+      .then(function(ok){ if (ok.status!=='success') throw new Error('Invalid token'); });
+    }
+    var url = BACKEND_URL + '?action=getBaseRates' + (accessToken ? '&token=' + encodeURIComponent(accessToken) : '');
+    fetch(url)
+    .then(function(res){ return res.json(); })
+    .then(function(j){
+      if (j.status==='success' && j.data && j.data.baseRates) baseRates = j.data.baseRates;
+      renderFixedCosts();
+    });
+  }catch(_){}
+}
+
 function syncPercents(){
-  const f = Number(document.getElementById('foodPercent').value||0);
+  var f = Number(document.getElementById('foodPercent').value||0);
   document.getElementById('beveragePercent').value = Math.max(0,Math.min(100,100 - f));
 }
 
 function renderFixedCosts(){
-  const r = baseRates.fixedCosts;
-  document.getElementById('fixedCostsSummary').innerHTML = `
-    • Cellular: $${fmt2(r.cellular)} /month<br>
-    • License Fee: $${fmt2(r.licenseFee)} /month<br>
-    • Engage <b>Transactions</b> Fees <i>($${fmt2(r.engageTransactionFee)}/tx)</i><br>
-    • Gateway <b>Transactions</b> Fees <i>($${fmt2(r.gatewayTransactionFee)}/tx)</i><br>
-    • Merchant Interchange: ${Number(r.merchantAccountPercent).toFixed(2)}% of sales revenue<br>
-    • Merchant Swipe Fee: $${fmt2(r.merchantAccountSwipeFee)} per tx<br>
-    • RFID Tags: $${fmt2(r.rfidTagsPerTag)} per tag
-  `;
+  var r = baseRates.fixedCosts;
+  document.getElementById('fixedCostsSummary').innerHTML = 
+    '• Cellular: $' + fmt2(r.cellular) + ' /month<br>' +
+    '• License Fee: $' + fmt2(r.licenseFee) + ' /month<br>' +
+    '• Engage <b>Transactions</b> Fees <i>($' + fmt2(r.engageTransactionFee) + '/tx)</i><br>' +
+    '• Gateway <b>Transactions</b> Fees <i>($' + fmt2(r.gatewayTransactionFee) + '/tx)</i><br>' +
+    '• Merchant Interchange: ' + Number(r.merchantAccountPercent).toFixed(2) + '% of sales revenue<br>' +
+    '• Merchant Swipe Fee: $' + fmt2(r.merchantAccountSwipeFee) + ' per tx<br>' +
+    '• RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
 }
 
 /* ===========================
    Calculations
 =========================== */
 function readInputs(){
-  const g = id => Number(document.getElementById(id).value||0);
+  var g = function(id){ return Number(document.getElementById(id).value||0); };
   return {
     fridgeCount: Math.max(1, Math.floor(g('fridgeCount'))),
     transactions: g('transactions'),
@@ -407,34 +535,34 @@ function readInputs(){
 }
 
 function calcPerFridge(inputs){
-  const r = baseRates.fixedCosts;
+  var r = baseRates.fixedCosts;
 
-  const avgTicket = (inputs.foodPrice * inputs.foodPercent/100) + (inputs.beveragePrice * inputs.beveragePercent/100);
-  const salesRevenue = inputs.transactions * avgTicket;
+  var avgTicket = (inputs.foodPrice * inputs.foodPercent/100) + (inputs.beveragePrice * inputs.beveragePercent/100);
+  var salesRevenue = inputs.transactions * avgTicket;
 
-  const serviceRevenue = inputs.serviceFee;
+  var serviceRevenue = inputs.serviceFee;
 
-  const cogs = salesRevenue * (1 - inputs.margin/100);
-  const spoilageCost = cogs * (inputs.spoilage/100);
+  var cogs = salesRevenue * (1 - inputs.margin/100);
+  var spoilageCost = cogs * (inputs.spoilage/100);
 
-  const rfid   = inputs.transactions * r.rfidTagsPerTag;
-  const engage = inputs.transactions * r.engageTransactionFee;
-  const gateway= inputs.transactions * r.gatewayTransactionFee;
-  const merchantPct = salesRevenue * (r.merchantAccountPercent/100);
-  const swipe  = inputs.transactions * r.merchantAccountSwipeFee;
+  var rfid   = inputs.transactions * r.rfidTagsPerTag;
+  var engage = inputs.transactions * r.engageTransactionFee;
+  var gateway= inputs.transactions * r.gatewayTransactionFee;
+  var merchantPct = salesRevenue * (r.merchantAccountPercent/100);
+  var swipe  = inputs.transactions * r.merchantAccountSwipeFee;
 
-  const cellular = r.cellular;
-  const license  = r.licenseFee;
-  const labor    = inputs.laborRate * inputs.laborHours * 4;
-  const misc     = inputs.miscCosts;
-  const financing= inputs.financing;
+  var cellular = r.cellular;
+  var license  = r.licenseFee;
+  var labor    = inputs.laborRate * inputs.laborHours * 4;
+  var misc     = inputs.miscCosts;
+  var financing= inputs.financing;
 
-  const costsNoFinance =
+  var costsNoFinance =
       cogs + spoilageCost + cellular + license + rfid + engage + gateway + merchantPct + swipe + labor + misc;
 
-  const totalCosts = costsNoFinance + financing;
+  var totalCosts = costsNoFinance + financing;
 
-  let totalCostsBlock =
+  var totalCostsBlock =
       (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
       (IN_NET_INCLUDE_RFID     ? rfid     : 0) +
@@ -445,15 +573,15 @@ function calcPerFridge(inputs){
       (IN_NET_INCLUDE_LABOR    ? labor    : 0) +
       (IN_NET_INCLUDE_MISC     ? misc     : 0);
 
-  const netSheet =
+  var netSheet =
       (salesRevenue + serviceRevenue) -
       (cogs + spoilageCost + totalCostsBlock + (IN_NET_INCLUDE_FINANCING ? financing : 0));
 
   return {
-    salesRevenue, serviceRevenue,
-    cogs, spoilageCost, cellular, license, rfid, engage, gateway, merchantPct, swipe, labor, misc, financing,
-    totalCosts,
-    netSheet
+    salesRevenue: salesRevenue, serviceRevenue: serviceRevenue,
+    cogs: cogs, spoilageCost: spoilageCost, cellular: cellular, license: license, rfid: rfid, engage: engage, gateway: gateway, merchantPct: merchantPct, swipe: swipe, labor: labor, misc: misc, financing: financing,
+    totalCosts: totalCosts,
+    netSheet: netSheet
   };
 }
 
@@ -461,27 +589,27 @@ function calcPerFridge(inputs){
    UI Update
 =========================== */
 function update(){
-  const i = readInputs();
-  const pf = calcPerFridge(i);
+  var i = readInputs();
+  var pf = calcPerFridge(i);
 
-  const salesRevenue = pf.salesRevenue * i.fridgeCount;
-  const serviceRev   = pf.serviceRevenue * i.fridgeCount;
-  const totalRevenue = salesRevenue + serviceRev;
-  const monthlyCosts = pf.totalCosts     * i.fridgeCount;
-  const monthlyNet   = pf.netSheet       * i.fridgeCount;
+  var salesRevenue = pf.salesRevenue * i.fridgeCount;
+  var serviceRev   = pf.serviceRevenue * i.fridgeCount;
+  var totalRevenue = salesRevenue + serviceRev;
+  var monthlyCosts = pf.totalCosts     * i.fridgeCount;
+  var monthlyNet   = pf.netSheet       * i.fridgeCount;
 
-  const annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
+  var annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
   setText('kpiServiceRevenue',usd2(serviceRev));
   setText('kpiCosts',         usd2(monthlyCosts));
   setText('kpiTotalRevenue',  usd2(totalRevenue));
 
-  const netEl = document.getElementById('kpiNet');
+  var netEl = document.getElementById('kpiNet');
   netEl.textContent = usd2(monthlyNet);
   netEl.className = 'v ' + (monthlyNet>=0 ? 'positive':'negative');
 
-  const annEl = document.getElementById('kpiAnnual');
+  var annEl = document.getElementById('kpiAnnual');
   annEl.textContent = usd2(annual);
   annEl.className = 'v ' + (annual>=0 ? 'positive':'negative');
 
@@ -491,24 +619,24 @@ function update(){
 /* ===========================
    Breakdown table
 =========================== */
-// Update the renderBreakdown function to show labor calculation details
 function renderBreakdown(pf, inputs){
-  const tb = document.getElementById('breakdownBody');
+  var tb = document.getElementById('breakdownBody');
   tb.innerHTML = '';
 
-  const addSec = (t)=>{
-    const tr = document.createElement('tr');
+  var addSec = function(t){
+    var tr = document.createElement('tr');
     tr.className = 'b-section';
-    tr.innerHTML = `<td colspan="3">${t}</td>`;
+    tr.innerHTML = '<td colspan="3">' + t + '</td>';
     tb.appendChild(tr);
   };
-  const addRow = (label, per, all, cls='')=>{
-    const tr = document.createElement('tr'); if (cls) tr.classList.add(cls);
-    tr.innerHTML = `<td>${label}</td><td>${usd2(per)}</td><td>${usd2(all)}</td>`;
+  var addRow = function(label, per, all, cls){
+    var tr = document.createElement('tr'); 
+    if (cls) tr.classList.add(cls);
+    tr.innerHTML = '<td>' + label + '</td><td>' + usd2(per) + '</td><td>' + usd2(all) + '</td>';
     tb.appendChild(tr);
   };
 
-  const fc = inputs.fridgeCount;
+  var fc = inputs.fridgeCount;
 
   addSec('Costs');
   addRow('COGS',                               pf.cogs,           pf.cogs*fc);
@@ -521,8 +649,7 @@ function renderBreakdown(pf, inputs){
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
   
-  // Updated labor row to show the calculation
-  const laborCalc = `Labor ($${inputs.laborRate}/hr × ${inputs.laborHours} hrs/week × 4 weeks)`;
+  var laborCalc = 'Labor ($' + inputs.laborRate + '/hr × ' + inputs.laborHours + ' hrs/week × 4 weeks)';
   addRow(laborCalc,                            pf.labor,          pf.labor*fc);
   
   addRow('Miscellaneous',                      pf.misc,           pf.misc*fc);
@@ -530,8 +657,8 @@ function renderBreakdown(pf, inputs){
   addRow('Total Costs (incl. financing)',      pf.totalCosts,     pf.totalCosts*fc, 'b-total');
 
   addSec('Revenue (for reference)');
-  const foodRev = inputs.transactions * (inputs.foodPercent/100)     * inputs.foodPrice;
-  const bevRev  = inputs.transactions * (inputs.beveragePercent/100) * inputs.beveragePrice;
+  var foodRev = inputs.transactions * (inputs.foodPercent/100)     * inputs.foodPrice;
+  var bevRev  = inputs.transactions * (inputs.beveragePercent/100) * inputs.beveragePrice;
   addRow('Food Revenue',          foodRev,         foodRev*fc);
   addRow('Beverage Revenue',      bevRev,          bevRev*fc);
   addRow('Service Fee Revenue',   pf.serviceRevenue, pf.serviceRevenue*fc);
@@ -544,13 +671,11 @@ function openShare(){
   if (!operatorMode) return;
   document.getElementById('shareOverlay').style.display='flex';
 
-  // prefill client name from logged in user (if empty)
-  const name = localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'';
-  const nameBox = document.getElementById('clientName');
+  var name = localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'';
+  var nameBox = document.getElementById('clientName');
   if (!nameBox.value && name) nameBox.value = name;
 
-  // reset button each time
-  const gen = document.getElementById('btnGenShare');
+  var gen = document.getElementById('btnGenShare');
   if (gen){
     gen.disabled = false;
     gen.innerHTML = 'Generate';
@@ -558,30 +683,30 @@ function openShare(){
 }
 function closeShare(){ document.getElementById('shareOverlay').style.display='none'; }
 
-async function createShare(){
+function createShare(){
   if (!operatorMode) return;
 
-  const btn       = document.getElementById('btnGenShare');
-  const urlBox    = document.getElementById('shareUrlBox');
-  const createdBy = (localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'Operator');
-  const clientName= document.getElementById('clientName').value||'';
+  var btn       = document.getElementById('btnGenShare');
+  var urlBox    = document.getElementById('shareUrlBox');
+  var createdBy = (localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'Operator');
+  var clientName= document.getElementById('clientName').value||'';
 
-  // spinner + disable while working
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span>Generating…';
   urlBox.value = '';
 
-  try{
-    const u = `${BACKEND_URL}?action=generateToken&createdBy=${encodeURIComponent(createdBy)}&clientName=${encodeURIComponent(clientName)}`;
-    const r = await fetch(u);
-    const j = await r.json();
+  var u = BACKEND_URL + '?action=generateToken&createdBy=' + encodeURIComponent(createdBy) + '&clientName=' + encodeURIComponent(clientName);
+  fetch(u)
+  .then(function(r){ return r.json(); })
+  .then(function(j){
     if (j.status === 'success'){
-      const link = j.data.shareUrl;
+      var link = j.data.shareUrl;
       urlBox.value = link;
 
-      // Auto-copy (two strategies)
-      let copied = false;
-      try { await navigator.clipboard.writeText(link); copied = true; } catch (_){}
+      var copied = false;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(function(){ copied = true; }).catch(function(){});
+      }
       if (!copied) {
         urlBox.select(); urlBox.setSelectionRange(0,99999);
         try { document.execCommand('copy'); copied = true; } catch (_){}
@@ -589,11 +714,10 @@ async function createShare(){
 
       if (copied) {
         closeShare();
-        toast('Guest link copied. It’s valid for 7 days — share it with your client.');
+        toast('Guest link copied. It\'s valid for 7 days — share it with your client.');
       } else {
-        // If copy failed (rare), keep modal open and instruct
         urlBox.focus();
-        toast('Couldn’t auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
+        toast('Couldn\'t auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
       }
 
       btn.disabled = false;
@@ -603,11 +727,12 @@ async function createShare(){
       btn.innerHTML = 'Generate';
       alert(j.message || 'Unable to generate link');
     }
-  }catch(err){
+  })
+  .catch(function(err){
     btn.disabled = false;
     btn.innerHTML = 'Generate';
     alert('Network error. Please try again.');
-  }
+  });
 }
 
 function openManage(){
@@ -617,68 +742,73 @@ function openManage(){
 }
 function closeManage(){ document.getElementById('manageOverlay').style.display='none'; }
 
-async function loadTokens(){
-  const listBox = document.getElementById('tokenList');
+function loadTokens(){
+  var listBox = document.getElementById('tokenList');
   listBox.textContent = 'Loading…';
-  const createdBy = (document.getElementById('filterCreatedBy').value||'').trim();
-  try{
-    const url = `${BACKEND_URL}?action=listTokens&onlyActive=false&maxRows=50${createdBy?`&createdBy=${encodeURIComponent(createdBy)}`:''}`;
-    const r = await fetch(url); const j = await r.json();
+  var createdBy = (document.getElementById('filterCreatedBy').value||'').trim();
+  var url = BACKEND_URL + '?action=listTokens&onlyActive=false&maxRows=50' + (createdBy ? '&createdBy=' + encodeURIComponent(createdBy) : '');
+  fetch(url)
+  .then(function(r){ return r.json(); })
+  .then(function(j){
     if (j.status!=='success') throw new Error(j.message||'Failed to load tokens');
-    const items = j.data.tokens||[];
+    var items = j.data.tokens||[];
     if (!items.length){ listBox.innerHTML = '<div class="subtle">No tokens found.</div>'; return; }
-    listBox.innerHTML = items.map(t => {
-      const active = t.active ? '<span class="tableBadge">active</span>' : '<span class="tableBadge" style="background:#fee2e2;color:#b91c1c">revoked</span>';
-      return `
-        <div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:#f8fafc">
-          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
-            <div>
-              <div style="font-weight:700">${t.clientName || '(no client name)'} ${active}</div>
-              <div class="subtle">Created: ${t.createdDate ? new Date(t.createdDate).toLocaleDateString() : '—'} • Expires: ${t.expiresAt? new Date(t.expiresAt).toLocaleDateString():'—'} • Accesses: ${t.accessCount||0}</div>
-              <div class="subtle" style="word-break:break-all">${t.shareUrl}</div>
-            </div>
-            <div>
-              <button class="btn secondary" onclick="copyText('${t.shareUrl.replace(/'/g,"\\'")}')">Copy Link</button>
-              ${t.active ? `<button class="btn" style="background:#b91c1c" onclick="revokeToken('${t.token}')">Revoke</button>` : ''}
-            </div>
-          </div>
-        </div>`;
+    listBox.innerHTML = items.map(function(t){
+      var active = t.active ? '<span class="tableBadge">active</span>' : '<span class="tableBadge" style="background:#fee2e2;color:#b91c1c">revoked</span>';
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:#f8fafc">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center">' +
+          '<div>' +
+            '<div style="font-weight:700">' + (t.clientName || '(no client name)') + ' ' + active + '</div>' +
+            '<div class="subtle">Created: ' + (t.createdDate ? new Date(t.createdDate).toLocaleDateString() : '—') + ' • Expires: ' + (t.expiresAt? new Date(t.expiresAt).toLocaleDateString():'—') + ' • Accesses: ' + (t.accessCount||0) + '</div>' +
+            '<div class="subtle" style="word-break:break-all">' + t.shareUrl + '</div>' +
+          '</div>' +
+          '<div>' +
+            '<button class="btn secondary" onclick="copyText(\'' + t.shareUrl.replace(/'/g,"\\'") + '\')">Copy Link</button>' +
+            (t.active ? '<button class="btn" style="background:#b91c1c" onclick="revokeToken(\'' + t.token + '\')">Revoke</button>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
-  }catch(err){
-    listBox.innerHTML = `<div class="subtle" style="color:#b91c1c">Error: ${err.message}</div>`;
+  })
+  .catch(function(err){
+    listBox.innerHTML = '<div class="subtle" style="color:#b91c1c">Error: ' + err.message + '</div>';
+  });
+}
+
+function revokeToken(token){
+  if (!confirm('Revoke this link?')) return;
+  fetch(BACKEND_URL + '?action=deactivateToken&token=' + encodeURIComponent(token))
+  .then(function(r){ return r.json(); })
+  .then(function(j){
+    if (j.status==='success'){ loadTokens(); } else { alert(j.message||'Failed to revoke'); }
+  });
+}
+
+function copyText(t){ 
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(t).then(function(){ toast('Copied!'); });
   }
 }
-async function revokeToken(token){
-  if (!confirm('Revoke this link?')) return;
-  const r = await fetch(`${BACKEND_URL}?action=deactivateToken&token=${encodeURIComponent(token)}`);
-  const j = await r.json();
-  if (j.status==='success'){ loadTokens(); } else { alert(j.message||'Failed to revoke'); }
-}
-function copyText(t){ navigator.clipboard.writeText(t).then(()=>toast('Copied!')); }
 
 /* ===========================
    Helpers (with comma formatting)
 =========================== */
-function setText(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
-function usd2(n){ return `$${fmt2(n)}`; }
+function setText(id, txt){ var el=document.getElementById(id); if(el) el.textContent=txt; }
+function usd2(n){ return '$' + fmt2(n); }
 function fmt2(n){
-  const num = Number(n||0);
+  var num = Number(n||0);
   return num.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-/* Tiny toast helper */
-function toast(message, kind='success'){
-  const d = document.createElement('div');
+function toast(message, kind){
+  var d = document.createElement('div');
   d.className = 'toast';
   d.textContent = message;
   if (kind==='warn'){ d.style.background = '#f59e0b'; }
   if (kind==='error'){ d.style.background = '#dc2626'; }
   document.body.appendChild(d);
-  setTimeout(()=>{ d.style.opacity='0'; d.style.transition='opacity .25s'; setTimeout(()=>d.remove(), 250); }, 2600);
+  setTimeout(function(){ d.style.opacity='0'; d.style.transition='opacity .25s'; setTimeout(function(){d.remove();}, 250); }, 2600);
 }
 </script>
 </body>
 </html>
-
-
-
