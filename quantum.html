@@ -193,7 +193,7 @@
       <p>Smart Food Fridge Solutions for Modern Businesses</p>
     </div>
 
-    <!-- Quantum Solutions - 6 Cards Vertical Stack -->
+    <!-- Quantum Solutions - 5 Cards Vertical Stack -->
     <div class="quantum-grid">
       <div class="card">
         <h2>How We Stack Up</h2>
@@ -289,8 +289,8 @@
       </div>
 
       <div class="form-group">
-        <label for="scannerCount">RFID Scanners Needed</label>
-        <select id="scannerCount" name="scannerCount" onchange="updateQuantumPricingSummary()">
+        <label for="scannerCount">RFID Scanners Needed *</label>
+        <select id="scannerCount" name="scannerCount" required onchange="updateQuantumPricingSummary()">
           <option value="0">0 scanners</option>
           <option value="1" selected>1 scanner</option>
           <option value="2">2 scanners</option>
@@ -313,14 +313,32 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="rfidRolls">RFID Tag Rolls (1,000 tags per roll)</label>
-          <input type="number" id="rfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricingSummary()">
+          <label for="rfidRolls">RFID Tag Rolls (1,000 tags per roll) *</label>
+          <input type="number" id="rfidRolls" name="rfidRolls" min="0" max="50" value="5" required onchange="updateQuantumPricingSummary()">
           <small>Recommended starting quantity: 5 rolls. $0.18 per tag ($180 per roll).</small>
         </div>
         <div class="form-group">
           <label for="shippingPerUnit">Shipping Cost Per Fridge *</label>
           <input type="number" id="shippingPerUnit" name="shippingPerUnit" min="0" step="0.01" value="600" required onchange="updateQuantumPricingSummary()">
           <small>Enter shipping cost per fridge (e.g., $600). Total shipping = cost per fridge × number of fridges.</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="shippingMethod">Shipping Method *</label>
+          <select id="shippingMethod" name="shippingMethod" required>
+            <option value="White Glove Standard LTL">White Glove Standard LTL</option>
+            <option value="Standard LTL" selected>Standard LTL</option>
+          </select>
+          <small>Select the shipping method for detailed terms and conditions.</small>
+        </div>
+        <div class="form-group">
+          <label for="countryOfOrigin">Country of Origin *</label>
+          <select id="countryOfOrigin" name="countryOfOrigin" required>
+            <option value="Canada CA" selected>Canada CA</option>
+          </select>
+          <small>Select country of origin for specific shipping notices and requirements.</small>
         </div>
       </div>
 
@@ -537,7 +555,9 @@
           fridgeCount: document.getElementById('quantumFridgeCount').value,
           scannerCount: document.getElementById('scannerCount').value,
           rfidRolls: document.getElementById('rfidRolls').value || '0',
-          shippingPerUnit: document.getElementById('shippingPerUnit').value || '0', // NEW: shipping field
+          shippingPerUnit: document.getElementById('shippingPerUnit').value || '0',
+          shippingMethod: document.getElementById('shippingMethod').value,
+          countryOfOrigin: document.getElementById('countryOfOrigin').value,
           vinylWrap: 'No',
           goldSupport: 'No'
         };
