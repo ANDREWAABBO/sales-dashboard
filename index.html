@@ -653,7 +653,7 @@
               '<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">' + m.description + '</p>' +
             '</div>' +
             '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
-              '<button class="btn btn-primary" onclick="window.open(\'' + viewUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
+              '<button class="btn btn-primary" onclick="viewAbbondanzaMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/<[^>]*>/g, '').replace(/'/g, "\\'") + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
               '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">📥 Download</button>' +
             '</div>' +
           '</div>'
