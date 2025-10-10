@@ -275,7 +275,7 @@
             </div>
             <div class="form-group">
               <label for="customerZip">Customer Zip Code *</label>
-              <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345"/>
+              <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345" inputmode="numeric"/>
             </div>
           </div>
         </div>
@@ -716,7 +716,7 @@
       document.getElementById('repPhone').value = lead.repPhone || '';
       document.getElementById('repEmail').value = lead.repEmail || '';
       document.getElementById('customerAddress').value = lead.customerAddress || '';
-      document.getElementById('customerZip').value = lead.customerZip || '';
+      // Preserve leading zeros in zip code const zipCode = lead.customerZip || ''; document.getElementById('customerZip').value = String(zipCode).padStart(5, '0');
 
       if (lead.followUp){
         const d = new Date(lead.followUp);
@@ -760,7 +760,12 @@
     function snapshotForm(){
       const formEl = document.getElementById('leadForm');
       const form = new FormData(formEl);
-      return JSON.stringify(Object.fromEntries(form.entries()));
+const lead = Object.fromEntries(form.entries());
+
+// Ensure zip code preserves leading zeros
+if (lead.customerZip) {
+  lead.customerZip = String(lead.customerZip).padStart(5, '0');
+}
     }
     function markFormPristineAndWatch(){
       formInitialSnapshot = snapshotForm();
