@@ -577,17 +577,30 @@
     };
     
    window.proceedToProposalGenerator = function proceedToProposalGenerator() {
-  // Close warning modal
-  const warningOverlay = document.querySelector('.modal-overlay');
-  if (warningOverlay) warningOverlay.remove();
+  console.log('proceedToProposalGenerator called!');
+  
+  // Close warning modal - but be more specific
+  const allOverlays = document.querySelectorAll('.modal-overlay');
+  console.log('Found overlays:', allOverlays.length);
+  
+  allOverlays.forEach(function(overlay) {
+    if (overlay.id !== 'quantumProposalModal') {
+      console.log('Removing overlay:', overlay);
+      overlay.remove();
+    }
+  });
   
   // Open the proposal generator modal
   setTimeout(function() {
     const modalOverlay = document.getElementById('quantumProposalModal');
+    console.log('Modal overlay element:', modalOverlay);
     if (modalOverlay) {
       modalOverlay.style.display = 'block';
+      console.log('Set display to block');
       updateQuantumPricingSummary();
       loadDropdownOptions();
+    } else {
+      console.log('ERROR: Could not find quantumProposalModal');
     }
   }, 200);
 };
