@@ -576,7 +576,7 @@
       document.body.appendChild(warningOverlay);
     };
     
-   window.proceedToProposalGenerator = function proceedToProposalGenerator() {
+  window.proceedToProposalGenerator = function proceedToProposalGenerator() {
   console.log('proceedToProposalGenerator called!');
   
   // Close warning modal - but be more specific
@@ -589,43 +589,6 @@
       overlay.remove();
     }
   });
-  
-  // Open the proposal generator modal
-  setTimeout(function() {
-    const modalOverlay = document.getElementById('quantumProposalModal');
-    console.log('Modal overlay element:', modalOverlay);
-    if (modalOverlay) {
-      modalOverlay.style.display = 'block';
-      console.log('Set display to block');
-      updateQuantumPricingSummary();
-      loadDropdownOptions();
-    } else {
-      console.log('ERROR: Could not find quantumProposalModal');
-    }
-  }, 200);
-};
-  
-  // Open the proposal generator modal
-  setTimeout(function() {
-    const modalOverlay = document.getElementById('quantumProposalModal');
-    if (modalOverlay) {
-      modalOverlay.style.display = 'block';
-      updateQuantumPricingSummary();
-      loadDropdownOptions();
-    }
-  }, 200);
-};
-  
-  // Open the proposal generator modal
-  setTimeout(function() {
-    const modalOverlay = document.getElementById('quantumProposalModal');
-    if (modalOverlay) {
-      modalOverlay.style.display = 'block';
-      updateQuantumPricingSummary();
-      loadDropdownOptions();
-    }
-  }, 200);
-};
   
   // Open the proposal generator modal
   setTimeout(function() {
