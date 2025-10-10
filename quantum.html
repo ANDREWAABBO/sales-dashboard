@@ -1253,7 +1253,7 @@
       closeQuantumProposalViewer();
   
       const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
+      overlay.className = 'modal-overlay pdf-viewer-overlay';
       overlay.style.display = 'block';
   
       const pdfModal = document.createElement('div');
@@ -1264,6 +1264,15 @@
       pdfModal.style.flexDirection = 'column';
   
       const viewerUrl = 'https://drive.google.com/file/d/' + fileId + '/preview?usp=embed';
+      
+      // Find the proposal to check its archive status
+      const proposal = window.allQuantumProposals ? window.allQuantumProposals.find(function(p) { return p.id === fileId; }) : null;
+      const isArchived = proposal && proposal.status === 'archived';
+      
+      // Create appropriate archive/restore button
+      const archiveButton = isArchived
+        ? '<button class="btn" onclick="unarchiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#10b981;">♻️ Restore</button>'
+        : '<button class="btn" onclick="archiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#f59e0b;">📦 Archive</button>';
   
       pdfModal.innerHTML = 
         '<div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
@@ -1271,6 +1280,7 @@
           '<div style="display:flex;gap:10px;align-items:center;">' +
             '<button class="btn btn-primary" onclick="closeModal(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">Back to Library</button>' +
             '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:10px 20px;">Download</button>' +
+            archiveButton +
           '</div>' +
         '</div>' +
         '<div style="flex:1;padding:20px;overflow:hidden;">' +
@@ -1278,6 +1288,45 @@
         '</div>';
       overlay.appendChild(pdfModal);
       document.body.appendChild(overlay);
+    };
+    
+    // Archive from PDF viewer
+    window.archiveFromViewer = function archiveFromViewer(fileId, companyName) {
+      // Close PDF viewer
+      const pdfOverlay = document.querySelector('.pdf-viewer-overlay');
+      if (pdfOverlay) pdfOverlay.remove();
+      
+      // Open library
+      setTimeout(function() {
+        openQuantumProposalViewer();
+        
+        // Wait for library to load, then trigger archive
+        setTimeout(function() {
+          archiveQuantumProposal(fileId, companyName);
+        }, 500);
+      }, 200);
+    };
+    
+    // Restore from PDF viewer
+    window.unarchiveFromViewer = function unarchiveFromViewer(fileId, companyName) {
+      // Close PDF viewer
+      const pdfOverlay = document.querySelector('.pdf-viewer-overlay');
+      if (pdfOverlay) pdfOverlay.remove();
+      
+      // Open library in archive view
+      setTimeout(function() {
+        openQuantumProposalViewer();
+        
+        // Wait for library to load, then switch to archive view and trigger restore
+        setTimeout(function() {
+          if (!window.showArchivedProposals) {
+            toggleArchiveView();
+          }
+          setTimeout(function() {
+            unarchiveQuantumProposal(fileId, companyName);
+          }, 300);
+        }, 500);
+      }, 200);
     };
   
     // FIXED: Only close generic modals on backdrop click, NOT the proposal modal
