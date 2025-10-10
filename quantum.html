@@ -7,13 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
-
+  
   <!-- Shared auth (login/register/reset) -->
   <script defer src="password.js"></script>
-
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
+  
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background: #1e3a8a;
@@ -22,7 +22,7 @@
       color: #333;
       font-size: 18px;
     }
-
+  
     /* Company Switcher */
     .company-switcher {
       display: flex;
@@ -36,7 +36,7 @@
       margin: -20px -20px 30px -20px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     }
-
+  
     .company-btn {
       padding: 12px 25px;
       background: rgba(255, 255, 255, 0.1);
@@ -53,13 +53,13 @@
       backdrop-filter: blur(10px);
       text-decoration: none;
     }
-
+  
     .company-btn:hover {
       background: rgba(255, 255, 255, 0.2);
       transform: translateY(-2px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
-
+  
     .company-btn.active {
       background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
       border-color: transparent;
@@ -67,19 +67,19 @@
                   0 0 60px rgba(59, 130, 246, 0.3);
       animation: glow 2s ease-in-out infinite alternate;
     }
-
+  
     @keyframes glow {
       from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); }
       to   { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); }
     }
-
+  
     .company-logo { height: 35px; width: auto; filter: brightness(0) invert(1); transition: all 0.3s ease; }
     .abbondanza-logo { height: 40px; }
     .company-btn:hover .company-logo { transform: scale(1.05); }
-
+  
     .dashboard-container { max-width: 1400px; margin: 0 auto; animation: fadeIn 0.8s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
+  
     .header { text-align: center; margin-bottom: 35px; color: white; position: relative; }
     .header h1 {
       font-size: 3.2em; font-weight: 700; margin-bottom: 10px; color: white;
@@ -90,10 +90,10 @@
     }
     @keyframes titleGlow { from { filter: brightness(1); } to { filter: brightness(1.3); } }
     .header p { font-size: 1.3em; opacity: 0.9; }
-
+  
     /* Quantum Grid - Vertical Stack */
     .quantum-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
-
+  
     .card {
       background: rgba(255, 255, 255, 0.95);
       border-radius: 15px; padding: 20px;
@@ -110,7 +110,7 @@
     .card:hover { transform: translateY(-3px); box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35); }
     .card h2 { font-size: 1.5em; margin-bottom: 10px; color: #2d3748; }
     .card p  { color: #718096; margin-bottom: 18px; line-height: 1.5; font-size: 1.1em; }
-
+  
     .btn {
       display: inline-block; padding: 12px 26px; background: #1e3a8a; color: white;
       text-decoration: none; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;
@@ -123,7 +123,7 @@
     }
     .btn:hover::after { width: 300px; height: 300px; }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4); background: #1e40af; }
-
+  
     /* Modal Styles */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -135,12 +135,12 @@
       max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z-index: 10001;
     }
     .modal h3 { margin-bottom: 15px; color: #2d3748; text-align: center; font-size: 1.4em; }
-
+  
     /* PROPOSAL MODAL - Different ID to prevent outside click close */
     #quantumProposalModal .modal-overlay {
       pointer-events: auto;
     }
-
+  
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; margin-bottom: 5px; color: #4a5568; font-weight: 600; font-size: 1.05em; }
     .form-group input, .form-group select, .form-group textarea {
@@ -148,24 +148,24 @@
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1e3a8a; }
     .form-group small { display: block; margin-top: 5px; color: #718096; font-size: 0.95em; }
-
+  
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-
+  
     .pricing-summary { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 20px; border-radius: 15px; margin: 20px 0; border: 2px solid #1e3a8a; }
     .pricing-summary h4 { margin: 0 0 15px 0; color: #2d3748; font-size: 1.3em; text-align: center; }
-
+  
     .modal-buttons { display: flex; gap: 15px; margin-top: 25px; }
     .btn-primary { background: #1e3a8a; flex: 2; }
     .btn-primary:hover { background: #1e40af; }
     .btn-secondary { background: #64748b; flex: 1; }
     .btn-secondary:hover { background: #475569; }
-
+  
     .close-btn { background: #e53e3e; color: white; border: none; padding: 10px 22px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; font-size: 1.05em; }
     .close-btn:hover { background: #c53030; transform: scale(1.05); }
-
+  
     .success-popup { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 2px solid #28a745; color: #155724; padding: 20px; border-radius: 15px; text-align: center; font-size: 1.05em; }
     .error-popup   { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 2px solid #dc3545; color: #721c24; padding: 20px; border-radius: 15px; text-align: center; font-size: 1.05em; }
-
+  
     .loading-spinner {
       display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #1e3a8a;
       border-radius: 50%; animation: spin 1s linear infinite;
@@ -173,7 +173,7 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
-
+  
 <body>
   <!-- Company Switcher -->
   <div class="company-switcher">
@@ -186,21 +186,21 @@
       <span>Quantum Solutions</span>
     </button>
   </div>
-
+  
   <div class="dashboard-container">
     <div class="header">
       <h1>Quantum Solutions Dashboard</h1>
       <p>Smart Food Fridge Solutions for Modern Businesses</p>
     </div>
-
-    <!-- Quantum Solutions - 5 Cards Vertical Stack -->
+  
+    <!-- Quantum Solutions - 6 Cards Vertical Stack -->
     <div class="quantum-grid">
       <div class="card">
         <h2>How We Stack Up</h2>
         <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
         <button onclick="openQuantumAboutUs()" class="btn" type="button">View Materials</button>
       </div>
-
+  
       <div class="card">
         <h2>Proposal Management</h2>
         <p>Create and access Smart Food Fridge proposals with comprehensive pricing analysis and searchable library.</p>
@@ -210,18 +210,28 @@
         </div>
       </div>
 
+      <!-- NEW: Account Setup Document Card -->
+      <div class="card">
+        <h2>Account Setup Document</h2>
+        <p>Complete new customer account setup forms with automated PDF generation and searchable library.</p>
+        <div style="display:flex;gap:15px;margin-top:18px;">
+          <a href="account-setup-form.html" class="btn" style="flex:1;">Fill Out Form</a>
+          <button onclick="openAccountFormLibrary()" class="btn" style="flex:1;" type="button">View Library</button>
+        </div>
+      </div>
+  
       <div class="card">
         <h2>Master Service Agreement</h2>
         <p>Print to sign comprehensive service agreements for enterprise clients and partnerships.</p>
         <button onclick="openQuantumMasterAgreement()" class="btn" type="button">View Agreement</button>
       </div>
-
+  
       <div class="card">
         <h2>ROI Calculator</h2>
         <p>Interactive calculator to demonstrate cost savings and return on investment for potential clients.</p>
         <button onclick="openQuantumROICalculator()" class="btn" type="button">Open Calculator</button>
       </div>
-
+  
       <div class="card">
         <h2>Lead Logger</h2>
         <p>Track and manage sales leads with company-specific categorization and comprehensive follow-up system.</p>
@@ -229,12 +239,12 @@
       </div>
     </div>
   </div>
-
+  
   <!-- Quantum Proposal Generator Modal -->
   <div id="quantumProposalModal" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
       <h3>Generate Smart Food Fridge Proposal</h3>
-
+  
       <div class="form-row">
         <div class="form-group">
           <label for="quantumCompanyName">Company Name *</label>
@@ -245,7 +255,7 @@
           <input type="text" id="quantumContactName" name="quantumContactName" placeholder="Leave blank if unknown">
         </div>
       </div>
-
+  
       <div class="form-row">
         <div class="form-group">
           <label for="customerAddress">Customer Address *</label>
@@ -257,7 +267,7 @@
           <small>Used for freight calculation</small>
         </div>
       </div>
-
+  
       <div class="form-row">
         <div class="form-group">
           <label for="quantumPreparedBy">Your Name *</label>
@@ -268,12 +278,12 @@
           <input type="tel" id="quantumPreparedByPhone" name="quantumPreparedByPhone" required>
         </div>
       </div>
-
+  
       <div class="form-group">
         <label for="quantumPreparedByEmail">Your Email *</label>
         <input type="email" id="quantumPreparedByEmail" name="quantumPreparedByEmail" required>
       </div>
-
+  
       <div class="form-row">
         <div class="form-group">
           <label for="customerType">Customer Type *</label>
@@ -287,7 +297,7 @@
           <input type="number" id="quantumFridgeCount" name="quantumFridgeCount" min="1" value="1" required onchange="updateQuantumPricingSummary()">
         </div>
       </div>
-
+  
       <div class="form-group">
         <label for="scannerCount">RFID Scanners Needed *</label>
         <select id="scannerCount" name="scannerCount" required onchange="updateQuantumPricingSummary()">
@@ -310,7 +320,7 @@
         </select>
         <small>New customers typically need 1 scanner per location. Additional scanners for backup or multiple sites.</small>
       </div>
-
+  
       <div class="form-row">
         <div class="form-group">
           <label for="rfidRolls">RFID Tag Rolls (1,000 tags per roll) *</label>
@@ -323,7 +333,7 @@
           <small>Enter shipping cost per fridge (e.g., $600). Total shipping = cost per fridge × number of fridges.</small>
         </div>
       </div>
-
+  
       <div class="form-row">
         <div class="form-group">
           <label for="shippingMethod">Shipping Method *</label>
@@ -340,33 +350,39 @@
           <small>Select country of origin for specific shipping notices and requirements.</small>
         </div>
       </div>
-
+  
       <div class="pricing-summary">
         <h4>Proposal Summary</h4>
         <div id="quantumPricingSummary"></div>
       </div>
-
+  
       <div class="modal-buttons">
         <button class="btn btn-secondary" onclick="closeQuantumModal('quantumProposalModal')" style="flex:1;background:#64748b;" type="button">Cancel</button>
         <button class="btn btn-primary" id="generateQuantumBtn" type="button" onclick="generateQuantumProposal()">Generate Proposal PDF</button>
       </div>
     </div>
   </div>
-
+  
   <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
+    // NEW: Account Form Library function
+    window.openAccountFormLibrary = function openAccountFormLibrary() {
+      alert('Account Form Library coming soon! This will show all submitted account setup forms.');
+      // TODO: Implement library viewer similar to proposal viewer
+    };
+
     // Expose everything used by inline HTML attributes:
     window.openQuantumAboutUs = function openQuantumAboutUs() {
       const existingOverlay = document.querySelector('.modal-overlay');
       if (existingOverlay) existingOverlay.remove();
-
+  
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
       overlay.style.display = 'block';
-
+  
       const modal = document.createElement('div');
       modal.className = 'modal';
-
+  
       const materials = [
         { title: 'Restaurant Industry Trends Report', id: '1MejzxfsJ7VHR9OzwYuO7iEWUdDPrcLzO', description: 'Current market trends and insights for the restaurant industry', type: 'pdf' },
         { title: 'Maximizing Revenue Per Square Foot in Food Service Operations', id: '1hTRsDlrx0MRzmdVrqrOyfqg5-Gj-6RQC', description: 'Strategies to optimize space utilization and increase profitability', type: 'pdf' },
@@ -376,7 +392,7 @@
         { title: 'Smart RFID Refrigerated Fresh Food Fridge Technical Deep Dive and FAQ', id: '1zmo7_EccscAMQ-10q5yFF9k9vFdXHe3c', description: 'Comprehensive technical documentation and frequently asked questions', type: 'pdf' },
         { title: 'Food Fridge Presentation Slide Deck With Proposal Example', id: '19hC90aDJgAQCiNOPACjzhxEdFoE2iaUMpfirP3kAgzs', description: 'Robust presentation with how to use videos and proposal', type: 'slides' }
       ];
-
+  
       const cards = materials.map(function(m) {
         var viewUrl, downloadUrl;
         if (m.type === 'slides') { 
@@ -395,7 +411,6 @@
           viewUrl = 'https://drive.google.com/file/d/' + m.id + '/view'; 
           downloadUrl = 'https://drive.google.com/uc?export=download&id=' + m.id; 
         }
-        
         return (
           '<div style="background:#f8fafc;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;">' +
             '<div style="margin-bottom:20px;">' +
@@ -409,23 +424,23 @@
           '</div>'
         );
       }).join('');
-
+  
       modal.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
           '<h3 style="margin:0;color:#2d3748;font-size:1.8em;">How We Stack Up - Marketing Materials</h3>' +
           '<button class="close-btn" onclick="closeModal()">✕</button>' +
         '</div>' +
         '<div style="display:grid;gap:20px;">' + cards + '</div>';
-
+  
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
     };
-
+  
     window.closeModal = function closeModal() {
       const overlay = document.querySelector('.modal-overlay');
       if (overlay) overlay.remove();
     };
-
+  
     window.openQuantumProposalGenerator = function openQuantumProposalGenerator() {
       const existingModal = document.getElementById('quantumProposalModal');
       if (existingModal) existingModal.style.display = 'none';
@@ -444,16 +459,14 @@
         }
       }, 100);
     };
-
+  
     // Load dynamic dropdown options from SHIPPING NOTES tab
     function loadDropdownOptions() {
       const shippingMethodSelect = document.getElementById('shippingMethod');
       const countrySelect = document.getElementById('countryOfOrigin');
-      
       // Set loading state
       shippingMethodSelect.innerHTML = '<option value="">Loading shipping methods...</option>';
       countrySelect.innerHTML = '<option value="">Loading countries...</option>';
-      
       try {
         const callbackName = 'dropdownCallback_' + Date.now();
         const promise = new Promise(function(resolve, reject) {
@@ -466,20 +479,18 @@
             reject(new Error('Request timeout')); 
           }, 10000);
         });
-
+  
         const script = document.createElement('script');
         const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
         const url = QUANTUM_PROPOSAL_URL + '?action=getDropdownOptions&callback=' + callbackName;
         script.src = url;
-        
         script.onerror = function() {
           delete window[callbackName];
           // Fallback to default options if loading fails
           populateDropdownsWithDefaults();
         };
-
+  
         document.body.appendChild(script);
-        
         promise.then(function(data) {
           document.body.removeChild(script);
           if (data.status === 'success') {
@@ -492,22 +503,19 @@
           console.warn('Error loading dropdown options:', error.message);
           populateDropdownsWithDefaults();
         });
-        
       } catch (error) {
         console.warn('Error setting up dropdown loading:', error.message);
         populateDropdownsWithDefaults();
       }
     }
-
+  
     // Populate dropdowns with dynamic data
     function populateDropdowns(shippingMethods, countries) {
       const shippingMethodSelect = document.getElementById('shippingMethod');
       const countrySelect = document.getElementById('countryOfOrigin');
-      
       // Clear existing options
       shippingMethodSelect.innerHTML = '<option value="">Select shipping method...</option>';
       countrySelect.innerHTML = '<option value="">Select country...</option>';
-      
       // Populate shipping methods
       if (shippingMethods && shippingMethods.length > 0) {
         shippingMethods.forEach(function(method) {
@@ -522,7 +530,6 @@
         });
         shippingMethodSelect.value = standardLTL || shippingMethods[0];
       }
-      
       // Populate countries
       if (countries && countries.length > 0) {
         countries.forEach(function(country) {
@@ -537,41 +544,39 @@
         });
         countrySelect.value = canadaCA || countries[0];
       }
-      
       console.log('Dropdown options loaded successfully');
     }
-
+  
     // Fallback function with default options
     function populateDropdownsWithDefaults() {
       const defaultShippingMethods = ['Standard LTL', 'White Glove Standard LTL'];
       const defaultCountries = ['Canada CA', 'United States'];
-      
       populateDropdowns(defaultShippingMethods, defaultCountries);
       console.log('Using default dropdown options');
     }
-
+  
     window.closeQuantumModal = function closeQuantumModal(id) {
       const m = document.getElementById(id);
       if (m) m.style.display = 'none';
     };
-
+  
     window.updateCustomerType = function updateCustomerType() {
       const customerType = document.getElementById('customerType').value;
       const scannerCount = document.getElementById('scannerCount');
       scannerCount.value = (customerType === 'new') ? 1 : 0;
       updateQuantumPricingSummary();
     };
-
+  
     function calculateFreight() {
       const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
       const customerZip = document.getElementById('customerZip').value;
-
+  
       var baseFreight;
       if (fridgeCount === 1) baseFreight = 895;
       else if (fridgeCount === 2) baseFreight = 1400;
       else if (fridgeCount === 3) baseFreight = 1800;
       else baseFreight = fridgeCount * 550;
-
+  
       var distanceMultiplier = 1.0;
       if (customerZip) {
         const zipCode = parseInt(customerZip);
@@ -580,7 +585,7 @@
       }
       return Math.round(baseFreight * distanceMultiplier);
     }
-
+  
     window.updateQuantumPricingSummary = function updateQuantumPricingSummary() {
       const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
       const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
@@ -588,36 +593,33 @@
       const shippingPerUnit = parseFloat(document.getElementById('shippingPerUnit').value) || 0;
       const vinylWrap = false;
       const goldSupport = false;
-
+  
       const fridgePrice = 7500;
       const scannerPrice = 455;
       const rfidRollPrice = 180;
       const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50);
-      
       // Calculate shipping instead of freight
       const shipping = shippingPerUnit * fridgeCount;
-
+  
       const fridgeTotal = fridgeCount * fridgePrice;
       const scannerTotal = scannerCount * scannerPrice;
       const rfidTotal = rfidRolls * rfidRollPrice;
       const wrapTotal = vinylWrap ? wrapPrice : 0;
-
+  
       // Use shipping instead of freight in total calculation
       const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + shipping;
-
+  
       const monthlyLicense = fridgeCount * 175;
       const monthlyLTE = fridgeCount * 25;
       const monthlyGold = goldSupport ? (fridgeCount * 39) : 0;
       const monthlyTotal = monthlyLicense + monthlyLTE + monthlyGold;
-
+  
       var html = '<div style="margin-bottom:15px;">' +
         '<h4 style="color:#1e3a8a;margin-bottom:10px;">One-Time Costs</h4>' +
         '<div>Food Fridges (' + fridgeCount + '): $' + fridgeTotal.toLocaleString() + '</div>';
-      
       if (scannerCount > 0) html += '<div>RFID Scanners (' + scannerCount + '): $' + scannerTotal.toLocaleString() + '</div>';
       if (rfidRolls > 0) html += '<div>RFID Tags (' + rfidRolls + ' rolls): $' + rfidTotal.toLocaleString() + '</div>';
       if (vinylWrap) html += '<div>Vinyl Wrap: $' + wrapTotal.toLocaleString() + '</div>';
-      
       // Show shipping instead of freight
       html += '<div>Shipping (' + fridgeCount + ' × $' + shippingPerUnit + '): $' + shipping.toLocaleString() + '</div>' +
         '<div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">' +
@@ -628,17 +630,14 @@
           '<h4 style="color:#1e3a8a;margin-bottom:10px;">Monthly Recurring</h4>' +
           '<div>License Fees: $' + monthlyLicense.toLocaleString() + '/month</div>' +
           '<div>LTE Service: $' + monthlyLTE.toLocaleString() + '/month</div>';
-      
       if (goldSupport) html += '<div>Gold Support: $' + monthlyGold.toLocaleString() + '/month</div>';
-      
       html += '<div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">' +
           'Monthly Total: $' + monthlyTotal.toLocaleString() + '/month' +
         '</div>' +
         '</div>';
-      
       document.getElementById('quantumPricingSummary').innerHTML = html;
     };
-
+  
     window.generateQuantumProposal = function generateQuantumProposal(event) {
       if (event) { event.preventDefault(); event.stopPropagation(); }
       const submitBtn = document.getElementById('generateQuantumBtn');
@@ -646,7 +645,7 @@
       if (submitBtn.disabled) return;
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
-
+  
       try {
         const formData = {
           companyName: document.getElementById('quantumCompanyName').value,
@@ -666,17 +665,16 @@
           vinylWrap: 'No',
           goldSupport: 'No'
         };
-        
         if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
           throw new Error('Please fill in all required fields.');
         }
-
+  
         const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
         const params = new URLSearchParams();
         Object.keys(formData).forEach(function(key) {
           params.append(key, formData[key]);
         });
-
+  
         fetch(QUANTUM_PROPOSAL_URL + '?' + params.toString())
         .then(function(response) { return response.json(); })
         .then(function(result) {
@@ -714,7 +712,6 @@
           submitBtn.disabled = false;
           submitBtn.innerHTML = originalText;
         });
-        
       } catch (error) {
         showQuantumPopup(
           '<div class="error-popup">' +
@@ -728,7 +725,7 @@
         submitBtn.innerHTML = originalText;
       }
     };
-
+  
     window.showQuantumPopup = function showQuantumPopup(content, type) {
       const popup = document.createElement('div');
       popup.className = 'modal-overlay';
@@ -747,25 +744,25 @@
         }, 15000);
       }
     };
-
+  
     window.openQuantumMasterAgreement = function openQuantumMasterAgreement() {
       const existingOverlay = document.querySelector('.modal-overlay');
       if (existingOverlay) existingOverlay.remove();
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
       overlay.style.display = 'block';
-
+  
       const modal = document.createElement('div');
       modal.className = 'modal';
       modal.style.maxWidth = '1200px';
       modal.style.height = '90vh';
       modal.style.display = 'flex';
       modal.style.flexDirection = 'column';
-
+  
       const docId = '1ChcyX_PUlX48AhzAkNtsDWduamgQHomYSYM9LVwd3FA';
       const pdfUrl = 'https://docs.google.com/document/d/' + docId + '/export?format=pdf';
       const viewerUrl = 'https://docs.google.com/document/d/' + docId + '/preview';
-
+  
       modal.innerHTML = 
         '<div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
           '<h3 style="margin:0;color:#2d3748;font-size:1.3em;">Master Services Agreement (Food Fridge)</h3>' +
@@ -780,22 +777,22 @@
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
     };
-
+  
     window.openQuantumROICalculator = function openQuantumROICalculator() {
       const existing = document.querySelector('.modal-overlay.roi-overlay');
       if (existing) existing.remove();
-
+  
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay roi-overlay';
       overlay.style.display = 'block';
-
+  
       const modal = document.createElement('div');
       modal.className = 'modal';
       modal.style.maxWidth = '1200px';
       modal.style.height = '90vh';
       modal.style.display = 'flex';
       modal.style.flexDirection = 'column';
-
+  
       // Cache-bust the ROI iframe to avoid stale code
       const src = 'roi-calculator.html?v=' + Date.now();
       modal.innerHTML = 
@@ -809,25 +806,25 @@
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
     };
-
+  
     window.openQuantumLeadLogger = function openQuantumLeadLogger() {
       window.location.href = 'lead-logger.html';
     };
-
+  
     window.openQuantumProposalViewer = function openQuantumProposalViewer() {
       const existingOverlay = document.querySelector('.proposal-viewer-overlay');
       if (existingOverlay) existingOverlay.remove();
-
+  
       window.allQuantumProposals = null;
-
+  
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay proposal-viewer-overlay';
       overlay.style.display = 'block';
-
+  
       const modal = document.createElement('div');
       modal.className = 'modal';
       modal.style.maxWidth = '1000px';
-
+  
       modal.innerHTML = 
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
           '<h3 style="margin:0;color:#2d3748;font-size:1.8em;">Quantum Proposal Library</h3>' +
@@ -847,12 +844,12 @@
       document.body.appendChild(overlay);
       setTimeout(function() { loadQuantumProposalsFromDrive(); }, 100);
     };
-
+  
     window.closeQuantumProposalViewer = function closeQuantumProposalViewer() {
       const overlay = document.querySelector('.proposal-viewer-overlay');
       if (overlay) overlay.remove();
     };
-
+  
     function loadQuantumProposalsFromDrive() {
       try {
         const callbackName = 'quantumProposalsCallback_' + Date.now();
@@ -860,11 +857,11 @@
           window[callbackName] = function(data) { delete window[callbackName]; resolve(data); };
           setTimeout(function() { delete window[callbackName]; reject(new Error('Request timeout')); }, 20000);
         });
-
+  
         const script = document.createElement('script');
         const url = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec?action=getProposals&callback=' + callbackName;
         script.src = url;
-
+  
         script.onerror = function() {
           delete window[callbackName];
           const proposalsList = document.getElementById('quantumProposalsList');
@@ -876,7 +873,7 @@
               '</div>';
           }
         };
-
+  
         document.body.appendChild(script);
         promise.then(function(data) {
           document.body.removeChild(script);
@@ -912,7 +909,7 @@
         }
       }
     }
-
+  
     function displayQuantumProposals(proposals) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (!proposalsList) return;
@@ -920,7 +917,6 @@
         proposalsList.innerHTML = '<div style="text-align:center;padding:40px;color:#718096;"><p>No proposals found in the library.</p></div>';
         return;
       }
-      
       proposalsList.innerHTML = proposals.map(function(proposal) {
         return (
           '<div class="proposal-item" style="background:white;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.05);" onmouseover="this.style.borderColor=\'#1e3a8a\'; this.style.transform=\'translateY(-3px)\'; this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.1)\'" onmouseout="this.style.borderColor=\'#e2e8f0\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 2px 8px rgba(0,0,0,0.05)\'">' +
@@ -941,17 +937,17 @@
         );
       }).join('');
     }
-
+  
     window.filterQuantumProposals = function filterQuantumProposals() {
       const searchInput = document.getElementById('quantumProposalSearch');
       const term = (searchInput.value || '').toLowerCase();
       const proposalsList = document.getElementById('quantumProposalsList');
       const clearBtn = document.getElementById('clearQuantumSearchBtn');
       clearBtn.style.display = term.length > 0 ? 'block' : 'none';
-
+  
       if (!window.allQuantumProposals || window.allQuantumProposals.length === 0) return;
       if (!term) { displayQuantumProposals(window.allQuantumProposals); return; }
-
+  
       const filtered = window.allQuantumProposals.filter(function(p) {
         return p.companyName.toLowerCase().includes(term) || p.name.toLowerCase().includes(term);
       });
@@ -965,23 +961,23 @@
         displayQuantumProposals(filtered);
       }
     };
-
+  
     window.viewQuantumProposalPDF = function viewQuantumProposalPDF(fileId, companyName) {
       closeQuantumProposalViewer();
-
+  
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
       overlay.style.display = 'block';
-
+  
       const pdfModal = document.createElement('div');
       pdfModal.className = 'modal';
       pdfModal.style.maxWidth = '1200px';
       pdfModal.style.height = '90vh';
       pdfModal.style.display = 'flex';
       pdfModal.style.flexDirection = 'column';
-
+  
       const viewerUrl = 'https://drive.google.com/file/d/' + fileId + '/preview?usp=embed';
-
+  
       pdfModal.innerHTML = 
         '<div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
           '<h3 style="margin:0;color:#2d3748;font-size:1.3em;">Proposal for ' + companyName + '</h3>' +
@@ -996,7 +992,7 @@
       overlay.appendChild(pdfModal);
       document.body.appendChild(overlay);
     };
-
+  
     // FIXED: Only close generic modals on backdrop click, NOT the proposal modal
     document.addEventListener('click', function (event) {
       if (event.target.classList && event.target.classList.contains('modal-overlay')) {
@@ -1007,7 +1003,7 @@
       }
     });
   </script>
-
+  
   <!-- Reusable Username + Logout pill (shared across pages) -->
   <script defer src="userbar.js?v=1"></script>
   <script>
