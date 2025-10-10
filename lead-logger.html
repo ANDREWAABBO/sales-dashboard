@@ -688,6 +688,11 @@
       document.getElementById('customerAddress').required = false;
       document.getElementById('customerZip').required = false;
       
+      // Reset save button state
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Lead';
+      
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
       markFormPristineAndWatch();
@@ -714,7 +719,8 @@
       document.getElementById('repPhone').value = lead.repPhone || '';
       document.getElementById('repEmail').value = lead.repEmail || '';
       document.getElementById('customerAddress').value = lead.customerAddress || '';
-      // Preserve leading zeros in zip code const zipCode = lead.customerZip || ''; document.getElementById('customerZip').value = String(zipCode).padStart(5, '0');
+      const zipCode = lead.customerZip || '';
+      document.getElementById('customerZip').value = String(zipCode).padStart(5, '0');
 
       if (lead.followUp){
         const d = new Date(lead.followUp);
@@ -724,6 +730,11 @@
         const d = new Date(lead.appointmentDate);
         if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
       }
+
+      // Reset save button state
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Lead';
 
       // FIXED: Call toggleQuantumFields AFTER setting businessUnit value
       toggleQuantumFields();
@@ -758,12 +769,11 @@
     function snapshotForm(){
       const formEl = document.getElementById('leadForm');
       const form = new FormData(formEl);
-const lead = Object.fromEntries(form.entries());
-
-// Ensure zip code preserves leading zeros
-if (lead.customerZip) {
-  lead.customerZip = String(lead.customerZip).padStart(5, '0');
-}
+      const lead = Object.fromEntries(form.entries());
+      if (lead.customerZip) {
+        lead.customerZip = String(lead.customerZip).padStart(5, '0');
+      }
+      return JSON.stringify(lead);
     }
     function markFormPristineAndWatch(){
       formInitialSnapshot = snapshotForm();
