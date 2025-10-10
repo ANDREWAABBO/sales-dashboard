@@ -134,7 +134,25 @@
       background: white; border-radius: 20px; padding: 25px 35px; max-width: 900px; width: 95%;
       max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z-index: 10001;
     }
-    .modal h3 { margin-bottom: 15px; color: #2d3748; text-align: center; font-size: 1.4em; }
+    
+    /* PDF Modal Styles */
+    .pdf-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; border-radius: 20px; width: 90%; height: 90%;
+      max-width: 1200px; max-height: 90vh; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      z-index: 10001; display: flex; flex-direction: column;
+    }
+    .pdf-header {
+      padding: 20px; background: #f7fafc; border-radius: 20px 20px 0 0;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .pdf-header h3 { margin: 0; color: #2d3748; font-size: 1.3em; }
+    .pdf-viewer { flex: 1; padding: 20px; overflow: hidden; }
+    .pdf-viewer iframe {
+      width: 100%; height: 100%; border: none; border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
   
     /* PROPOSAL MODAL - Different ID to prevent outside click close */
     #quantumProposalModal .modal-overlay {
@@ -359,7 +377,54 @@
   
   <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
-    // NEW: Open New Customer Account Form in modal viewer
+    // NEW: View Quantum Material in PDF Modal - DEFINE FIRST
+    window.viewQuantumMaterialPDF = function viewQuantumMaterialPDF(fileId, title, fileType) {
+      const materialsOverlay = document.querySelector('.modal-overlay');
+      if (materialsOverlay) materialsOverlay.remove();
+      
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+  
+      const pdfModal = document.createElement('div');
+      pdfModal.className = 'pdf-modal';
+      
+      let viewerUrl, downloadUrl;
+      if (fileType === 'slides') {
+        viewerUrl = 'https://docs.google.com/presentation/d/' + fileId + '/preview';
+        downloadUrl = 'https://docs.google.com/presentation/d/' + fileId + '/export/pdf';
+      } else if (fileType === 'sheets') {
+        const pdfExportUrl = 'https://docs.google.com/spreadsheets/d/' + fileId + '/export?format=pdf&portrait=true&fitw=true&gridlines=true';
+        viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(pdfExportUrl) + '&embedded=true';
+        downloadUrl = pdfExportUrl;
+      } else if (fileType === 'docs') {
+        viewerUrl = 'https://docs.google.com/document/d/' + fileId + '/preview';
+        downloadUrl = 'https://docs.google.com/document/d/' + fileId + '/export?format=pdf';
+      } else if (fileType === 'pdf') {
+        viewerUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+        downloadUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
+      } else {
+        viewerUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+        downloadUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
+      }
+  
+      pdfModal.innerHTML = 
+        '<div class="pdf-header">' +
+          '<h3>' + title + '</h3>' +
+          '<div style="display:flex;gap:10px;align-items:center;">' +
+            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumAboutUs, 200);" style="padding:10px 20px;">← Back to Materials</button>' +
+            '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:10px 20px;">📥 Download</button>' +
+            '<button class="close-btn" onclick="closePDFViewer()">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pdf-viewer">' +
+          '<iframe src="' + viewerUrl + '" width="100%" height="100%" allowfullscreen></iframe>' +
+        '</div>';
+      
+      overlay.appendChild(pdfModal);
+      document.body.appendChild(overlay);
+    };
+
     function downloadNewCustomerForm() {
       const existingOverlay = document.querySelector('.modal-overlay');
       if (existingOverlay) existingOverlay.remove();
@@ -369,26 +434,22 @@
       overlay.style.display = 'block';
   
       const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1200px';
-      modal.style.height = '90vh';
-      modal.style.display = 'flex';
-      modal.style.flexDirection = 'column';
+      modal.className = 'pdf-modal';
   
       const docId = '1LGvkY0K9_ZlQwaCfWRbLUFDXefQUfBKeytXmz3X8-Kc';
       const pdfUrl = 'https://docs.google.com/document/d/' + docId + '/export?format=pdf';
       const viewerUrl = 'https://docs.google.com/document/d/' + docId + '/preview';
   
       modal.innerHTML = 
-        '<div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
-          '<h3 style="margin:0;color:#2d3748;font-size:1.3em;">New Customer Account Setup Form</h3>' +
+        '<div class="pdf-header">' +
+          '<h3>New Customer Account Setup Form</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
             '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">📥 Download PDF</button>' +
-            '<button class="close-btn" onclick="closeModal()">✕</button>' +
+            '<button class="close-btn" onclick="closePDFViewer()">✕</button>' +
           '</div>' +
         '</div>' +
-        '<div style="flex:1;padding:20px;overflow:hidden;">' +
-          '<iframe src="' + viewerUrl + '" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>' +
+        '<div class="pdf-viewer">' +
+          '<iframe src="' + viewerUrl + '" width="100%" height="100%" allowfullscreen></iframe>' +
         '</div>';
       
       overlay.appendChild(modal);
@@ -396,7 +457,6 @@
     }
     window.downloadNewCustomerForm = downloadNewCustomerForm;
 
-    // Expose everything used by inline HTML attributes:
     window.openQuantumAboutUs = function openQuantumAboutUs() {
       const existingOverlay = document.querySelector('.modal-overlay');
       if (existingOverlay) existingOverlay.remove();
@@ -419,21 +479,17 @@
       ];
   
       const cards = materials.map(function(m) {
-        var viewUrl, downloadUrl;
+        var downloadUrl;
         if (m.type === 'slides') { 
-          viewUrl = 'https://docs.google.com/presentation/d/' + m.id + '/preview'; 
           downloadUrl = 'https://docs.google.com/presentation/d/' + m.id + '/export/pdf'; 
         }
         else if (m.type === 'docs') { 
-          viewUrl = 'https://docs.google.com/document/d/' + m.id + '/preview'; 
           downloadUrl = 'https://docs.google.com/document/d/' + m.id + '/export?format=pdf'; 
         }
         else if (m.type === 'sheets') { 
-          viewUrl = 'https://docs.google.com/spreadsheets/d/' + m.id + '/preview'; 
           downloadUrl = 'https://docs.google.com/spreadsheets/d/' + m.id + '/export?format=pdf'; 
         }
         else { 
-          viewUrl = 'https://drive.google.com/file/d/' + m.id + '/view'; 
           downloadUrl = 'https://drive.google.com/uc?export=download&id=' + m.id; 
         }
         return (
@@ -443,7 +499,7 @@
               '<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">' + m.description + '</p>' +
             '</div>' +
             '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
-              '<button class="btn btn-primary" onclick="window.open(\'' + viewUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
+              '<button class="btn btn-primary" onclick="viewQuantumMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/'/g, "\\'") + '\', \'' + m.type + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
               '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">📥 Download</button>' +
             '</div>' +
           '</div>'
@@ -465,9 +521,14 @@
       const overlay = document.querySelector('.modal-overlay');
       if (overlay) overlay.remove();
     };
+    
+    window.closePDFViewer = function closePDFViewer() {
+      document.querySelectorAll('.modal-overlay').forEach(ov => {
+        if (ov && ov.querySelector('.pdf-modal')) ov.remove();
+      });
+    };
   
     window.openQuantumProposalGenerator = function openQuantumProposalGenerator() {
-      // Show warning/checklist modal first
       const warningOverlay = document.createElement('div');
       warningOverlay.className = 'modal-overlay';
       warningOverlay.style.display = 'block';
@@ -482,14 +543,12 @@
             '<h3 style="margin:0;color:#dc2626;font-size:2em;font-weight:700;">STOP</h3>' +
             '<p style="color:#991b1b;font-size:1.2em;font-weight:600;margin-top:10px;">Before a proposal is made</p>' +
           '</div>' +
-          
           '<div style="background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:25px;margin-bottom:25px;">' +
             '<div style="margin-bottom:25px;">' +
               '<h4 style="color:#dc2626;margin:0 0 12px 0;font-size:1.15em;display:flex;align-items:center;gap:10px;">' +
                 '<span style="background:#dc2626;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;">1</span>' +
                 'Did we contact Ken Piers (pronounced PIE-reese) @ REDYREF for a shipping quote?' +
               '</h4>' +
-              
               '<div style="background:white;border:1px solid #fecaca;border-radius:8px;padding:15px;margin-top:15px;">' +
                 '<p style="color:#7f1d1d;font-weight:600;margin:0 0 10px 0;font-size:1.05em;">📝 Notes on Shipping:</p>' +
                 '<ul style="margin:0;padding-left:20px;color:#991b1b;line-height:1.7;">' +
@@ -498,7 +557,6 @@
                 '</ul>' +
               '</div>' +
             '</div>' +
-            
             '<div>' +
               '<h4 style="color:#dc2626;margin:0 0 12px 0;font-size:1.15em;display:flex;align-items:center;gap:10px;">' +
                 '<span style="background:#dc2626;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;">2</span>' +
@@ -509,7 +567,6 @@
               '</div>' +
             '</div>' +
           '</div>' +
-          
           '<div style="display:flex;gap:15px;margin-top:25px;">' +
             '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;font-size:1.05em;padding:14px;">❌ Cancel</button>' +
             '<button class="btn btn-primary" onclick="proceedToProposalGenerator()" style="flex:1;font-size:1.05em;padding:14px;background:#dc2626;border:none;">✅ I Understand - Continue</button>' +
@@ -519,13 +576,10 @@
       document.body.appendChild(warningOverlay);
     };
     
-    // Proceed to actual proposal generator after acknowledging warning
     window.proceedToProposalGenerator = function proceedToProposalGenerator() {
-      // Close warning modal
       const warningOverlay = document.querySelector('.modal-overlay');
       if (warningOverlay) warningOverlay.remove();
       
-      // Now open the actual proposal generator
       const existingModal = document.getElementById('quantumProposalModal');
       if (existingModal) existingModal.style.display = 'none';
       setTimeout(function() {
@@ -533,7 +587,7 @@
         if (modal) {
           modal.style.display = 'block';
           updateQuantumPricingSummary();
-          loadDropdownOptions(); // Load dynamic dropdown options
+          loadDropdownOptions();
           const generateBtn = document.getElementById('generateQuantumBtn');
           if (generateBtn) {
             const newBtn = generateBtn.cloneNode(true);
@@ -544,11 +598,9 @@
       }, 100);
     };
   
-    // Load dynamic dropdown options from SHIPPING NOTES tab
     function loadDropdownOptions() {
       const shippingMethodSelect = document.getElementById('shippingMethod');
       const countrySelect = document.getElementById('countryOfOrigin');
-      // Set loading state
       shippingMethodSelect.innerHTML = '<option value="">Loading shipping methods...</option>';
       countrySelect.innerHTML = '<option value="">Loading countries...</option>';
       try {
@@ -570,7 +622,6 @@
         script.src = url;
         script.onerror = function() {
           delete window[callbackName];
-          // Fallback to default options if loading fails
           populateDropdownsWithDefaults();
         };
   
@@ -593,14 +644,11 @@
       }
     }
   
-    // Populate dropdowns with dynamic data
     function populateDropdowns(shippingMethods, countries) {
       const shippingMethodSelect = document.getElementById('shippingMethod');
       const countrySelect = document.getElementById('countryOfOrigin');
-      // Clear existing options
       shippingMethodSelect.innerHTML = '<option value="">Select shipping method...</option>';
       countrySelect.innerHTML = '<option value="">Select country...</option>';
-      // Populate shipping methods
       if (shippingMethods && shippingMethods.length > 0) {
         shippingMethods.forEach(function(method) {
           const option = document.createElement('option');
@@ -608,13 +656,11 @@
           option.textContent = method;
           shippingMethodSelect.appendChild(option);
         });
-        // Set default to first option if Standard LTL exists, otherwise first option
         const standardLTL = shippingMethods.find(function(method) {
           return method === 'Standard LTL';
         });
         shippingMethodSelect.value = standardLTL || shippingMethods[0];
       }
-      // Populate countries
       if (countries && countries.length > 0) {
         countries.forEach(function(country) {
           const option = document.createElement('option');
@@ -622,7 +668,6 @@
           option.textContent = country;
           countrySelect.appendChild(option);
         });
-        // Set default to first option if Canada CA exists, otherwise first option
         const canadaCA = countries.find(function(country) {
           return country === 'Canada CA';
         });
@@ -631,7 +676,6 @@
       console.log('Dropdown options loaded successfully');
     }
   
-    // Fallback function with default options
     function populateDropdownsWithDefaults() {
       const defaultShippingMethods = ['Standard LTL', 'White Glove Standard LTL'];
       const defaultCountries = ['Canada CA', 'United States'];
@@ -682,7 +726,6 @@
       const scannerPrice = 455;
       const rfidRollPrice = 180;
       const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50);
-      // Calculate shipping instead of freight
       const shipping = shippingPerUnit * fridgeCount;
   
       const fridgeTotal = fridgeCount * fridgePrice;
@@ -690,7 +733,6 @@
       const rfidTotal = rfidRolls * rfidRollPrice;
       const wrapTotal = vinylWrap ? wrapPrice : 0;
   
-      // Use shipping instead of freight in total calculation
       const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + shipping;
   
       const monthlyLicense = fridgeCount * 175;
@@ -704,7 +746,6 @@
       if (scannerCount > 0) html += '<div>RFID Scanners (' + scannerCount + '): $' + scannerTotal.toLocaleString() + '</div>';
       if (rfidRolls > 0) html += '<div>RFID Tags (' + rfidRolls + ' rolls): $' + rfidTotal.toLocaleString() + '</div>';
       if (vinylWrap) html += '<div>Vinyl Wrap: $' + wrapTotal.toLocaleString() + '</div>';
-      // Show shipping instead of freight
       html += '<div>Shipping (' + fridgeCount + ' × $' + shippingPerUnit + '): $' + shipping.toLocaleString() + '</div>' +
         '<div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">' +
           'One-Time Total: $' + oneTimeTotal.toLocaleString() +
@@ -837,26 +878,22 @@
       overlay.style.display = 'block';
   
       const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1200px';
-      modal.style.height = '90vh';
-      modal.style.display = 'flex';
-      modal.style.flexDirection = 'column';
+      modal.className = 'pdf-modal';
   
       const docId = '1ChcyX_PUlX48AhzAkNtsDWduamgQHomYSYM9LVwd3FA';
       const pdfUrl = 'https://docs.google.com/document/d/' + docId + '/export?format=pdf';
       const viewerUrl = 'https://docs.google.com/document/d/' + docId + '/preview';
   
       modal.innerHTML = 
-        '<div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
-          '<h3 style="margin:0;color:#2d3748;font-size:1.3em;">Master Services Agreement (Food Fridge)</h3>' +
+        '<div class="pdf-header">' +
+          '<h3>Master Services Agreement (Food Fridge)</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
             '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">📥 Download PDF</button>' +
-            '<button class="close-btn" onclick="closeModal()">✕</button>' +
+            '<button class="close-btn" onclick="closePDFViewer()">✕</button>' +
           '</div>' +
         '</div>' +
-        '<div style="flex:1;padding:20px;overflow:hidden;">' +
-          '<iframe src="' + viewerUrl + '" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>' +
+        '<div class="pdf-viewer">' +
+          '<iframe src="' + viewerUrl + '" width="100%" height="100%" allowfullscreen></iframe>' +
         '</div>';
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
@@ -871,21 +908,16 @@
       overlay.style.display = 'block';
   
       const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1200px';
-      modal.style.height = '90vh';
-      modal.style.display = 'flex';
-      modal.style.flexDirection = 'column';
+      modal.className = 'pdf-modal';
   
-      // Cache-bust the ROI iframe to avoid stale code
       const src = 'roi-calculator.html?v=' + Date.now();
       modal.innerHTML = 
-        '<div style="padding:14px 16px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
-          '<h3 style="margin:0;color:#1e3a8a;font-size:1.2em;">ROI Calculator</h3>' +
+        '<div class="pdf-header">' +
+          '<h3>ROI Calculator</h3>' +
           '<button class="close-btn" onclick="document.querySelector(\'.roi-overlay\').remove()">✕</button>' +
         '</div>' +
-        '<div style="flex:1;padding:12px;overflow:hidden;">' +
-          '<iframe src="' + src + '" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.08);" allowfullscreen></iframe>' +
+        '<div class="pdf-viewer">' +
+          '<iframe src="' + src + '" width="100%" height="100%" allowfullscreen></iframe>' +
         '</div>';
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
@@ -900,7 +932,7 @@
       if (existingOverlay) existingOverlay.remove();
   
       window.allQuantumProposals = null;
-      window.showArchivedProposals = false; // Track whether showing archived
+      window.showArchivedProposals = false;
   
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay proposal-viewer-overlay';
@@ -933,7 +965,6 @@
       setTimeout(function() { loadQuantumProposalsFromDrive(); }, 100);
     };
 
-    // NEW: Toggle between active and archived proposals
     window.toggleArchiveView = function toggleArchiveView() {
       window.showArchivedProposals = !window.showArchivedProposals;
       
@@ -980,7 +1011,8 @@
                 '<button class="btn btn-primary" onclick="openQuantumProposalViewer()">Try Again</button>' +
               '</div>';
           }
-        };
+
+          };
   
         document.body.appendChild(script);
         promise.then(function(data) {
@@ -1022,7 +1054,6 @@
       const proposalsList = document.getElementById('quantumProposalsList');
       if (!proposalsList) return;
       
-      // Filter based on archive status
       const filtered = proposals.filter(function(p) {
         if (window.showArchivedProposals) {
           return p.status === 'archived';
@@ -1067,9 +1098,7 @@
       }).join('');
     }
 
-    // NEW: Unarchive (restore) proposal function
     window.unarchiveQuantumProposal = function unarchiveQuantumProposal(fileId, companyName) {
-      // Show custom confirmation modal
       const confirmOverlay = document.createElement('div');
       confirmOverlay.className = 'modal-overlay';
       confirmOverlay.style.display = 'block';
@@ -1090,7 +1119,6 @@
       document.body.appendChild(confirmOverlay);
     };
 
-    // Actual unarchive execution after confirmation
     window.confirmUnarchiveQuantumProposal = function confirmUnarchiveQuantumProposal(fileId, companyName) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (proposalsList) {
@@ -1168,9 +1196,7 @@
       }
     };
 
-    // NEW: Archive proposal function
     window.archiveQuantumProposal = function archiveQuantumProposal(fileId, companyName) {
-      // Show custom confirmation modal
       const confirmOverlay = document.createElement('div');
       confirmOverlay.className = 'modal-overlay';
       confirmOverlay.style.display = 'block';
@@ -1191,7 +1217,6 @@
       document.body.appendChild(confirmOverlay);
     };
 
-    // Actual archive execution after confirmation
     window.confirmArchiveQuantumProposal = function confirmArchiveQuantumProposal(fileId, companyName) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (proposalsList) {
@@ -1278,7 +1303,6 @@
   
       if (!window.allQuantumProposals || window.allQuantumProposals.length === 0) return;
       
-      // Filter by archive status first
       let proposals = window.allQuantumProposals.filter(function(p) {
         if (window.showArchivedProposals) {
           return p.status === 'archived';
@@ -1287,7 +1311,6 @@
         }
       });
       
-      // Then filter by search term if provided
       if (term) {
         proposals = proposals.filter(function(p) {
           return p.companyName.toLowerCase().includes(term) || p.name.toLowerCase().includes(term);
@@ -1316,67 +1339,53 @@
       overlay.style.display = 'block';
   
       const pdfModal = document.createElement('div');
-      pdfModal.className = 'modal';
-      pdfModal.style.maxWidth = '1200px';
-      pdfModal.style.height = '90vh';
-      pdfModal.style.display = 'flex';
-      pdfModal.style.flexDirection = 'column';
+      pdfModal.className = 'pdf-modal';
   
       const viewerUrl = 'https://drive.google.com/file/d/' + fileId + '/preview?usp=embed';
       
-      // Find the proposal to check its archive status
       const proposal = window.allQuantumProposals ? window.allQuantumProposals.find(function(p) { return p.id === fileId; }) : null;
       const isArchived = proposal && proposal.status === 'archived';
       
-      // Create appropriate archive/restore button
       const archiveButton = isArchived
         ? '<button class="btn" onclick="unarchiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#10b981;">♻️ Restore</button>'
         : '<button class="btn" onclick="archiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#f59e0b;">📦 Archive</button>';
   
       pdfModal.innerHTML = 
-        '<div style="padding:20px;background:#f7fafc;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;">' +
-          '<h3 style="margin:0;color:#2d3748;font-size:1.3em;">Proposal for ' + companyName + '</h3>' +
+        '<div class="pdf-header">' +
+          '<h3>Proposal for ' + companyName + '</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-primary" onclick="closeModal(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">Back to Library</button>' +
-            '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:10px 20px;">Download</button>' +
+            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">← Back to Library</button>' +
+            '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:10px 20px;">📥 Download</button>' +
             archiveButton +
           '</div>' +
         '</div>' +
-        '<div style="flex:1;padding:20px;overflow:hidden;">' +
-          '<iframe src="' + viewerUrl + '" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>' +
+        '<div class="pdf-viewer">' +
+          '<iframe src="' + viewerUrl + '" width="100%" height="100%" allowfullscreen></iframe>' +
         '</div>';
       overlay.appendChild(pdfModal);
       document.body.appendChild(overlay);
     };
     
-    // Archive from PDF viewer
     window.archiveFromViewer = function archiveFromViewer(fileId, companyName) {
-      // Close PDF viewer
       const pdfOverlay = document.querySelector('.pdf-viewer-overlay');
       if (pdfOverlay) pdfOverlay.remove();
       
-      // Open library
       setTimeout(function() {
         openQuantumProposalViewer();
         
-        // Wait for library to load, then trigger archive
         setTimeout(function() {
           archiveQuantumProposal(fileId, companyName);
         }, 500);
       }, 200);
     };
     
-    // Restore from PDF viewer
     window.unarchiveFromViewer = function unarchiveFromViewer(fileId, companyName) {
-      // Close PDF viewer
       const pdfOverlay = document.querySelector('.pdf-viewer-overlay');
       if (pdfOverlay) pdfOverlay.remove();
       
-      // Open library in archive view
       setTimeout(function() {
         openQuantumProposalViewer();
         
-        // Wait for library to load, then switch to archive view and trigger restore
         setTimeout(function() {
           if (!window.showArchivedProposals) {
             toggleArchiveView();
@@ -1388,10 +1397,8 @@
       }, 200);
     };
   
-    // FIXED: Only close generic modals on backdrop click, NOT the proposal modal
     document.addEventListener('click', function (event) {
       if (event.target.classList && event.target.classList.contains('modal-overlay')) {
-        // Only close if it's NOT the proposal generator modal
         if (event.target.id !== 'quantumProposalModal') {
           closeModal();
         }
@@ -1402,12 +1409,10 @@
   <!-- Reusable Username + Logout pill (shared across pages) -->
   <script defer src="userbar.js?v=1"></script>
   <script>
-    // Ensure init runs after the deferred file has executed
     document.addEventListener('DOMContentLoaded', function () {
       if (window.UserBar && typeof window.UserBar.init === 'function') {
         window.UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
       } else {
-        // Fallback if the file was slow: try again on window.load
         window.addEventListener('load', function () {
           if (window.UserBar && typeof window.UserBar.init === 'function') {
             window.UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
