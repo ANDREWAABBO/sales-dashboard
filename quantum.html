@@ -956,12 +956,95 @@
               '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
                 '<button class="btn btn-primary" onclick="viewQuantumProposalPDF(\'' + proposal.id + '\', \'' + proposal.companyName + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📄 View</button>' +
                 '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + proposal.id + '\', \'_blank\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">📥 Download</button>' +
+                '<button class="btn" onclick="archiveQuantumProposal(\'' + proposal.id + '\', \'' + proposal.companyName.replace(/'/g, "\\'") + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;background:#f59e0b;">📦 Archive</button>' +
               '</div>' +
             '</div>' +
           '</div>'
         );
       }).join('');
     }
+
+    // NEW: Archive proposal function
+    window.archiveQuantumProposal = function archiveQuantumProposal(fileId, companyName) {
+      if (!confirm('Archive proposal for ' + companyName + '?\n\nThis will move it to the Archived Proposals folder.')) {
+        return;
+      }
+
+      const proposalsList = document.getElementById('quantumProposalsList');
+      if (proposalsList) {
+        proposalsList.innerHTML = 
+          '<div style="text-align:center;padding:40px;">' +
+            '<div class="loading-spinner"></div>' +
+            '<p style="margin-top:20px;color:#718096;">Archiving proposal...</p>' +
+          '</div>';
+      }
+
+      try {
+        const callbackName = 'archiveCallback_' + Date.now();
+        const promise = new Promise(function(resolve, reject) {
+          window[callbackName] = function(data) { 
+            delete window[callbackName]; 
+            resolve(data); 
+          };
+          setTimeout(function() { 
+            delete window[callbackName]; 
+            reject(new Error('Request timeout')); 
+          }, 20000);
+        });
+
+        const script = document.createElement('script');
+        const QUANTUM_PROPOSAL_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
+        const url = QUANTUM_PROPOSAL_URL + '?action=archiveProposal&fileId=' + encodeURIComponent(fileId) + '&callback=' + callbackName;
+        script.src = url;
+
+        script.onerror = function() {
+          delete window[callbackName];
+          showQuantumPopup(
+            '<div class="error-popup">' +
+              '<h3>❌ Archive Failed</h3>' +
+              '<p>Unable to archive the proposal. Please try again.</p>' +
+            '</div>',
+            'error'
+          );
+          loadQuantumProposalsFromDrive();
+        };
+
+        document.body.appendChild(script);
+        promise.then(function(data) {
+          document.body.removeChild(script);
+          if (data.status === 'success') {
+            showQuantumPopup(
+              '<div class="success-popup">' +
+                '<h3>✅ Proposal Archived</h3>' +
+                '<p>The proposal for <strong>' + companyName + '</strong> has been moved to the archive.</p>' +
+              '</div>',
+              'success'
+            );
+            loadQuantumProposalsFromDrive();
+          } else {
+            throw new Error(data.message || 'Failed to archive proposal');
+          }
+        }).catch(function(error) {
+          showQuantumPopup(
+            '<div class="error-popup">' +
+              '<h3>❌ Archive Failed</h3>' +
+              '<p>' + error.message + '</p>' +
+            '</div>',
+            'error'
+          );
+          loadQuantumProposalsFromDrive();
+        });
+      } catch (error) {
+        showQuantumPopup(
+          '<div class="error-popup">' +
+            '<h3>❌ Archive Failed</h3>' +
+            '<p>' + error.message + '</p>' +
+          '</div>',
+          'error'
+        );
+        loadQuantumProposalsFromDrive();
+      }
+    };
   
     window.filterQuantumProposals = function filterQuantumProposals() {
       const searchInput = document.getElementById('quantumProposalSearch');
