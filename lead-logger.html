@@ -204,7 +204,7 @@
       <span class="close" onclick="attemptCloseModal()">&times;</span>
       <h2 id="modalTitle">Add New Lead</h2>
 
-      <form id="leadForm">
+      <form id="leadForm" onsubmit="return false;">
         <div class="form-group">
           <label for="businessUnit">Business Unit *</label>
           <select id="businessUnit" name="businessUnit" required onchange="toggleQuantumFields()">
@@ -306,7 +306,7 @@
 
         <div class="form-actions">
           <button type="button" class="btn btn-cancel" onclick="attemptCloseModal()">Cancel</button>
-          <button type="submit" id="saveBtn" class="btn">Save Lead</button>
+          <button type="button" id="saveBtn" class="btn" onclick="onSaveClick(event)">Save Lead</button>
         </div>
       </form>
     </div>
@@ -377,6 +377,8 @@
   </div>
 
   <div id="toast" class="toast"></div>
+
+  window.onSaveClick = onSaveClick;  // Make function globally accessible
 
   <script>
     // ====== CONFIG ======
