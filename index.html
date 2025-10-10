@@ -615,8 +615,10 @@
         viewerUrl = 'https://docs.google.com/presentation/d/' + fileId + '/preview';
         downloadUrl = 'https://docs.google.com/presentation/d/' + fileId + '/export/pdf';
       } else if (fileType === 'sheets') {
-        viewerUrl = 'https://docs.google.com/spreadsheets/d/' + fileId + '/preview';
-        downloadUrl = 'https://docs.google.com/spreadsheets/d/' + fileId + '/export?format=pdf&portrait=true&fitw=true&gridlines=true';
+        // For sheets, use PDF export URL with viewer instead of preview
+        const pdfExportUrl = 'https://docs.google.com/spreadsheets/d/' + fileId + '/export?format=pdf&portrait=true&fitw=true&gridlines=true';
+        viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(pdfExportUrl) + '&embedded=true';
+        downloadUrl = pdfExportUrl;
       } else if (fileType === 'docs') {
         viewerUrl = 'https://docs.google.com/document/d/' + fileId + '/preview';
         downloadUrl = 'https://docs.google.com/document/d/' + fileId + '/export?format=pdf';
@@ -700,7 +702,7 @@
               '<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">' + m.description + '</p>' +
             '</div>' +
             '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
-              '<button class="btn btn-primary" onclick="viewAbbondanzaMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/<[^>]*>/g, '').replace(/'/g, "\\'") + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
+              '<button class="btn btn-primary" onclick="viewAbbondanzaMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/<[^>]*>/g, '').replace(/'/g, "\\'") + '\', \'' + m.type + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
               '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">📥 Download</button>' +
             '</div>' +
           '</div>'
