@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Setup Form</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1e3a8a;
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #1e3a8a;
+    }
+    
+    .header h1 {
+      color: #1e3a8a;
+      font-size: 2em;
+      margin-bottom: 10px;
+    }
+    
+    .section {
+      margin-bottom: 35px;
+      padding: 25px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border-left: 4px solid #1e3a8a;
+    }
+    
+    .section h2 {
+      color: #1e3a8a;
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1e3a8a;
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    }
+    
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      padding: 10px 0;
+    }
+    
+    .checkbox-group input[type="checkbox"],
+    .checkbox-group input[type="radio"] {
+      width: auto;
+      margin-right: 8px;
+    }
+    
+    .repeating-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .repeating-section h3 {
+      color: #4a5568;
+      font-size: 1.1em;
+      margin-bottom: 15px;
+    }
+    
+    .btn {
+      padding: 14px 30px;
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      background: #1e40af;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #64748b;
+    }
+    
+    .btn-secondary:hover {
+      background: #475569;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 2px solid #e2e8f0;
+    }
+    
+    .small-text {
+      font-size: 0.85em;
+      color: #718096;
+      margin-top: 5px;
+    }
+    
+    .required {
+      color: #e53e3e;
+    }
+    
+    .success-message {
+      background: #d4edda;
+      border: 2px solid #28a745;
+      color: #155724;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #1e3a8a;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📋 Account Setup Form</h1>
+      <p style="color: #718096; margin-top: 10px;">REDYREF - Livewire New Account Setup</p>
+    </div>
+    
+    <form id="accountSetupForm">
+      <!-- Company Information -->
+      <div class="section">
+        <h2>🏢 Company Information</h2>
+        
+        <div class="form-group">
+          <label>Company Name <span class="required">*</span></label>
+          <input type="text" name="companyName" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Company Address <span class="required">*</span></label>
+          <input type="text" name="companyAddress" required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone Number <span class="required">*</span></label>
+            <input type="tel" name="phoneNumber" required>
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" name="email" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contact Name/Title <span class="required">*</span></label>
+            <input type="text" name="contactNameTitle" required>
+          </div>
+          <div class="form-group">
+            <label>D&B# (Dun & Bradstreet Number)</label>
+            <input type="text" name="dbNumber">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Business History -->
+      <div class="section">
+        <h2>📅 Business History</h2>
+        
+        <div class="form-group">
+          <label>Prior Business Names (last 5 years)</label>
+          <textarea name="priorNames" placeholder="Include all prior corporations, mergers, or registered trade names"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Prior Business Address</label>
+          <input type="text" name="priorAddress">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date Founded</label>
+            <input type="date" name="dateFounded">
+          </div>
+          <div class="form-group">
+            <label>At Present Location Since</label>
+            <input type="date" name="presentLocationSince">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tax Information -->
+      <div class="section">
+        <h2>💰 Tax Information</h2>
+        
+        <div class="form-group">
+          <label>Exempt from Sales Tax?</label>
+          <div class="checkbox-group">
+            <label><input type="radio" name="salesTaxExempt" value="Yes"> Yes</label>
+            <label><input type="radio" name="salesTaxExempt" value="No" checked> No</label>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>State</label>
+            <input type="text" name="taxState">
+          </div>
+          <div class="form-group">
+            <label>Tax #</label>
+            <input type="text" name="taxNumber">
+          </div>
+        </div>
+        
+        <p class="small-text">Note: Please attach copy of Exempt/Tax Re-Sale Certificate if applicable</p>
+      </div>
+      
+      <!-- Officers/Principals -->
+      <div class="section">
+        <h2>👥 Principals or Officers</h2>
+        
+        <div class="repeating-section">
+          <h3>Principal/Officer #1</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="officer1Name">
+            </div>
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" name="officer1Title">
+            </div>
+          </div>
+        </div>
+        
+        <div class="repeating-section">
+          <h3>Principal/Officer #2</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="officer2Name">
+            </div>
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" name="officer2Title">
+            </div>
+          </div>
+        </div>
+        
+        <div class="repeating-section">
+          <h3>Principal/Officer #3</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="officer3Name">
+            </div>
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" name="officer3Title">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Accounts Payable -->
+      <div class="section">
+        <h2>💳 Accounts Payable Contact</h2>
+        
+        <div class="form-group">
+          <label>Contact Name <span class="required">*</span></label>
+          <input type="text" name="apContactName" required>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone <span class="required">*</span></label>
+            <input type="tel" name="apPhone" required>
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" name="apEmail" required>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Shipping Address -->
+      <div class="section">
+        <h2>📦 Ship To Address</h2>
+        
+        <div class="form-group">
+          <label>Shipping Address <span class="required">*</span></label>
+          <textarea name="shipToAddress" required></textarea>
+        </div>
+      </div>
+      
+      <!-- Business Structure -->
+      <div class="section">
+        <h2>🏛️ Form of Business</h2>
+        
+        <div class="checkbox-group">
+          <label><input type="radio" name="businessForm" value="Proprietorship"> Proprietorship</label>
+          <label><input type="radio" name="businessForm" value="Corporation"> Corporation</label>
+          <label><input type="radio" name="businessForm" value="Partnership"> Partnership</label>
+          <label><input type="radio" name="businessForm" value="Other"> Other</label>
+        </div>
+      </div>
+      
+      <!-- Parent Company -->
+      <div class="section">
+        <h2>🏢 Parent Company Information (if applicable)</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Parent Company Name</label>
+            <input type="text" name="parentCompanyName">
+          </div>
+          <div class="form-group">
+            <label>Parent D&B#</label>
+            <input type="text" name="parentDBNumber">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Parent Company Address</label>
+          <input type="text" name="parentAddress">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone #</label>
+            <input type="tel" name="parentPhone">
+          </div>
+          <div class="form-group">
+            <label>Fax #</label>
+            <input type="tel" name="parentFax">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Relationship to Parent Company</label>
+          <div class="checkbox-group">
+            <label><input type="radio" name="parentRelationship" value="Branch"> Branch</label>
+            <label><input type="radio" name="parentRelationship" value="Division"> Division</label>
+            <label><input type="radio" name="parentRelationship" value="Subsidiary"> Subsidiary</label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Formal Guarantee by Parent Company?</label>
+          <div class="checkbox-group">
+            <label><input type="radio" name="parentGuarantee" value="Yes"> Yes</label>
+            <label><input type="radio" name="parentGuarantee" value="No"> No</label>
+          </div>
+          <p class="small-text">If yes, please attach copy</p>
+        </div>
+      </div>
+      
+      <!-- Personal Liability -->
+      <div class="section">
+        <h2>👤 Personal Liability</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name/Title</label>
+            <input type="text" name="liabilityNameTitle">
+          </div>
+          <div class="form-group">
+            <label>Phone #</label>
+            <input type="tel" name="liabilityPhone">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" name="liabilityAddress">
+          </div>
+          <div class="form-group">
+            <label>SSN</label>
+            <input type="text" name="liabilitySSN" placeholder="XXX-XX-XXXX">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bank Reference -->
+      <div class="section">
+        <h2>🏦 Bank Reference</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Bank Name</label>
+            <input type="text" name="bankName">
+          </div>
+          <div class="form-group">
+            <label>Bank Contact Officer</label>
+            <input type="text" name="bankOfficer">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Bank Address</label>
+          <input type="text" name="bankAddress">
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone #</label>
+            <input type="tel" name="bankPhone">
+          </div>
+          <div class="form-group">
+            <label>Fax #</label>
+            <input type="tel" name="bankFax">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Account Type</label>
+            <input type="text" name="bankAccountType">
+          </div>
+          <div class="form-group">
+            <label>Account #</label>
+            <input type="text" name="bankAccountNumber">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Trade References -->
+      <div class="section">
+        <h2>🤝 Trade References</h2>
+        
+        <div class="repeating-section">
+          <h3>Trade Reference #1</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="trade1Name">
+            </div>
+            <div class="form-group">
+              <label>Account #</label>
+              <input type="text" name="trade1Account">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Years Doing Business</label>
+              <input type="number" name="trade1Years">
+            </div>
+            <div class="form-group">
+              <label>Contact Name</label>
+              <input type="text" name="trade1Contact">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" name="trade1Address">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone #</label>
+              <input type="tel" name="trade1Phone">
+            </div>
+            <div class="form-group">
+              <label>Fax #</label>
+              <input type="tel" name="trade1Fax">
+            </div>
+          </div>
+        </div>
+        
+        <div class="repeating-section">
+          <h3>Trade Reference #2</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="trade2Name">
+            </div>
+            <div class="form-group">
+              <label>Account #</label>
+              <input type="text" name="trade2Account">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Years Doing Business</label>
+              <input type="number" name="trade2Years">
+            </div>
+            <div class="form-group">
+              <label>Contact Name</label>
+              <input type="text" name="trade2Contact">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" name="trade2Address">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone #</label>
+              <input type="tel" name="trade2Phone">
+            </div>
+            <div class="form-group">
+              <label>Fax #</label>
+              <input type="tel" name="trade2Fax">
+            </div>
+          </div>
+        </div>
+        
+        <div class="repeating-section">
+          <h3>Trade Reference #3</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" name="trade3Name">
+            </div>
+            <div class="form-group">
+              <label>Account #</label>
+              <input type="text" name="trade3Account">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Years Doing Business</label>
+              <input type="number" name="trade3Years">
+            </div>
+            <div class="form-group">
+              <label>Contact Name</label>
+              <input type="text" name="trade3Contact">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" name="trade3Address">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Phone #</label>
+              <input type="tel" name="trade3Phone">
+            </div>
+            <div class="form-group">
+              <label>Fax #</label>
+              <input type="tel" name="trade3Fax">
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Authorization -->
+      <div class="section">
+        <h2>✍️ Authorization</h2>
+        
+        <p style="margin-bottom: 20px; line-height: 1.6;">
+          The undersigned hereby certifies that the information supplied is true and correct. 
+          Undersigned will further abide by assigned terms of account.
+        </p>
+        
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Authorized Signature Name <span class="required">*</span></label>
+            <input type="text" name="authorizedName" required>
+          </div>
+          <div class="form-group">
+            <label>Title <span class="required">*</span></label>
+            <input type="text" name="authorizedTitle" required>
+          </div>
+          <div class="form-group">
+            <label>Date <span class="required">*</span></label>
+            <input type="date" name="authorizedDate" required>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Submit Buttons -->
+      <div class="button-group">
+        <button type="submit" class="btn">
+          Generate Filled PDF
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="printBlankForm()">
+          Print Blank Form
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='index.html'">
+          Back to Dashboard
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <script>
+    // Form submission handler
+    document.getElementById('accountSetupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating PDF...';
+      
+      try {
+        const formData = new FormData(e.target);
+        const data = {};
+        formData.forEach((value, key) => {
+          data[key] = value;
+        });
+        
+        // TODO: Replace with your actual Google Apps Script URL
+        const ACCOUNT_FORM_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+        
+        const params = new URLSearchParams(data);
+        const response = await fetch(`${ACCOUNT_FORM_URL}?${params.toString()}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alert('✅ Account Setup Form Generated Successfully!\n\nThe PDF has been saved to your Google Drive.');
+          window.open(result.pdfUrl, '_blank');
+        } else {
+          throw new Error(result.message || 'Failed to generate form');
+        }
+        
+      } catch (error) {
+        alert('❌ Error: ' + error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    });
+    
+    // Print blank form function
+    function printBlankForm() {
+      // Save current form data
+      const formData = {};
+      const form = document.getElementById('accountSetupForm');
+      const inputs = form.querySelectorAll('input, textarea, select');
+      inputs.forEach(input => {
+        formData[input.name] = input.value;
+      });
+      
+      // Clear form
+      form.reset();
+      
+      // Print
+      window.print();
+      
+      // Restore form data
+      setTimeout(() => {
+        Object.keys(formData).forEach(key => {
+          const input = form.querySelector(`[name="${key}"]`);
+          if (input) input.value = formData[key];
+        });
+      }, 100);
+    }
+    
+    // Set today's date as default for authorization date
+    document.addEventListener('DOMContentLoaded', function() {
+      const dateField = document.querySelector('input[name="authorizedDate"]');
+      if (dateField && !dateField.value) {
+        dateField.valueAsDate = new Date();
+      }
+    });
+  </script>
+</body>
+</html>
