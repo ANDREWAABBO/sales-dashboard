@@ -577,13 +577,15 @@
     };
     
    window.proceedToProposalGenerator = function proceedToProposalGenerator() {
+  // Close warning modal
   const warningOverlay = document.querySelector('.modal-overlay');
   if (warningOverlay) warningOverlay.remove();
   
+  // Open the proposal generator modal
   setTimeout(function() {
-    const modal = document.getElementById('quantumProposalModal');
-    if (modal) {
-      modal.style.display = 'block';
+    const modalOverlay = document.getElementById('quantumProposalModal');
+    if (modalOverlay) {
+      modalOverlay.style.display = 'block';
       updateQuantumPricingSummary();
       loadDropdownOptions();
     }
