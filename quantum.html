@@ -966,10 +966,29 @@
 
     // NEW: Archive proposal function
     window.archiveQuantumProposal = function archiveQuantumProposal(fileId, companyName) {
-      if (!confirm('Archive proposal for ' + companyName + '?\n\nThis will move it to the Archived Proposals folder.')) {
-        return;
-      }
+      // Show custom confirmation modal
+      const confirmOverlay = document.createElement('div');
+      confirmOverlay.className = 'modal-overlay';
+      confirmOverlay.style.display = 'block';
+      confirmOverlay.style.zIndex = '20000';
 
+      confirmOverlay.innerHTML = 
+        '<div class="modal" style="max-width:500px;" onclick="event.stopPropagation()">' +
+          '<h3 style="margin-bottom:20px;color:#2d3748;">Archive Proposal?</h3>' +
+          '<p style="color:#4a5568;margin-bottom:10px;line-height:1.6;">Are you sure you want to archive the proposal for:</p>' +
+          '<p style="color:#1e3a8a;font-weight:600;margin-bottom:20px;font-size:1.1em;">' + companyName + '</p>' +
+          '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will move it to the Archived Proposals folder.</p>' +
+          '<div style="display:flex;gap:15px;margin-top:25px;">' +
+            '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
+            '<button class="btn" onclick="confirmArchiveQuantumProposal(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#f59e0b;">📦 Archive</button>' +
+          '</div>' +
+        '</div>';
+      
+      document.body.appendChild(confirmOverlay);
+    };
+
+    // Actual archive execution after confirmation
+    window.confirmArchiveQuantumProposal = function confirmArchiveQuantumProposal(fileId, companyName) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (proposalsList) {
         proposalsList.innerHTML = 
