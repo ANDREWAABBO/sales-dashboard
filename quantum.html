@@ -576,27 +576,19 @@
       document.body.appendChild(warningOverlay);
     };
     
-    window.proceedToProposalGenerator = function proceedToProposalGenerator() {
-      const warningOverlay = document.querySelector('.modal-overlay');
-      if (warningOverlay) warningOverlay.remove();
-      
-      const existingModal = document.getElementById('quantumProposalModal');
-      if (existingModal) existingModal.style.display = 'none';
-      setTimeout(function() {
-        const modal = document.getElementById('quantumProposalModal');
-        if (modal) {
-          modal.style.display = 'block';
-          updateQuantumPricingSummary();
-          loadDropdownOptions();
-          const generateBtn = document.getElementById('generateQuantumBtn');
-          if (generateBtn) {
-            const newBtn = generateBtn.cloneNode(true);
-            generateBtn.parentNode.replaceChild(newBtn, generateBtn);
-            newBtn.addEventListener('click', generateQuantumProposal);
-          }
-        }
-      }, 100);
-    };
+   window.proceedToProposalGenerator = function proceedToProposalGenerator() {
+  const warningOverlay = document.querySelector('.modal-overlay');
+  if (warningOverlay) warningOverlay.remove();
+  
+  setTimeout(function() {
+    const modal = document.getElementById('quantumProposalModal');
+    if (modal) {
+      modal.style.display = 'block';
+      updateQuantumPricingSummary();
+      loadDropdownOptions();
+    }
+  }, 200);
+};
   
     function loadDropdownOptions() {
       const shippingMethodSelect = document.getElementById('shippingMethod');
