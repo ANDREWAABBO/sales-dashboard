@@ -681,7 +681,7 @@
         });
         
         // TODO: Replace with your actual Google Apps Script URL
-        const ACCOUNT_FORM_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+       const ACCOUNT_FORM_URL = 'https://script.google.com/macros/s/AKfycbxJQe_nKkvgSkVkiJJl1-NhF0oh8ORTQ9JAwAs3fOymawzI5C7mYXSYWQrsP6H0_IPlpA/exec';
         
         const params = new URLSearchParams(data);
         const response = await fetch(`${ACCOUNT_FORM_URL}?${params.toString()}`);
