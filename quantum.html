@@ -600,6 +600,17 @@
   // Open the proposal generator modal
   setTimeout(function() {
     const modalOverlay = document.getElementById('quantumProposalModal');
+    if (modalOverlay) {
+      modalOverlay.style.display = 'block';
+      updateQuantumPricingSummary();
+      loadDropdownOptions();
+    }
+  }, 200);
+};
+  
+  // Open the proposal generator modal
+  setTimeout(function() {
+    const modalOverlay = document.getElementById('quantumProposalModal');
     console.log('Modal overlay element:', modalOverlay);
     if (modalOverlay) {
       modalOverlay.style.display = 'block';
