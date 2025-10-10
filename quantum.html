@@ -467,6 +467,65 @@
     };
   
     window.openQuantumProposalGenerator = function openQuantumProposalGenerator() {
+      // Show warning/checklist modal first
+      const warningOverlay = document.createElement('div');
+      warningOverlay.className = 'modal-overlay';
+      warningOverlay.style.display = 'block';
+      warningOverlay.style.zIndex = '10000';
+
+      warningOverlay.innerHTML = 
+        '<div class="modal" style="max-width:700px;" onclick="event.stopPropagation()">' +
+          '<div style="text-align:center;margin-bottom:25px;">' +
+            '<div style="display:inline-block;width:80px;height:80px;background:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:15px;">' +
+              '<span style="color:white;font-size:48px;font-weight:bold;">⛔</span>' +
+            '</div>' +
+            '<h3 style="margin:0;color:#dc2626;font-size:2em;font-weight:700;">STOP</h3>' +
+            '<p style="color:#991b1b;font-size:1.2em;font-weight:600;margin-top:10px;">Before a proposal is made</p>' +
+          '</div>' +
+          
+          '<div style="background:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:25px;margin-bottom:25px;">' +
+            '<div style="margin-bottom:25px;">' +
+              '<h4 style="color:#dc2626;margin:0 0 12px 0;font-size:1.15em;display:flex;align-items:center;gap:10px;">' +
+                '<span style="background:#dc2626;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;">1</span>' +
+                'Did we contact Ken Piers (PIE-RESSE) @ REDYREF for a shipping quote?' +
+              '</h4>' +
+              
+              '<div style="background:white;border:1px solid #fecaca;border-radius:8px;padding:15px;margin-top:15px;">' +
+                '<p style="color:#7f1d1d;font-weight:600;margin:0 0 10px 0;font-size:1.05em;">📝 Notes on Shipping:</p>' +
+                '<ul style="margin:0;padding-left:20px;color:#991b1b;line-height:1.7;">' +
+                  '<li style="margin-bottom:10px;"><strong>Customer carrier option:</strong> Customer can choose their own carrier but must sign a damage waiver. Our shipping is covered with insurance. Claims are processed quickly (typically 30 days) when using our carrier. If client uses their own carrier, damage claims could take up to 1 year to resolve, if at all.</li>' +
+                  '<li><strong>Quote flexibility:</strong> Shipping quote may change up or down the day it is shipped. Example: if item ships 10 weeks from order date, shipping might change and the difference will be invoiced or credited by REDYREF.</li>' +
+                '</ul>' +
+              '</div>' +
+            '</div>' +
+            
+            '<div>' +
+              '<h4 style="color:#dc2626;margin:0 0 12px 0;font-size:1.15em;display:flex;align-items:center;gap:10px;">' +
+                '<span style="background:#dc2626;color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;">2</span>' +
+                'Is the client financing?' +
+              '</h4>' +
+              '<div style="background:white;border:1px solid #fecaca;border-radius:8px;padding:15px;">' +
+                '<p style="margin:0;color:#991b1b;line-height:1.7;"><strong>If NO:</strong> We need a <strong style="color:#dc2626;">50% deposit</strong> on the order with signature</p>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          
+          '<div style="display:flex;gap:15px;margin-top:25px;">' +
+            '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;font-size:1.05em;padding:14px;">❌ Cancel</button>' +
+            '<button class="btn btn-primary" onclick="proceedToProposalGenerator()" style="flex:1;font-size:1.05em;padding:14px;background:#dc2626;border:none;">✅ I Understand - Continue</button>' +
+          '</div>' +
+        '</div>';
+      
+      document.body.appendChild(warningOverlay);
+    };
+    
+    // Proceed to actual proposal generator after acknowledging warning
+    window.proceedToProposalGenerator = function proceedToProposalGenerator() {
+      // Close warning modal
+      const warningOverlay = document.querySelector('.modal-overlay');
+      if (warningOverlay) warningOverlay.remove();
+      
+      // Now open the actual proposal generator
       const existingModal = document.getElementById('quantumProposalModal');
       if (existingModal) existingModal.style.display = 'none';
       setTimeout(function() {
