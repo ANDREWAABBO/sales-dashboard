@@ -359,11 +359,13 @@
   
   <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
-    // NEW: Account Form Library function
-    window.openAccountFormLibrary = function openAccountFormLibrary() {
-      alert('Account Form Library coming soon! This will show all submitted account setup forms.');
-      // TODO: Implement library viewer similar to proposal viewer
-    };
+    // NEW: Download New Customer Account Form as PDF
+    function downloadNewCustomerForm() {
+      const docId = '1LGvkY0K9_ZlQwaCfWRbLUFDXefQUfBKeytXmz3X8-Kc';
+      const pdfUrl = 'https://docs.google.com/document/d/' + docId + '/export?format=pdf';
+      window.open(pdfUrl, '_blank');
+    }
+    window.downloadNewCustomerForm = downloadNewCustomerForm;
 
     // Expose everything used by inline HTML attributes:
     window.openQuantumAboutUs = function openQuantumAboutUs() {
