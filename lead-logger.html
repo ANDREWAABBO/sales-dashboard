@@ -719,8 +719,13 @@
       document.getElementById('repPhone').value = lead.repPhone || '';
       document.getElementById('repEmail').value = lead.repEmail || '';
       document.getElementById('customerAddress').value = lead.customerAddress || '';
+      // FIXED: Only pad zip code if it exists and has a value
       const zipCode = lead.customerZip || '';
-      document.getElementById('customerZip').value = String(zipCode).padStart(5, '0');
+      if (zipCode && zipCode.toString().trim() !== '') {
+        document.getElementById('customerZip').value = String(zipCode).padStart(5, '0');
+      } else {
+        document.getElementById('customerZip').value = '';
+      }
 
       if (lead.followUp){
         const d = new Date(lead.followUp);
