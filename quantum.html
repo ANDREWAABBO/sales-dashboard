@@ -577,18 +577,25 @@
     };
     
    window.proceedToProposalGenerator = function proceedToProposalGenerator() {
-  console.log('proceedToProposalGenerator called!');
-  
   // Close warning modal - but be more specific
   const allOverlays = document.querySelectorAll('.modal-overlay');
-  console.log('Found overlays:', allOverlays.length);
   
   allOverlays.forEach(function(overlay) {
     if (overlay.id !== 'quantumProposalModal') {
-      console.log('Removing overlay:', overlay);
       overlay.remove();
     }
   });
+  
+  // Open the proposal generator modal
+  setTimeout(function() {
+    const modalOverlay = document.getElementById('quantumProposalModal');
+    if (modalOverlay) {
+      modalOverlay.style.display = 'block';
+      updateQuantumPricingSummary();
+      loadDropdownOptions();
+    }
+  }, 200);
+};
   
   // Open the proposal generator modal
   setTimeout(function() {
