@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
   
+  <!-- Shared auth (login/register/reset) -->
   <script defer src="password.js"></script>
   
   <style>
@@ -22,6 +23,7 @@
       font-size: 18px;
     }
   
+    /* Company Switcher */
     .company-switcher {
       display: flex;
       justify-content: center;
@@ -89,6 +91,7 @@
     @keyframes titleGlow { from { filter: brightness(1); } to { filter: brightness(1.3); } }
     .header p { font-size: 1.3em; opacity: 0.9; }
   
+    /* Quantum Grid - Vertical Stack */
     .quantum-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
   
     .card {
@@ -121,6 +124,7 @@
     .btn:hover::after { width: 300px; height: 300px; }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4); background: #1e40af; }
   
+    /* Modal Styles */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.7); z-index: 10000; backdrop-filter: blur(5px);
@@ -131,6 +135,7 @@
       max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z-index: 10001;
     }
     
+    /* PDF Modal Styles */
     .pdf-modal {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       background: white; border-radius: 20px; width: 90%; height: 90%;
@@ -147,6 +152,11 @@
     .pdf-viewer iframe {
       width: 100%; height: 100%; border: none; border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+  
+    /* PROPOSAL MODAL - Different ID to prevent outside click close */
+    #quantumProposalModal .modal-overlay {
+      pointer-events: auto;
     }
   
     .form-group { margin-bottom: 20px; }
@@ -183,6 +193,7 @@
 </head>
   
 <body>
+  <!-- Company Switcher -->
   <div class="company-switcher">
     <a href="index.html" class="company-btn">
       <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
@@ -200,6 +211,7 @@
       <p>Smart Food Fridge Solutions for Modern Businesses</p>
     </div>
   
+    <!-- Quantum Solutions - 6 Cards Vertical Stack -->
     <div class="quantum-grid">
       <div class="card">
         <h2>How We Stack Up</h2>
@@ -216,6 +228,7 @@
         </div>
       </div>
 
+      <!-- NEW: Onboarding New Client Card -->
       <div class="card">
         <h2>Onboarding New Client</h2>
         <p>Complete new customer account setup forms and master service agreements for enterprise partnerships.</p>
@@ -239,6 +252,7 @@
     </div>
   </div>
   
+  <!-- Quantum Proposal Generator Modal -->
   <div id="quantumProposalModal" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
       <h3>Generate Smart Food Fridge Proposal</h3>
@@ -361,8 +375,10 @@
     </div>
   </div>
   
+  <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
-    window.viewQuantumMaterialPDF = function(fileId, title, fileType) {
+    // NEW: View Quantum Material in PDF Modal - DEFINE FIRST
+    window.viewQuantumMaterialPDF = function viewQuantumMaterialPDF(fileId, title, fileType) {
       const materialsOverlay = document.querySelector('.modal-overlay');
       if (materialsOverlay) materialsOverlay.remove();
       
@@ -441,7 +457,7 @@
     }
     window.downloadNewCustomerForm = downloadNewCustomerForm;
 
-    window.openQuantumAboutUs = function() {
+    window.openQuantumAboutUs = function openQuantumAboutUs() {
       const existingOverlay = document.querySelector('.modal-overlay');
       if (existingOverlay) existingOverlay.remove();
   
@@ -501,20 +517,18 @@
       document.body.appendChild(overlay);
     };
   
-    window.closeModal = function() {
+    window.closeModal = function closeModal() {
       const overlay = document.querySelector('.modal-overlay');
       if (overlay) overlay.remove();
     };
     
-    window.closePDFViewer = function() {
-      document.querySelectorAll('.modal-overlay').forEach(function(ov) {
+    window.closePDFViewer = function closePDFViewer() {
+      document.querySelectorAll('.modal-overlay').forEach(ov => {
         if (ov && ov.querySelector('.pdf-modal')) ov.remove();
       });
     };
   
-    window.openQuantumProposalGenerator = function() {
-      console.log('openQuantumProposalGenerator called');
-      
+    window.openQuantumProposalGenerator = function openQuantumProposalGenerator() {
       const warningOverlay = document.createElement('div');
       warningOverlay.className = 'modal-overlay';
       warningOverlay.style.display = 'block';
@@ -554,39 +568,34 @@
             '</div>' +
           '</div>' +
           '<div style="display:flex;gap:15px;margin-top:25px;">' +
-            '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove();console.log(\'Cancel clicked\');" style="flex:1;font-size:1.05em;padding:14px;">❌ Cancel</button>' +
-            '<button class="btn btn-primary" onclick="window.proceedToProposalGenerator();console.log(\'Continue clicked\');" style="flex:1;font-size:1.05em;padding:14px;background:#dc2626;border:none;">✅ I Understand - Continue</button>' +
+            '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;font-size:1.05em;padding:14px;">❌ Cancel</button>' +
+            '<button class="btn btn-primary" onclick="proceedToProposalGenerator()" style="flex:1;font-size:1.05em;padding:14px;background:#dc2626;border:none;">✅ I Understand - Continue</button>' +
           '</div>' +
         '</div>';
       
       document.body.appendChild(warningOverlay);
-      console.log('Warning overlay added to body');
     };
     
-    window.proceedToProposalGenerator = function() {
-      console.log('proceedToProposalGenerator called');
-      
-      // Remove warning overlay
+    window.proceedToProposalGenerator = function proceedToProposalGenerator() {
       const warningOverlay = document.querySelector('.modal-overlay');
-      if (warningOverlay) {
-        console.log('Removing warning overlay');
-        warningOverlay.remove();
-      }
+      if (warningOverlay) warningOverlay.remove();
       
-      // Wait a moment then show the proposal modal
+      const existingModal = document.getElementById('quantumProposalModal');
+      if (existingModal) existingModal.style.display = 'none';
       setTimeout(function() {
         const modal = document.getElementById('quantumProposalModal');
-        console.log('Looking for quantumProposalModal:', modal);
-        
         if (modal) {
-          console.log('Found modal, displaying it');
           modal.style.display = 'block';
           updateQuantumPricingSummary();
           loadDropdownOptions();
-        } else {
-          console.error('quantumProposalModal not found in DOM!');
+          const generateBtn = document.getElementById('generateQuantumBtn');
+          if (generateBtn) {
+            const newBtn = generateBtn.cloneNode(true);
+            generateBtn.parentNode.replaceChild(newBtn, generateBtn);
+            newBtn.addEventListener('click', generateQuantumProposal);
+          }
         }
-      }, 200);
+      }, 100);
     };
   
     function loadDropdownOptions() {
@@ -674,12 +683,12 @@
       console.log('Using default dropdown options');
     }
   
-    window.closeQuantumModal = function(id) {
+    window.closeQuantumModal = function closeQuantumModal(id) {
       const m = document.getElementById(id);
       if (m) m.style.display = 'none';
     };
   
-    window.updateCustomerType = function() {
+    window.updateCustomerType = function updateCustomerType() {
       const customerType = document.getElementById('customerType').value;
       const scannerCount = document.getElementById('scannerCount');
       scannerCount.value = (customerType === 'new') ? 1 : 0;
@@ -705,7 +714,7 @@
       return Math.round(baseFreight * distanceMultiplier);
     }
   
-    window.updateQuantumPricingSummary = function() {
+    window.updateQuantumPricingSummary = function updateQuantumPricingSummary() {
       const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
       const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
       const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
@@ -754,7 +763,7 @@
       document.getElementById('quantumPricingSummary').innerHTML = html;
     };
   
-    window.generateQuantumProposal = function(event) {
+    window.generateQuantumProposal = function generateQuantumProposal(event) {
       if (event) { event.preventDefault(); event.stopPropagation(); }
       const submitBtn = document.getElementById('generateQuantumBtn');
       const originalText = submitBtn.innerHTML;
@@ -842,7 +851,7 @@
       }
     };
   
-    window.showQuantumPopup = function(content, type) {
+    window.showQuantumPopup = function showQuantumPopup(content, type) {
       const popup = document.createElement('div');
       popup.className = 'modal-overlay';
       popup.innerHTML = 
@@ -861,7 +870,7 @@
       }
     };
   
-    window.openQuantumMasterAgreement = function() {
+    window.openQuantumMasterAgreement = function openQuantumMasterAgreement() {
       const existingOverlay = document.querySelector('.modal-overlay');
       if (existingOverlay) existingOverlay.remove();
       const overlay = document.createElement('div');
@@ -890,7 +899,7 @@
       document.body.appendChild(overlay);
     };
   
-    window.openQuantumROICalculator = function() {
+    window.openQuantumROICalculator = function openQuantumROICalculator() {
       const existing = document.querySelector('.modal-overlay.roi-overlay');
       if (existing) existing.remove();
   
@@ -914,11 +923,11 @@
       document.body.appendChild(overlay);
     };
   
-    window.openQuantumLeadLogger = function() {
+    window.openQuantumLeadLogger = function openQuantumLeadLogger() {
       window.location.href = 'lead-logger.html';
     };
   
-    window.openQuantumProposalViewer = function() {
+    window.openQuantumProposalViewer = function openQuantumProposalViewer() {
       const existingOverlay = document.querySelector('.proposal-viewer-overlay');
       if (existingOverlay) existingOverlay.remove();
   
@@ -956,7 +965,7 @@
       setTimeout(function() { loadQuantumProposalsFromDrive(); }, 100);
     };
 
-    window.toggleArchiveView = function() {
+    window.toggleArchiveView = function toggleArchiveView() {
       window.showArchivedProposals = !window.showArchivedProposals;
       
       const toggleBtn = document.getElementById('toggleArchiveBtn');
@@ -975,7 +984,7 @@
       filterQuantumProposals();
     };
   
-    window.closeQuantumProposalViewer = function() {
+    window.closeQuantumProposalViewer = function closeQuantumProposalViewer() {
       const overlay = document.querySelector('.proposal-viewer-overlay');
       if (overlay) overlay.remove();
     };
@@ -994,11 +1003,16 @@
   
         script.onerror = function() {
           delete window[callbackName];
-18px;">Unable to load proposals.</p>' +
+          const proposalsList = document.getElementById('quantumProposalsList');
+          if (proposalsList) {
+            proposalsList.innerHTML = 
+              '<div style="text-align:center;padding:40px;">' +
+                '<p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load proposals.</p>' +
                 '<button class="btn btn-primary" onclick="openQuantumProposalViewer()">Try Again</button>' +
               '</div>';
           }
-        };
+
+          };
   
         document.body.appendChild(script);
         promise.then(function(data) {
@@ -1084,7 +1098,7 @@
       }).join('');
     }
 
-    window.unarchiveQuantumProposal = function(fileId, companyName) {
+    window.unarchiveQuantumProposal = function unarchiveQuantumProposal(fileId, companyName) {
       const confirmOverlay = document.createElement('div');
       confirmOverlay.className = 'modal-overlay';
       confirmOverlay.style.display = 'block';
@@ -1105,7 +1119,7 @@
       document.body.appendChild(confirmOverlay);
     };
 
-    window.confirmUnarchiveQuantumProposal = function(fileId, companyName) {
+    window.confirmUnarchiveQuantumProposal = function confirmUnarchiveQuantumProposal(fileId, companyName) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (proposalsList) {
         proposalsList.innerHTML = 
@@ -1182,7 +1196,7 @@
       }
     };
 
-    window.archiveQuantumProposal = function(fileId, companyName) {
+    window.archiveQuantumProposal = function archiveQuantumProposal(fileId, companyName) {
       const confirmOverlay = document.createElement('div');
       confirmOverlay.className = 'modal-overlay';
       confirmOverlay.style.display = 'block';
@@ -1203,7 +1217,7 @@
       document.body.appendChild(confirmOverlay);
     };
 
-    window.confirmArchiveQuantumProposal = function(fileId, companyName) {
+    window.confirmArchiveQuantumProposal = function confirmArchiveQuantumProposal(fileId, companyName) {
       const proposalsList = document.getElementById('quantumProposalsList');
       if (proposalsList) {
         proposalsList.innerHTML = 
@@ -1280,7 +1294,7 @@
       }
     };
   
-    window.filterQuantumProposals = function() {
+    window.filterQuantumProposals = function filterQuantumProposals() {
       const searchInput = document.getElementById('quantumProposalSearch');
       const term = (searchInput.value || '').toLowerCase();
       const proposalsList = document.getElementById('quantumProposalsList');
@@ -1317,7 +1331,7 @@
       }
     };
   
-    window.viewQuantumProposalPDF = function(fileId, companyName) {
+    window.viewQuantumProposalPDF = function viewQuantumProposalPDF(fileId, companyName) {
       closeQuantumProposalViewer();
   
       const overlay = document.createElement('div');
@@ -1352,7 +1366,7 @@
       document.body.appendChild(overlay);
     };
     
-    window.archiveFromViewer = function(fileId, companyName) {
+    window.archiveFromViewer = function archiveFromViewer(fileId, companyName) {
       const pdfOverlay = document.querySelector('.pdf-viewer-overlay');
       if (pdfOverlay) pdfOverlay.remove();
       
@@ -1365,7 +1379,7 @@
       }, 200);
     };
     
-    window.unarchiveFromViewer = function(fileId, companyName) {
+    window.unarchiveFromViewer = function unarchiveFromViewer(fileId, companyName) {
       const pdfOverlay = document.querySelector('.pdf-viewer-overlay');
       if (pdfOverlay) pdfOverlay.remove();
       
@@ -1383,7 +1397,7 @@
       }, 200);
     };
   
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
       if (event.target.classList && event.target.classList.contains('modal-overlay')) {
         if (event.target.id !== 'quantumProposalModal') {
           closeModal();
@@ -1392,13 +1406,14 @@
     });
   </script>
   
+  <!-- Reusable Username + Logout pill (shared across pages) -->
   <script defer src="userbar.js?v=1"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       if (window.UserBar && typeof window.UserBar.init === 'function') {
         window.UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
       } else {
-        window.addEventListener('load', function() {
+        window.addEventListener('load', function () {
           if (window.UserBar && typeof window.UserBar.init === 'function') {
             window.UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
           }
