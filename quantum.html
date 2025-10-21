@@ -986,64 +986,116 @@
     };
 
     window.hideVideo = function hideVideo(fileId, fileName) {
-      if (!confirm('Hide "' + fileName + '"?\n\nThis will move it to the Hidden folder.')) {
-        return;
-      }
+  // Create custom confirmation modal
+  const confirmOverlay = document.createElement('div');
+  confirmOverlay.className = 'modal-overlay';
+  confirmOverlay.style.display = 'block';
+  confirmOverlay.style.zIndex = '30000';
 
-      const content = document.getElementById('videoLibraryContent');
-      if (content) {
-        content.innerHTML = 
-          '<div style="text-align:center;padding:40px;">' +
-            '<div class="loading-spinner"></div>' +
-            '<p style="margin-top:20px;color:#718096;">Hiding video...</p>' +
-          '</div>';
-      }
+  confirmOverlay.innerHTML = 
+    '<div class="modal" style="max-width:500px;">' +
+      '<h3 style="margin-bottom:20px;color:#2d3748;">Hide Video?</h3>' +
+      '<p style="color:#4a5568;margin-bottom:10px;line-height:1.6;">Are you sure you want to hide:</p>' +
+      '<p style="color:#1e3a8a;font-weight:600;margin-bottom:20px;font-size:1.1em;">' + fileName + '</p>' +
+      '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will move it to the Hidden folder.</p>' +
+      '<div style="display:flex;gap:15px;margin-top:25px;">' +
+        '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
+        '<button class="btn" onclick="confirmHideVideo(\'' + fileId + '\', \'' + fileName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#e53e3e;">🚫 Hide Video</button>' +
+      '</div>' +
+    '</div>';
+  
+  document.body.appendChild(confirmOverlay);
+};
 
-      fetch(VIDEO_LIBRARY_URL + '?action=hideVideo&fileId=' + encodeURIComponent(fileId) + '&fileName=' + encodeURIComponent(fileName))
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            loadVideos();
-            showVideoPopup('✅ Video hidden successfully', 'success');
-          } else {
-            throw new Error(data.message || 'Failed to hide video');
-          }
-        })
-        .catch(error => {
-          showVideoPopup('❌ Error: ' + error.message, 'error');
-          loadVideos();
-        });
-    };
+function confirmHideVideo(fileId, fileName) {
+  const content = document.getElementById('videoLibraryContent');
+  if (content) {
+    content.innerHTML = 
+      '<div style="text-align:center;padding:40px;">' +
+        '<div class="loading-spinner"></div>' +
+        '<p style="margin-top:20px;color:#718096;">Hiding video...</p>' +
+      '</div>';
+  }
+
+  fetch(VIDEO_LIBRARY_URL + '?action=hideVideo&fileId=' + encodeURIComponent(fileId) + '&fileName=' + encodeURIComponent(fileName))
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        loadVideos();
+        showVideoPopup('✅ Video hidden successfully', 'success');
+      } else {
+        throw new Error(data.message || 'Failed to hide video');
+      }
+    })
+    .catch(error => {
+      showVideoPopup('❌ Error: ' + error.message, 'error');
+      loadVideos();
+    });
+}
+
 
     window.unhideVideo = function unhideVideo(fileId, fileName) {
-      if (!confirm('Restore "' + fileName + '"?\n\nThis will move it back to active videos.')) {
-        return;
-      }
+  // Create custom confirmation modal with category dropdown
+  const confirmOverlay = document.createElement('div');
+  confirmOverlay.className = 'modal-overlay';
+  confirmOverlay.style.display = 'block';
+  confirmOverlay.style.zIndex = '30000';
 
-      const content = document.getElementById('videoLibraryContent');
-      if (content) {
-        content.innerHTML = 
-          '<div style="text-align:center;padding:40px;">' +
-            '<div class="loading-spinner"></div>' +
-            '<p style="margin-top:20px;color:#718096;">Restoring video...</p>' +
-          '</div>';
-      }
+  // Build category options
+  let categoryOptions = '';
+  window.allCategories.forEach(function(category) {
+    categoryOptions += '<option value="' + category + '">' + category + '</option>';
+  });
 
-      fetch(VIDEO_LIBRARY_URL + '?action=unhideVideo&fileId=' + encodeURIComponent(fileId) + '&fileName=' + encodeURIComponent(fileName))
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            loadVideos();
-            showVideoPopup('✅ Video restored successfully', 'success');
-          } else {
-            throw new Error(data.message || 'Failed to restore video');
-          }
-        })
-        .catch(error => {
-          showVideoPopup('❌ Error: ' + error.message, 'error');
-          loadVideos();
-        });
-    };
+  confirmOverlay.innerHTML = 
+    '<div class="modal" style="max-width:500px;">' +
+      '<h3 style="margin-bottom:20px;color:#2d3748;">Restore Video?</h3>' +
+      '<p style="color:#4a5568;margin-bottom:10px;line-height:1.6;">Restore to which category:</p>' +
+      '<p style="color:#1e3a8a;font-weight:600;margin-bottom:20px;font-size:1.1em;">' + fileName + '</p>' +
+      '<div style="margin-bottom:25px;">' +
+        '<label style="display:block;margin-bottom:8px;color:#4a5568;font-weight:600;">Select Category:</label>' +
+        '<select id="restoreCategory" class="category-dropdown" style="width:100%;">' +
+          categoryOptions +
+        '</select>' +
+      '</div>' +
+      '<div style="display:flex;gap:15px;margin-top:25px;">' +
+        '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
+        '<button class="btn" onclick="confirmUnhideVideo(\'' + fileId + '\', \'' + fileName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#10b981;">👁️ Restore Video</button>' +
+      '</div>' +
+    '</div>';
+  
+  document.body.appendChild(confirmOverlay);
+};
+
+
+function confirmUnhideVideo(fileId, fileName) {
+  const categorySelect = document.getElementById('restoreCategory');
+  const targetCategory = categorySelect ? categorySelect.value : '';
+
+  const content = document.getElementById('videoLibraryContent');
+  if (content) {
+    content.innerHTML = 
+      '<div style="text-align:center;padding:40px;">' +
+        '<div class="loading-spinner"></div>' +
+        '<p style="margin-top:20px;color:#718096;">Restoring video...</p>' +
+      '</div>';
+  }
+
+  fetch(VIDEO_LIBRARY_URL + '?action=unhideVideo&fileId=' + encodeURIComponent(fileId) + '&fileName=' + encodeURIComponent(fileName) + '&targetCategory=' + encodeURIComponent(targetCategory))
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        loadVideos();
+        showVideoPopup('✅ Video restored to ' + targetCategory, 'success');
+      } else {
+        throw new Error(data.message || 'Failed to restore video');
+      }
+    })
+    .catch(error => {
+      showVideoPopup('❌ Error: ' + error.message, 'error');
+      loadVideos();
+    });
+}
 
     function showVideoPopup(message, type) {
       const popup = document.createElement('div');
