@@ -189,6 +189,186 @@
       border-radius: 50%; animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Video Library Styles */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .video-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .video-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+    .video-thumbnail {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 48px;
+    }
+
+    .video-info {
+      padding: 15px;
+    }
+
+    .video-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .video-meta {
+      font-size: 13px;
+      color: #718096;
+    }
+
+    .video-actions {
+      padding: 0 15px 15px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .video-action-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .video-action-btn.primary {
+      background: #1e3a8a;
+      color: white;
+    }
+
+    .video-action-btn.primary:hover {
+      background: #1e40af;
+    }
+
+    .video-action-btn.secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .video-action-btn.secondary:hover {
+      background: #cbd5e0;
+    }
+
+    .video-action-btn.danger {
+      background: #fee;
+      color: #c53030;
+    }
+
+    .video-action-btn.danger:hover {
+      background: #fdd;
+    }
+
+    .video-player-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #000;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 1200px;
+      max-height: 90vh;
+      z-index: 10001;
+      overflow: hidden;
+    }
+
+    .video-player-header {
+      background: #1a1a1a;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .video-player-content {
+      width: 100%;
+      height: calc(90vh - 60px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-player-content video {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #1e3a8a;
+    }
+
+    .search-icon {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #718096;
+    }
+
+    .toggle-hidden-btn {
+      padding: 10px 20px;
+      background: #64748b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    .toggle-hidden-btn:hover {
+      background: #475569;
+    }
+
+    .toggle-hidden-btn.active {
+      background: #1e3a8a;
+    }
   </style>
 </head>
   
@@ -204,7 +384,6 @@
       <span>Quantum Solutions</span>
     </button>
   </div>
-  
   <div class="dashboard-container">
     <div class="header">
       <h1>Quantum Solutions Dashboard</h1>
@@ -218,6 +397,13 @@
         <p>Marketing materials and competitive analysis showing Quantum Solutions advantages over traditional vending.</p>
         <button onclick="openQuantumAboutUs()" class="btn" type="button">View Materials</button>
       </div>
+
+      <!-- NEW: Video Library Card -->
+      <div class="card">
+        <h2>Video Library</h2>
+        <p>Access training videos, product demos, and client presentations. Manage and organize video content.</p>
+        <button onclick="openVideoLibrary()" class="btn" type="button">Open Video Library</button>
+      </div>
   
       <div class="card">
         <h2>Proposal Management</h2>
@@ -228,7 +414,7 @@
         </div>
       </div>
 
-      <!-- NEW: Onboarding New Client Card -->
+      <!-- Onboarding New Client Card -->
       <div class="card">
         <h2>Onboarding New Client</h2>
         <p>Complete new customer account setup forms and master service agreements for enterprise partnerships.</p>
@@ -251,7 +437,6 @@
       </div>
     </div>
   </div>
-  
   <!-- Quantum Proposal Generator Modal -->
   <div id="quantumProposalModal" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
@@ -374,9 +559,11 @@
       </div>
     </div>
   </div>
-  
   <!-- App script: expose handlers on window so inline on* can find them -->
   <script>
+    // Video Library Configuration
+    const VIDEO_LIBRARY_URL = 'https://script.google.com/macros/s/AKfycbxFS2mSdcK0SSF4qFPRKF_jUVqnVkSBW4btCLCbVyy_3MWo4SR4cJ-CNURGf4xRPk3a/exec';
+
     // NEW: View Quantum Material in PDF Modal - DEFINE FIRST
     window.viewQuantumMaterialPDF = function viewQuantumMaterialPDF(fileId, title, fileType) {
       const materialsOverlay = document.querySelector('.modal-overlay');
@@ -527,7 +714,282 @@
         if (ov && ov.querySelector('.pdf-modal')) ov.remove();
       });
     };
-  
+    // NEW: Video Library Functions
+    window.openVideoLibrary = function openVideoLibrary() {
+      const existingOverlay = document.querySelector('.video-library-overlay');
+      if (existingOverlay) existingOverlay.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay video-library-overlay';
+      overlay.style.display = 'block';
+
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.maxWidth = '1200px';
+
+      modal.innerHTML = 
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
+          '<h3 id="videoLibraryTitle" style="margin:0;color:#2d3748;font-size:1.8em;">Video Library</h3>' +
+          '<button class="close-btn" onclick="closeVideoLibrary()">✕</button>' +
+        '</div>' +
+        '<div class="search-box">' +
+          '<input type="text" id="videoSearch" placeholder="Search videos..." oninput="filterVideos()">' +
+          '<span class="search-icon">🔍</span>' +
+        '</div>' +
+        '<button id="toggleHiddenBtn" class="toggle-hidden-btn" onclick="toggleHiddenVideos()">📦 Show Hidden Videos</button>' +
+        '<div id="videoLibraryContent" style="min-height:300px;">' +
+          '<div style="text-align:center;padding:40px;">' +
+            '<div class="loading-spinner"></div>' +
+            '<p style="margin-top:20px;color:#718096;">Loading videos...</p>' +
+          '</div>' +
+        '</div>';
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      window.allVideos = [];
+      window.showHiddenVideos = false;
+      loadVideos();
+    };
+
+    window.closeVideoLibrary = function closeVideoLibrary() {
+      const overlay = document.querySelector('.video-library-overlay');
+      if (overlay) overlay.remove();
+    };
+
+    function loadVideos() {
+      fetch(VIDEO_LIBRARY_URL + '?action=getVideos')
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            window.allVideos = data.videos;
+            displayVideos(data.videos);
+          } else {
+            throw new Error(data.message || 'Failed to load videos');
+          }
+        })
+        .catch(error => {
+          const content = document.getElementById('videoLibraryContent');
+          if (content) {
+            content.innerHTML = 
+              '<div style="text-align:center;padding:40px;">' +
+                '<p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load videos</p>' +
+                '<p style="color:#718096;margin-bottom:20px;">Error: ' + error.message + '</p>' +
+                '<button class="btn btn-primary" onclick="loadVideos()">Try Again</button>' +
+              '</div>';
+          }
+        });
+    }
+
+    function displayVideos(videos) {
+      const content = document.getElementById('videoLibraryContent');
+      if (!content) return;
+
+      const filtered = videos.filter(v => {
+        if (window.showHiddenVideos) {
+          return v.status === 'hidden';
+        } else {
+          return v.status === 'active';
+        }
+      });
+
+      if (filtered.length === 0) {
+        const emptyMessage = window.showHiddenVideos 
+          ? 'No hidden videos found.' 
+          : 'No active videos found.';
+        content.innerHTML = 
+          '<div style="text-align:center;padding:40px;color:#718096;">' +
+            '<p style="font-size:18px;">' + emptyMessage + '</p>' +
+          '</div>';
+        return;
+      }
+
+      const videoCards = filtered.map(video => {
+        const isHidden = video.status === 'hidden';
+        const actionButton = isHidden
+          ? '<button class="video-action-btn primary" onclick="unhideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">👁️ Show</button>'
+          : '<button class="video-action-btn danger" onclick="hideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">🚫 Hide</button>';
+
+        return (
+          '<div class="video-card" data-video-name="' + video.name.toLowerCase() + '">' +
+            '<div class="video-thumbnail">🎬</div>' +
+            '<div class="video-info">' +
+              '<div class="video-title" title="' + video.name + '">' + video.name + '</div>' +
+              '<div class="video-meta">' + formatFileSize(video.size) + '</div>' +
+            '</div>' +
+            '<div class="video-actions">' +
+              '<button class="video-action-btn primary" onclick="playVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">▶️ Play</button>' +
+              actionButton +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      content.innerHTML = '<div class="video-grid">' + videoCards + '</div>';
+    }
+
+    window.toggleHiddenVideos = function toggleHiddenVideos() {
+      window.showHiddenVideos = !window.showHiddenVideos;
+      
+      const toggleBtn = document.getElementById('toggleHiddenBtn');
+      const title = document.getElementById('videoLibraryTitle');
+      
+      if (window.showHiddenVideos) {
+        toggleBtn.textContent = '📋 Show Active Videos';
+        toggleBtn.classList.add('active');
+        title.textContent = 'Hidden Videos';
+      } else {
+        toggleBtn.textContent = '📦 Show Hidden Videos';
+        toggleBtn.classList.remove('active');
+        title.textContent = 'Video Library';
+      }
+      
+      filterVideos();
+    };
+
+    window.filterVideos = function filterVideos() {
+      const searchInput = document.getElementById('videoSearch');
+      const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+      
+      if (!window.allVideos) return;
+      
+      let filtered = window.allVideos.filter(v => {
+        if (window.showHiddenVideos) {
+          return v.status === 'hidden';
+        } else {
+          return v.status === 'active';
+        }
+      });
+      
+      if (searchTerm) {
+        filtered = filtered.filter(v => v.name.toLowerCase().includes(searchTerm));
+      }
+      
+      displayVideos(filtered);
+    };
+
+    window.playVideo = function playVideo(fileId, fileName) {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay video-player-overlay';
+      overlay.style.display = 'block';
+      overlay.style.zIndex = '20000';
+
+      const playerModal = document.createElement('div');
+      playerModal.className = 'video-player-modal';
+
+      const videoUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
+
+      playerModal.innerHTML = 
+        '<div class="video-player-header">' +
+          '<h3 style="margin:0;font-size:1.2em;">' + fileName + '</h3>' +
+          '<div style="display:flex;gap:10px;">' +
+            '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:8px 16px;">📥 Download</button>' +
+            '<button class="close-btn" onclick="closeVideoPlayer()">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="video-player-content">' +
+          '<iframe src="' + videoUrl + '" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay"></iframe>' +
+        '</div>';
+
+      overlay.appendChild(playerModal);
+      document.body.appendChild(overlay);
+    };
+
+    window.closeVideoPlayer = function closeVideoPlayer() {
+      const overlay = document.querySelector('.video-player-overlay');
+      if (overlay) overlay.remove();
+    };
+
+    window.hideVideo = function hideVideo(fileId, fileName) {
+      if (!confirm('Hide "' + fileName + '"?\n\nThis will move it to the Hidden folder.')) {
+        return;
+      }
+
+      const content = document.getElementById('videoLibraryContent');
+      if (content) {
+        content.innerHTML = 
+          '<div style="text-align:center;padding:40px;">' +
+            '<div class="loading-spinner"></div>' +
+            '<p style="margin-top:20px;color:#718096;">Hiding video...</p>' +
+          '</div>';
+      }
+
+      fetch(VIDEO_LIBRARY_URL + '?action=hideVideo&fileId=' + encodeURIComponent(fileId) + '&fileName=' + encodeURIComponent(fileName))
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            loadVideos();
+            showVideoPopup('✅ Video hidden successfully', 'success');
+          } else {
+            throw new Error(data.message || 'Failed to hide video');
+          }
+        })
+        .catch(error => {
+          showVideoPopup('❌ Error: ' + error.message, 'error');
+          loadVideos();
+        });
+    };
+
+    window.unhideVideo = function unhideVideo(fileId, fileName) {
+      if (!confirm('Restore "' + fileName + '"?\n\nThis will move it back to active videos.')) {
+        return;
+      }
+
+      const content = document.getElementById('videoLibraryContent');
+      if (content) {
+        content.innerHTML = 
+          '<div style="text-align:center;padding:40px;">' +
+            '<div class="loading-spinner"></div>' +
+            '<p style="margin-top:20px;color:#718096;">Restoring video...</p>' +
+          '</div>';
+      }
+
+      fetch(VIDEO_LIBRARY_URL + '?action=unhideVideo&fileId=' + encodeURIComponent(fileId) + '&fileName=' + encodeURIComponent(fileName))
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            loadVideos();
+            showVideoPopup('✅ Video restored successfully', 'success');
+          } else {
+            throw new Error(data.message || 'Failed to restore video');
+          }
+        })
+        .catch(error => {
+          showVideoPopup('❌ Error: ' + error.message, 'error');
+          loadVideos();
+        });
+    };
+
+    function showVideoPopup(message, type) {
+      const popup = document.createElement('div');
+      popup.className = 'modal-overlay';
+      popup.style.zIndex = '30000';
+      popup.innerHTML = 
+        '<div class="modal" style="max-width:400px;">' +
+          '<div class="' + (type === 'success' ? 'success-popup' : 'error-popup') + '">' +
+            '<p style="margin:0;font-size:16px;">' + message + '</p>' +
+          '</div>' +
+          '<div style="margin-top:20px;text-align:center;">' +
+            '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()">Close</button>' +
+          '</div>' +
+        '</div>';
+      popup.style.display = 'block';
+      document.body.appendChild(popup);
+
+      if (type === 'success') {
+        setTimeout(() => {
+          if (popup.parentNode) popup.remove();
+        }, 3000);
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
     window.openQuantumProposalGenerator = function openQuantumProposalGenerator() {
       const warningOverlay = document.createElement('div');
       warningOverlay.className = 'modal-overlay';
@@ -579,7 +1041,6 @@
   window.proceedToProposalGenerator = function proceedToProposalGenerator() {
   console.log('proceedToProposalGenerator called!');
   
-  // Close warning modal - but be more specific
   const allOverlays = document.querySelectorAll('.modal-overlay');
   console.log('Found overlays:', allOverlays.length);
   
@@ -590,7 +1051,6 @@
     }
   });
   
-  // Open the proposal generator modal
   setTimeout(function() {
     const modalOverlay = document.getElementById('quantumProposalModal');
     console.log('Modal overlay element:', modalOverlay);
@@ -707,7 +1167,8 @@
       const customerZip = document.getElementById('customerZip').value;
   
       var baseFreight;
-      if (fridgeCount === 1) baseFreight = 895;
+      if (fridgeCount === 1) base
+      Freight = 895;
       else if (fridgeCount === 2) baseFreight = 1400;
       else if (fridgeCount === 3) baseFreight = 1800;
       else baseFreight = fridgeCount * 550;
@@ -1018,8 +1479,7 @@
                 '<button class="btn btn-primary" onclick="openQuantumProposalViewer()">Try Again</button>' +
               '</div>';
           }
-
-          };
+        };
   
         document.body.appendChild(script);
         promise.then(function(data) {
