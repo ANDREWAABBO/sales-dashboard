@@ -213,16 +213,16 @@
     }
 
     .video-thumbnail {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 48px;
-    }
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 48px;
+}
 
     .video-info {
       padding: 15px;
@@ -391,6 +391,26 @@
   color: white;
   border-color: #1e3a8a;
 }
+
+
+.category-dropdown {
+  width: 200px;
+  padding: 12px 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  background: white;
+  color: #4a5568;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.category-dropdown:focus {
+  outline: none;
+  border-color: #1e3a8a;
+}
+
     
   </style>
 </head>
@@ -813,13 +833,14 @@
   const tabsContainer = document.getElementById('categoryTabs');
   if (!tabsContainer) return;
 
-  let tabs = '<button class="category-tab' + (window.selectedCategory === 'All' ? ' active' : '') + '" onclick="selectCategory(\'All\')">All Videos</button>';
+  let options = '<option value="All"' + (window.selectedCategory === 'All' ? ' selected' : '') + '>All Videos</option>';
   
   window.allCategories.forEach(function(category) {
-    tabs += '<button class="category-tab' + (window.selectedCategory === category ? ' active' : '') + '" onclick="selectCategory(\'' + category.replace(/'/g, "\\'") + '\')">' + category + '</button>';
+    const selected = window.selectedCategory === category ? ' selected' : '';
+    options += '<option value="' + category + '"' + selected + '>' + category + '</option>';
   });
 
-  tabsContainer.innerHTML = tabs;
+  tabsContainer.innerHTML = '<select class="category-dropdown" onchange="selectCategory(this.value)">' + options + '</select>';
 }
 
 
