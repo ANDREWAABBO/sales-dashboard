@@ -852,34 +852,7 @@
     return;
   }
 
-  const videoCards = filtered.map(video => {
-    const isHidden = video.status === 'hidden';
-    const actionButton = isHidden
-      ? '<button class="video-action-btn primary" onclick="unhideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">👁️ Show</button>'
-      : '<button class="video-action-btn danger" onclick="hideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">🚫 Hide</button>';
 
-    const categoryBadge = video.category && video.category !== 'Hidden' 
-      ? '<div style="background:#dbeafe;color:#1e3a8a;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-top:8px;display:inline-block;">' + video.category + '</div>'
-      : '';
-
-    return (
-      '<div class="video-card" data-video-name="' + video.name.toLowerCase() + '">' +
-        '<div class="video-thumbnail">🎬</div>' +
-        '<div class="video-info">' +
-          '<div class="video-title" title="' + video.name + '">' + video.name + '</div>' +
-          '<div class="video-meta">' + formatFileSize(video.size) + '</div>' +
-          categoryBadge +
-        '</div>' +
-        '<div class="video-actions">' +
-          '<button class="video-action-btn primary" onclick="playVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">▶️ Play</button>' +
-          actionButton +
-        '</div>' +
-      '</div>'
-    );
-  }).join('');
-
-  content.innerHTML = '<div class="video-grid">' + videoCards + '</div>';
-}
       const videoCards = filtered.map(video => {
         const isHidden = video.status === 'hidden';
         const actionButton = isHidden
