@@ -369,6 +369,29 @@
     .toggle-hidden-btn.active {
       background: #1e3a8a;
     }
+
+.category-tab {
+  padding: 10px 20px;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.category-tab:hover {
+  background: #cbd5e0;
+}
+
+.category-tab.active {
+  background: #1e3a8a;
+  color: white;
+  border-color: #1e3a8a;
+}
+    
   </style>
 </head>
   
@@ -716,94 +739,147 @@
     };
     // NEW: Video Library Functions
     window.openVideoLibrary = function openVideoLibrary() {
-      const existingOverlay = document.querySelector('.video-library-overlay');
-      if (existingOverlay) existingOverlay.remove();
+  const existingOverlay = document.querySelector('.video-library-overlay');
+  if (existingOverlay) existingOverlay.remove();
 
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay video-library-overlay';
-      overlay.style.display = 'block';
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay video-library-overlay';
+  overlay.style.display = 'block';
 
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.style.maxWidth = '1200px';
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.maxWidth = '1200px';
 
-      modal.innerHTML = 
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
-          '<h3 id="videoLibraryTitle" style="margin:0;color:#2d3748;font-size:1.8em;">Video Library</h3>' +
-          '<button class="close-btn" onclick="closeVideoLibrary()">✕</button>' +
-        '</div>' +
-        '<div class="search-box">' +
-          '<input type="text" id="videoSearch" placeholder="Search videos..." oninput="filterVideos()">' +
-          '<span class="search-icon">🔍</span>' +
-        '</div>' +
-        '<button id="toggleHiddenBtn" class="toggle-hidden-btn" onclick="toggleHiddenVideos()">📦 Show Hidden Videos</button>' +
-        '<div id="videoLibraryContent" style="min-height:300px;">' +
-          '<div style="text-align:center;padding:40px;">' +
-            '<div class="loading-spinner"></div>' +
-            '<p style="margin-top:20px;color:#718096;">Loading videos...</p>' +
-          '</div>' +
-        '</div>';
+  modal.innerHTML = 
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
+      '<h3 id="videoLibraryTitle" style="margin:0;color:#2d3748;font-size:1.8em;">Video Library</h3>' +
+      '<button class="close-btn" onclick="closeVideoLibrary()">✕</button>' +
+    '</div>' +
+    '<div class="search-box">' +
+      '<input type="text" id="videoSearch" placeholder="Search videos..." oninput="filterVideos()">' +
+      '<span class="search-icon">🔍</span>' +
+    '</div>' +
+    '<div id="categoryTabs" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;"></div>' +
+    '<button id="toggleHiddenBtn" class="toggle-hidden-btn" onclick="toggleHiddenVideos()">📦 Show Hidden Videos</button>' +
+    '<div id="videoLibraryContent" style="min-height:300px;">' +
+      '<div style="text-align:center;padding:40px;">' +
+        '<div class="loading-spinner"></div>' +
+        '<p style="margin-top:20px;color:#718096;">Loading videos...</p>' +
+      '</div>' +
+    '</div>';
 
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 
-      window.allVideos = [];
-      window.showHiddenVideos = false;
-      loadVideos();
-    };
+  window.allVideos = [];
+  window.allCategories = [];
+  window.selectedCategory = 'All';
+  window.showHiddenVideos = false;
+  loadVideos();
+};
 
     window.closeVideoLibrary = function closeVideoLibrary() {
       const overlay = document.querySelector('.video-library-overlay');
       if (overlay) overlay.remove();
     };
 
-    function loadVideos() {
-      fetch(VIDEO_LIBRARY_URL + '?action=getVideos')
-        .then(response => response.json())
-        .then(data => {
-          if (data.status === 'success') {
-            window.allVideos = data.videos;
-            displayVideos(data.videos);
-          } else {
-            throw new Error(data.message || 'Failed to load videos');
-          }
-        })
-        .catch(error => {
-          const content = document.getElementById('videoLibraryContent');
-          if (content) {
-            content.innerHTML = 
-              '<div style="text-align:center;padding:40px;">' +
-                '<p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load videos</p>' +
-                '<p style="color:#718096;margin-bottom:20px;">Error: ' + error.message + '</p>' +
-                '<button class="btn btn-primary" onclick="loadVideos()">Try Again</button>' +
-              '</div>';
-          }
-        });
-    }
+   function loadVideos() {
+  fetch(VIDEO_LIBRARY_URL + '?action=getVideos')
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        window.allVideos = data.videos;
+        window.allCategories = data.categories || [];
+        renderCategoryTabs();
+        displayVideos(data.videos);
+      } else {
+        throw new Error(data.message || 'Failed to load videos');
+      }
+    })
+    .catch(error => {
+      const content = document.getElementById('videoLibraryContent');
+      if (content) {
+        content.innerHTML = 
+          '<div style="text-align:center;padding:40px;">' +
+            '<p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load videos</p>' +
+            '<p style="color:#718096;margin-bottom:20px;">Error: ' + error.message + '</p>' +
+            '<button class="btn btn-primary" onclick="loadVideos()">Try Again</button>' +
+          '</div>';
+      }
+    });
+}
+
+    function renderCategoryTabs() {
+  const tabsContainer = document.getElementById('categoryTabs');
+  if (!tabsContainer) return;
+
+  let tabs = '<button class="category-tab' + (window.selectedCategory === 'All' ? ' active' : '') + '" onclick="selectCategory(\'All\')">All Videos</button>';
+  
+  window.allCategories.forEach(function(category) {
+    tabs += '<button class="category-tab' + (window.selectedCategory === category ? ' active' : '') + '" onclick="selectCategory(\'' + category.replace(/'/g, "\\'") + '\')">' + category + '</button>';
+  });
+
+  tabsContainer.innerHTML = tabs;
+}
+
+
+    window.selectCategory = function selectCategory(category) {
+  window.selectedCategory = category;
+  renderCategoryTabs();
+  filterVideos();
+};
 
     function displayVideos(videos) {
-      const content = document.getElementById('videoLibraryContent');
-      if (!content) return;
+  const content = document.getElementById('videoLibraryContent');
+  if (!content) return;
 
-      const filtered = videos.filter(v => {
-        if (window.showHiddenVideos) {
-          return v.status === 'hidden';
-        } else {
-          return v.status === 'active';
-        }
-      });
+  const filtered = videos.filter(v => {
+    if (window.showHiddenVideos) {
+      return v.status === 'hidden';
+    } else {
+      return v.status === 'active';
+    }
+  });
 
-      if (filtered.length === 0) {
-        const emptyMessage = window.showHiddenVideos 
-          ? 'No hidden videos found.' 
-          : 'No active videos found.';
-        content.innerHTML = 
-          '<div style="text-align:center;padding:40px;color:#718096;">' +
-            '<p style="font-size:18px;">' + emptyMessage + '</p>' +
-          '</div>';
-        return;
-      }
+  if (filtered.length === 0) {
+    const emptyMessage = window.showHiddenVideos 
+      ? 'No hidden videos found.' 
+      : 'No active videos found.';
+    content.innerHTML = 
+      '<div style="text-align:center;padding:40px;color:#718096;">' +
+        '<p style="font-size:18px;">' + emptyMessage + '</p>' +
+      '</div>';
+    return;
+  }
 
+  const videoCards = filtered.map(video => {
+    const isHidden = video.status === 'hidden';
+    const actionButton = isHidden
+      ? '<button class="video-action-btn primary" onclick="unhideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">👁️ Show</button>'
+      : '<button class="video-action-btn danger" onclick="hideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">🚫 Hide</button>';
+
+    const categoryBadge = video.category && video.category !== 'Hidden' 
+      ? '<div style="background:#dbeafe;color:#1e3a8a;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-top:8px;display:inline-block;">' + video.category + '</div>'
+      : '';
+
+    return (
+      '<div class="video-card" data-video-name="' + video.name.toLowerCase() + '">' +
+        '<div class="video-thumbnail">🎬</div>' +
+        '<div class="video-info">' +
+          '<div class="video-title" title="' + video.name + '">' + video.name + '</div>' +
+          '<div class="video-meta">' + formatFileSize(video.size) + '</div>' +
+          categoryBadge +
+        '</div>' +
+        '<div class="video-actions">' +
+          '<button class="video-action-btn primary" onclick="playVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">▶️ Play</button>' +
+          actionButton +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+
+  content.innerHTML = '<div class="video-grid">' + videoCards + '</div>';
+}
       const videoCards = filtered.map(video => {
         const isHidden = video.status === 'hidden';
         const actionButton = isHidden
@@ -848,25 +924,34 @@
     };
 
     window.filterVideos = function filterVideos() {
-      const searchInput = document.getElementById('videoSearch');
-      const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-      
-      if (!window.allVideos) return;
-      
-      let filtered = window.allVideos.filter(v => {
-        if (window.showHiddenVideos) {
-          return v.status === 'hidden';
-        } else {
-          return v.status === 'active';
-        }
-      });
-      
-      if (searchTerm) {
-        filtered = filtered.filter(v => v.name.toLowerCase().includes(searchTerm));
-      }
-      
-      displayVideos(filtered);
-    };
+  const searchInput = document.getElementById('videoSearch');
+  const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+  
+  if (!window.allVideos) return;
+  
+  let filtered = window.allVideos.filter(v => {
+    // Filter by hidden/active status
+    if (window.showHiddenVideos) {
+      if (v.status !== 'hidden') return false;
+    } else {
+      if (v.status !== 'active') return false;
+    }
+    
+    // Filter by category
+    if (window.selectedCategory !== 'All' && v.category !== window.selectedCategory) {
+      return false;
+    }
+    
+    // Filter by search term
+    if (searchTerm && !v.name.toLowerCase().includes(searchTerm)) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  displayVideos(filtered);
+};
 
     window.playVideo = function playVideo(fileId, fileName) {
       const overlay = document.createElement('div');
