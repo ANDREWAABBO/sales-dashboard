@@ -3,930 +3,1150 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sales Team Dashboard</title>
-  
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
-  
-  <!-- Page styles (unchanged) -->
+  <title>Lead Logger - Abbondanza Sales</title>
+  <!-- Add SheetJS for Excel functionality -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #1e3a8a;
-      min-height: 100vh;
-      padding: 20px;
-      color: #333;
-      font-size: 18px;
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;background:#1e3a8a;min-height:100vh;padding:20px}
+    .container{max-width:98%;margin:0 auto;background:rgba(255,255,255,.95);border-radius:20px;padding:30px;box-shadow:0 20px 40px rgba(0,0,0,.1)}
+    h1{color:#2d3748;margin-bottom:30px;text-align:center;font-size:2.2rem}
+
+    /* STICKY CONTROLS - Stay at top when scrolling */
+    .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px;position:sticky;top:0;z-index:100;background:rgba(255,255,255,.98);padding:15px 0;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+    
+    .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.2s;text-decoration:none;display:inline-block}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.35);background:#1e40af}
+    .btn-secondary{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
+    .filters{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+    select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .2s}
+    select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
+
+    /* IMPROVED TABLE WITH SCROLLING AND CENTERED TEXT */
+    .table-container{overflow:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:70vh;position:relative}
+    table{width:100%;border-collapse:collapse;background:#fff;min-width:1400px}
+    th{background:#1e3a8a;color:#fff;padding:15px;text-align:center;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:1px solid #cbd5e1}
+    td{padding:15px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;border-bottom:none;vertical-align:middle}
+    tbody tr{border-bottom:1px solid #e2e8f0}
+    tbody tr:last-child{border-bottom:none}
+    tr:hover{background:#f7fafc}
+    td:nth-child(2){white-space:normal;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:260px}
+    
+    /* Notes column with hover tooltip functionality */
+    td:nth-child(11){
+      white-space:normal;
+      word-break:break-word;
+      overflow:hidden;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      max-width:420px;
+      vertical-align:top;
+      line-height:1.4;
+      padding:12px 15px;
+      position:relative;
+      cursor:pointer;
     }
-  
-    /* Company Switcher */
-    .company-switcher {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      padding: 20px;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      background: #000000;
-      margin: -20px -20px 30px -20px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    }
-  
-    .company-btn {
-      padding: 12px 25px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+
+    /* Tooltip styles for notes hover */
+    .notes-tooltip {
+      position: absolute;
+      background: #2d3748;
       color: white;
-      font-size: 18px;
-      font-weight: 600;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      backdrop-filter: blur(10px);
-      text-decoration: none;
-    }
-  
-    .company-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-  
-    .company-btn.active {
-      background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-      border-color: transparent;
-      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3);
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-  
-    @keyframes glow {
-      from { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.3); }
-      to   { box-shadow: 0 10px 40px rgba(59, 130, 246, 0.7), 0 0 80px rgba(59, 130, 246, 0.5); }
-    }
-  
-    .company-logo { height: 35px; width: auto; filter: brightness(0) invert(1); transition: all 0.3s ease; }
-    .abbondanza-logo { height: 40px; }
-    .company-btn:hover .company-logo { transform: scale(1.05); }
-  
-    .dashboard-container { max-width: 1400px; margin: 0 auto; animation: fadeIn 0.8s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  
-    .header { text-align: center; margin-bottom: 35px; color: white; position: relative; }
-    .header h1 {
-      font-size: 3.2em; font-weight: 700; margin-bottom: 10px; color: white;
-      font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
-      letter-spacing: 2px; text-transform: uppercase;
-      text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
-      animation: titleGlow 3s ease-in-out infinite alternate;
-    }
-    @keyframes titleGlow { from { filter: brightness(1); } to { filter: brightness(1.3); } }
-    .header p { font-size: 1.3em; opacity: 0.9; }
-  
-    /* Vertical stack grid */
-    .quantum-grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 800px; margin: 0 auto; }
-  
-    .card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 15px; padding: 20px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative; overflow: hidden;
-    }
-    .card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-      background: linear-gradient(90deg, #1e3a8a 0%, #1e40af 100%);
-      transform: scaleX(0); transform-origin: left; transition: transform 0.3s ease;
-    }
-    .card:hover::before { transform: scaleX(1); }
-    .card:hover { transform: translateY(-3px); box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35); }
-    .card h2 { font-size: 1.5em; margin-bottom: 10px; color: #2d3748; }
-    .card p  { color: #718096; margin-bottom: 18px; line-height: 1.5; font-size: 1.1em; }
-  
-    .btn {
-      display: inline-block; padding: 12px 26px; background: #1e3a8a; color: white;
-      text-decoration: none; border-radius: 25px; font-weight: 600; transition: all 0.3s ease;
-      position: relative; overflow: hidden; border: none; cursor: pointer; font-size: 1.05em;
-    }
-    .btn::after {
-      content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
-      border-radius: 50%; background: rgba(255, 255, 255, 0.3);
-      transform: translate(-50%, -50%); transition: width 0.6s, height 0.6s;
-    }
-    .btn:hover::after { width: 300px; height: 300px; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(30, 58, 138, 0.4); background: #1e40af; }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  
-    /* Modal / PDF viewer */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); z-index: 10000; backdrop-filter: blur(5px); }
-    .modal {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; border-radius: 20px; padding: 25px 35px; max-width: 750px; width: 95%; max-height: 98vh;
-      overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z-index: 10001;
-    }
-    .pdf-modal {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white;
-      border-radius: 20px; width: 90%; height: 90%; max-width: 1200px; max-height: 90vh;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z-index: 10001; display: flex; flex-direction: column;
-    }
-    .pdf-header { padding: 20px; background: #f7fafc; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
-    .pdf-header h3 { margin: 0; color: #2d3748; font-size: 1.3em; }
-    .pdf-viewer { flex: 1; padding: 20px; overflow: hidden; }
-    .pdf-viewer iframe { width: 100%; height: 100%; border: none; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-  
-    .close-btn { background: #e53e3e; color: white; border: none; padding: 10px 22px; border-radius: 20px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; font-size: 1.05em; }
-    .close-btn:hover { background: #c53030; transform: scale(1.05); }
-  
-    .modal h3 { margin-bottom: 15px; color: #2d3748; text-align: center; font-size: 1.4em; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 5px; color: #4a5568; font-weight: 600; font-size: 1.05em; }
-    .form-group input, .form-group select { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1.05em; transition: border-color 0.3s ease; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3a8a; }
-    .form-group small { display: block; margin-top: 5px; color: #718096; font-size: 0.95em; }
-  
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-  
-    .pricing-summary {
-      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-      padding: 15px; border-radius: 10px; margin: 15px 0; border: 2px solid #1e3a8a;
-    }
-    .pricing-summary h4 { margin: 0 0 10px 0; color: #2d3748; font-size: 1.2em; }
-    .pricing-display { font-size: 1.1em; color: #1e3a8a; font-weight: 600; }
-  
-    .modal-buttons { display: flex; gap: 15px; margin-top: 20px; }
-    .btn-secondary { background: #64748b; flex: 1; }
-    .btn-secondary:hover { background: #475569; }
-    .btn-primary { background: #1e3a8a; flex: 2; }
-    .btn-primary:hover { background: #1e40af; }
-  
-    .success-popup { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 2px solid #28a745; color: #155724; padding: 20px; border-radius: 15px; text-align: center; font-size: 1.05em; }
-    .error-popup   { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 2px solid #dc3545; color: #721c24; padding: 20px; border-radius: 15px; text-align: center; font-size: 1.05em; }
-  
-    .loading-spinner {
-      display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #1e3a8a;
-      border-radius: 50%; animation: spin 1s linear infinite;
-    }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-  
-    .link-btn { background: transparent; border: none; color: #1e3a8a; font-weight: 600; cursor: pointer; padding: 8px 0; }
-    .link-btn:hover { text-decoration: underline; }
-  
-    /* NEW: Archive functionality styling */
-    .filter-container {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-  
-    .archive-filter {
       padding: 12px 16px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 16px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      min-width: 180px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 1000;
+      max-width: 400px;
+      word-wrap: break-word;
+      white-space: normal;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
     }
-  
-    .archive-filter:focus {
-      outline: none;
-      border-color: #1e3a8a;
+    
+    .notes-tooltip.show {
+      opacity: 1;
+      transform: translateY(0);
     }
-  
-    .refresh-btn {
-      background: #10b981 !important;
-      font-size: 14px !important;
-      padding: 10px 20px !important;
-      min-width: 90px !important;
+    
+    .notes-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 20px;
+      border: 8px solid transparent;
+      border-top-color: #2d3748;
     }
-  
-    .refresh-btn:hover {
-      background: #059669 !important;
-    }
-  
-    .archive-btn {
-      background: #f59e0b !important;
-      font-size: 14px !important;
-      padding: 10px 20px !important;
-      min-width: 80px !important;
-    }
-  
-    .archive-btn:hover {
-      background: #d97706 !important;
-    }
-  
-    .archived-item {
-      opacity: 0.7;
-      background: #f8fafc !important;
-    }
-  
-    .archived-badge {
-      background: #f59e0b;
-      color: white;
-      font-size: 12px;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-weight: 600;
-      margin-left: 10px;
-    }
+
+    .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block}
+    .status-active{background:#d4f1d4;color:#2d5a2d}
+    .status-followup{background:#fff3cd;color:#856404}
+    .status-notqualified{background:#f8d7da;color:#721c24}
+    .status-dead{background:#e2e8f0;color:#718096}
+    .appointment-yes{color:#48bb78;font-weight:600}
+    .appointment-no{color:#e53e3e}
+    .empty-state{text-align:center;padding:60px 20px;color:#718096}
+    .empty-state h3{font-size:1.25rem;margin-bottom:10px;color:#4a5568}
+    .loading{text-align:center;padding:40px;color:#718096}
+    .spinner{display:inline-block;width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+    /* --- MODAL: static backdrop, no accidental close --- */
+    .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .2s ease}
+    .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:620px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .2s ease}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes slideIn{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer}
+    .close:hover{color:#000}
+    
+    .section-header{font-size:1.3em;font-weight:600;color:#2d3748;margin:25px 0 15px 0;padding-bottom:8px;border-bottom:2px solid #e2e8f0}
+    .form-group{margin-bottom:16px}
+    .form-group label{display:block;margin-bottom:6px;color:#4a5568;font-weight:600}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:border-color .2s}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#667eea}
+    .form-group small{display:block;margin-top:5px;color:#718096;font-size:0.9em}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .form-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+    .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
+    .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
+    .btn-small{padding:6px 12px;font-size:12px;border-radius:6px;white-space:nowrap}
+    #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
+    #leadModal .form-actions{position:sticky;bottom:0;background:#fff;padding-top:12px;margin-top:12px;border-top:1px solid #e2e8f0;z-index:1}
+
+    /* Import Modal Styles */
+    #importModal .modal-content{max-width:800px}
+    .file-preview{background:#f7fafc;padding:15px;border-radius:8px;margin:15px 0}
+    .file-preview table{font-size:12px;border-collapse:collapse}
+    .file-preview th{background:#1e3a8a;color:white;padding:8px;text-align:left;border:1px solid #ccc}
+    .file-preview td{border:1px solid #ccc;padding:8px}
+    
+    /* Proposal Modal Styles */
+    .pricing-info{background:#f0f8ff;padding:15px;border-radius:8px;margin:15px 0;border:2px solid #b3d9ff}
+    .pricing-info h3{margin:0 0 10px 0;color:#2c5aa0;font-size:1.2em}
+    .pricing-display{font-size:16px;color:#2c5aa0;font-weight:bold}
+
+    /* DELETE CONFIRMATION MODAL */
+    .delete-modal .modal-content{max-width:500px;text-align:center}
+    .delete-modal h2{color:#e53e3e;margin-bottom:20px}
+    .delete-modal .company-name{background:#f8d7da;padding:10px;border-radius:8px;margin:15px 0;font-weight:bold;color:#721c24}
+    .delete-modal input{text-align:center;font-size:16px;font-weight:bold;margin:15px 0}
+    .btn-danger{background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)}
+    .btn-danger:hover{background:linear-gradient(135deg,#c53030 0%,#9b2c2c 100%)}
   </style>
-  
-  <!-- Optional override config for password.js (must be BEFORE password.js) -->
-  <script>
-    window.AUTH_CONFIG = {
-      USER_MANAGEMENT_URL: 'https://script.google.com/macros/s/AKfycbx76lEJH6uwQuaLQ_ML0IfHnS4G3saXlF-Lz7G8vKbWrUT1IMa7BZtCz9ZiqX7tIava/exec',
-      SHOW_RESET_TOKEN_FOR_TESTING: false
-    };
-  </script>
-  
-  <!-- Auth first, then the user bar -->
-  <script defer src="password.js"></script>
-  <script defer src="userbar.js?v=1"></script>
 </head>
 <body>
-  
-  <!-- Company Switcher -->
-  <div class="company-switcher">
-    <button class="company-btn active" onclick="switchCompany('abbondanza', event)">
-      <img src="images/abbondanza-logo.png" alt="Abbondanza" class="company-logo abbondanza-logo">
-      <span>Abbondanza Vending LLC</span>
-    </button>
-  
-    <button class="company-btn" onclick="switchCompany('quantum', event)">
-      <img src="images/quantum-logo-transparent.png" alt="Quantum Solutions" class="company-logo">
-      <span>Quantum Solutions</span>
-    </button>
-  </div>
-  
-  <div class="dashboard-container">
-    <div class="header">
-      <h1 id="dashboard-title">Abbondanza Sales Force</h1>
-      <p>Access all your sales resources in one place</p>
+  <div class="container">
+    <h1>Lead Database</h1>
+
+    <div class="controls">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">← Back to Dashboard</button>
+        <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
+        <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)">📄 Download Excel Template</button>
+        <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)">📤 Import Excel File</button>
+        <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)">📥 Export Current Leads</button>
+      </div>
+
+      <div class="filters">
+        <select id="repFilter" onchange="filterLeads()"><option value="">All Reps</option></select>
+        <select id="companyFilter" onchange="filterLeads()"><option value="">All Business Units</option></select>
+        <select id="statusFilter" onchange="filterLeads()">
+          <option value="">All Status</option>
+          <option value="Active" selected>Active</option>
+          <option value="Follow Up Later">Follow Up Later</option>
+          <option value="Not Qualified">Not Qualified</option>
+          <option value="Dead">Dead (Archived)</option>
+        </select>
+        <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()"/>
+      </div>
     </div>
-  
-    <!-- Abbondanza Dashboard - 6 Cards Vertical Stack -->
-    <div class="quantum-grid">
-      <div class="card">
-        <h2>About Us - How We Work</h2>
-        <p>Marketing materials, proposals, flyers, and product information for your sales calls.</p>
-        <button onclick="openAbbondanzaAboutUs()" class="btn" type="button">View Materials</button>
+
+    <div class="table-container">
+      <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <p>Loading leads...</p>
       </div>
-  
-      <div class="card">
-        <h2>Product List</h2>
-        <p>Complete catalog of all Abbondanza fresh food products with pricing and descriptions.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="openProductListPDF()" class="btn" style="flex: 1;">View</button>
-          <button onclick="downloadProductListPDF()" class="btn" style="flex: 1;">Download</button>
-        </div>
-      </div>
-  
-      <div class="card">
-        <h2>Proposal Management</h2>
-        <p>Create customized PDF proposals instantly and access generated proposals library with archive functionality.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="openProposalGenerator()" class="btn" style="flex: 1;">Generate Proposal</button>
-          <button onclick="openProposalViewer()" class="btn" style="flex: 1;">View Library</button>
-        </div>
-      </div>
-  
-      <div class="card">
-        <h2>Service Agreement Management</h2>
-        <p>Generate subsidy agreements with automated pricing calculations and access all service agreements library with archive functionality.</p>
-        <div style="display: flex; gap: 15px; margin-top: 18px;">
-          <button onclick="generateServiceAgreement()" class="btn" style="flex: 1;">Create Agreement</button>
-          <button onclick="openServiceAgreementViewer()" class="btn" style="flex: 1;">View Library</button>
-        </div>
-      </div>
-  
-      <div class="card">
-        <h2>Welcome Package</h2>
-        <p>Comprehensive welcome materials and onboarding documents for new clients and partners.</p>
-        <button onclick="openWelcomePackageViewer()" class="btn" type="button">View Welcome Package</button>
-      </div>
-  
-      <div class="card">
-        <h2>Lead Logger</h2>
-        <p>Log and track sales leads with follow-up management and status tracking.</p>
-        <a href="lead-logger.html" class="btn">Open Lead Logger</a>
+
+      <table id="leadsTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>Date Added</th>
+            <th>Company Name</th>
+            <th>Contact Name</th>
+            <th>Phone Number</th>
+            <th>Email Address</th>
+            <th>Rep Name</th>
+            <th>Status</th>
+            <th>Follow Up</th>
+            <th>Appt Made</th>
+            <th>Appt Date</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="leadsTableBody"></tbody>
+      </table>
+
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <h3>No leads found</h3>
+        <p>Add your first lead using the form above.</p>
       </div>
     </div>
   </div>
-  
-  <!-- Proposal Generator Modal -->
-  <div id="proposalModal" class="modal-overlay">
-    <div class="modal">
-      <h3>Generate Fresh Food Solutions Proposal</h3>
-  
-      <div class="form-group">
-        <label for="companyName">Company Name *</label>
-        <input type="text" id="companyName" name="companyName" required>
-      </div>
-  
-      <div class="form-group">
-        <label for="contactName">Contact Name (Optional)</label>
-        <input type="text" id="contactName" name="contactName" placeholder="Leave blank if unknown">
-      </div>
-  
-      <div class="form-row">
+
+  <!-- Add/Edit Lead Modal -->
+  <div id="leadModal" class="modal" aria-hidden="true">
+    <div class="modal-content" id="leadModalContent">
+      <span class="close" onclick="attemptCloseModal()">&times;</span>
+      <h2 id="modalTitle">Add New Lead</h2>
+
+      <form id="leadForm" onsubmit="return false;">
         <div class="form-group">
-          <label for="preparedBy">Your Name *</label>
-          <input type="text" id="preparedBy" name="preparedBy" required>
-        </div>
-  
-        <div class="form-group">
-          <label for="preparedByPhone">Your Phone *</label>
-          <input type="tel" id="preparedByPhone" name="preparedByPhone" required>
-        </div>
-      </div>
-  
-      <div class="form-group">
-        <label for="preparedByEmail">Your Email *</label>
-        <input type="email" id="preparedByEmail" name="preparedByEmail" required>
-      </div>
-  
-      <div class="form-row">
-        <div class="form-group">
-          <label for="fridgeCount">Number of Fridges *</label>
-          <input type="number" id="fridgeCount" name="fridgeCount" min="1" value="1" required onchange="updatePricingSummary()">
-        </div>
-  
-        <div class="form-group">
-          <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
-          <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
-            <option value="395">$395/month</option>
-            <option value="495">$495/month</option>
-            <option value="595">$595/month</option>
-            <option value="695">$695/month</option>
-            <option value="795" selected>$795/month</option>
+          <label for="businessUnit">Business Unit *</label>
+          <select id="businessUnit" name="businessUnit" required onchange="toggleQuantumFields()">
+            <option value="">Select...</option>
+            <option value="Abbondanza Vending">Abbondanza Vending</option>
+            <option value="Quantum Solutions">Quantum Solutions</option>
           </select>
         </div>
-      </div>
-  
-      <div class="form-group">
-        <label for="deliveryFee">Additional Delivery Charges (Optional)</label>
-        <input type="number" id="deliveryFee" name="deliveryFee" min="0" max="5000" step="50" placeholder="$0.00" onchange="updatePricingSummary();">
-        <small>Add extra charges for difficult deliveries, long distances, or 10+ units. Must be in $50 increments.</small>
-      </div>
-  
-      <div class="pricing-summary">
-        <h4>Pricing Summary</h4>
-        <div class="pricing-display" id="pricingSummary">
-          Monthly Total: $795/month<br>
-          Setup Fee: $295 (one-time)
-        </div>
-      </div>
-  
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
-        <button class="btn btn-primary" id="generateBtn" type="button" onclick="generateProposal()">Generate Proposal PDF</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Service Agreement Modal -->
-  <div id="serviceAgreementModal" class="modal-overlay">
-    <div class="modal">
-      <h3>Generate Service Agreement</h3>
-  
-      <div class="form-group">
-        <label for="serviceCompanyName">Company Name *</label>
-        <input type="text" id="serviceCompanyName" name="serviceCompanyName" required>
-      </div>
-  
-      <div class="form-group">
-        <label for="serviceContactName">Contact Name (Optional)</label>
-        <input type="text" id="serviceContactName" name="serviceContactName" placeholder="Leave blank if unknown">
-      </div>
-  
-      <div class="form-group">
-        <label for="serviceStreet">Street Address *</label>
-        <input type="text" id="serviceStreet" name="serviceStreet" required>
-      </div>
-  
-      <div class="form-row">
+
         <div class="form-group">
-          <label for="serviceCity">City *</label>
-          <input type="text" id="serviceCity" name="serviceCity" required>
+          <label for="companyName">Company Name *</label>
+          <input type="text" id="companyName" name="companyName" list="companySuggestions" required />
+          <datalist id="companySuggestions"></datalist>
         </div>
-  
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName">Contact Name</label>
+            <input type="text" id="contactName" name="contactName"/>
+          </div>
+          <div class="form-group">
+            <label for="phoneNumber">Phone Number</label>
+            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12"/>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label for="serviceState">State *</label>
-          <select id="serviceState" name="serviceState" required>
-            <option value="">Select State</option>
-            <option value="MA" selected>MA</option>
-            <option value="NH">NH</option>
-            <option value="ME">ME</option>
-            <option value="VT">VT</option>
-            <option value="RI">RI</option>
-            <option value="CT">CT</option>
-          </select>
+          <label for="emailAddress">Email Address</label>
+          <input type="email" id="emailAddress" name="emailAddress"/>
         </div>
-      </div>
-  
-      <div class="form-group">
-        <label for="serviceZip">Zip Code *</label>
-        <input type="text" id="serviceZip" name="serviceZip" pattern="[0-9]{5}" maxlength="5" required>
-      </div>
-  
-      <div class="form-row">
-        <div class="form-group">
-          <label for="servicePreparedBy">Your Name *</label>
-          <input type="text" id="servicePreparedBy" name="servicePreparedBy" required>
+
+        <div class="section-header">Sales Representative Information</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="repName">Rep Name *</label>
+            <input type="text" id="repName" name="repName" required/>
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="Active">Active</option>
+              <option value="Follow Up Later">Follow Up Later</option>
+              <option value="Not Qualified">Not Qualified</option>
+              <option value="Dead">Dead (Archived)</option>
+            </select>
+          </div>
         </div>
-  
-        <div class="form-group">
-          <label for="servicePreparedByPhone">Your Phone *</label>
-          <input type="tel" id="servicePreparedByPhone" name="servicePreparedByPhone" required>
+
+        <!-- FIXED: Always show Rep Phone and Email fields -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="repPhone">Rep Phone *</label>
+            <input type="tel" id="repPhone" name="repPhone" placeholder="555-123-4567" maxlength="14" required/>
+          </div>
+          <div class="form-group">
+            <label for="repEmail">Rep Email *</label>
+            <input type="email" id="repEmail" name="repEmail" placeholder="rep@company.com" required/>
+          </div>
         </div>
-      </div>
-  
-      <div class="form-group">
-        <label for="servicePreparedByEmail">Your Email *</label>
-        <input type="email" id="servicePreparedByEmail" name="servicePreparedByEmail" required>
-      </div>
-  
-      <div class="form-row">
-        <div class="form-group">
-          <label for="serviceFridgeCount">Total Kiosks to Install *</label>
-          <input type="number" id="serviceFridgeCount" name="serviceFridgeCount" min="1" value="1" required onchange="updateServiceAgreementPricing()">
-        </div>
-  
-        <div class="form-group">
-          <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>
-          <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">
-            <option value="395">$395/month</option>
-            <option value="495">$495/month</option>
-            <option value="595">$595/month</option>
-            <option value="695">$695/month</option>
-            <option value="795" selected>$795/month</option>
-          </select>
-        </div>
-      </div>
-  
-      <div class="form-row">
-        <div class="form-group">
-          <label for="subsidyPercentage">Subsidy Percentage *</label>
-          <select id="subsidyPercentage" name="subsidyPercentage" required onchange="updateServiceAgreementPricing()">
-            <option value="0" selected>0%</option>
-            <option value="10">10%</option>
-            <option value="20">20%</option>
-            <option value="25">25%</option>
-            <option value="30">30%</option>
-            <option value="40">40%</option>
-            <option value="50">50%</option>
-            <option value="60">60%</option>
-            <option value="70">70%</option>
-            <option value="75">75%</option>
-            <option value="80">80%</option>
-            <option value="90">90%</option>
-            <option value="100">100%</option>
-          </select>
-          <small>Discount on purchases billed back to company</small>
-        </div>
-  
-        <div class="form-group">
-          <label for="freeMonths">Free Months</label>
-          <select id="freeMonths" name="freeMonths" onchange="calculateFirstBillDate()">
-            <option value="0" selected>No free months</option>
-            <option value="1">1 month free</option>
-            <option value="2">2 months free</option>
-            <option value="3">3 months free</option>
-            <option value="4">4 months free</option>
-            <option value="5">5 months free</option>
-            <option value="6">6 months free</option>
-          </select>
-          <small>Service fee waived for initial months</small>
-        </div>
-      </div>
-  
-      <div class="form-row">
-        <div class="form-group">
-          <label for="installDate">Install Date</label>
-          <input type="date" id="installDate" name="installDate" onchange="calculateFirstBillDate()">
-          <small>Leave blank for TBD</small>
-        </div>
-  
-        <div class="form-group">
-          <label for="firstBillDate">First Bill Date</label>
-          <input type="date" id="firstBillDate" name="firstBillDate" readonly style="background-color: #f0f0f0;">
-          <small>Auto-calculated based on install date and free months</small>
-        </div>
-      </div>
-  
-      <div class="pricing-summary">
-        <h4>Agreement Summary</h4>
-        <div class="pricing-display" id="servicePricingSummary">
-          Total Kiosks: 1<br>
-          Monthly Service Fee: $795.00<br>
-          Subsidy: 0% discount<br>
-          Monthly Subsidy Amount: $0.00
-        </div>
-      </div>
-  
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeModal('serviceAgreementModal')">Cancel</button>
-        <button class="btn btn-primary" id="generateServiceBtn" type="button" onclick="generateServiceAgreementPDF()">Generate Service Agreement PDF</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- App script (unchanged logic) -->
-  <script>
-    /* ====== App Endpoints ====== */
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
-    const PROPOSALS_API_URL = 'https://script.google.com/macros/s/AKfycbxLigSx069wQveXiAS7M9stBH7lItBRt88iLHno_qYFIlmdKZgdpQfNTinIbl92DGo68Q/exec';
-    const SERVICE_AGREEMENT_URL = 'https://script.google.com/macros/s/AKfycbyJ0DLErQzyIVWWbLwRXnLWESJtWq0n4FYKsa3oGXC0_0pOn4fNlnWxp11FLbPXalPihg/exec';
-    const SERVICE_AGREEMENTS_API_URL = 'https://script.google.com/macros/s/AKfycbyZDkhdIwynj2JAA1S07b6a1G9IBuUZXcn3AyJrX7s6cQm65g-ZX8fd4FXH7oCp2pe3/exec';
-  
-    // NEW: Global variables for archive functionality
-    window.allProposals = null;
-    window.allServiceAgreements = null;
-    window.currentProposalFilter = 'active';
-    window.currentServiceFilter = 'active';
-  
-    /* ====== Tiny UI helpers ====== */
-    const helperCSS = document.createElement('style');
-    helperCSS.textContent = `
-      @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    `;
-    document.head.appendChild(helperCSS);
-  
-    function showPopup(content, type) {
-      const popup = document.createElement('div');
-      popup.className = 'modal-overlay';
-      popup.style.display = 'block';
-      popup.innerHTML = `
-        <div class="modal">
-          <div class="${type === 'error' ? 'error-popup' : 'success-popup'}">
-            ${content}
-            <div style="margin-top: 20px;">
-              <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+
+        <!-- Conditional section for Quantum Solutions ONLY -->
+        <div id="quantumFieldsSection" style="display:none;">
+          <div class="section-header">Customer Location (Required for Quantum Solutions)</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="customerAddress">Customer Address *</label>
+              <input type="text" id="customerAddress" name="customerAddress" placeholder="City, State"/>
+            </div>
+            <div class="form-group">
+              <label for="customerZip">Customer Zip Code *</label>
+              <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345" inputmode="numeric"/>
             </div>
           </div>
-        </div>`;
-      document.body.appendChild(popup);
-      if (type === 'success') setTimeout(() => popup.remove(), 10000);
-    }
-  
-    /* ====== Company switcher ====== */
-    function switchCompany(company, ev) {
-      document.querySelectorAll('.company-btn').forEach(btn => btn.classList.remove('active'));
-      const clickedBtn = ev?.currentTarget || ev?.target?.closest('.company-btn');
-      if (clickedBtn) clickedBtn.classList.add('active');
-  
-      const title = document.getElementById('dashboard-title');
-      if (company === 'abbondanza') {
-        title.textContent = 'Abbondanza Sales Force';
-      } else if (company === 'quantum') {
-        title.textContent = 'Quantum Solutions Dashboard';
-        window.location.href = 'quantum.html';
-      }
-    }
+        </div>
 
-    /* ====== NEW: About Us - How We Work (Matching Quantum Style) ====== */
-    // NEW: View Abbondanza Material in PDF Modal - DEFINE FIRST
-    window.viewAbbondanzaMaterialPDF = function viewAbbondanzaMaterialPDF(fileId, title, fileType) {
-      // Close the materials list modal
-      const materialsOverlay = document.querySelector('.modal-overlay');
-      if (materialsOverlay) materialsOverlay.remove();
-      
-      // Open PDF viewer modal
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const pdfModal = document.createElement('div');
-      pdfModal.className = 'pdf-modal';
-      
-      // Determine viewer URL based on file type
-      let viewerUrl, downloadUrl;
-      if (fileType === 'slides') {
-        viewerUrl = 'https://docs.google.com/presentation/d/' + fileId + '/preview';
-        downloadUrl = 'https://docs.google.com/presentation/d/' + fileId + '/export/pdf';
-      } else if (fileType === 'sheets') {
-        // For sheets, use PDF export URL with viewer instead of preview
-        const pdfExportUrl = 'https://docs.google.com/spreadsheets/d/' + fileId + '/export?format=pdf&portrait=true&fitw=true&gridlines=true';
-        viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(pdfExportUrl) + '&embedded=true';
-        downloadUrl = pdfExportUrl;
-      } else if (fileType === 'docs') {
-        viewerUrl = 'https://docs.google.com/document/d/' + fileId + '/preview';
-        downloadUrl = 'https://docs.google.com/document/d/' + fileId + '/export?format=pdf';
-      } else {
-        viewerUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
-        downloadUrl = 'https://drive.google.com/uc?export=download&id=' + fileId;
-      }
-  
-      pdfModal.innerHTML = 
-        '<div class="pdf-header">' +
-          '<h3>' + title + '</h3>' +
-          '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openAbbondanzaAboutUs, 200);" style="padding:10px 20px;">← Back to Materials</button>' +
-            '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:10px 20px;">📥 Download</button>' +
-            '<button class="close-btn" onclick="closePDFViewer()">✕</button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="pdf-viewer">' +
-          '<iframe src="' + viewerUrl + '" width="100%" height="100%" style="border:none;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);" allowfullscreen></iframe>' +
-        '</div>';
-      
-      overlay.appendChild(pdfModal);
-      document.body.appendChild(overlay);
-    };
-
-    function openAbbondanzaAboutUs() {
-      const existingOverlay = document.querySelector('.modal-overlay');
-      if (existingOverlay) existingOverlay.remove();
-  
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-  
-      // Abbondanza marketing materials
-      const materials = [
-        { 
-          title: 'Abbondanza About Us Presentation <span style="color:#dc2626;font-weight:600;">(No Customer Testimonials)</span>', 
-          id: '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU', 
-          description: 'Complete overview of Abbondanza Vending services, products, and business model',
-          type: 'slides' 
-        },
-        { 
-          title: 'Abbondanza About Us Presentation <span style="color:#d97706;font-weight:600;">(Yes Customer Testimonials)</span>', 
-          id: '1WelG2-HY-KcSpyTghoBEFoIp8hX4Zq1w2AyRyfT2sMc', 
-          description: 'Complete overview of Abbondanza Vending services, products, and business model with customer testimonials',
-          type: 'slides' 
-        },
-        { 
-          title: 'Product List & Pricing', 
-          id: '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw', 
-          description: 'Complete catalog of all Abbondanza fresh food products with pricing',
-          type: 'sheets' 
-        }
-      ];
-  
-      const cards = materials.map(function(m) {
-        var viewUrl, downloadUrl;
-        if (m.type === 'slides') { 
-          viewUrl = 'https://docs.google.com/presentation/d/' + m.id + '/preview'; 
-          downloadUrl = 'https://docs.google.com/presentation/d/' + m.id + '/export/pdf'; 
-        }
-        else if (m.type === 'docs') { 
-          viewUrl = 'https://docs.google.com/document/d/' + m.id + '/preview'; 
-          downloadUrl = 'https://docs.google.com/document/d/' + m.id + '/export?format=pdf'; 
-        }
-        else if (m.type === 'sheets') { 
-          viewUrl = 'https://docs.google.com/spreadsheets/d/' + m.id + '/preview'; 
-          downloadUrl = 'https://docs.google.com/spreadsheets/d/' + m.id + '/export?format=pdf&portrait=true&fitw=true&gridlines=true'; 
-        }
-        else { 
-          viewUrl = 'https://drive.google.com/file/d/' + m.id + '/view'; 
-          downloadUrl = 'https://drive.google.com/uc?export=download&id=' + m.id; 
-        }
-        return (
-          '<div style="background:#f8fafc;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;">' +
-            '<div style="margin-bottom:20px;">' +
-              '<h4 style="margin:0 0 10px 0;color:#1e3a8a;font-size:1.2em;font-weight:600;">' + m.title + '</h4>' +
-              '<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">' + m.description + '</p>' +
-            '</div>' +
-            '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
-              '<button class="btn btn-primary" onclick="viewAbbondanzaMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/<[^>]*>/g, '').replace(/'/g, "\\'") + '\', \'' + m.type + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">👁️ View PDF</button>' +
-              '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">📥 Download</button>' +
-            '</div>' +
-          '</div>'
-        );
-      }).join('');
-  
-      modal.innerHTML =
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
-          '<h3 style="margin:0;color:#2d3748;font-size:1.8em;">About Us - How We Work</h3>' +
-          '<button class="close-btn" onclick="closeModal()">✕</button>' +
-        '</div>' +
-        '<div style="display:grid;gap:20px;">' + cards + '</div>';
-  
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-    }
-    window.openAbbondanzaAboutUs = openAbbondanzaAboutUs;
-
-    window.closeModal = function closeModal() {
-      const overlay = document.querySelector('.modal-overlay');
-      if (overlay) overlay.remove();
-    };
-  
-    /* ====== NEW: Welcome Package Viewer ====== */
-    function openWelcomePackageViewer() {
-      const existingOverlay = document.querySelector('.modal-overlay');
-      if (existingOverlay) existingOverlay.remove();
-  
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-  
-      // Welcome Package documents from your Google Drive folder
-      const welcomePackageDocs = [
-        { 
-          title: 'Certificate of Insurance (COI)', 
-          id: '19Y3ciEphZS9flJnGlzU_BNwcxvrvaHXlTUKYM68pY2M', 
-          description: 'Abbondanza Vending LLC Certificate of Insurance documentation.',
-          type: 'slides' 
-        },
-        { 
-          title: 'ACH Payment Details & Setup', 
-          id: '1HVA53cJOSOIXS1Tta1D_nQ1Dle0rzDKz2vvSu6uH3nc', 
-          description: 'Automatic payment setup information and ACH banking details.',
-          type: 'docs' 
-        },
-        { 
-          title: 'Kiosk Installation & User Guide', 
-          id: '1fuioAsSuvJVIqRqvCcFrOa8KnPm-ooxkf8G9nxhQwE4', 
-          description: 'Step-by-step installation flyer showing customers how to use the fresh food kiosks.',
-          type: 'slides' 
-        },
-        { 
-          title: 'W9 Tax Form', 
-          id: '18fLITwrOfvmNfo3xETkbSttfQKh8U2YZK_OTOMKNeHA', 
-          description: 'Required W9 tax form for vendor setup and payment processing.',
-          type: 'slides' 
-        },
-        { 
-          title: 'New Customer Information Form', 
-          id: '1FAIpQLSckGtCmj6BPy1hA0HCMt5Rd-lRBryyPOe2dGlXA_66O36khLw', 
-          description: 'Interactive form for gathering essential information from new customers.',
-          type: 'form',
-          shareUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSckGtCmj6BPy1hA0HCMt5Rd-lRBryyPOe2dGlXA_66O36khLw/viewform?usp=sf_link'
-        }
-      ];
-  
-      const cards = welcomePackageDocs.map(doc => {
-        let viewUrl, downloadUrl, buttons;
-        if (doc.type === 'form') {
-          // Special handling for Google Forms - shareable link only
-          viewUrl = doc.shareUrl;
-          buttons = `
-            <button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">New Customer Questions</button>
-            <button class="btn btn-secondary" onclick="copyToClipboard('Please Fill Out New Customer Questions: ${viewUrl}')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Share Link</button>
-          `;
-        } else {
-          // Generate PDF exports for all other document types (no direct document access)
-          if (doc.type === 'slides') { 
-            viewUrl = `https://docs.google.com/presentation/d/${doc.id}/export/pdf`; 
-            downloadUrl = `https://docs.google.com/presentation/d/${doc.id}/export/pdf`; 
-          }
-          else if (doc.type === 'docs') { 
-            viewUrl = `https://docs.google.com/document/d/${doc.id}/export?format=pdf`; 
-            downloadUrl = `https://docs.google.com/document/d/${doc.id}/export?format=pdf`; 
-          }
-          else if (doc.type === 'sheets') { 
-            viewUrl = `https://docs.google.com/spreadsheets/d/${doc.id}/export?format=pdf&portrait=true&fitw=true`; 
-            downloadUrl = `https://docs.google.com/spreadsheets/d/${doc.id}/export?format=pdf&portrait=true&fitw=true`; 
-          }
-          else { // Already PDF files
-            viewUrl = `https://drive.google.com/uc?export=download&id=${doc.id}`; 
-            downloadUrl = `https://drive.google.com/uc?export=download&id=${doc.id}`; 
-          }
-          buttons = `
-            <button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">View PDF</button>
-            <button class="btn btn-secondary" onclick="window.open('${downloadUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Download PDF</button>
-          `;
-        }
-        return (
-          '<div style="background:#f8fafc;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;">' +
-            '<div style="margin-bottom:20px;">' +
-              `<h4 style="margin:0 0 10px 0;color:#1e3a8a;font-size:1.2em;font-weight:600;">${doc.title}</h4>` +
-              `<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">${doc.description}</p>` +
-            '</div>' +
-            `<div style="display:flex;gap:15px;flex-wrap:wrap;">${buttons}</div>` +
-          '</div>'
-        );
-      }).join('');
-  
-      modal.innerHTML =
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
-          '<h3 style="margin:0;color:#2d3748;font-size:1.8em;">Welcome Package</h3>' +
-          '<button class="close-btn" onclick="closeWelcomeModal()">Close</button>' +
-        '</div>' +
-        '<div style="display:grid;gap:20px;">' + cards + '</div>';
-  
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-    }
-  
-    // Helper function for copying form links to clipboard
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        showPopup('Form link copied to clipboard!', 'success');
-      }).catch(() => {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        showPopup('Form link copied to clipboard!', 'success');
-      });
-    }
-  
-    function closeWelcomeModal() {
-      const overlay = document.querySelector('.modal-overlay');
-      if (overlay) overlay.remove();
-    }
-  
-    /* ====== PDF: Product List ====== */
-    function openProductListPDF() {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const pdfModal = document.createElement('div');
-      pdfModal.className = 'pdf-modal';
-  
-      const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-      const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&portrait=true&fitw=true&gridlines=true`;
-      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
-  
-      pdfModal.innerHTML = `
-        <div class="pdf-header">
-          <h3>Abbondanza Product List</h3>
-          <div>
-            <button class="btn btn-secondary" onclick="window.open('${pdfUrl}', '_blank')" style="margin-right: 10px;">Download PDF</button>
-            <button class="close-btn" onclick="closePDFViewer()">Close</button>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="followUp">Follow Up Date</label>
+            <input type="date" id="followUp" name="followUp"/>
+          </div>
+          <div class="form-group">
+            <label for="appointmentMade">Appointment Made?</label>
+            <select id="appointmentMade" name="appointmentMade" onchange="toggleAppointmentDate()">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
           </div>
         </div>
-        <div class="pdf-viewer">
-          <iframe src="${viewerUrl}" allowfullscreen></iframe>
-        </div>`;
-      overlay.appendChild(pdfModal);
-      document.body.appendChild(overlay);
+
+        <div class="form-group" id="appointmentDateGroup" style="display:none;">
+          <label for="appointmentDate">Appointment Date</label>
+          <input type="date" id="appointmentDate" name="appointmentDate"/>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" rows="4"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-cancel" onclick="attemptCloseModal()">Cancel</button>
+          <button type="button" id="saveBtn" class="btn" onclick="onSaveClick(event)">Save Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Excel Import Modal -->
+  <div id="importModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close" onclick="closeImportModal()">&times;</span>
+      <h2>Import Leads from Excel</h2>
+      
+      <div style="background:#f0f8ff;padding:20px;border-radius:8px;margin:20px 0;border:1px solid #b3d9ff;">
+        <h3 style="color:#2c5aa0;margin-bottom:10px;">Instructions:</h3>
+        <ol style="color:#4a5568;line-height:1.6;">
+          <li>Download the Excel template using the "Download Excel Template" button</li>
+          <li>Fill in your leads data (one lead per row)</li>
+          <li>Save the file and select it below</li>
+          <li>Click "Import Leads" to upload</li>
+        </ol>
+        <p style="color:#e53e3e;margin-top:10px;font-weight:600;">
+          ⚠️ Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
+        </p>
+      </div>
+
+      <div class="form-group">
+        <label for="excelFileInput">Select Excel File (.xlsx)</label>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)"/>
+        <small>Supported formats: .xlsx, .xls</small>
+      </div>
+
+      <div id="filePreview" style="display:none;margin:20px 0;">
+        <h3>File Preview:</h3>
+        <div id="previewContent" class="file-preview" style="max-height:200px;overflow-y:auto;">
+          <!-- Preview content will be inserted here -->
+        </div>
+        <p id="previewSummary" style="color:#4a5568;margin-top:10px;"></p>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" onclick="closeImportModal()">Cancel</button>
+        <button type="button" id="importBtn" class="btn" onclick="importLeads()" disabled>Import Leads</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal delete-modal" aria-hidden="true">
+    <div class="modal-content">
+      <span class="close" onclick="closeDeleteModal()">&times;</span>
+      <h2>Delete Lead Permanently</h2>
+      <p style="color:#4a5568;margin-bottom:15px;">This action cannot be undone. The lead will be permanently deleted from the database.</p>
+      
+      <div class="company-name" id="deleteCompanyName">
+        Company Name Will Show Here
+      </div>
+      
+      <p style="margin:20px 0;font-weight:600;color:#721c24;">Type "yes" to confirm deletion:</p>
+      
+      <div class="form-group">
+        <input type="text" id="deleteConfirmInput" placeholder="Type 'yes' to confirm" onkeyup="validateDeleteConfirmation()" style="border-color:#e53e3e"/>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger" onclick="confirmDeleteLead()" disabled>Delete Lead Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ====== CONFIG ======
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
+
+    let allLeads = [];
+    let currentEditId = null;
+    let knownCompanies = [];
+    let currentLeadForProposal = null;
+    let currentLeadToDelete = null;
+    let notesTooltip = null;
+
+    // Track unsaved edits in the modal
+    let formInitialSnapshot = '';
+    let formDirty = false;
+
+    function safeLeadId(obj){
+      const id = obj?.id ?? obj?.ID ?? obj?.Id ?? obj?.iD ?? obj?.leadId ?? '';
+      return String(id).trim();
     }
-    function downloadProductListPDF() {
-      const sheetsId = '1FVnd5kMEpT6PnAnd5KbSZ4nrm3BONEsSULUejOCjdEw';
-      const pdfUrl = `https://docs.google.com/spreadsheets/d/${sheetsId}/export?format=pdf&size=letter&portrait=true&fitw=true&sheetnames=false&printtitle=false&pagenumbers=false&gridlines=true`;
-      window.open(pdfUrl, '_blank');
-    }
-  
-    /* ====== PDF: About Us Deck (DEPRECATED - use openAbbondanzaAboutUs instead) ====== */
-    function openPDFViewer() {
-      openAbbondanzaAboutUs();
-    }
-    function downloadPresentationPDF() {
-      const slidesId = '13MgZEuaHvneWrIqomnU_NFKFuR_tY4g0WH6Wc041LDU';
-      const pdfUrl = `https://docs.google.com/presentation/d/${slidesId}/export/pdf`;
-      window.open(pdfUrl, '_blank');
-    }
-    function closePDFViewer() {
-      document.querySelectorAll('.modal-overlay').forEach(ov => {
-        if (ov && ov.querySelector('.pdf-modal')) ov.remove();
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('saveBtn').addEventListener('click', onSaveClick);
+
+      // static backdrop
+      const modal = document.getElementById('leadModal');
+      modal.addEventListener('click', (e) => { if (e.target === modal) e.stopPropagation(); });
+
+      loadLeads();
+      loadCompanyLists();
+      setupPhoneFormatting();
+      setupRepPhoneFormatting();
+      setupNotesTooltip();
+    });
+
+    function setupPhoneFormatting(){
+      const phoneInput = document.getElementById('phoneNumber');
+      phoneInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g,'');
+        if (v.length >= 6) v = v.slice(0,3)+'-'+v.slice(3,6)+'-'+v.slice(6,10);
+        else if (v.length >= 3) v = v.slice(0,3)+'-'+v.slice(3);
+        e.target.value = v;
       });
-      window.allProposals = null;
-      window.allServiceAgreements = null;
+      phoneInput.addEventListener('keypress', (e) => {
+        const ch = String.fromCharCode(e.which);
+        if (!/[0-9-]/.test(ch)) e.preventDefault();
+      });
     }
-  
-    /* ====== Proposal Generator ====== */
-    function openProposalGenerator() {
-      const proposalModal = document.getElementById('proposalModal');
-      if (proposalModal) {
-        proposalModal.style.display = 'block';
-        updatePricingSummary();
+
+    function setupRepPhoneFormatting() {
+      const repPhoneInput = document.getElementById('repPhone');
+      repPhoneInput.addEventListener('input', (e) => {
+        let v = e.target.value.replace(/\D/g,'');
+        if (v.length >= 6) v = v.slice(0,3)+'-'+v.slice(3,6)+'-'+v.slice(6,10);
+        else if (v.length >= 3) v = v.slice(0,3)+'-'+v.slice(3);
+        e.target.value = v;
+      });
+      repPhoneInput.addEventListener('keypress', (e) => {
+        const ch = String.fromCharCode(e.which);
+        if (!/[0-9-]/.test(ch)) e.preventDefault();
+      });
+    }
+
+    function setupNotesTooltip() {
+      // Create tooltip element
+      notesTooltip = document.createElement('div');
+      notesTooltip.className = 'notes-tooltip';
+      document.body.appendChild(notesTooltip);
+    }
+
+    function showNotesTooltip(element, fullText) {
+      if (!fullText || fullText.trim() === '') return;
+      
+      const rect = element.getBoundingClientRect();
+      notesTooltip.textContent = fullText;
+      notesTooltip.style.left = (rect.left + window.scrollX) + 'px';
+      notesTooltip.style.top = (rect.top + window.scrollY - notesTooltip.offsetHeight - 10) + 'px';
+      notesTooltip.classList.add('show');
+    }
+
+    function hideNotesTooltip() {
+      notesTooltip.classList.remove('show');
+    }
+
+    // FIXED: Show/hide Quantum fields based on business unit selection
+    function toggleQuantumFields() {
+      const businessUnit = document.getElementById('businessUnit').value;
+      const quantumSection = document.getElementById('quantumFieldsSection');
+      
+      if (businessUnit === 'Quantum Solutions') {
+        quantumSection.style.display = 'block';
+        // Make customer address required for Quantum
+        document.getElementById('customerAddress').required = true;
+        document.getElementById('customerZip').required = true;
+      } else {
+        quantumSection.style.display = 'none';
+        // Remove required for other business units
+        document.getElementById('customerAddress').required = false;
+        document.getElementById('customerZip').required = false;
       }
     }
-    function closeModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) modal.style.display = 'none';
+
+    async function loadLeads(){
+      try{
+        document.getElementById('loadingState').style.display='block';
+        document.getElementById('leadsTable').style.display='none';
+        document.getElementById('emptyState').style.display='none';
+
+        const res = await fetch(WEB_APP_URL + '?action=getLeads');
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Failed to load leads');
+
+        allLeads = data.leads || [];
+        
+        // DEBUG: Check what data we're getting from the backend
+        console.log('Loaded leads from backend:', allLeads);
+        if (allLeads.length > 0) {
+          console.log('Sample lead data:', allLeads[0]);
+          console.log('Sample lead repPhone:', allLeads[0].repPhone);
+          console.log('Sample lead repEmail:', allLeads[0].repEmail);
+        }
+        
+        updateRepFilter();
+        filterLeads(); // ← render using current dropdowns (default = Active)
+      }catch(err){
+        console.error('loadLeads error:', err);
+        document.getElementById('loadingState').style.display='none';
+        document.getElementById('emptyState').style.display='block';
+        showToast('Error loading leads. ' + err.message, 'error');
+      }
     }
-    function updatePricingSummary() {
-      const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1;
-      const basePrice   = parseInt(document.getElementById('monthlyFee').value) || 795;
-      const additionalDeliveryFee = parseInt(document.getElementById('deliveryFee').value) || 0;
-  
+
+    async function loadCompanyLists(){
+      try{
+        const res = await fetch(WEB_APP_URL + '?action=getCompanies');
+        const data = await res.json();
+        if (data.status !== 'success') throw new Error('API returned non-success status');
+
+        knownCompanies = Array.isArray(data.companies) ? data.companies : [];
+        const dl = document.getElementById('companySuggestions');
+        dl.innerHTML = '';
+        knownCompanies.forEach(name => {
+          const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt);
+        });
+
+        const unitsFromApi = Array.isArray(data.businessUnits) ? data.businessUnits : [];
+        const unitsFromLeads = [...new Set((allLeads||[]).map(l => l.businessUnit).filter(Boolean))];
+        const defaultUnits = ['Abbondanza Vending', 'Quantum Solutions'];
+        const allUnits = [...new Set([...defaultUnits, ...unitsFromApi, ...unitsFromLeads])];
+        const units = allUnits.sort();
+
+        const sel = document.getElementById('companyFilter');
+        sel.innerHTML = '<option value="">All Business Units</option>';
+        units.forEach(u => {
+          const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
+        });
+
+        const bu = document.getElementById('businessUnit');
+        const current = bu.value;
+        bu.innerHTML = '<option value="">Select...</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
+        if (current) bu.value = current;
+      }catch(e){
+        console.warn('getCompanies failed, using defaults:', e);
+        const fallback = ['Abbondanza Vending','Quantum Solutions'];
+
+        const sel = document.getElementById('companyFilter');
+        sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>`<option value="${u}">${u}</option>`).join('');
+
+        const bu = document.getElementById('businessUnit');
+        const current = bu.value;
+        bu.innerHTML = '<option value="">Select...</option>' + fallback.map(u => `<option value="${u}">${u}</option>`).join('');
+        if (current) bu.value = current;
+      }
+    }
+
+    function displayLeads(leads){
+      const tbody = document.getElementById('leadsTableBody');
+      const table = document.getElementById('leadsTable');
+      const loading = document.getElementById('loadingState');
+      const empty = document.getElementById('emptyState');
+
+      tbody.innerHTML = '';
+      loading.style.display = 'none';
+
+      if (!leads.length){
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+      table.style.display = 'table';
+      empty.style.display = 'none';
+
+      leads.forEach(lead => tbody.appendChild(createLeadRow(lead)));
+    }
+
+    function createLeadRow(lead){
+      const row = document.createElement('tr');
+      const leadId = safeLeadId(lead);
+
+      const dateAdded = formatDate(lead.dateAdded);
+      const followUp = formatDate(lead.followUp);
+      const appointmentDate = formatDate(lead.appointmentDate);
+      const statusClass = getStatusClass(lead.status);
+      const appointmentClass = (lead.appointmentMade === 'Yes') ? 'appointment-yes' : 'appointment-no';
+      const notes = lead.notes || '';
+
+      const cells = [
+        dateAdded,
+        `<strong>${lead.companyName || ''}</strong>`,
+        lead.contactName || '',
+        lead.phoneNumber || '',
+        lead.emailAddress || '',
+        lead.repName || '',
+        `<span class="status-badge ${statusClass}">${lead.status || 'Active'}</span>`,
+        followUp,
+        `<span class="${appointmentClass}">${lead.appointmentMade || 'No'}</span>`,
+        appointmentDate,
+        notes,
+        `<div class="action-buttons">
+           <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Generate Proposal</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
+           <button class="btn btn-small btn-danger" onclick="openDeleteModal('${leadId}')">Delete</button>
+         </div>`
+      ];
+
+      cells.forEach((html, index) => { 
+        const td = document.createElement('td'); 
+        td.innerHTML = html; 
+        
+        // Add hover functionality to notes column (11th column, index 10)
+        if (index === 10 && notes.trim() !== '') {
+          td.addEventListener('mouseenter', (e) => showNotesTooltip(e.target, notes));
+          td.addEventListener('mouseleave', hideNotesTooltip);
+        }
+        
+        row.appendChild(td); 
+      });
+      return row;
+    }
+
+    function getStatusClass(status){
+      const map = {'Active':'status-active','Follow Up Later':'status-followup','Not Qualified':'status-notqualified','Dead':'status-dead'};
+      return map[status] || 'status-active';
+    }
+
+    function formatDate(s){
+      if (!s) return '';
+      const d = new Date(s);
+      if (isNaN(d)) return '';
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      const y = d.getFullYear();
+      return `${m}/${day}/${y}`;
+    }
+
+    function filterLeads(){
+      const rep = document.getElementById('repFilter').value.toLowerCase();
+      const unit = document.getElementById('companyFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const q = document.getElementById('searchInput').value.toLowerCase();
+
+      const filtered = (allLeads || []).filter(l => {
+        const matchRep = !rep || ((l.repName||'').toLowerCase().includes(rep));
+        const matchStatus = !status || (l.status === status);
+        const matchUnit = !unit || (l.businessUnit === unit);
+        const matchSearch = !q ||
+          (l.companyName && l.companyName.toLowerCase().includes(q)) ||
+          (l.contactName && l.contactName.toLowerCase().includes(q)) ||
+          (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
+          (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
+        return matchRep && matchStatus && matchUnit && matchSearch;
+      });
+
+      displayLeads(filtered);
+    }
+
+    function updateRepFilter(){
+      const sel = document.getElementById('repFilter');
+      const reps = [...new Set((allLeads || []).map(l => l.repName).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">All Reps</option>';
+      reps.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o); });
+    }
+
+    function openAddLeadModal(){
+      currentEditId = null;
+      document.getElementById('modalTitle').textContent = 'Add New Lead';
+      document.getElementById('leadForm').reset();
+      document.getElementById('status').value = 'Active';
+      document.getElementById('appointmentMade').value = 'No';
+      
+      // FIXED: Clear all fields explicitly to prevent cache contamination
+      document.getElementById('businessUnit').value = '';
+      document.getElementById('companyName').value = '';
+      document.getElementById('contactName').value = '';
+      document.getElementById('phoneNumber').value = '';
+      document.getElementById('emailAddress').value = '';
+      document.getElementById('repName').value = '';
+      document.getElementById('repPhone').value = '';
+      document.getElementById('repEmail').value = '';
+      document.getElementById('customerAddress').value = '';
+      document.getElementById('customerZip').value = '';
+      document.getElementById('followUp').value = '';
+      document.getElementById('appointmentDate').value = '';
+      document.getElementById('notes').value = '';
+      
+      // Hide Quantum fields by default and remove required
+      document.getElementById('quantumFieldsSection').style.display = 'none';
+      document.getElementById('customerAddress').required = false;
+      document.getElementById('customerZip').required = false;
+      
+      // Reset save button state
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Lead';
+      
+      toggleAppointmentDate();
+      document.getElementById('leadModal').style.display = 'block';
+      markFormPristineAndWatch();
+    }
+
+    function editLead(leadId){
+      const lead = (allLeads || []).find(l => safeLeadId(l) === String(leadId));
+      if (!lead) return;
+
+      currentEditId = safeLeadId(lead);
+      document.getElementById('modalTitle').textContent = 'Edit Lead';
+
+      document.getElementById('businessUnit').value = lead.businessUnit || '';
+      document.getElementById('companyName').value = lead.companyName || '';
+      document.getElementById('contactName').value = lead.contactName || '';
+      document.getElementById('phoneNumber').value = lead.phoneNumber || '';
+      document.getElementById('emailAddress').value = lead.emailAddress || '';
+      document.getElementById('repName').value = lead.repName || '';
+      document.getElementById('status').value = lead.status || 'Active';
+      document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
+      document.getElementById('notes').value = lead.notes || '';
+
+      // NEW FIELDS - Always populate these
+      document.getElementById('repPhone').value = lead.repPhone || '';
+      document.getElementById('repEmail').value = lead.repEmail || '';
+      document.getElementById('customerAddress').value = lead.customerAddress || '';
+      // FIXED: Only pad zip code if it exists and has a value
+      const zipCode = lead.customerZip || '';
+      if (zipCode && zipCode.toString().trim() !== '') {
+        document.getElementById('customerZip').value = String(zipCode).padStart(5, '0');
+      } else {
+        document.getElementById('customerZip').value = '';
+      }
+
+      if (lead.followUp){
+        const d = new Date(lead.followUp);
+        if (!isNaN(d)) document.getElementById('followUp').value = d.toISOString().split('T')[0];
+      }
+      if (lead.appointmentDate){
+        const d = new Date(lead.appointmentDate);
+        if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
+      }
+
+      // Reset save button state
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Lead';
+
+      // FIXED: Call toggleQuantumFields AFTER setting businessUnit value
+      toggleQuantumFields();
+      toggleAppointmentDate();
+      document.getElementById('leadModal').style.display = 'block';
+      markFormPristineAndWatch();
+    }
+
+    function attemptCloseModal(){
+      if (formDirty){
+        const ok = confirm('Discard your changes?');
+        if (!ok) return;
+      }
+      closeModal();
+    }
+
+    function closeModal(){
+      document.getElementById('leadModal').style.display = 'none';
+      document.getElementById('leadForm').reset();
+      currentEditId = null;
+      formDirty = false;
+      formInitialSnapshot = '';
+      removeFormWatchers();
+    }
+
+    function toggleAppointmentDate(){
+      const show = document.getElementById('appointmentMade').value === 'Yes';
+      document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
+    }
+
+    // Track pristine/dirty state
+    function snapshotForm(){
+      const formEl = document.getElementById('leadForm');
+      const form = new FormData(formEl);
+      const lead = Object.fromEntries(form.entries());
+      if (lead.customerZip) {
+        lead.customerZip = String(lead.customerZip).padStart(5, '0');
+      }
+      return JSON.stringify(lead);
+    }
+    function markFormPristineAndWatch(){
+      formInitialSnapshot = snapshotForm();
+      formDirty = false;
+      removeFormWatchers();
+      const formEl = document.getElementById('leadForm');
+      const markDirty = () => { formDirty = (snapshotForm() !== formInitialSnapshot); };
+      formEl.querySelectorAll('input,select,textarea').forEach(el => {
+        el.addEventListener('input', markDirty);
+        el.addEventListener('change', markDirty);
+        el._dirtyHandlersAttached = true;
+      });
+    }
+    function removeFormWatchers(){
+      const formEl = document.getElementById('leadForm');
+      if (!formEl) return;
+      formEl.querySelectorAll('input,select,textarea').forEach(el => {
+        if (el._dirtyHandlersAttached){
+          const clone = el.cloneNode(true);
+          el.parentNode.replaceChild(clone, el);
+        }
+      });
+    }
+
+    async function onSaveClick(e){
+      e.preventDefault();
+      const formEl = document.getElementById('leadForm');
+      if (!formEl.checkValidity()){ formEl.reportValidity(); return; }
+
+      const form = new FormData(formEl);
+      const lead = Object.fromEntries(form.entries());
+      const saveBtn = document.getElementById('saveBtn');
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+
+      try{
+        const isUpdate = !!currentEditId;
+        const action = isUpdate ? 'updateLead' : 'addLead';
+        const url = WEB_APP_URL + '?action=' + encodeURIComponent(action)
+          + (isUpdate ? ('&leadId=' + encodeURIComponent(String(currentEditId))) : '');
+
+        const payload = isUpdate
+          ? { action:'updateLead', leadId:String(currentEditId), updates:lead }
+          : { action:'addLead',   lead:lead };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Network ${res.status}`);
+        const out = await res.json();
+        if (out.status !== 'success') throw new Error(out.message || 'Save failed');
+
+        showToast(isUpdate ? 'Lead updated' : 'Lead added', 'success');
+        formDirty = false;
+        closeModal();
+        await loadLeads();
+      }catch(err){
+        console.error('save error:', err);
+        showToast('Error saving lead: ' + err.message, 'error');
+      }finally{
+        saveBtn.disabled = false; saveBtn.textContent = originalText;
+      }
+    }
+
+    async function archiveLead(btnEl, leadId){
+      const id = String(leadId || '').trim();
+      if (!id){ showToast('Could not determine lead ID — refresh and try again.', 'error'); return; }
+      if (!confirm('Archive this lead?')) return;
+
+      const prevHtml = btnEl.innerHTML;
+      btnEl.disabled = true; btnEl.innerHTML = 'Archiving…';
+
+      try{
+        const url = WEB_APP_URL + '?action=archiveLead&leadId=' + encodeURIComponent(id);
+        const payload = { action:'archiveLead', leadId:id };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Network ${res.status}`);
+        const out = await res.json();
+        if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
+
+        showToast('Lead archived', 'success');
+        await loadLeads(); // list re-renders with current filter (Active)
+      }catch(err){
+        console.error(err);
+        showToast('Error archiving lead: ' + err.message, 'error');
+      }finally{
+        btnEl.disabled = false; btnEl.innerHTML = prevHtml;
+      }
+    }
+
+    // ============ DELETE LEAD FUNCTIONS ============
+
+    function openDeleteModal(leadId) {
+      const lead = allLeads.find(l => safeLeadId(l) === String(leadId));
+      if (!lead) {
+        showToast('Lead not found. Please refresh the page and try again.', 'error');
+        return;
+      }
+
+      currentLeadToDelete = lead;
+      document.getElementById('deleteCompanyName').textContent = lead.companyName;
+      document.getElementById('deleteConfirmInput').value = '';
+      document.getElementById('confirmDeleteBtn').disabled = true;
+      document.getElementById('deleteModal').style.display = 'block';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      currentLeadToDelete = null;
+    }
+
+    function validateDeleteConfirmation() {
+      const input = document.getElementById('deleteConfirmInput').value.toLowerCase().trim();
+      const confirmBtn = document.getElementById('confirmDeleteBtn');
+      
+      if (input === 'yes') {
+        confirmBtn.disabled = false;
+      } else {
+        confirmBtn.disabled = true;
+      }
+    }
+
+    async function confirmDeleteLead() {
+      if (!currentLeadToDelete) {
+        showToast('No lead selected for deletion.', 'error');
+        return;
+      }
+
+      const leadId = safeLeadId(currentLeadToDelete);
+      const confirmBtn = document.getElementById('confirmDeleteBtn');
+      const originalText = confirmBtn.textContent;
+      
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Deleting...';
+
+      try {
+        const url = WEB_APP_URL + '?action=deleteLead&leadId=' + encodeURIComponent(leadId);
+        const payload = { action: 'deleteLead', leadId: leadId };
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Network ${res.status}`);
+        const out = await res.json();
+        if (out.status !== 'success') throw new Error(out.message || 'Delete failed');
+
+        showToast(`Lead "${currentLeadToDelete.companyName}" deleted permanently`, 'success');
+        closeDeleteModal();
+        await loadLeads(); // Refresh the lead list
+        
+      } catch (err) {
+        console.error('Delete error:', err);
+        showToast('Error deleting lead: ' + err.message, 'error');
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+      }
+    }
+
+    // ============ PROPOSAL GENERATION FUNCTIONS ============
+
+    // FIXED: Generate Proposal - Main Router Function
+    function generateProposal(leadId) {
+      const lead = allLeads.find(l => safeLeadId(l) === String(leadId));
+      if (!lead) {
+        showToast('Lead not found. Please refresh the page and try again.', 'error');
+        return;
+      }
+
+      // Store current lead for proposal generation
+      currentLeadForProposal = lead;
+
+      // FIXED: More robust validation with better error messages
+      if (!lead.repPhone || !lead.repEmail) {
+        showToast('Missing sales rep contact information. Please edit the lead and add rep phone and email.', 'error');
+        return;
+      }
+
+      if (lead.businessUnit === 'Abbondanza Vending') {
+        showAbbondanzaProposalModal(lead);
+      } else if (lead.businessUnit === 'Quantum Solutions') {
+        // Validate Quantum-specific required fields
+        if (!lead.customerAddress || !lead.customerZip) {
+          showToast('Missing customer address information required for Quantum Solutions. Please edit the lead first.', 'error');
+          return;
+        }
+        showQuantumProposalModal(lead);
+      } else {
+        showToast('Unknown business unit. Please edit the lead and select a valid business unit.', 'error');
+      }
+    }
+
+    function showAbbondanzaProposalModal(lead) {
+      // Remove any existing proposal modals
+      document.querySelectorAll('[id$="ProposalModal"]').forEach(m => m.remove());
+      
+      // Create modal HTML
+      const modalHTML = `
+        <div id="abbondanzaProposalModal" class="modal" aria-hidden="false" style="display: block;">
+          <div class="modal-content">
+            <span class="close" onclick="closeProposalModal('abbondanzaProposalModal')">&times;</span>
+            <h2>Generate Abbondanza Proposal</h2>
+            
+            <form id="abbondanzaProposalForm">
+              <div class="form-group">
+                <label>Company Information (from lead)</label>
+                <div style="background: #f7fafc; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                  <strong>Company:</strong> ${lead.companyName}<br>
+                  <strong>Contact:</strong> ${lead.contactName || 'N/A'}<br>
+                  <strong>Rep:</strong> ${lead.repName}
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="abboFridgeCount">Number of Fridges *</label>
+                  <input type="number" id="abboFridgeCount" name="fridgeCount" min="1" value="1" required onchange="updateAbboPricing()">
+                </div>
+                <div class="form-group">
+                  <label for="abboMonthlyFee">Base Monthly Rate (1st Unit) *</label>
+                  <select id="abboMonthlyFee" name="monthlyFee" required onchange="updateAbboPricing()">
+                    <option value="395">$395/month</option>
+                    <option value="495">$495/month</option>
+                    <option value="595">$595/month</option>
+                    <option value="695">$695/month</option>
+                    <option value="795" selected>$795/month</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="abboDeliveryFee">Additional Delivery Charges (Optional)</label>
+                <input type="number" id="abboDeliveryFee" name="deliveryFee" min="0" max="5000" step="50" placeholder="0" onchange="updateAbboPricing()">
+                <small>Add extra charges for difficult deliveries or long distances. Must be in $50 increments.</small>
+              </div>
+              
+              <div class="pricing-info">
+                <h3>Pricing Summary</h3>
+                <div id="abboPricingDisplay" class="pricing-display">
+                  Monthly Total: $795/month<br>
+                  Setup Fee: $295 (one-time)
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeProposalModal('abbondanzaProposalModal')">Cancel</button>
+                <button type="button" class="btn" onclick="submitAbbondanzaProposal()">Generate Proposal PDF</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      // Add to page
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Update initial pricing
+      updateAbboPricing();
+    }
+
+    function showQuantumProposalModal(lead) {
+      // Remove any existing proposal modals
+      document.querySelectorAll('[id$="ProposalModal"]').forEach(m => m.remove());
+      
+      // Create modal HTML
+      const modalHTML = `
+        <div id="quantumProposalModal" class="modal" aria-hidden="false" style="display: block;">
+          <div class="modal-content">
+            <span class="close" onclick="closeProposalModal('quantumProposalModal')">&times;</span>
+            <h2>Generate Quantum Solutions Proposal</h2>
+            
+            <form id="quantumProposalForm">
+              <div class="form-group">
+                <label>Lead Information</label>
+                <div style="background: #f7fafc; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                  <strong>Company:</strong> ${lead.companyName}<br>
+                  <strong>Contact:</strong> ${lead.contactName || 'N/A'}<br>
+                  <strong>Address:</strong> ${lead.customerAddress}<br>
+                  <strong>Zip:</strong> ${lead.customerZip}<br>
+                  <strong>Rep:</strong> ${lead.repName}
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="quantumCustomerType">Customer Type *</label>
+                  <select id="quantumCustomerType" name="customerType" required onchange="updateQuantumPricing()">
+                    <option value="new" selected>New Customer (includes scanner)</option>
+                    <option value="existing">Existing Customer (has scanner)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="quantumFridgeCount">Number of Fridges *</label>
+                  <input type="number" id="quantumFridgeCount" name="fridgeCount" min="1" value="1" required onchange="updateQuantumPricing()">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="quantumScannerCount">RFID Scanners Needed</label>
+                  <select id="quantumScannerCount" name="scannerCount" onchange="updateQuantumPricing()">
+                    <option value="0">0 scanners</option>
+                    <option value="1" selected>1 scanner</option>
+                    <option value="2">2 scanners</option>
+                    <option value="3">3 scanners</option>
+                    <option value="4">4 scanners</option>
+                    <option value="5">5 scanners</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="quantumRfidRolls">RFID Tag Rolls (1,000 tags per roll)</label>
+                  <input type="number" id="quantumRfidRolls" name="rfidRolls" min="0" max="50" value="5" onchange="updateQuantumPricing()">
+                  <small>$180 per roll. Recommended starting quantity: 5 rolls.</small>
+                </div>
+              </div>
+              
+              <div class="pricing-info">
+                <h3>Pricing Summary</h3>
+                <div id="quantumPricingDisplay" class="pricing-display">
+                  Loading pricing...
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeProposalModal('quantumProposalModal')">Cancel</button>
+                <button type="button" class="btn" onclick="submitQuantumProposal()">Generate Proposal PDF</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      // Add to page
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      
+      // Update initial pricing
+      updateQuantumPricing();
+    }
+
+    function updateAbboPricing() {
+      const fridgeCount = parseInt(document.getElementById('abboFridgeCount')?.value) || 1;
+      const basePrice = parseInt(document.getElementById('abboMonthlyFee')?.value) || 795;
+      const additionalDeliveryFee = parseInt(document.getElementById('abboDeliveryFee')?.value) || 0;
+      
       let monthlyTotal = basePrice;
       let baseSetupFee = 295;
-  
+      
       if (fridgeCount > 1) {
         const additionalUnits = fridgeCount - 1;
         const discountedPrice = basePrice - 100;
         monthlyTotal = basePrice + (discountedPrice * additionalUnits);
         baseSetupFee = 295 + (79 * additionalUnits);
       }
-  
+      
       const totalSetupFee = baseSetupFee + additionalDeliveryFee;
-  
+      
       let pricingText = `Monthly Total: $${monthlyTotal}/month`;
       if (fridgeCount > 1) {
         pricingText += ` (${fridgeCount} fridges)<br>`;
@@ -936,708 +1156,572 @@
         pricingText += '<br>';
       }
       pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
-      if (additionalDeliveryFee > 0) {
-        pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: ${additionalDeliveryFee.toFixed(2)}</small>`;
-      }
-      document.getElementById('pricingSummary').innerHTML = pricingText;
+      
+      const display = document.getElementById('abboPricingDisplay');
+      if (display) display.innerHTML = pricingText;
     }
-    async function generateProposal(event) {
-      if (event) { event.preventDefault(); event.stopPropagation(); }
-      const submitBtn = document.getElementById('generateBtn');
-      const originalText = submitBtn.innerHTML;
-      if (submitBtn.disabled) return;
-  
+
+    function updateQuantumPricing() {
+      const fridgeCount = parseInt(document.getElementById('quantumFridgeCount')?.value) || 1;
+      const scannerCount = parseInt(document.getElementById('quantumScannerCount')?.value) || 0;
+      const rfidRolls = parseInt(document.getElementById('quantumRfidRolls')?.value) || 0;
+      
+      // Quantum pricing constants
+      const fridgePrice = 7500;
+      const scannerPrice = 455;
+      const rfidRollPrice = 180;
+      const licenseMonthly = 175;
+      const lteMonthly = 25;
+      
+      // Calculate freight (simplified version)
+      let freight = fridgeCount * 895; // Base freight calculation
+      
+      const fridgeTotal = fridgeCount * fridgePrice;
+      const scannerTotal = scannerCount * scannerPrice;
+      const rfidTotal = rfidRolls * rfidRollPrice;
+      const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + freight;
+      
+      const monthlyLicense = fridgeCount * licenseMonthly;
+      const monthlyLTE = fridgeCount * lteMonthly;
+      const monthlyTotal = monthlyLicense + monthlyLTE;
+      
+      const pricingText = `
+        <strong>One-Time Costs:</strong><br>
+        Food Fridges (${fridgeCount}): $${fridgeTotal.toLocaleString()}<br>
+        ${scannerCount > 0 ? `RFID Scanners (${scannerCount}): $${scannerTotal.toLocaleString()}<br>` : ''}
+        ${rfidRolls > 0 ? `RFID Tags (${rfidRolls} rolls): $${rfidTotal.toLocaleString()}<br>` : ''}
+        Freight: $${freight.toLocaleString()}<br>
+        <strong>One-Time Total: $${oneTimeTotal.toLocaleString()}</strong><br><br>
+        <strong>Monthly Recurring:</strong><br>
+        License Fees: $${monthlyLicense.toLocaleString()}/month<br>
+        LTE Service: $${monthlyLTE.toLocaleString()}/month<br>
+        <strong>Monthly Total: $${monthlyTotal.toLocaleString()}/month</strong>
+      `;
+      
+      const display = document.getElementById('quantumPricingDisplay');
+      if (display) display.innerHTML = pricingText;
+    }
+
+    function closeProposalModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) modal.remove();
+    }
+
+    function getCurrentLead() {
+      return currentLeadForProposal;
+    }
+
+    async function submitAbbondanzaProposal() {
+      const lead = getCurrentLead();
+      if (!lead) {
+        showToast('Lead data not found. Please close and try again.', 'error');
+        return;
+      }
+
+      // Get form values
+      const fridgeCount = document.getElementById('abboFridgeCount').value;
+      const monthlyFee = document.getElementById('abboMonthlyFee').value;
+      const deliveryFee = document.getElementById('abboDeliveryFee').value || '';
+
+      // Build form data for Abbondanza system
+      const formData = {
+        companyName: lead.companyName,
+        contactName: lead.contactName || '',
+        preparedBy: lead.repName,
+        preparedByPhone: lead.repPhone,
+        preparedByEmail: lead.repEmail,
+        fridgeCount: fridgeCount,
+        monthlyFee: monthlyFee,
+        deliveryFee: deliveryFee
+      };
+
+      // Show loading state
+      const submitBtn = document.querySelector('#abbondanzaProposalModal button[onclick="submitAbbondanzaProposal()"]');
+      const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
-  
+      submitBtn.textContent = 'Generating...';
+
       try {
-        const formData = {
-          companyName: document.getElementById('companyName').value,
-          contactName: document.getElementById('contactName').value || '',
-          preparedBy: document.getElementById('preparedBy').value,
-          preparedByPhone: document.getElementById('preparedByPhone').value,
-          preparedByEmail: document.getElementById('preparedByEmail').value,
-          fridgeCount: document.getElementById('fridgeCount').value,
-          monthlyFee: document.getElementById('monthlyFee').value,
-          deliveryFee: document.getElementById('deliveryFee').value || ''
-        };
-        if (!formData.companyName || !formData.preparedBy || !formData.preparedByPhone || !formData.preparedByEmail) {
-          throw new Error('Please fill in all required fields.');
-        }
-  
+        // Use your existing Abbondanza Web App URL
+        const ABBONDANZA_URL = 'https://script.google.com/macros/s/AKfycbxAeTdnlfZbcCsxAoASHRQqX_zEsxyzYRJK4EP5QUWvYkQUEneWrKozR-A1XxRSgmtjxQ/exec';
+        
+        // Build URL parameters
         const params = new URLSearchParams();
-        Object.keys(formData).forEach(k => params.append(k, formData[k]));
-        const url = `${WEB_APP_URL}?${params.toString()}`;
-        window.open(url, '_blank');
-  
-        closeModal('proposalModal');
-        showPopup(`
-          <div class="success-popup">
-            <h3>Proposal Generation Started!</h3>
-            <p>Your proposal is being generated. A new tab has opened with the results.</p>
-            <p><strong>Company:</strong> ${formData.companyName}</p>
-            <p><strong>Prepared by:</strong> ${formData.preparedBy}</p>
-          </div>
-        `, 'success');
+        Object.keys(formData).forEach(key => {
+          if (formData[key]) params.append(key, formData[key]);
+        });
+        
+        const proposalUrl = `${ABBONDANZA_URL}?${params.toString()}`;
+        
+        // Open in new tab (same as your existing dashboard)
+        window.open(proposalUrl, '_blank');
+        
+        // Close modal and show success message
+        closeProposalModal('abbondanzaProposalModal');
+        showToast(`Abbondanza proposal generation started for ${lead.companyName}. Check the new tab for results.`, 'success');
+        
       } catch (error) {
-        showPopup(`Error generating proposal: ${error.message}`, 'error');
+        console.error('Error generating Abbondanza proposal:', error);
+        showToast('Error generating proposal: ' + error.message, 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+        submitBtn.textContent = originalText;
       }
     }
-  
-    /* ====== ENHANCED Proposal Library with Archive ====== */
-    function openProposalViewer() {
-      const existingOverlay = document.querySelector('.modal-overlay');
-      if (existingOverlay) existingOverlay.remove();
-  
-      window.allProposals = null;
-      window.currentProposalFilter = 'active';
-  
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const modal = document.createElement('div');
-      modal.className = 'pdf-modal';
-  
-      modal.innerHTML = `
-        <div class="pdf-header">
-          <h3>Proposal Library</h3>
-          <button class="close-btn" onclick="closePDFViewer()">Close</button>
-        </div>
-        <div class="pdf-viewer" style="padding: 20px;">
-          <div class="filter-container">
-            <select id="proposalArchiveFilter" class="archive-filter" onchange="changeProposalArchiveFilter()">
-              <option value="active">Active Proposals</option>
-              <option value="archived">Archived Proposals</option>
-              <option value="all">All Proposals</option>
-            </select>
-            <button class="btn refresh-btn" onclick="refreshProposals()">🔄 Refresh</button>
-            <div style="position: relative; flex: 1;">
-              <input type="text" id="proposalSearch" placeholder="Search by company name..."
-                style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;
-                       border-radius: 10px; transition: all 0.3s ease;"
-                onkeyup="filterProposals()"
-                onfocus="this.style.borderColor='#1e3a8a'"
-                onblur="this.style.borderColor='#e2e8f0'">
-              <button id="clearSearchBtn"
-                onclick="document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"
-                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;
-                       cursor: pointer; display: none; transition: all 0.3s ease; font-size: 18px; color: #4a5568;">×</button>
-            </div>
-          </div>
-          <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
-            <div style="text-align: center; padding: 40px;">
-              <div class="loading-spinner"></div>
-              <p style="margin-top: 20px; color: #718096;">Loading proposals from Google Drive...</p>
-            </div>
-          </div>
-        </div>`;
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      setTimeout(() => { loadProposalsFromDrive(); }, 100);
-    }
-  
-    // NEW: Archive filter functions
-    window.changeProposalArchiveFilter = function() {
-      const filter = document.getElementById('proposalArchiveFilter');
-      window.currentProposalFilter = filter.value;
-      filterProposals();
-    };
-  
-    window.refreshProposals = function() {
-      window.allProposals = null;
-      loadProposalsFromDrive();
-    };
-  
-    // NEW: Archive toggle function
-    window.toggleProposalArchive = async function(proposalId, currentStatus, event) {
-      const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
-      const proposal = window.allProposals ? window.allProposals.find(p => p.id === proposalId) : null;
-      const companyName = proposal ? proposal.name : '';
-      const button = event.target;
-      const originalText = button.innerHTML;
-      button.disabled = true;
-      button.innerHTML = '<span class="loading-spinner"></span>';
-      try {
-        const callbackName = 'archiveCallback_' + Date.now();
-        const promise = new Promise((resolve, reject) => {
-          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
-          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 10000);
-        });
-  
-        const script = document.createElement('script');
-        const params = new URLSearchParams({
-          action: 'updateArchiveStatus',
-          fileId: proposalId,
-          status: newStatus,
-          companyName: companyName,
-          callback: callbackName
-        });
-        script.src = `${PROPOSALS_API_URL}?${params.toString()}`;
-        script.onerror = () => {
-          delete window[callbackName];
-          throw new Error('Failed to connect to archive service');
-        };
-  
-        document.body.appendChild(script);
-        const result = await promise;
-        document.body.removeChild(script);
-  
-        if (result.status === 'success') {
-          if (window.allProposals && proposal) {
-            proposal.status = newStatus;
-            proposal.archivedDate = result.data.archivedDate;
-          }
-          filterProposals();
-          showPopup(`Proposal ${newStatus === 'archived' ? 'archived' : 'restored'} successfully!`, 'success');
-        } else {
-          throw new Error(result.message || 'Failed to update archive status');
-        }
-      } catch (error) {
-        console.error('Archive toggle error:', error);
-        showPopup(`Archive update failed: ${error.message}`, 'error');
-      } finally {
-        button.disabled = false;
-        button.innerHTML = originalText;
-      }
-    };
-  
-    async function loadProposalsFromDrive() {
-      try {
-        const callbackName = 'proposalsCallback_' + Date.now();
-        const promise = new Promise((resolve, reject) => {
-          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
-          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 20000);
-        });
-  
-        const script = document.createElement('script');
-        script.src = `${PROPOSALS_API_URL}?action=getProposals&callback=${callbackName}`;
-        script.onerror = () => {
-          delete window[callbackName];
-          const proposalsList = document.getElementById('proposalsList');
-          if (proposalsList) {
-            proposalsList.innerHTML = `
-              <div style="text-align: center; padding: 40px;">
-                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
-                <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
-              </div>`;
-          }
-        };
-  
-        document.body.appendChild(script);
-        const data = await promise;
-        document.body.removeChild(script);
-  
-        if (data.status === 'success') {
-          const sorted = (data.proposals || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
-          sorted.forEach(proposal => {
-            if (!proposal.status) {
-              proposal.status = 'active';
-            }
-          });
-          window.allProposals = sorted;
-          filterProposals();
-        } else {
-          throw new Error(data.message || 'Failed to load proposals');
-        }
-      } catch (error) {
-        const proposalsList = document.getElementById('proposalsList');
-        if (proposalsList) {
-          proposalsList.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-              <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load proposals.</p>
-              <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
-              <button class="btn btn-primary" onclick="loadProposalsFromDrive()">Try Again</button>
-            </div>`;
-        }
-      }
-    }
-  
-    function displayProposals(proposals) {
-      const list = document.getElementById('proposalsList');
-      if (!list) return;
-      if (proposals.length === 0) {
-        const filterText = window.currentProposalFilter === 'active' ? 'active' : 
-                          window.currentProposalFilter === 'archived' ? 'archived' : '';
-        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #718096;"><p>No ${filterText} proposals found.</p></div>`;
+
+    async function submitQuantumProposal() {
+      const lead = getCurrentLead();
+      if (!lead) {
+        showToast('Lead data not found. Please close and try again.', 'error');
         return;
       }
-      list.innerHTML = proposals.map(p => {
-        const isArchived = p.status === 'archived';
-        const archiveButtonText = isArchived ? 'Restore' : 'Archive';
-        const itemClass = isArchived ? 'archived-item' : '';
-        const archivedBadge = isArchived ? '<span class="archived-badge">Archived</span>' : '';
-        return `
-          <div class="proposal-item ${itemClass}" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
-               onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
-               onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-              <div style="flex: 1; min-width: 200px;">
-                <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${p.name}${archivedBadge}</h4>
-                <p style="margin: 0; color: #718096; font-size: 14px;">
-                  Modified: ${p.modifiedTime ? new Date(p.modifiedTime).toLocaleDateString() : 'Unknown'}
-                  ${isArchived && p.archivedDate ? `<br>Archived: ${new Date(p.archivedDate).toLocaleDateString()}` : ''}
-                </p>
-              </div>
-              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="viewProposalPDF('${p.id}', '${p.name}')" style="padding: 10px 20px; font-size: 14px; min-width: 80px;">View</button>
-                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${p.id}', '_blank')" style="padding: 10px 20px; font-size: 14px; min-width: 80px;">Download</button>
-                <button class="btn archive-btn" onclick="toggleProposalArchive('${p.id}', '${p.status || 'active'}', event)">${archiveButtonText}</button>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-  
-    function filterProposals() {
-      const input = document.getElementById('proposalSearch');
-      const term = input ? input.value.toLowerCase() : '';
-      const clearBtn = document.getElementById('clearSearchBtn');
-      if (clearBtn) clearBtn.style.display = term.length > 0 ? 'block' : 'none';
-      if (!window.allProposals || window.allProposals.length === 0) return;
-  
-      // Filter by archive status first
-      let filteredByStatus = window.allProposals;
-      if (window.currentProposalFilter === 'active') {
-        filteredByStatus = window.allProposals.filter(p => p.status !== 'archived');
-      } else if (window.currentProposalFilter === 'archived') {
-        filteredByStatus = window.allProposals.filter(p => p.status === 'archived');
-      }
-  
-      // Then filter by search term
-      let finalFiltered = filteredByStatus;
-      if (term) {
-        finalFiltered = filteredByStatus.filter(p => p.name.toLowerCase().includes(term));
-      }
-  
-      displayProposals(finalFiltered);
-    }
-  
-    function viewProposalPDF(fileId, fileName) {
-      closePDFViewer();
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const pdfModal = document.createElement('div');
-      pdfModal.className = 'pdf-modal';
-      const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-  
-      pdfModal.innerHTML = `
-        <div class="pdf-header">
-          <h3>${fileName}</h3>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openProposalViewer, 200);" style="padding: 10px 20px;">Back to Library</button>
-            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding: 10px 20px;">Download</button>
-          </div>
-        </div>
-        <div class="pdf-viewer"><iframe src="${viewerUrl}" allowfullscreen></iframe></div>`;
-      overlay.appendChild(pdfModal);
-      document.body.appendChild(overlay);
-    }
-  
-    /* ====== Service Agreement ====== */
-    function generateServiceAgreement() {
-      const serviceModal = document.getElementById('serviceAgreementModal');
-      if (serviceModal) {
-        serviceModal.style.display = 'block';
-        updateServiceAgreementPricing();
-      }
-    }
-  
-    function updateServiceAgreementPricing() {
-      const fridgeCount = parseInt(document.getElementById('serviceFridgeCount').value) || 1;
-      const basePrice   = parseInt(document.getElementById('serviceMonthlyFee').value) || 795;
-      const subsidyPercentage = parseInt(document.getElementById('subsidyPercentage').value) || 0;
-  
-      let monthlyTotal = basePrice;
-      if (fridgeCount > 1) {
-        const additionalUnits = fridgeCount - 1;
-        const discountedPrice = basePrice - 100;
-        monthlyTotal = basePrice + (discountedPrice * additionalUnits);
-      }
-  
-      const estimatedMonthlyPurchases = fridgeCount * 300;
-      const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPercentage) / 100;
-  
-      let txt = `Total Kiosks: ${fridgeCount}<br>`;
-      txt += `Monthly Service Fee: ${monthlyTotal.toFixed(2)}<br>`;
-      txt += `Subsidy: ${subsidyPercentage}% discount<br>`;
-      txt += `Estimated Monthly Subsidy: ${monthlySubsidyAmount.toFixed(2)}`;
-      document.getElementById('servicePricingSummary').innerHTML = txt;
-    }
-  
-    function calculateFirstBillDate() {
-      const installDate = document.getElementById('installDate').value;
-      const freeMonths = parseInt(document.getElementById('freeMonths').value) || 0;
-      const firstBillDateInput = document.getElementById('firstBillDate');
-  
-      if (installDate) {
-        const install = new Date(installDate);
-        const firstBill = new Date(install);
-        firstBill.setMonth(firstBill.getMonth() + 1 + freeMonths);
-        const year = firstBill.getFullYear();
-        const month = String(firstBill.getMonth() + 1).padStart(2, '0');
-        const day = String(firstBill.getDate()).padStart(2, '0');
-        firstBillDateInput.value = `${year}-${month}-${day}`;
-      } else {
-        firstBillDateInput.value = '';
-      }
-    }
-  
-    async function generateServiceAgreementPDF() {
-      const submitBtn = document.getElementById('generateServiceBtn');
-      const originalText = submitBtn.innerHTML;
-      if (submitBtn.disabled) return;
-  
+
+      // Get form values
+      const customerType = document.getElementById('quantumCustomerType').value;
+      const fridgeCount = document.getElementById('quantumFridgeCount').value;
+      const scannerCount = document.getElementById('quantumScannerCount').value;
+      const rfidRolls = document.getElementById('quantumRfidRolls').value;
+
+      // Build form data for Quantum system
+      const formData = {
+        companyName: lead.companyName,
+        contactName: lead.contactName || '',
+        customerAddress: lead.customerAddress,
+        customerZip: lead.customerZip,
+        preparedBy: lead.repName,
+        preparedByPhone: lead.repPhone,
+        preparedByEmail: lead.repEmail,
+        customerType: customerType,
+        fridgeCount: fridgeCount,
+        scannerCount: scannerCount,
+        rfidRolls: rfidRolls,
+        vinylWrap: 'No', // Default values for fields not in lead
+        goldSupport: 'No'
+      };
+
+      // Show loading state
+      const submitBtn = document.querySelector('#quantumProposalModal button[onclick="submitQuantumProposal()"]');
+      const originalText = submitBtn.textContent;
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
-  
+      submitBtn.textContent = 'Generating...';
+
       try {
-        const formData = {
-          companyName: document.getElementById('serviceCompanyName').value,
-          contactName: document.getElementById('serviceContactName').value || '',
-          street: document.getElementById('serviceStreet').value,
-          city: document.getElementById('serviceCity').value,
-          state: document.getElementById('serviceState').value,
-          zip: document.getElementById('serviceZip').value,
-          preparedBy: document.getElementById('servicePreparedBy').value,
-          preparedByPhone: document.getElementById('servicePreparedByPhone').value,
-          preparedByEmail: document.getElementById('servicePreparedByEmail').value,
-          fridgeCount: document.getElementById('serviceFridgeCount').value,
-          monthlyFee: document.getElementById('serviceMonthlyFee').value,
-          subsidyPercentage: document.getElementById('subsidyPercentage').value,
-          freeMonths: document.getElementById('freeMonths').value,
-          installDate: document.getElementById('installDate').value,
-          firstBillDate: document.getElementById('firstBillDate').value
-        };
-  
-        const required = ['companyName','street','city','state','zip','preparedBy','preparedByPhone','preparedByEmail'];
-        for (const f of required) {
-          if (!formData[f]) {
-            const name = f.replace(/([A-Z])/g, ' $1').toLowerCase();
-            throw new Error(`Please fill in the ${name} field.`);
-          }
-        }
-  
-        const fridgeCount = parseInt(formData.fridgeCount) || 1;
-        const basePrice   = parseInt(formData.monthlyFee) || 795;
-        const subsidyPct  = parseInt(formData.subsidyPercentage) || 0;
-  
-        let monthlyTotal = basePrice;
-        if (fridgeCount > 1) {
-          const discountedPrice = basePrice - 100;
-          monthlyTotal = basePrice + (discountedPrice * (fridgeCount - 1));
-        }
-  
-        const estimatedMonthlyPurchases = fridgeCount * 300;
-        const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPct) / 100;
-  
-        const params = new URLSearchParams({
-          type: 'serviceAgreement',
-          customer: formData.companyName,
-          street: formData.street,
-          city: formData.city,
-          state: formData.state,
-          zip: formData.zip,
-          subsidyPercentage: formData.subsidyPercentage,
-          serviceFee: formData.monthlyFee,
-          installDate: formData.installDate,
-          totalKiosks: formData.fridgeCount,
-          firstBillDate: formData.firstBillDate,
-          freeMonths: formData.freeMonths,
-          preparedBy: formData.preparedBy,
-          preparedByPhone: formData.preparedByPhone,
-          preparedByEmail: formData.preparedByEmail,
-          contactName: formData.contactName,
-          monthlyTotal: String(monthlyTotal),
-          monthlySubsidyAmount: String(monthlySubsidyAmount),
-          estimatedMonthlyPurchases: String(estimatedMonthlyPurchases)
+        // Use your existing Quantum Web App URL
+        const QUANTUM_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
+        
+        const params = new URLSearchParams();
+        Object.keys(formData).forEach(key => {
+          if (formData[key]) params.append(key, formData[key]);
         });
-  
-        const url = `${SERVICE_AGREEMENT_URL}?${params.toString()}`;
-        window.open(url, '_blank');
-  
-        closeModal('serviceAgreementModal');
-        showPopup('Service Agreement Generation Started!', 'success');
+
+        // Call Quantum API
+        const response = await fetch(`${QUANTUM_URL}?${params.toString()}`);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          closeProposalModal('quantumProposalModal');
+          
+          // Show success message with PDF link
+          showToast(`Quantum proposal generated successfully for ${lead.companyName}`, 'success');
+          
+          // Open PDF in new tab
+          if (result.pdfUrl) {
+            window.open(result.pdfUrl, '_blank');
+          }
+          
+        } else {
+          throw new Error(result.message || 'Failed to generate proposal');
+        }
+        
       } catch (error) {
-        showPopup(`Error: ${error.message}`, 'error');
+        console.error('Error generating Quantum proposal:', error);
+        showToast('Error generating proposal: ' + error.message, 'error');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+        submitBtn.textContent = originalText;
       }
     }
-  
-    /* ====== ENHANCED Service Agreement Library with Archive ====== */
-    function openServiceAgreementViewer() {
-      const existingOverlay = document.querySelector('.modal-overlay');
-      if (existingOverlay) existingOverlay.remove();
-  
-      window.allServiceAgreements = null;
-      window.currentServiceFilter = 'active';
-  
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const modal = document.createElement('div');
-      modal.className = 'pdf-modal';
-  
-      modal.innerHTML = `
-        <div class="pdf-header">
-          <h3>Service Agreement Library</h3>
-          <button class="close-btn" onclick="closePDFViewer()">Close</button>
-        </div>
-        <div class="pdf-viewer" style="padding: 20px;">
-          <div class="filter-container">
-            <select id="serviceArchiveFilter" class="archive-filter" onchange="changeServiceArchiveFilter()">
-              <option value="active">Active Agreements</option>
-              <option value="archived">Archived Agreements</option>
-              <option value="all">All Agreements</option>
-            </select>
-            <button class="btn refresh-btn" onclick="refreshServiceAgreements()">🔄 Refresh</button>
-            <div style="position: relative; flex: 1;">
-              <input type="text" id="serviceAgreementSearch" placeholder="Search by company name..."
-                style="width: 100%; padding: 15px 45px 15px 15px; font-size: 16px; border: 2px solid #e2e8f0;
-                       border-radius: 10px; transition: all 0.3s ease;"
-                onkeyup="filterServiceAgreements()"
-                onfocus="this.style.borderColor='#1e3a8a'"
-                onblur="this.style.borderColor='#e2e8f0'">
-              <button id="clearServiceSearchBtn"
-                onclick="document.getElementById('serviceAgreementSearch').value=''; this.style.display='none'; filterServiceAgreements();"
-                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-                       background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;
-                       cursor: pointer; display: none; transition: all 0.3s ease; font-size: 18px; color: #4a5568;">×</button>
-            </div>
-          </div>
-  
-          <div id="serviceAgreementsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
-            <div style="text-align: center; padding: 40px;">
-              <div class="loading-spinner"></div>
-              <p style="margin-top: 20px; color: #718096;">Loading service agreements from Google Drive...</p>
-            </div>
-          </div>
-        </div>`;
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-      setTimeout(() => { loadServiceAgreementsFromDrive(); }, 100);
+
+    // ============ EXCEL IMPORT/EXPORT FUNCTIONS ============
+
+    // Excel Template Download
+    function downloadLeadTemplate() {
+      // Define the template structure with all fields including new ones (NO SAMPLE LEADS)
+      const templateData = [
+        // Header row only
+        [
+          'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+          'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer Zip',
+          'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
+        ]
+      ];
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+      
+      // Set column widths for better readability
+      const colWidths = [
+        {wch: 18}, // Business Unit
+        {wch: 25}, // Company Name
+        {wch: 18}, // Contact Name
+        {wch: 15}, // Phone Number
+        {wch: 25}, // Email Address
+        {wch: 18}, // Rep Name
+        {wch: 15}, // Rep Phone
+        {wch: 25}, // Rep Email
+        {wch: 20}, // Customer Address
+        {wch: 12}, // Customer Zip
+        {wch: 12}, // Status
+        {wch: 15}, // Follow Up Date
+        {wch: 15}, // Appointment Made
+        {wch: 15}, // Appointment Date
+        {wch: 30}  // Notes
+      ];
+      ws['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Lead Template");
+      
+      // Generate filename with current date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Lead_Import_Template_${date}.xlsx`;
+      
+      // Download the file
+      XLSX.writeFile(wb, filename);
+      
+      showToast('Excel template downloaded successfully. Fill it out and use "Import Excel File" to upload your leads.', 'success');
     }
-  
-    // NEW: Service Agreement Archive Functions
-    window.changeServiceArchiveFilter = function() {
-      const filter = document.getElementById('serviceArchiveFilter');
-      window.currentServiceFilter = filter.value;
-      filterServiceAgreements();
-    };
-  
-    window.refreshServiceAgreements = function() {
-      window.allServiceAgreements = null;
-      loadServiceAgreementsFromDrive();
-    };
-  
-    window.toggleServiceAgreementArchive = async function(agreementId, currentStatus, event) {
-      const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
-      const agreement = window.allServiceAgreements ? window.allServiceAgreements.find(a => a.id === agreementId) : null;
-      const companyName = agreement ? agreement.name : '';
-      const button = event.target;
-      const originalText = button.innerHTML;
-      button.disabled = true;
-      button.innerHTML = '...';
-      try {
-        const callbackName = 'serviceArchiveCallback_' + Date.now();
-        const promise = new Promise((resolve, reject) => {
-          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
-          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 10000);
-        });
-  
-        const script = document.createElement('script');
-        const params = new URLSearchParams({
-          action: 'updateArchiveStatus',
-          fileId: agreementId,
-          status: newStatus,
-          companyName: companyName,
-          callback: callbackName
-        });
-        script.src = `${SERVICE_AGREEMENTS_API_URL}?${params.toString()}`;
-        script.onerror = () => {
-          delete window[callbackName];
-          throw new Error('Failed to connect to archive service');
-        };
-  
-        document.body.appendChild(script);
-        const result = await promise;
-        document.body.removeChild(script);
-  
-        if (result.status === 'success') {
-          if (window.allServiceAgreements && agreement) {
-            agreement.status = newStatus;
-            agreement.archivedDate = result.data.archivedDate;
-          }
-          filterServiceAgreements();
-          showPopup(`Service agreement ${newStatus === 'archived' ? 'archived' : 'restored'} successfully!`, 'success');
-        } else {
-          throw new Error(result.message || 'Failed to update archive status');
-        }
-      } catch (error) {
-        console.error('Service archive error:', error);
-        showPopup(`Archive update failed: ${error.message}`, 'error');
-      } finally {
-        button.disabled = false;
-        button.innerHTML = originalText;
-      }
-    };
-  
-    async function loadServiceAgreementsFromDrive() {
-      try {
-        const callbackName = 'serviceAgreementsCallback_' + Date.now();
-        const promise = new Promise((resolve, reject) => {
-          window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
-          setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 20000);
-        });
-  
-        const script = document.createElement('script');
-        script.src = `${SERVICE_AGREEMENTS_API_URL}?action=getServiceAgreements&callback=${callbackName}`;
-        script.onerror = () => {
-          delete window[callbackName];
-          const list = document.getElementById('serviceAgreementsList');
-          if (list) {
-            list.innerHTML = `
-              <div style="text-align: center; padding: 40px;">
-                <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
-                <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
-              </div>`;
-          }
-        };
-  
-        document.body.appendChild(script);
-        const data = await promise;
-        document.body.removeChild(script);
-  
-        if (data.status === 'success') {
-          const sorted = (data.serviceAgreements || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
-          sorted.forEach(agreement => {
-            if (!agreement.status) {
-              agreement.status = 'active';
-            }
-          });
-          window.allServiceAgreements = sorted;
-          filterServiceAgreements();
-        } else {
-          throw new Error(data.message || 'Failed to load service agreements');
-        }
-      } catch (error) {
-        const list = document.getElementById('serviceAgreementsList');
-        if (list) {
-          list.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-              <p style="color: #e53e3e; margin-bottom: 20px; font-size: 18px;">Unable to load service agreements.</p>
-              <p style="color: #718096; margin-bottom: 20px;">Error: ${error.message}</p>
-              <button class="btn btn-primary" onclick="loadServiceAgreementsFromDrive()">Try Again</button>
-            </div>`;
-        }
-      }
+
+    // Import Modal Management
+    function openImportModal() {
+      document.getElementById('importModal').style.display = 'block';
+      // Reset the modal state
+      document.getElementById('excelFileInput').value = '';
+      document.getElementById('filePreview').style.display = 'none';
+      document.getElementById('importBtn').disabled = true;
     }
-  
-    function displayServiceAgreements(agreements) {
-      const list = document.getElementById('serviceAgreementsList');
-      if (!list) return;
-      if (agreements.length === 0) {
-        const filterText = window.currentServiceFilter === 'active' ? 'active' : 
-                          window.currentServiceFilter === 'archived' ? 'archived' : '';
-        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #718096;"><p>No ${filterText} service agreements found.</p></div>`;
+
+    function closeImportModal() {
+      document.getElementById('importModal').style.display = 'none';
+      // Clear any stored file data
+      window.importFileData = null;
+    }
+
+    // File Selection and Preview
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        document.getElementById('filePreview').style.display = 'none';
+        document.getElementById('importBtn').disabled = true;
         return;
       }
-      list.innerHTML = agreements.map(a => {
-        const isArchived = a.status === 'archived';
-        const archiveButtonText = isArchived ? 'Restore' : 'Archive';
-        const itemClass = isArchived ? 'archived-item' : '';
-        const archivedBadge = isArchived ? '<span class="archived-badge">Archived</span>' : '';
-        return `
-          <div class="agreement-item ${itemClass}" style="background: white; padding: 25px; border-radius: 15px; border: 2px solid #e2e8f0; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05);"
-               onmouseover="this.style.borderColor='#1e3a8a'; this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
-               onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)'">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-              <div style="flex: 1; min-width: 200px;">
-                <h4 style="margin: 0 0 8px 0; color: #2d3748; font-size: 18px;">${a.name}${archivedBadge}</h4>
-                <p style="margin: 0; color: #718096; font-size: 14px;">
-                  Modified: ${a.modifiedTime ? new Date(a.modifiedTime).toLocaleDateString() : 'Unknown'}
-                  ${isArchived && a.archivedDate ? `<br>Archived: ${new Date(a.archivedDate).toLocaleDateString()}` : ''}
-                </p>
-              </div>
-              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="viewServiceAgreementPDF('${a.id}', '${a.name}')" style="padding: 12px 24px; font-size: 14px; min-width: 90px;">View</button>
-                <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${a.id}', '_blank')" style="padding: 12px 24px; font-size: 14px; min-width: 100px;">Download</button>
-                <button class="btn archive-btn" onclick="toggleServiceAgreementArchive('${a.id}', '${a.status || 'active'}', event)" style="padding: 12px 24px; font-size: 14px; min-width: 90px;">${archiveButtonText}</button>
-              </div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-  
-    function filterServiceAgreements() {
-      const input = document.getElementById('serviceAgreementSearch');
-      const term = input ? input.value.toLowerCase() : '';
-      const clearBtn = document.getElementById('clearServiceSearchBtn');
-      if (clearBtn) clearBtn.style.display = term.length > 0 ? 'block' : 'none';
-      if (!window.allServiceAgreements || window.allServiceAgreements.length === 0) return;
-  
-      // Filter by archive status first
-      let filteredByStatus = window.allServiceAgreements;
-      if (window.currentServiceFilter === 'active') {
-        filteredByStatus = window.allServiceAgreements.filter(a => a.status !== 'archived');
-      } else if (window.currentServiceFilter === 'archived') {
-        filteredByStatus = window.allServiceAgreements.filter(a => a.status === 'archived');
+
+      // Check file type
+      const allowedTypes = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel' // .xls
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Please select a valid Excel file (.xlsx or .xls)', 'error');
+        event.target.value = '';
+        return;
       }
-  
-      // Then filter by search term
-      let finalFiltered = filteredByStatus;
-      if (term) {
-        finalFiltered = filteredByStatus.filter(a => a.name.toLowerCase().includes(term));
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          
+          // Store the data for import
+          window.importFileData = jsonData;
+          
+          // Show preview
+          showFilePreview(jsonData);
+          
+        } catch (error) {
+          console.error('Error reading Excel file:', error);
+          showToast('Error reading Excel file. Please make sure it\'s a valid Excel file.', 'error');
+          event.target.value = '';
+        }
+      };
+      
+      reader.readAsArrayBuffer(file);
+    }
+
+    function showFilePreview(data) {
+      if (!data || data.length < 2) {
+        showToast('Excel file appears to be empty or invalid.', 'error');
+        return;
       }
-  
-      displayServiceAgreements(finalFiltered);
+
+      const headers = data[0];
+      const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
+      
+      // Create preview HTML
+      let previewHTML = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+      
+      // Headers
+      previewHTML += '<tr style="background:#1e3a8a;color:white;">';
+      headers.forEach(header => {
+        previewHTML += `<th style="border:1px solid #ccc;padding:8px;text-align:left;">${header || ''}</th>`;
+      });
+      previewHTML += '</tr>';
+      
+      // Show first 5 rows as preview
+      const previewRows = rows.slice(0, 5);
+      previewRows.forEach(row => {
+        previewHTML += '<tr>';
+        headers.forEach((_, index) => {
+          const cellValue = row[index] || '';
+          previewHTML += `<td style="border:1px solid #ccc;padding:8px;">${String(cellValue).substring(0, 30)}${String(cellValue).length > 30 ? '...' : ''}</td>`;
+        });
+        previewHTML += '</tr>';
+      });
+      
+      previewHTML += '</table>';
+      
+      document.getElementById('previewContent').innerHTML = previewHTML;
+      document.getElementById('previewSummary').textContent = 
+        `Found ${rows.length} lead${rows.length !== 1 ? 's' : ''} to import` + 
+        (rows.length > 5 ? ` (showing first 5 rows)` : '');
+      
+      document.getElementById('filePreview').style.display = 'block';
+      document.getElementById('importBtn').disabled = false;
     }
-  
-    function viewServiceAgreementPDF(fileId, fileName) {
-      closePDFViewer();
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
-  
-      const pdfModal = document.createElement('div');
-      pdfModal.className = 'pdf-modal';
-      const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-  
-      pdfModal.innerHTML = `
-        <div class="pdf-header">
-          <h3>${fileName}</h3>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);" style="padding: 10px 20px;">Back to Library</button>
-            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding: 10px 20px;">Download</button>
-          </div>
-        </div>
-        <div class="pdf-viewer"><iframe src="${viewerUrl}" allowfullscreen></iframe></div>`;
-      overlay.appendChild(pdfModal);
-      document.body.appendChild(overlay);
-    }
-  
-    /* ====== Backdrop close for all overlays (ignore auth overlay) ====== */
-    window.addEventListener('click', function (event) {
-      if (event.target.classList.contains('modal-overlay') && event.target.id !== 'loginOverlay') {
-        event.target.remove();
+
+    // Import Function
+    async function importLeads() {
+      if (!window.importFileData) {
+        showToast('No file data found. Please select a file first.', 'error');
+        return;
       }
-    });
-  </script>
-  
-  <!-- Reusable Username + Logout pill (init call only) -->
-  <script>
-    if (window.UserBar && typeof UserBar.init === 'function') {
-      UserBar.init({ redirectOnLogout: 'index.html', hideForGuests: true });
+
+      const importBtn = document.getElementById('importBtn');
+      const originalText = importBtn.textContent;
+      importBtn.disabled = true;
+      importBtn.textContent = 'Importing...';
+
+      try {
+        const data = window.importFileData;
+        const headers = data[0];
+        const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
+
+        // Map headers to expected field names
+        const fieldMapping = {
+          'Business Unit': 'businessUnit',
+          'Company Name': 'companyName',
+          'Contact Name': 'contactName',
+          'Phone Number': 'phoneNumber',
+          'Email Address': 'emailAddress',
+          'Rep Name': 'repName',
+          'Rep Phone': 'repPhone',
+          'Rep Email': 'repEmail',
+          'Customer Address': 'customerAddress',
+          'Customer Zip': 'customerZip',
+          'Status': 'status',
+          'Follow Up Date': 'followUp',
+          'Appointment Made': 'appointmentMade',
+          'Appointment Date': 'appointmentDate',
+          'Notes': 'notes'
+        };
+
+        const leads = [];
+        const errors = [];
+
+        rows.forEach((row, index) => {
+          const lead = {};
+          let hasRequiredFields = true;
+          const requiredFields = ['businessUnit', 'companyName', 'repName', 'repPhone', 'repEmail'];
+
+          // Map each cell to the corresponding field
+          headers.forEach((header, cellIndex) => {
+            const fieldName = fieldMapping[header];
+            if (fieldName && row[cellIndex] !== undefined && row[cellIndex] !== null) {
+              lead[fieldName] = String(row[cellIndex]).trim();
+            }
+          });
+
+          // Set defaults
+          if (!lead.status) lead.status = 'Active';
+          if (!lead.appointmentMade) lead.appointmentMade = 'No';
+
+          // Validate required fields
+          requiredFields.forEach(field => {
+            if (!lead[field]) {
+              hasRequiredFields = false;
+              errors.push(`Row ${index + 2}: Missing ${field}`);
+            }
+          });
+
+          if (hasRequiredFields) {
+            leads.push(lead);
+          }
+        });
+
+        if (errors.length > 0) {
+          console.warn('Import validation errors:', errors);
+          const errorMsg = `Found ${errors.length} error${errors.length !== 1 ? 's' : ''}:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...(and more)' : ''}`;
+          showToast(errorMsg, 'error');
+          return;
+        }
+
+        if (leads.length === 0) {
+          showToast('No valid leads found in the Excel file.', 'error');
+          return;
+        }
+
+        // Import leads one by one
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < leads.length; i++) {
+          try {
+            const response = await fetch(WEB_APP_URL + '?action=addLead', {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+              body: JSON.stringify({ action: 'addLead', lead: leads[i] })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+              successCount++;
+            } else {
+              failCount++;
+              console.error(`Failed to import lead ${i + 1}:`, result.message);
+            }
+          } catch (error) {
+            failCount++;
+            console.error(`Error importing lead ${i + 1}:`, error);
+          }
+        }
+
+        // Close modal and show results
+        closeImportModal();
+        
+        if (successCount > 0) {
+          showToast(`Successfully imported ${successCount} lead${successCount !== 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}`, 'success');
+          // Reload leads to show imported data
+          await loadLeads();
+        } else {
+          showToast('Failed to import any leads. Please check the file format and try again.', 'error');
+        }
+
+      } catch (error) {
+        console.error('Import error:', error);
+        showToast('Error during import: ' + error.message, 'error');
+      } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = originalText;
+      }
     }
+
+    // Export current leads to Excel
+    function exportLeadsToExcel() {
+      if (!allLeads || allLeads.length === 0) {
+        showToast('No leads to export. Please add some leads first.', 'error');
+        return;
+      }
+
+      const exportData = [
+        // Headers
+        [
+          'Date Added', 'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+          'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer Zip',
+          'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
+        ]
+      ];
+
+      // Data rows
+      allLeads.forEach(lead => {
+        exportData.push([
+          lead.dateAdded || '',
+          lead.businessUnit || '',
+          lead.companyName || '',
+          lead.contactName || '',
+          lead.phoneNumber || '',
+          lead.emailAddress || '',
+          lead.repName || '',
+          lead.repPhone || '',
+          lead.repEmail || '',
+          lead.customerAddress || '',
+          lead.customerZip || '',
+          lead.status || '',
+          lead.followUp || '',
+          lead.appointmentMade || '',
+          lead.appointmentDate || '',
+          lead.notes || ''
+        ]);
+      });
+
+      // Create and download Excel file
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(exportData);
+      
+      // Set column widths
+      ws['!cols'] = [
+        {wch: 12}, {wch: 18}, {wch: 25}, {wch: 18}, {wch: 15}, {wch: 25},
+        {wch: 18}, {wch: 15}, {wch: 25}, {wch: 20}, {wch: 12},
+        {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}
+      ];
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Leads Export");
+      
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Leads_Export_${date}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      
+      showToast(`Exported ${allLeads.length} leads to ${filename}`, 'success');
+    }
+
+    function showToast(msg, type='success'){
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast ' + type;
+      el.style.position = 'fixed';
+      el.style.bottom = '20px';
+      el.style.right  = '20px';
+      el.style.background = type === 'success'
+        ? 'linear-gradient(135deg,#48bb78 0%,#38a169 100%)'
+        : 'linear-gradient(135deg,#e53e3e 0%,#c53030 100%)';
+      el.style.color = '#fff';
+      el.style.padding = '16px 24px';
+      el.style.borderRadius = '8px';
+      el.style.boxShadow = '0 4px 12px rgba(0,0,0,.2)';
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
+    // Global function exports
+    window.openAddLeadModal = openAddLeadModal;
+    window.editLead = editLead;
+    window.archiveLead = archiveLead;
+    window.toggleAppointmentDate = toggleAppointmentDate;
+    window.filterLeads = filterLeads;
+    window.attemptCloseModal = attemptCloseModal;
+    window.goToDashboard = () => { window.location.href = 'index.html'; };
+    
+    // New function exports
+    window.toggleQuantumFields = toggleQuantumFields;
+    window.generateProposal = generateProposal;
+    window.closeProposalModal = closeProposalModal;
+    window.updateAbboPricing = updateAbboPricing;
+    window.updateQuantumPricing = updateQuantumPricing;
+    window.submitAbbondanzaProposal = submitAbbondanzaProposal;
+    window.submitQuantumProposal = submitQuantumProposal;
+    window.downloadLeadTemplate = downloadLeadTemplate;
+    window.openImportModal = openImportModal;
+    window.closeImportModal = closeImportModal;
+    window.handleFileSelect = handleFileSelect;
+    window.importLeads = importLeads;
+    window.exportLeadsToExcel = exportLeadsToExcel;
+    window.openDeleteModal = openDeleteModal;
+    window.closeDeleteModal = closeDeleteModal;
+    window.validateDeleteConfirmation = validateDeleteConfirmation;
+    window.confirmDeleteLead = confirmDeleteLead;
   </script>
 </body>
 </html>
