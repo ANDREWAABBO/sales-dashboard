@@ -1582,22 +1582,43 @@
 
     // Excel Template Download
  function downloadLeadTemplate() {
-      // Define the template structure - NO DATE ADDED COLUMN
-      const templateData = [
-        // Header row only
-        [
-          'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
-          'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer State', 'Customer Zip',
-          'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
-        ]
+      // Headers - WITH LEAD ID
+      const headers = [
+        'Lead ID', 'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+        'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer State', 'Customer Zip',
+        'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
       ];
-
-      // Create workbook
+      
+      // Sample data row
+      const sampleData = [
+        '', // Leave Lead ID blank for new leads
+        'Abbondanza Vending',
+        'Sample Company LLC',
+        'John Smith',
+        '555-123-4567',
+        'john.smith@example.com',
+        'Julie Garley',
+        '806-316-5195',
+        'julie.g@abbondanzavending.com',
+        '123 Main Street',
+        'NH',
+        '03101',
+        'Active',
+        '2025-12-31',
+        'No',
+        '',
+        'Sample notes here'
+      ];
+      
+      const templateData = [headers, sampleData];
+      
+      // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(templateData);
       
-      // Set column widths for better readability
+      // Set column widths
       const colWidths = [
+        {wch: 25}, // Lead ID
         {wch: 18}, // Business Unit
         {wch: 25}, // Company Name
         {wch: 18}, // Contact Name
@@ -1627,6 +1648,11 @@
         ['- Rep Name'],
         ['- Rep Phone'],
         ['- Rep Email'],
+        [''],
+        ['IMPORTANT: Lead ID Column'],
+        ['• Leave the Lead ID column BLANK when adding new leads'],
+        ['• The system will automatically generate a unique Lead ID'],
+        ['• Only fill in Lead ID if you are updating an existing lead'],
         [''],
         ['VALID VALUES - Business Unit:'],
         ['• Abbondanza Vending'],
@@ -1675,7 +1701,6 @@
       
       showToast('Template downloaded successfully', 'success');
     }
-
     // Import Modal Management
     function openImportModal() {
       document.getElementById('importModal').style.display = 'block';
@@ -1777,8 +1802,7 @@
       document.getElementById('importBtn').disabled = false;
     }
 
-    // Import Function
- async function importLeads() {
+   async function importLeads() {
       if (!window.importFileData) {
         showToast('No file data found. Please select a file first.', 'error');
         return;
@@ -1794,12 +1818,9 @@
         const headers = data[0];
         const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
 
-        // DEBUG ALERT 1: Check headers
-        alert('DEBUG 1: Total headers found: ' + headers.length + '\n\nFirst 8 headers:\n' + 
-              headers.slice(0, 8).map((h, i) => i + ': "' + h + '"').join('\n'));
-
-        // Map headers to expected field names
+        // Map headers to expected field names - WITH LEAD ID
         const fieldMapping = {
+          'Lead ID': 'leadId',
           'Business Unit': 'businessUnit',
           'Company Name': 'companyName',
           'Contact Name': 'contactName',
@@ -1833,15 +1854,6 @@
         importValidLeads = [];
         importErrorLeads = [];
 
-        // DEBUG ALERT 2: Check first row data
-        if (rows.length > 0) {
-          const firstRow = rows[0];
-          alert('DEBUG 2: First row has ' + firstRow.length + ' cells\n\n' +
-                'Cell 5 (Rep Name): "' + (firstRow[5] || 'EMPTY') + '"\n' +
-                'Cell 6 (Rep Phone): "' + (firstRow[6] || 'EMPTY') + '"\n' +
-                'Cell 7 (Rep Email): "' + (firstRow[7] || 'EMPTY') + '"');
-        }
-
         rows.forEach((row, index) => {
           const lead = {};
           let rowErrors = [];
@@ -1859,14 +1871,20 @@
             }
           });
 
-          // DEBUG ALERT 3: Check lead object after mapping (only for first row)
-          if (index === 0) {
-            alert('DEBUG 3: After mapping first row:\n\n' +
-                  'businessUnit: "' + (lead.businessUnit || 'MISSING') + '"\n' +
-                  'companyName: "' + (lead.companyName || 'MISSING') + '"\n' +
-                  'repName: "' + (lead.repName || 'MISSING') + '"\n' +
-                  'repPhone: "' + (lead.repPhone || 'MISSING') + '"\n' +
-                  'repEmail: "' + (lead.repEmail || 'MISSING') + '"');
+          // Check if this is an update (has Lead ID) or new lead (no Lead ID)
+          if (lead.leadId) {
+            // This is an existing lead - check if it exists in database
+            const existingLead = allLeads.find(dbLead => dbLead.leadId === lead.leadId);
+            if (existingLead) {
+              lead._isUpdate = true;
+              lead._existingLeadId = existingLead.id; // Store the numeric ID for updating
+            } else {
+              // Lead ID provided but doesn't exist in database
+              rowErrors.push('Lead ID "' + lead.leadId + '" not found in database');
+            }
+          } else {
+            // No Lead ID - this will be a new lead
+            lead._isUpdate = false;
           }
 
           // Set defaults
@@ -1975,46 +1993,6 @@
           }
         });
 
-        // DEBUG ALERT 4: Check validation results
-        alert('DEBUG 4: Validation complete\n\n' +
-              'Valid leads: ' + importValidLeads.length + '\n' +
-              'Error leads: ' + importErrorLeads.length);
-
-
-
-// CHECK FOR DUPLICATES against existing database
-importBtn.textContent = 'Checking for duplicates...';
-
-const duplicateLeads = [];
-
-for (let i = importValidLeads.length - 1; i >= 0; i--) {
-  const importLead = importValidLeads[i];
-  const existingLead = allLeads.find(dbLead => 
-    dbLead.companyName && importLead.companyName &&
-    dbLead.companyName.toLowerCase().trim() === importLead.companyName.toLowerCase().trim() &&
-    ((dbLead.contactName && importLead.contactName && 
-      dbLead.contactName.toLowerCase().trim() === importLead.contactName.toLowerCase().trim()) ||
-     (!dbLead.contactName && !importLead.contactName))
-  );
-  
-  if (existingLead) {
-    importLead._isDuplicate = true;
-    importLead._existingLead = existingLead;
-    importLead._duplicateAction = 'skip';
-    importLead._errors = ['DUPLICATE: This lead already exists in database (Added: ' + formatDate(existingLead.dateAdded) + ')'];
-    
-    duplicateLeads.push(importLead);
-    importValidLeads.splice(i, 1);
-  }
-}
-
-// Add duplicates to error leads
-importErrorLeads = importErrorLeads.concat(duplicateLeads);
-
-
-
-        
-
         // If NO errors, import all immediately
         if (importErrorLeads.length === 0) {
           await performImport(importValidLeads);
@@ -2058,27 +2036,7 @@ function showFixErrorsModal() {
           <div class="error-row-title">Row ${lead._rowNumber}: ${lead.companyName || 'Unknown Company'}</div>
           <span class="error-badge" id="badge-${index}">${lead._errors.length} Error${lead._errors.length !== 1 ? 's' : ''}</span>
         </div>
-        ${lead._isDuplicate ? `
-          <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:15px;border-left:4px solid #f59e0b;">
-            <strong style="color:#92400e;">⚠️ DUPLICATE FOUND</strong>
-            <p style="color:#78350f;font-size:14px;margin:8px 0 12px 0;">This lead matches: <strong>${lead._existingLead.companyName}</strong> (Added: ${formatDate(lead._existingLead.dateAdded)})</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="radio" name="duplicate-${index}" value="skip" checked onchange="setDuplicateAction(${index}, 'skip')">
-                <span style="color:#78350f;font-size:14px;">Skip (Keep Existing)</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="radio" name="duplicate-${index}" value="update" onchange="setDuplicateAction(${index}, 'update')">
-                <span style="color:#78350f;font-size:14px;">Update Existing</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="radio" name="duplicate-${index}" value="new" onchange="setDuplicateAction(${index}, 'new')">
-                <span style="color:#78350f;font-size:14px;">Import as New</span>
-              </label>
-            </div>
-          </div>
-        ` : ''}
-        <div class="error-list" id="error-list-${index}" ${lead._isDuplicate && lead._duplicateAction === 'skip' ? 'style="display:none;"' : ''}>
+        <div class="error-list" id="error-list-${index}">
           ${errorsListHTML}
         </div>
           <div class="error-row-fields">
@@ -2208,6 +2166,10 @@ function showFixErrorsModal() {
       document.getElementById('importModal').style.display = 'none';
       document.getElementById('fixErrorsModal').style.display = 'block';
     }
+
+
+
+    
 
 function cancelErrorFix() {
       showConfirm(
@@ -2409,57 +2371,46 @@ function importValidRowsOnly() {
       for (let i = 0; i < leadsArray.length; i++) {
         try {
           const leadData = Object.assign({}, leadsArray[i]);
-const isDuplicate = leadData._isDuplicate;
-const duplicateAction = leadData._duplicateAction;
-const existingLead = leadData._existingLead;
+          const isUpdate = leadData._isUpdate;
+          const existingLeadId = leadData._existingLeadId;
+          
+          // Clean up internal flags
+          delete leadData._rowNumber;
+          delete leadData._errors;
+          delete leadData._originalData;
+          delete leadData._isUpdate;
+          delete leadData._existingLeadId;
 
-delete leadData._rowNumber;
-delete leadData._errors;
-delete leadData._originalData;
-delete leadData._isDuplicate;
-delete leadData._duplicateAction;
-delete leadData._existingLead;
+          // If this is an update (has Lead ID and exists in database)
+          if (isUpdate && existingLeadId) {
+            const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(existingLeadId), {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+              body: JSON.stringify({ action: 'updateLead', leadId: existingLeadId, updates: leadData })
+            });
 
-// Skip if duplicate action is 'skip'
-if (isDuplicate && duplicateAction === 'skip') {
-  successCount++;
-  continue;
-}
-
-// If updating existing lead, use updateLead action
-if (isDuplicate && duplicateAction === 'update') {
-  const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(safeLeadId(existingLead)), {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-    body: JSON.stringify({ action: 'updateLead', leadId: safeLeadId(existingLead), updates: leadData })
-  });
-
-  const result = await response.json();
-  if (result.status === 'success') {
-    successCount++;
-  } else {
-    failCount++;
-    console.error('Failed to update lead ' + (i + 1) + ':', result.message);
-  }
-  
-  document.getElementById('importProgress').textContent = i + 1;
-  continue;
-}
-
-// Otherwise, import as new lead
-
-          const response = await fetch(WEB_APP_URL + '?action=addLead', {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-            body: JSON.stringify({ action: 'addLead', lead: leadData })
-          });
-
-          const result = await response.json();
-          if (result.status === 'success') {
-            successCount++;
+            const result = await response.json();
+            if (result.status === 'success') {
+              successCount++;
+            } else {
+              failCount++;
+              console.error('Failed to update lead ' + (i + 1) + ':', result.message);
+            }
           } else {
-            failCount++;
-            console.error('Failed to import lead ' + (i + 1) + ':', result.message);
+            // Add as new lead (will auto-generate Lead ID)
+            const response = await fetch(WEB_APP_URL + '?action=addLead', {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+              body: JSON.stringify({ action: 'addLead', lead: leadData })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+              successCount++;
+            } else {
+              failCount++;
+              console.error('Failed to import lead ' + (i + 1) + ':', result.message);
+            }
           }
         } catch (error) {
           failCount++;
@@ -2499,24 +2450,25 @@ if (isDuplicate && duplicateAction === 'update') {
     
 
     // Export current leads to Excel
- function exportLeadsToExcel() {
+function exportLeadsToExcel() {
       if (!allLeads || allLeads.length === 0) {
         showToast('No leads to export. Please add some leads first.', 'error');
         return;
       }
 
-      // Headers - NO DATE ADDED COLUMN
+      // Headers - WITH LEAD ID
       const exportData = [
         [
-          'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+          'Lead ID', 'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
           'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer State', 'Customer Zip',
           'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
         ]
       ];
 
-      // Data rows - NO DATE ADDED COLUMN
+      // Data rows - WITH LEAD ID
       allLeads.forEach(lead => {
         exportData.push([
+          lead.leadId || '',
           lead.businessUnit || '',
           lead.companyName || '',
           lead.contactName || '',
@@ -2542,7 +2494,7 @@ if (isDuplicate && duplicateAction === 'update') {
       
       // Set column widths
       ws['!cols'] = [
-        {wch: 18}, {wch: 25}, {wch: 18}, {wch: 15}, {wch: 25},
+        {wch: 25}, {wch: 18}, {wch: 25}, {wch: 18}, {wch: 15}, {wch: 25},
         {wch: 18}, {wch: 15}, {wch: 25}, {wch: 25}, {wch: 12}, {wch: 12},
         {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}
       ];
@@ -2552,11 +2504,18 @@ if (isDuplicate && duplicateAction === 'update') {
         ['LEAD EXPORT - INSTRUCTIONS FOR RE-IMPORTING'],
         [''],
         ['REQUIRED FIELDS (must have values):'],
+        ['- Lead ID (DO NOT CHANGE - used to match existing leads)'],
         ['- Business Unit'],
         ['- Company Name'],
         ['- Rep Name'],
         ['- Rep Phone'],
         ['- Rep Email'],
+        [''],
+        ['IMPORTANT: Lead ID Column'],
+        ['• The Lead ID column is used to identify existing leads'],
+        ['• When you re-import this file, leads will be UPDATED (not duplicated)'],
+        ['• DO NOT modify or delete the Lead ID column'],
+        ['• Leave Lead ID blank ONLY if adding a brand new lead'],
         [''],
         ['VALID VALUES - Business Unit:'],
         ['• Abbondanza Vending'],
@@ -2587,7 +2546,7 @@ if (isDuplicate && duplicateAction === 'update') {
         ['IMPORTANT: Do NOT add or remove columns. Keep the exact same structure.'],
         [''],
         ['NOTE: After editing, import the file using the "Import Excel File" button.'],
-        ['Any validation errors will be shown and you can fix them before completing the import.']
+        ['Leads with existing Lead IDs will be UPDATED. Rows without Lead ID will be added as NEW leads.']
       ];
       
       const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
@@ -2603,6 +2562,10 @@ if (isDuplicate && duplicateAction === 'update') {
       
       showToast('Exported ' + allLeads.length + ' leads to ' + filename, 'success');
     }
+
+
+
+    
     function showToast(msg, type='success'){
       const el = document.getElementById('toast');
       el.textContent = msg;
