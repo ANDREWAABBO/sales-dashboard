@@ -2262,10 +2262,7 @@ function importValidRowsOnly() {
       );
     }
 
-      await performImport(importValidLeads);
-    }
-
- function completeImportWithFixes() {
+    function completeImportWithFixes() {
       const allLeadsToImport = importValidLeads.concat(importErrorLeads);
       showConfirm(
         'Complete Import?',
