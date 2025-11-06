@@ -1416,7 +1416,7 @@
     // ============ EXCEL IMPORT/EXPORT FUNCTIONS ============
 
     // Excel Template Download
-  function downloadLeadTemplate() {
+ function downloadLeadTemplate() {
       // Define the template structure - NO DATE ADDED COLUMN
       const templateData = [
         // Header row only
@@ -1452,102 +1452,54 @@
       ];
       ws['!cols'] = colWidths;
 
-      // Create Dropdowns reference sheet
-      const dropdownData = [
-        ['Business Units', 'States', 'Status Options', 'Yes/No'],
-        ['Abbondanza Vending', 'AL', 'Active', 'Yes'],
-        ['Quantum Solutions', 'AK', 'Follow Up Later', 'No'],
-        ['', 'AZ', 'Not Qualified', ''],
-        ['', 'AR', 'Dead', ''],
-        ['', 'CA', '', ''],
-        ['', 'CO', '', ''],
-        ['', 'CT', '', ''],
-        ['', 'DE', '', ''],
-        ['', 'FL', '', ''],
-        ['', 'GA', '', ''],
-        ['', 'HI', '', ''],
-        ['', 'ID', '', ''],
-        ['', 'IL', '', ''],
-        ['', 'IN', '', ''],
-        ['', 'IA', '', ''],
-        ['', 'KS', '', ''],
-        ['', 'KY', '', ''],
-        ['', 'LA', '', ''],
-        ['', 'ME', '', ''],
-        ['', 'MD', '', ''],
-        ['', 'MA', '', ''],
-        ['', 'MI', '', ''],
-        ['', 'MN', '', ''],
-        ['', 'MS', '', ''],
-        ['', 'MO', '', ''],
-        ['', 'MT', '', ''],
-        ['', 'NE', '', ''],
-        ['', 'NV', '', ''],
-        ['', 'NH', '', ''],
-        ['', 'NJ', '', ''],
-        ['', 'NM', '', ''],
-        ['', 'NY', '', ''],
-        ['', 'NC', '', ''],
-        ['', 'ND', '', ''],
-        ['', 'OH', '', ''],
-        ['', 'OK', '', ''],
-        ['', 'OR', '', ''],
-        ['', 'PA', '', ''],
-        ['', 'RI', '', ''],
-        ['', 'SC', '', ''],
-        ['', 'SD', '', ''],
-        ['', 'TN', '', ''],
-        ['', 'TX', '', ''],
-        ['', 'UT', '', ''],
-        ['', 'VT', '', ''],
-        ['', 'VA', '', ''],
-        ['', 'WA', '', ''],
-        ['', 'WV', '', ''],
-        ['', 'WI', '', ''],
-        ['', 'WY', '', '']
+      // Create Instructions sheet
+      const instructionsData = [
+        ['LEAD IMPORT TEMPLATE - INSTRUCTIONS'],
+        [''],
+        ['REQUIRED FIELDS (must have values):'],
+        ['- Business Unit'],
+        ['- Company Name'],
+        ['- Rep Name'],
+        ['- Rep Phone'],
+        ['- Rep Email'],
+        [''],
+        ['VALID VALUES - Business Unit:'],
+        ['• Abbondanza Vending'],
+        ['• Quantum Solutions'],
+        [''],
+        ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
+        ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
+        ['MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC,'],
+        ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
+        [''],
+        ['VALID VALUES - Status:'],
+        ['• Active'],
+        ['• Follow Up Later'],
+        ['• Not Qualified'],
+        ['• Dead'],
+        [''],
+        ['VALID VALUES - Appointment Made:'],
+        ['• Yes'],
+        ['• No'],
+        [''],
+        ['FORMAT REQUIREMENTS:'],
+        ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
+        ['- Rep Email: must be valid email format (name@domain.com)'],
+        ['- Email Address: must be valid email format (name@domain.com)'],
+        ['- Follow Up Date: format as MM/DD/YYYY or YYYY-MM-DD'],
+        ['- Appointment Date: format as MM/DD/YYYY or YYYY-MM-DD'],
+        [''],
+        ['NOTE: After filling out the Lead Template sheet, import the file using'],
+        ['the "Import Excel File" button. Any validation errors will be shown'],
+        ['and you can fix them before completing the import.']
       ];
       
-      const wsDropdowns = XLSX.utils.aoa_to_sheet(dropdownData);
-      wsDropdowns['!cols'] = [{wch: 20}, {wch: 10}, {wch: 20}, {wch: 10}];
-
-      // Add data validation references
-      if (!ws['!dataValidation']) ws['!dataValidation'] = [];
-      
-      // Column A (Business Unit) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: false,
-        sqref: 'A2:A1000',
-        formulas: ['Dropdowns!$A$2:$A$3']
-      });
-      
-      // Column J (Customer State) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: true,
-        sqref: 'J2:J1000',
-        formulas: ['Dropdowns!$B$2:$B$52']
-      });
-      
-      // Column L (Status) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: true,
-        sqref: 'L2:L1000',
-        formulas: ['Dropdowns!$C$2:$C$5']
-      });
-      
-      // Column N (Appointment Made) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: true,
-        sqref: 'N2:N1000',
-        formulas: ['Dropdowns!$D$2:$D$3']
-      });
+      const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+      wsInstructions['!cols'] = [{wch: 80}];
 
       // Add sheets to workbook
       XLSX.utils.book_append_sheet(wb, ws, 'Lead Template');
-      XLSX.utils.book_append_sheet(wb, wsDropdowns, 'Dropdowns');
+      XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions');
       
       // Generate filename with current date
       const date = new Date().toISOString().split('T')[0];
@@ -1661,7 +1613,7 @@
     }
 
     // Import Function
-   async function importLeads() {
+  async function importLeads() {
       if (!window.importFileData) {
         showToast('No file data found. Please select a file first.', 'error');
         return;
@@ -1700,6 +1652,7 @@
         // Valid values for validation
         const VALID_BUSINESS_UNITS = ['Abbondanza Vending', 'Quantum Solutions'];
         const VALID_STATUSES = ['Active', 'Follow Up Later', 'Not Qualified', 'Dead'];
+        const VALID_APPOINTMENT = ['Yes', 'No'];
         const VALID_STATES = [
           'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
           'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -1736,38 +1689,91 @@
           // Validate required fields
           requiredFields.forEach(field => {
             if (!lead[field]) {
-              rowErrors.push('Missing ' + field);
+              rowErrors.push('Missing required field: ' + field);
             }
           });
 
-          // Validate Business Unit
-          if (lead.businessUnit && VALID_BUSINESS_UNITS.indexOf(lead.businessUnit) === -1) {
-            rowErrors.push('Invalid Business Unit (must be: ' + VALID_BUSINESS_UNITS.join(' or ') + ')');
-          }
-
-          // Validate Status
-          if (lead.status && VALID_STATUSES.indexOf(lead.status) === -1) {
-            rowErrors.push('Invalid Status (must be: ' + VALID_STATUSES.join(', ') + ')');
-          }
-
-          // Validate State
-          if (lead.customerState && VALID_STATES.indexOf(lead.customerState.toUpperCase()) === -1) {
-            rowErrors.push('Invalid State (must be valid US state abbreviation)');
-          }
-
-          // Validate Rep Email
-          if (lead.repEmail) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(lead.repEmail)) {
-              rowErrors.push('Invalid rep email format');
+          // VALIDATE BUSINESS UNIT - Must be exact match
+          if (lead.businessUnit) {
+            const normalizedUnit = lead.businessUnit.trim();
+            if (VALID_BUSINESS_UNITS.indexOf(normalizedUnit) === -1) {
+              rowErrors.push('Invalid Business Unit "' + normalizedUnit + '" (must be exactly: "Abbondanza Vending" or "Quantum Solutions")');
+            } else {
+              // Normalize to correct casing
+              if (normalizedUnit.toLowerCase() === 'abbondanza vending') {
+                lead.businessUnit = 'Abbondanza Vending';
+              } else if (normalizedUnit.toLowerCase() === 'quantum solutions') {
+                lead.businessUnit = 'Quantum Solutions';
+              }
             }
           }
 
-          // Validate Email Address
+          // VALIDATE STATUS - Must be exact match
+          if (lead.status) {
+            const normalizedStatus = lead.status.trim();
+            if (VALID_STATUSES.indexOf(normalizedStatus) === -1) {
+              rowErrors.push('Invalid Status "' + normalizedStatus + '" (must be: Active, Follow Up Later, Not Qualified, or Dead)');
+            }
+          }
+
+          // VALIDATE APPOINTMENT MADE - Must be Yes or No
+          if (lead.appointmentMade) {
+            const normalizedAppt = lead.appointmentMade.trim();
+            if (VALID_APPOINTMENT.indexOf(normalizedAppt) === -1) {
+              rowErrors.push('Invalid Appointment Made "' + normalizedAppt + '" (must be: Yes or No)');
+            }
+          }
+
+          // VALIDATE STATE - Must be valid 2-letter code
+          if (lead.customerState) {
+            const normalizedState = lead.customerState.trim().toUpperCase();
+            if (normalizedState.length !== 2) {
+              rowErrors.push('Invalid State format "' + lead.customerState + '" (must be 2-letter abbreviation like NH, MA)');
+            } else if (VALID_STATES.indexOf(normalizedState) === -1) {
+              rowErrors.push('Invalid State "' + normalizedState + '" (must be valid US state abbreviation)');
+            } else {
+              lead.customerState = normalizedState;
+            }
+          }
+
+          // VALIDATE ZIP CODE - Add leading zeros if needed
+          if (lead.customerZip) {
+            const zipValue = String(lead.customerZip).replace(/\D/g, '');
+            if (zipValue.length > 0 && zipValue.length <= 5) {
+              lead.customerZip = zipValue.padStart(5, '0');
+            } else if (zipValue.length > 5) {
+              rowErrors.push('Invalid Zip Code "' + lead.customerZip + '" (must be 5 digits or less)');
+            }
+          }
+
+          // VALIDATE REP EMAIL - Must be valid email
+          if (lead.repEmail) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(lead.repEmail.trim())) {
+              rowErrors.push('Invalid Rep Email format "' + lead.repEmail + '"');
+            }
+          }
+
+          // VALIDATE EMAIL ADDRESS - Must be valid email if provided
           if (lead.emailAddress) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(lead.emailAddress)) {
-              rowErrors.push('Invalid email format');
+            if (!emailRegex.test(lead.emailAddress.trim())) {
+              rowErrors.push('Invalid Email Address format "' + lead.emailAddress + '"');
+            }
+          }
+
+          // VALIDATE PHONE FORMATS - Basic check
+          if (lead.repPhone) {
+            const phoneDigits = lead.repPhone.replace(/\D/g, '');
+            if (phoneDigits.length < 10) {
+              rowErrors.push('Invalid Rep Phone "' + lead.repPhone + '" (must have at least 10 digits)');
+            }
+          }
+
+          if (lead.phoneNumber) {
+            const phoneDigits = lead.phoneNumber.replace(/\D/g, '');
+            if (phoneDigits.length > 0 && phoneDigits.length < 10) {
+              rowErrors.push('Invalid Phone Number "' + lead.phoneNumber + '" (must have at least 10 digits)');
             }
           }
 
@@ -1784,9 +1790,22 @@
 
         if (errors.length > 0) {
           console.warn('Import validation errors:', errors);
-          const errorMsg = 'Found ' + errors.length + ' error' + (errors.length !== 1 ? 's' : '') + '. Please fix:\n\n' + 
-            errors.slice(0, 5).map(e => 'Row ' + e.row + ' (' + e.companyName + '): ' + e.errors.join(', ')).join('\n') +
-            (errors.length > 5 ? '\n...(and ' + (errors.length - 5) + ' more)' : '');
+          let errorMsg = '❌ Found ' + errors.length + ' validation error' + (errors.length !== 1 ? 's' : '') + ':\n\n';
+          
+          errors.slice(0, 10).forEach(e => {
+            errorMsg = errorMsg + '📍 Row ' + e.row + ' (' + e.companyName + '):\n';
+            e.errors.forEach(err => {
+              errorMsg = errorMsg + '   • ' + err + '\n';
+            });
+            errorMsg = errorMsg + '\n';
+          });
+          
+          if (errors.length > 10) {
+            errorMsg = errorMsg + '... and ' + (errors.length - 10) + ' more errors.\n\n';
+          }
+          
+          errorMsg = errorMsg + '💡 Please fix these errors in your Excel file and try importing again.';
+          
           showToast(errorMsg, 'error');
           importBtn.disabled = false;
           importBtn.textContent = originalText;
@@ -1829,7 +1848,7 @@
         closeImportModal();
         
         if (successCount > 0) {
-          showToast('Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
+          showToast('✅ Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
           // Reload leads to show imported data
           await loadLeads();
         } else {
@@ -1846,7 +1865,7 @@
     }
 
     // Export current leads to Excel
-  function exportLeadsToExcel() {
+ function exportLeadsToExcel() {
       if (!allLeads || allLeads.length === 0) {
         showToast('No leads to export. Please add some leads first.', 'error');
         return;
@@ -1894,104 +1913,55 @@
         {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30}
       ];
 
-      // Create Dropdowns reference sheet
-      const dropdownData = [
-        ['Business Units', 'States', 'Status Options', 'Yes/No'],
-        ['Abbondanza Vending', 'AL', 'Active', 'Yes'],
-        ['Quantum Solutions', 'AK', 'Follow Up Later', 'No'],
-        ['', 'AZ', 'Not Qualified', ''],
-        ['', 'AR', 'Dead', ''],
-        ['', 'CA', '', ''],
-        ['', 'CO', '', ''],
-        ['', 'CT', '', ''],
-        ['', 'DE', '', ''],
-        ['', 'FL', '', ''],
-        ['', 'GA', '', ''],
-        ['', 'HI', '', ''],
-        ['', 'ID', '', ''],
-        ['', 'IL', '', ''],
-        ['', 'IN', '', ''],
-        ['', 'IA', '', ''],
-        ['', 'KS', '', ''],
-        ['', 'KY', '', ''],
-        ['', 'LA', '', ''],
-        ['', 'ME', '', ''],
-        ['', 'MD', '', ''],
-        ['', 'MA', '', ''],
-        ['', 'MI', '', ''],
-        ['', 'MN', '', ''],
-        ['', 'MS', '', ''],
-        ['', 'MO', '', ''],
-        ['', 'MT', '', ''],
-        ['', 'NE', '', ''],
-        ['', 'NV', '', ''],
-        ['', 'NH', '', ''],
-        ['', 'NJ', '', ''],
-        ['', 'NM', '', ''],
-        ['', 'NY', '', ''],
-        ['', 'NC', '', ''],
-        ['', 'ND', '', ''],
-        ['', 'OH', '', ''],
-        ['', 'OK', '', ''],
-        ['', 'OR', '', ''],
-        ['', 'PA', '', ''],
-        ['', 'RI', '', ''],
-        ['', 'SC', '', ''],
-        ['', 'SD', '', ''],
-        ['', 'TN', '', ''],
-        ['', 'TX', '', ''],
-        ['', 'UT', '', ''],
-        ['', 'VT', '', ''],
-        ['', 'VA', '', ''],
-        ['', 'WA', '', ''],
-        ['', 'WV', '', ''],
-        ['', 'WI', '', ''],
-        ['', 'WY', '', '']
+      // Create Instructions sheet
+      const instructionsData = [
+        ['LEAD EXPORT - INSTRUCTIONS FOR RE-IMPORTING'],
+        [''],
+        ['REQUIRED FIELDS (must have values):'],
+        ['- Business Unit'],
+        ['- Company Name'],
+        ['- Rep Name'],
+        ['- Rep Phone'],
+        ['- Rep Email'],
+        [''],
+        ['VALID VALUES - Business Unit:'],
+        ['• Abbondanza Vending'],
+        ['• Quantum Solutions'],
+        [''],
+        ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
+        ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
+        ['MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC,'],
+        ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
+        [''],
+        ['VALID VALUES - Status:'],
+        ['• Active'],
+        ['• Follow Up Later'],
+        ['• Not Qualified'],
+        ['• Dead'],
+        [''],
+        ['VALID VALUES - Appointment Made:'],
+        ['• Yes'],
+        ['• No'],
+        [''],
+        ['FORMAT REQUIREMENTS:'],
+        ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
+        ['- Rep Email: must be valid email format (name@domain.com)'],
+        ['- Email Address: must be valid email format (name@domain.com)'],
+        ['- Follow Up Date: format as MM/DD/YYYY or YYYY-MM-DD'],
+        ['- Appointment Date: format as MM/DD/YYYY or YYYY-MM-DD'],
+        [''],
+        ['IMPORTANT: Do NOT add or remove columns. Keep the exact same structure.'],
+        [''],
+        ['NOTE: After editing, import the file using the "Import Excel File" button.'],
+        ['Any validation errors will be shown and you can fix them before completing the import.']
       ];
       
-      const wsDropdowns = XLSX.utils.aoa_to_sheet(dropdownData);
-      wsDropdowns['!cols'] = [{wch: 20}, {wch: 10}, {wch: 20}, {wch: 10}];
-
-      const lastRow = exportData.length;
-
-      // Add data validation references
-      if (!ws['!dataValidation']) ws['!dataValidation'] = [];
-      
-      // Column A (Business Unit) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: false,
-        sqref: 'A2:A' + (lastRow + 1000),
-        formulas: ['Dropdowns!$A$2:$A$3']
-      });
-      
-      // Column J (Customer State) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: true,
-        sqref: 'J2:J' + (lastRow + 1000),
-        formulas: ['Dropdowns!$B$2:$B$52']
-      });
-      
-      // Column L (Status) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: true,
-        sqref: 'L2:L' + (lastRow + 1000),
-        formulas: ['Dropdowns!$C$2:$C$5']
-      });
-      
-      // Column N (Appointment Made) - Reference to Dropdowns sheet
-      ws['!dataValidation'].push({
-        type: 'list',
-        allowBlank: true,
-        sqref: 'N2:N' + (lastRow + 1000),
-        formulas: ['Dropdowns!$D$2:$D$3']
-      });
+      const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+      wsInstructions['!cols'] = [{wch: 80}];
 
       // Add sheets to workbook
       XLSX.utils.book_append_sheet(wb, ws, 'Leads Export');
-      XLSX.utils.book_append_sheet(wb, wsDropdowns, 'Dropdowns');
+      XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions');
       
       const date = new Date().toISOString().split('T')[0];
       const filename = 'Leads_Export_' + date + '.xlsx';
