@@ -136,6 +136,111 @@
     .delete-modal input{text-align:center;font-size:16px;font-weight:bold;margin:15px 0}
     .btn-danger{background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)}
     .btn-danger:hover{background:linear-gradient(135deg,#c53030 0%,#9b2c2c 100%)}
+
+
+/* Error Fixing Modal Styles */
+    .error-row {
+      background: #fff;
+      border: 2px solid #e53e3e;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .error-row.fixed {
+      border-color: #48bb78;
+      background: #f0fff4;
+    }
+
+    .error-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .error-row-title {
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .error-badge {
+      background: #e53e3e;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .error-badge.fixed {
+      background: #48bb78;
+    }
+
+    .error-list {
+      background: #fff5f5;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .error-list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .error-list li {
+      color: #e53e3e;
+      padding: 4px 0;
+      font-size: 14px;
+    }
+
+    .error-list li:before {
+      content: "• ";
+      font-weight: bold;
+    }
+
+    .error-row-fields {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .error-field-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .error-field-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 5px;
+    }
+
+    .error-field-group input,
+    .error-field-group select {
+      padding: 8px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .error-field-group input.error,
+    .error-field-group select.error {
+      border-color: #e53e3e;
+    }
+
+    #fixErrorsModal .modal-content {
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    
   </style>
 </head>
 <body>
@@ -410,6 +515,39 @@
     </div>
   </div>
 
+  <!-- Fix Import Errors Modal -->
+  <div id="fixErrorsModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-content" style="max-width:900px;max-height:90vh;overflow-y:auto;">
+      <span class="close" onclick="cancelErrorFix()">&times;</span>
+      <h2>Fix Import Errors</h2>
+      
+      <div style="background:#fff3cd;padding:15px;border-radius:8px;margin:20px 0;border:1px solid #ffc107;">
+        <p style="color:#856404;font-weight:600;margin-bottom:10px;">
+          ⚠️ <span id="errorSummary">Found validation errors in your import file</span>
+        </p>
+        <p style="color:#856404;font-size:14px;">
+          Fix the errors below, or import only the valid rows and fix the rest later.
+        </p>
+      </div>
+
+      <div id="errorRowsContainer" style="margin:20px 0;">
+        <!-- Error rows will be dynamically inserted here -->
+      </div>
+
+      <div class="form-actions" style="display:flex;gap:10px;justify-content:space-between;">
+        <button type="button" class="btn btn-cancel" onclick="cancelErrorFix()">Cancel Import</button>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" style="background:#ffc107;color:#000;" onclick="importValidRowsOnly()">
+            Import <span id="validCount">0</span> Valid Rows Only
+          </button>
+          <button type="button" id="completeImportBtn" class="btn" onclick="completeImportWithFixes()" disabled>
+            Complete Import (All Rows)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal -->
   <div id="deleteModal" class="modal delete-modal" aria-hidden="true">
     <div class="modal-content">
@@ -446,6 +584,10 @@
     let currentLeadForProposal = null;
     let currentLeadToDelete = null;
     let notesTooltip = null;
+    // Import error fixing state
+    let importValidLeads = [];
+    let importErrorLeads = [];
+    let importFileData = null;
 
     // Track unsaved edits in the modal
     let formInitialSnapshot = '';
@@ -1622,7 +1764,7 @@
       const importBtn = document.getElementById('importBtn');
       const originalText = importBtn.textContent;
       importBtn.disabled = true;
-      importBtn.textContent = 'Importing...';
+      importBtn.textContent = 'Validating...';
 
       try {
         const data = window.importFileData;
@@ -1661,8 +1803,8 @@
           'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
         ];
 
-        const leads = [];
-        const errors = [];
+        importValidLeads = [];
+        importErrorLeads = [];
 
         rows.forEach((row, index) => {
           const lead = {};
@@ -1674,7 +1816,6 @@
             const fieldName = fieldMapping[header];
             if (fieldName && row[cellIndex] !== undefined && row[cellIndex] !== null) {
               const cellValue = String(row[cellIndex]).trim();
-              // Skip empty values and "None" strings
               if (cellValue.toLowerCase() === 'none' || cellValue === '') {
                 return;
               }
@@ -1693,13 +1834,12 @@
             }
           });
 
-          // VALIDATE BUSINESS UNIT - Must be exact match
+          // VALIDATE BUSINESS UNIT
           if (lead.businessUnit) {
             const normalizedUnit = lead.businessUnit.trim();
             if (VALID_BUSINESS_UNITS.indexOf(normalizedUnit) === -1) {
-              rowErrors.push('Invalid Business Unit "' + normalizedUnit + '" (must be exactly: "Abbondanza Vending" or "Quantum Solutions")');
+              rowErrors.push('Invalid Business Unit "' + normalizedUnit + '"');
             } else {
-              // Normalize to correct casing
               if (normalizedUnit.toLowerCase() === 'abbondanza vending') {
                 lead.businessUnit = 'Abbondanza Vending';
               } else if (normalizedUnit.toLowerCase() === 'quantum solutions') {
@@ -1708,152 +1848,96 @@
             }
           }
 
-          // VALIDATE STATUS - Must be exact match
+          // VALIDATE STATUS
           if (lead.status) {
             const normalizedStatus = lead.status.trim();
             if (VALID_STATUSES.indexOf(normalizedStatus) === -1) {
-              rowErrors.push('Invalid Status "' + normalizedStatus + '" (must be: Active, Follow Up Later, Not Qualified, or Dead)');
+              rowErrors.push('Invalid Status "' + normalizedStatus + '"');
             }
           }
 
-          // VALIDATE APPOINTMENT MADE - Must be Yes or No
+          // VALIDATE APPOINTMENT MADE
           if (lead.appointmentMade) {
             const normalizedAppt = lead.appointmentMade.trim();
             if (VALID_APPOINTMENT.indexOf(normalizedAppt) === -1) {
-              rowErrors.push('Invalid Appointment Made "' + normalizedAppt + '" (must be: Yes or No)');
+              rowErrors.push('Invalid Appointment Made "' + normalizedAppt + '"');
             }
           }
 
-          // VALIDATE STATE - Must be valid 2-letter code
+          // VALIDATE STATE
           if (lead.customerState) {
             const normalizedState = lead.customerState.trim().toUpperCase();
             if (normalizedState.length !== 2) {
-              rowErrors.push('Invalid State format "' + lead.customerState + '" (must be 2-letter abbreviation like NH, MA)');
+              rowErrors.push('Invalid State format "' + lead.customerState + '"');
             } else if (VALID_STATES.indexOf(normalizedState) === -1) {
-              rowErrors.push('Invalid State "' + normalizedState + '" (must be valid US state abbreviation)');
+              rowErrors.push('Invalid State "' + normalizedState + '"');
             } else {
               lead.customerState = normalizedState;
             }
           }
 
-          // VALIDATE ZIP CODE - Add leading zeros if needed
+          // VALIDATE ZIP CODE
           if (lead.customerZip) {
             const zipValue = String(lead.customerZip).replace(/\D/g, '');
             if (zipValue.length > 0 && zipValue.length <= 5) {
               lead.customerZip = zipValue.padStart(5, '0');
             } else if (zipValue.length > 5) {
-              rowErrors.push('Invalid Zip Code "' + lead.customerZip + '" (must be 5 digits or less)');
+              rowErrors.push('Invalid Zip Code "' + lead.customerZip + '"');
             }
           }
 
-          // VALIDATE REP EMAIL - Must be valid email
+          // VALIDATE REP EMAIL
           if (lead.repEmail) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(lead.repEmail.trim())) {
-              rowErrors.push('Invalid Rep Email format "' + lead.repEmail + '"');
+              rowErrors.push('Invalid Rep Email "' + lead.repEmail + '"');
             }
           }
 
-          // VALIDATE EMAIL ADDRESS - Must be valid email if provided
+          // VALIDATE EMAIL ADDRESS
           if (lead.emailAddress) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(lead.emailAddress.trim())) {
-              rowErrors.push('Invalid Email Address format "' + lead.emailAddress + '"');
+              rowErrors.push('Invalid Email Address "' + lead.emailAddress + '"');
             }
           }
 
-          // VALIDATE PHONE FORMATS - Basic check
+          // VALIDATE PHONE FORMATS
           if (lead.repPhone) {
             const phoneDigits = lead.repPhone.replace(/\D/g, '');
             if (phoneDigits.length < 10) {
-              rowErrors.push('Invalid Rep Phone "' + lead.repPhone + '" (must have at least 10 digits)');
+              rowErrors.push('Invalid Rep Phone "' + lead.repPhone + '"');
             }
           }
 
           if (lead.phoneNumber) {
             const phoneDigits = lead.phoneNumber.replace(/\D/g, '');
             if (phoneDigits.length > 0 && phoneDigits.length < 10) {
-              rowErrors.push('Invalid Phone Number "' + lead.phoneNumber + '" (must have at least 10 digits)');
+              rowErrors.push('Invalid Phone Number "' + lead.phoneNumber + '"');
             }
           }
 
+          // Store lead with row info
+          lead._rowNumber = index + 2;
+          lead._originalData = JSON.parse(JSON.stringify(lead));
+
           if (rowErrors.length > 0) {
-            errors.push({
-              row: index + 2,
-              companyName: lead.companyName || 'Unknown',
-              errors: rowErrors
-            });
+            lead._errors = rowErrors;
+            importErrorLeads.push(lead);
           } else {
-            leads.push(lead);
+            importValidLeads.push(lead);
           }
         });
 
-        if (errors.length > 0) {
-          console.warn('Import validation errors:', errors);
-          let errorMsg = '❌ Found ' + errors.length + ' validation error' + (errors.length !== 1 ? 's' : '') + ':\n\n';
-          
-          errors.slice(0, 10).forEach(e => {
-            errorMsg = errorMsg + '📍 Row ' + e.row + ' (' + e.companyName + '):\n';
-            e.errors.forEach(err => {
-              errorMsg = errorMsg + '   • ' + err + '\n';
-            });
-            errorMsg = errorMsg + '\n';
-          });
-          
-          if (errors.length > 10) {
-            errorMsg = errorMsg + '... and ' + (errors.length - 10) + ' more errors.\n\n';
-          }
-          
-          errorMsg = errorMsg + '💡 Please fix these errors in your Excel file and try importing again.';
-          
-          showToast(errorMsg, 'error');
-          importBtn.disabled = false;
-          importBtn.textContent = originalText;
+        // If NO errors, import all immediately
+        if (importErrorLeads.length === 0) {
+          await performImport(importValidLeads);
+          closeImportModal();
           return;
         }
 
-        if (leads.length === 0) {
-          showToast('No valid leads found in the Excel file.', 'error');
-          importBtn.disabled = false;
-          importBtn.textContent = originalText;
-          return;
-        }
-
-        // Import leads one by one
-        let successCount = 0;
-        let failCount = 0;
-
-        for (let i = 0; i < leads.length; i++) {
-          try {
-            const response = await fetch(WEB_APP_URL + '?action=addLead', {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-              body: JSON.stringify({ action: 'addLead', lead: leads[i] })
-            });
-
-            const result = await response.json();
-            if (result.status === 'success') {
-              successCount++;
-            } else {
-              failCount++;
-              console.error('Failed to import lead ' + (i + 1) + ':', result.message);
-            }
-          } catch (error) {
-            failCount++;
-            console.error('Error importing lead ' + (i + 1) + ':', error);
-          }
-        }
-
-        // Close modal and show results
-        closeImportModal();
-        
-        if (successCount > 0) {
-          showToast('✅ Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
-          // Reload leads to show imported data
-          await loadLeads();
-        } else {
-          showToast('Failed to import any leads. Please check the file format and try again.', 'error');
-        }
+        // If errors found, show fix modal
+        showFixErrorsModal();
 
       } catch (error) {
         console.error('Import error:', error);
@@ -1863,6 +1947,336 @@
         importBtn.textContent = originalText;
       }
     }
+
+
+
+function showFixErrorsModal() {
+      // Update summary
+      document.getElementById('errorSummary').textContent = 
+        'Found ' + importValidLeads.length + ' valid rows and ' + importErrorLeads.length + ' rows with errors';
+      document.getElementById('validCount').textContent = importValidLeads.length;
+
+      // Build error rows HTML
+      const container = document.getElementById('errorRowsContainer');
+      container.innerHTML = '';
+
+      importErrorLeads.forEach((lead, index) => {
+        const errorRowDiv = document.createElement('div');
+        errorRowDiv.className = 'error-row';
+        errorRowDiv.id = 'error-row-' + index;
+        
+        const errorsListHTML = '<ul>' + lead._errors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+        
+        errorRowDiv.innerHTML = `
+          <div class="error-row-header">
+            <div class="error-row-title">Row ${lead._rowNumber}: ${lead.companyName || 'Unknown Company'}</div>
+            <span class="error-badge" id="badge-${index}">${lead._errors.length} Error${lead._errors.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="error-list" id="error-list-${index}">
+            ${errorsListHTML}
+          </div>
+          <div class="error-row-fields">
+            <div class="error-field-group">
+              <label>Business Unit *</label>
+              <select id="bu-${index}" onchange="validateErrorRow(${index})">
+                <option value="">Select...</option>
+                <option value="Abbondanza Vending" ${lead.businessUnit === 'Abbondanza Vending' ? 'selected' : ''}>Abbondanza Vending</option>
+                <option value="Quantum Solutions" ${lead.businessUnit === 'Quantum Solutions' ? 'selected' : ''}>Quantum Solutions</option>
+              </select>
+            </div>
+            <div class="error-field-group">
+              <label>Company Name *</label>
+              <input type="text" id="company-${index}" value="${lead.companyName || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Contact Name</label>
+              <input type="text" id="contact-${index}" value="${lead.contactName || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Phone Number</label>
+              <input type="tel" id="phone-${index}" value="${lead.phoneNumber || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Email Address</label>
+              <input type="email" id="email-${index}" value="${lead.emailAddress || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Rep Name *</label>
+              <input type="text" id="repName-${index}" value="${lead.repName || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Rep Phone *</label>
+              <input type="tel" id="repPhone-${index}" value="${lead.repPhone || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Rep Email *</label>
+              <input type="email" id="repEmail-${index}" value="${lead.repEmail || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Customer Address</label>
+              <input type="text" id="address-${index}" value="${lead.customerAddress || ''}" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Customer State</label>
+              <select id="state-${index}" onchange="validateErrorRow(${index})">
+                <option value="">Select...</option>
+                <option value="AL" ${lead.customerState === 'AL' ? 'selected' : ''}>AL</option>
+                <option value="AK" ${lead.customerState === 'AK' ? 'selected' : ''}>AK</option>
+                <option value="AZ" ${lead.customerState === 'AZ' ? 'selected' : ''}>AZ</option>
+                <option value="AR" ${lead.customerState === 'AR' ? 'selected' : ''}>AR</option>
+                <option value="CA" ${lead.customerState === 'CA' ? 'selected' : ''}>CA</option>
+                <option value="CO" ${lead.customerState === 'CO' ? 'selected' : ''}>CO</option>
+                <option value="CT" ${lead.customerState === 'CT' ? 'selected' : ''}>CT</option>
+                <option value="DE" ${lead.customerState === 'DE' ? 'selected' : ''}>DE</option>
+                <option value="FL" ${lead.customerState === 'FL' ? 'selected' : ''}>FL</option>
+                <option value="GA" ${lead.customerState === 'GA' ? 'selected' : ''}>GA</option>
+                <option value="HI" ${lead.customerState === 'HI' ? 'selected' : ''}>HI</option>
+                <option value="ID" ${lead.customerState === 'ID' ? 'selected' : ''}>ID</option>
+                <option value="IL" ${lead.customerState === 'IL' ? 'selected' : ''}>IL</option>
+                <option value="IN" ${lead.customerState === 'IN' ? 'selected' : ''}>IN</option>
+                <option value="IA" ${lead.customerState === 'IA' ? 'selected' : ''}>IA</option>
+                <option value="KS" ${lead.customerState === 'KS' ? 'selected' : ''}>KS</option>
+                <option value="KY" ${lead.customerState === 'KY' ? 'selected' : ''}>KY</option>
+                <option value="LA" ${lead.customerState === 'LA' ? 'selected' : ''}>LA</option>
+                <option value="ME" ${lead.customerState === 'ME' ? 'selected' : ''}>ME</option>
+                <option value="MD" ${lead.customerState === 'MD' ? 'selected' : ''}>MD</option>
+                <option value="MA" ${lead.customerState === 'MA' ? 'selected' : ''}>MA</option>
+                <option value="MI" ${lead.customerState === 'MI' ? 'selected' : ''}>MI</option>
+                <option value="MN" ${lead.customerState === 'MN' ? 'selected' : ''}>MN</option>
+                <option value="MS" ${lead.customerState === 'MS' ? 'selected' : ''}>MS</option>
+                <option value="MO" ${lead.customerState === 'MO' ? 'selected' : ''}>MO</option>
+                <option value="MT" ${lead.customerState === 'MT' ? 'selected' : ''}>MT</option>
+                <option value="NE" ${lead.customerState === 'NE' ? 'selected' : ''}>NE</option>
+                <option value="NV" ${lead.customerState === 'NV' ? 'selected' : ''}>NV</option>
+                <option value="NH" ${lead.customerState === 'NH' ? 'selected' : ''}>NH</option>
+                <option value="NJ" ${lead.customerState === 'NJ' ? 'selected' : ''}>NJ</option>
+                <option value="NM" ${lead.customerState === 'NM' ? 'selected' : ''}>NM</option>
+                <option value="NY" ${lead.customerState === 'NY' ? 'selected' : ''}>NY</option>
+                <option value="NC" ${lead.customerState === 'NC' ? 'selected' : ''}>NC</option>
+                <option value="ND" ${lead.customerState === 'ND' ? 'selected' : ''}>ND</option>
+                <option value="OH" ${lead.customerState === 'OH' ? 'selected' : ''}>OH</option>
+                <option value="OK" ${lead.customerState === 'OK' ? 'selected' : ''}>OK</option>
+                <option value="OR" ${lead.customerState === 'OR' ? 'selected' : ''}>OR</option>
+                <option value="PA" ${lead.customerState === 'PA' ? 'selected' : ''}>PA</option>
+                <option value="RI" ${lead.customerState === 'RI' ? 'selected' : ''}>RI</option>
+                <option value="SC" ${lead.customerState === 'SC' ? 'selected' : ''}>SC</option>
+                <option value="SD" ${lead.customerState === 'SD' ? 'selected' : ''}>SD</option>
+                <option value="TN" ${lead.customerState === 'TN' ? 'selected' : ''}>TN</option>
+                <option value="TX" ${lead.customerState === 'TX' ? 'selected' : ''}>TX</option>
+                <option value="UT" ${lead.customerState === 'UT' ? 'selected' : ''}>UT</option>
+                <option value="VT" ${lead.customerState === 'VT' ? 'selected' : ''}>VT</option>
+                <option value="VA" ${lead.customerState === 'VA' ? 'selected' : ''}>VA</option>
+                <option value="WA" ${lead.customerState === 'WA' ? 'selected' : ''}>WA</option>
+                <option value="WV" ${lead.customerState === 'WV' ? 'selected' : ''}>WV</option>
+                <option value="WI" ${lead.customerState === 'WI' ? 'selected' : ''}>WI</option>
+                <option value="WY" ${lead.customerState === 'WY' ? 'selected' : ''}>WY</option>
+              </select>
+            </div>
+            <div class="error-field-group">
+              <label>Customer Zip</label>
+              <input type="text" id="zip-${index}" value="${lead.customerZip || ''}" maxlength="5" onchange="validateErrorRow(${index})" />
+            </div>
+            <div class="error-field-group">
+              <label>Status</label>
+              <select id="status-${index}" onchange="validateErrorRow(${index})">
+                <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
+                <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
+                <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
+                <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead</option>
+              </select>
+            </div>
+            <div class="error-field-group">
+              <label>Appointment Made</label>
+              <select id="appt-${index}" onchange="validateErrorRow(${index})">
+                <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
+                <option value="No" ${lead.appointmentMade === 'No' ? 'selected' : ''}>No</option>
+              </select>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(errorRowDiv);
+      });
+
+      // Close import modal and show fix errors modal
+      document.getElementById('importModal').style.display = 'none';
+      document.getElementById('fixErrorsModal').style.display = 'block';
+    }
+
+    function cancelErrorFix() {
+      if (confirm('Cancel import? No data will be imported.')) {
+        document.getElementById('fixErrorsModal').style.display = 'none';
+        closeImportModal();
+        importValidLeads = [];
+        importErrorLeads = [];
+      }
+    }
+
+
+
+
+
+
+
+function validateErrorRow(index) {
+      const lead = importErrorLeads[index];
+      const errors = [];
+
+      // Get current values from form
+      const businessUnit = document.getElementById('bu-' + index).value;
+      const companyName = document.getElementById('company-' + index).value.trim();
+      const repName = document.getElementById('repName-' + index).value.trim();
+      const repPhone = document.getElementById('repPhone-' + index).value.trim();
+      const repEmail = document.getElementById('repEmail-' + index).value.trim();
+      const customerState = document.getElementById('state-' + index).value;
+      const customerZip = document.getElementById('zip-' + index).value.trim();
+      const emailAddress = document.getElementById('email-' + index).value.trim();
+      const phoneNumber = document.getElementById('phone-' + index).value.trim();
+
+      // Validate required fields
+      if (!businessUnit) errors.push('Missing Business Unit');
+      if (!companyName) errors.push('Missing Company Name');
+      if (!repName) errors.push('Missing Rep Name');
+      if (!repPhone) errors.push('Missing Rep Phone');
+      if (!repEmail) errors.push('Missing Rep Email');
+
+      // Validate formats
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (repEmail && !emailRegex.test(repEmail)) {
+        errors.push('Invalid Rep Email format');
+      }
+      if (emailAddress && !emailRegex.test(emailAddress)) {
+        errors.push('Invalid Email Address format');
+      }
+
+      if (repPhone) {
+        const phoneDigits = repPhone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          errors.push('Rep Phone must have at least 10 digits');
+        }
+      }
+
+      if (phoneNumber) {
+        const phoneDigits = phoneNumber.replace(/\D/g, '');
+        if (phoneDigits.length > 0 && phoneDigits.length < 10) {
+          errors.push('Phone Number must have at least 10 digits');
+        }
+      }
+
+      if (customerZip) {
+        const zipDigits = customerZip.replace(/\D/g, '');
+        if (zipDigits.length > 5) {
+          errors.push('Zip Code must be 5 digits or less');
+        }
+      }
+
+      // Update lead data
+      lead.businessUnit = businessUnit;
+      lead.companyName = companyName;
+      lead.contactName = document.getElementById('contact-' + index).value.trim();
+      lead.phoneNumber = phoneNumber;
+      lead.emailAddress = emailAddress;
+      lead.repName = repName;
+      lead.repPhone = repPhone;
+      lead.repEmail = repEmail;
+      lead.customerAddress = document.getElementById('address-' + index).value.trim();
+      lead.customerState = customerState;
+      lead.customerZip = customerZip;
+      lead.status = document.getElementById('status-' + index).value;
+      lead.appointmentMade = document.getElementById('appt-' + index).value;
+      lead._errors = errors;
+
+      // Update UI
+      const errorRow = document.getElementById('error-row-' + index);
+      const badge = document.getElementById('badge-' + index);
+      const errorList = document.getElementById('error-list-' + index);
+
+      if (errors.length === 0) {
+        errorRow.classList.add('fixed');
+        badge.classList.add('fixed');
+        badge.textContent = 'Fixed ✓';
+        errorList.style.display = 'none';
+      } else {
+        errorRow.classList.remove('fixed');
+        badge.classList.remove('fixed');
+        badge.textContent = errors.length + ' Error' + (errors.length !== 1 ? 's' : '');
+        errorList.innerHTML = '<ul>' + errors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+        errorList.style.display = 'block';
+      }
+
+      // Check if all errors are fixed
+      checkAllErrorsFixed();
+    }
+
+    function checkAllErrorsFixed() {
+      const allFixed = importErrorLeads.every(lead => lead._errors.length === 0);
+      document.getElementById('completeImportBtn').disabled = !allFixed;
+    }
+
+    async function importValidRowsOnly() {
+      if (!confirm('Import ' + importValidLeads.length + ' valid rows? Rows with errors will be skipped.')) {
+        return;
+      }
+
+      await performImport(importValidLeads);
+      document.getElementById('fixErrorsModal').style.display = 'none';
+      closeImportModal();
+    }
+
+    async function completeImportWithFixes() {
+      const allLeadsToImport = importValidLeads.concat(importErrorLeads);
+      await performImport(allLeadsToImport);
+      document.getElementById('fixErrorsModal').style.display = 'none';
+      closeImportModal();
+    }
+
+    async function performImport(leadsArray) {
+      let successCount = 0;
+      let failCount = 0;
+
+      const progressMsg = showToast('Importing ' + leadsArray.length + ' leads...', 'info');
+
+      for (let i = 0; i < leadsArray.length; i++) {
+        try {
+          const leadData = Object.assign({}, leadsArray[i]);
+          delete leadData._rowNumber;
+          delete leadData._errors;
+          delete leadData._originalData;
+
+          const response = await fetch(WEB_APP_URL + '?action=addLead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            body: JSON.stringify({ action: 'addLead', lead: leadData })
+          });
+
+          const result = await response.json();
+          if (result.status === 'success') {
+            successCount++;
+          } else {
+            failCount++;
+            console.error('Failed to import lead ' + (i + 1) + ':', result.message);
+          }
+        } catch (error) {
+          failCount++;
+          console.error('Error importing lead ' + (i + 1) + ':', error);
+        }
+      }
+
+      if (successCount > 0) {
+        showToast('✅ Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
+        await loadLeads();
+      } else {
+        showToast('❌ Failed to import any leads', 'error');
+      }
+
+      importValidLeads = [];
+      importErrorLeads = [];
+    }
+
+
+    
+    
+    
 
     // Export current leads to Excel
  function exportLeadsToExcel() {
