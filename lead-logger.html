@@ -1778,7 +1778,7 @@
     }
 
     // Import Function
-  async function importLeads() {
+ async function importLeads() {
       if (!window.importFileData) {
         showToast('No file data found. Please select a file first.', 'error');
         return;
@@ -1793,6 +1793,10 @@
         const data = window.importFileData;
         const headers = data[0];
         const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
+
+        // DEBUG ALERT 1: Check headers
+        alert('DEBUG 1: Total headers found: ' + headers.length + '\n\nFirst 8 headers:\n' + 
+              headers.slice(0, 8).map((h, i) => i + ': "' + h + '"').join('\n'));
 
         // Map headers to expected field names
         const fieldMapping = {
@@ -1829,6 +1833,15 @@
         importValidLeads = [];
         importErrorLeads = [];
 
+        // DEBUG ALERT 2: Check first row data
+        if (rows.length > 0) {
+          const firstRow = rows[0];
+          alert('DEBUG 2: First row has ' + firstRow.length + ' cells\n\n' +
+                'Cell 5 (Rep Name): "' + (firstRow[5] || 'EMPTY') + '"\n' +
+                'Cell 6 (Rep Phone): "' + (firstRow[6] || 'EMPTY') + '"\n' +
+                'Cell 7 (Rep Email): "' + (firstRow[7] || 'EMPTY') + '"');
+        }
+
         rows.forEach((row, index) => {
           const lead = {};
           let rowErrors = [];
@@ -1845,6 +1858,16 @@
               lead[fieldName] = cellValue;
             }
           });
+
+          // DEBUG ALERT 3: Check lead object after mapping (only for first row)
+          if (index === 0) {
+            alert('DEBUG 3: After mapping first row:\n\n' +
+                  'businessUnit: "' + (lead.businessUnit || 'MISSING') + '"\n' +
+                  'companyName: "' + (lead.companyName || 'MISSING') + '"\n' +
+                  'repName: "' + (lead.repName || 'MISSING') + '"\n' +
+                  'repPhone: "' + (lead.repPhone || 'MISSING') + '"\n' +
+                  'repEmail: "' + (lead.repEmail || 'MISSING') + '"');
+          }
 
           // Set defaults
           if (!lead.status) lead.status = 'Active';
@@ -1951,6 +1974,11 @@
             importValidLeads.push(lead);
           }
         });
+
+        // DEBUG ALERT 4: Check validation results
+        alert('DEBUG 4: Validation complete\n\n' +
+              'Valid leads: ' + importValidLeads.length + '\n' +
+              'Error leads: ' + importErrorLeads.length);
 
 
 
