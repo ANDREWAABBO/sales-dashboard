@@ -548,6 +548,27 @@
     </div>
   </div>
 
+
+  
+
+
+<!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal" aria-hidden="true" style="display:none;">
+    <div class="modal-content" style="max-width:500px;text-align:center;">
+      <h2 id="confirmTitle">Confirm Action</h2>
+      <p id="confirmMessage" style="color:#4a5568;margin:20px 0;font-size:16px;"></p>
+      <div class="form-actions" style="justify-content:center;gap:15px;">
+        <button type="button" class="btn btn-cancel" onclick="closeConfirmModal(false)">Cancel</button>
+        <button type="button" class="btn" id="confirmBtn" onclick="closeConfirmModal(true)">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  
+
   <!-- Delete Confirmation Modal -->
   <div id="deleteModal" class="modal delete-modal" aria-hidden="true">
     <div class="modal-content">
@@ -587,6 +608,8 @@
     // Import error fixing state
     let importValidLeads = [];
     let importErrorLeads = [];
+    // Confirmation modal callback
+    let confirmCallback = null;
     let importFileData = null;
 
     // Track unsaved edits in the modal
@@ -2103,18 +2126,34 @@ function showFixErrorsModal() {
       document.getElementById('fixErrorsModal').style.display = 'block';
     }
 
-    function cancelErrorFix() {
-      if (confirm('Cancel import? No data will be imported.')) {
-        document.getElementById('fixErrorsModal').style.display = 'none';
-        closeImportModal();
-        importValidLeads = [];
-        importErrorLeads = [];
-      }
+function cancelErrorFix() {
+      showConfirm(
+        'Cancel Import?',
+        'No data will be imported. Are you sure?',
+        function() {
+          document.getElementById('fixErrorsModal').style.display = 'none';
+          closeImportModal();
+          importValidLeads = [];
+          importErrorLeads = [];
+        }
+      );
     }
 
 
+function showConfirm(title, message, onConfirm) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      confirmCallback = onConfirm;
+      document.getElementById('confirmModal').style.display = 'block';
+    }
 
-
+    function closeConfirmModal(confirmed) {
+      document.getElementById('confirmModal').style.display = 'none';
+      if (confirmed && confirmCallback) {
+        confirmCallback();
+      }
+      confirmCallback = null;
+    }
 
 
 
@@ -2213,17 +2252,28 @@ function validateErrorRow(index) {
       document.getElementById('completeImportBtn').disabled = !allFixed;
     }
 
-   async function importValidRowsOnly() {
-      if (!confirm('Import ' + importValidLeads.length + ' valid rows? Rows with errors will be skipped.')) {
-        return;
-      }
+ async function importValidRowsOnly() {
+      showConfirm(
+        'Import Valid Rows Only?',
+        'Import ' + importValidLeads.length + ' valid rows? Rows with errors will be skipped.',
+        async function() {
+          await performImport(importValidLeads);
+        }
+      );
+    }
 
       await performImport(importValidLeads);
     }
 
-    async function completeImportWithFixes() {
+   async function completeImportWithFixes() {
       const allLeadsToImport = importValidLeads.concat(importErrorLeads);
-      await performImport(allLeadsToImport);
+      showConfirm(
+        'Complete Import?',
+        'Import all ' + allLeadsToImport.length + ' rows (valid + fixed)?',
+        async function() {
+          await performImport(allLeadsToImport);
+        }
+      );
     }
 
     async function performImport(leadsArray) {
