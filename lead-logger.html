@@ -580,8 +580,18 @@
           const opt = document.createElement('option'); opt.value = name; dl.appendChild(opt);
         });
 
-        const unitsFromApi = Array.isArray(data.businessUnits) ? data.businessUnits : [];
-        const unitsFromLeads = [...new Set((allLeads||[]).map(l => l.businessUnit).filter(Boolean))];
+        // FIXED: Normalize business units to prevent duplicates
+        const normalizeUnit = function(unit) {
+          if (!unit) return '';
+          const normalized = unit.trim();
+          // Fix common variations
+          if (normalized.toLowerCase() === 'abbondanza vending') return 'Abbondanza Vending';
+          if (normalized.toLowerCase() === 'quantum solutions') return 'Quantum Solutions';
+          return normalized;
+        };
+
+        const unitsFromApi = Array.isArray(data.businessUnits) ? data.businessUnits.map(normalizeUnit) : [];
+        const unitsFromLeads = [...new Set((allLeads||[]).map(l => normalizeUnit(l.businessUnit)).filter(Boolean))];
         const defaultUnits = ['Abbondanza Vending', 'Quantum Solutions'];
         const allUnits = [...new Set([...defaultUnits, ...unitsFromApi, ...unitsFromLeads])];
         const units = allUnits.sort();
@@ -594,18 +604,18 @@
 
         const bu = document.getElementById('businessUnit');
         const current = bu.value;
-        bu.innerHTML = '<option value="">Select...</option>' + units.map(u => `<option value="${u}">${u}</option>`).join('');
+        bu.innerHTML = '<option value="">Select...</option>' + units.map(u => '<option value="' + u + '">' + u + '</option>').join('');
         if (current) bu.value = current;
       }catch(e){
         console.warn('getCompanies failed, using defaults:', e);
         const fallback = ['Abbondanza Vending','Quantum Solutions'];
 
         const sel = document.getElementById('companyFilter');
-        sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>`<option value="${u}">${u}</option>`).join('');
+        sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>'<option value="' + u + '">' + u + '</option>').join('');
 
         const bu = document.getElementById('businessUnit');
         const current = bu.value;
-        bu.innerHTML = '<option value="">Select...</option>' + fallback.map(u => `<option value="${u}">${u}</option>`).join('');
+        bu.innerHTML = '<option value="">Select...</option>' + fallback.map(u => '<option value="' + u + '">' + u + '</option>').join('');
         if (current) bu.value = current;
       }
     }
