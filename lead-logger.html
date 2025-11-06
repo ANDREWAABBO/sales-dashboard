@@ -1589,9 +1589,9 @@
         'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
       ];
       
-      // Sample data row
+      // Sample data row - with clear instruction for Lead ID
       const sampleData = [
-        '', // Leave Lead ID blank for new leads
+        'LEAVE BLANK', // Clear instruction for Lead ID
         'Abbondanza Vending',
         'Sample Company LLC',
         'John Smith',
@@ -1638,9 +1638,22 @@
       ];
       ws['!cols'] = colWidths;
 
-      // Create Instructions sheet
+      // Create Instructions sheet with prominent Lead ID warning
       const instructionsData = [
         ['LEAD IMPORT TEMPLATE - INSTRUCTIONS'],
+        [''],
+        ['⚠️ ⚠️ ⚠️ IMPORTANT: LEAD ID COLUMN ⚠️ ⚠️ ⚠️'],
+        [''],
+        ['FOR NEW LEADS:'],
+        ['• DELETE the "LEAVE BLANK" text and leave the Lead ID cell EMPTY'],
+        ['• The system will automatically generate a unique Lead ID when you import'],
+        ['• DO NOT type anything in the Lead ID column for new leads'],
+        [''],
+        ['FOR UPDATING EXISTING LEADS:'],
+        ['• Only use exports from the system (they have Lead IDs filled in)'],
+        ['• Do NOT manually type Lead IDs'],
+        [''],
+        ['═══════════════════════════════════════════════════════════'],
         [''],
         ['REQUIRED FIELDS (must have values):'],
         ['- Business Unit'],
@@ -1648,11 +1661,6 @@
         ['- Rep Name'],
         ['- Rep Phone'],
         ['- Rep Email'],
-        [''],
-        ['IMPORTANT: Lead ID Column'],
-        ['• Leave the Lead ID column BLANK when adding new leads'],
-        ['• The system will automatically generate a unique Lead ID'],
-        ['• Only fill in Lead ID if you are updating an existing lead'],
         [''],
         ['VALID VALUES - Business Unit:'],
         ['• Abbondanza Vending'],
@@ -1701,6 +1709,13 @@
       
       showToast('Template downloaded successfully', 'success');
     }
+
+
+
+
+
+
+    
     // Import Modal Management
     function openImportModal() {
       document.getElementById('importModal').style.display = 'block';
