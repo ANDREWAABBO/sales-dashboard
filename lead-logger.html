@@ -2252,12 +2252,12 @@ function validateErrorRow(index) {
       document.getElementById('completeImportBtn').disabled = !allFixed;
     }
 
- async function importValidRowsOnly() {
+function importValidRowsOnly() {
       showConfirm(
         'Import Valid Rows Only?',
         'Import ' + importValidLeads.length + ' valid rows? Rows with errors will be skipped.',
-        async function() {
-          await performImport(importValidLeads);
+        function() {
+          performImport(importValidLeads);
         }
       );
     }
@@ -2265,13 +2265,13 @@ function validateErrorRow(index) {
       await performImport(importValidLeads);
     }
 
-   async function completeImportWithFixes() {
+ function completeImportWithFixes() {
       const allLeadsToImport = importValidLeads.concat(importErrorLeads);
       showConfirm(
         'Complete Import?',
         'Import all ' + allLeadsToImport.length + ' rows (valid + fixed)?',
-        async function() {
-          await performImport(allLeadsToImport);
+        function() {
+          performImport(allLeadsToImport);
         }
       );
     }
