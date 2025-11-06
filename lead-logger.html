@@ -1751,7 +1751,7 @@
     }
 
     // Export current leads to Excel
-   function exportLeadsToExcel() {
+  function exportLeadsToExcel() {
       if (!allLeads || allLeads.length === 0) {
         showToast('No leads to export. Please add some leads first.', 'error');
         return;
@@ -1803,12 +1803,11 @@
       XLSX.utils.book_append_sheet(wb, ws, "Leads Export");
       
       const date = new Date().toISOString().split('T')[0];
-      const filename = `Leads_Export_${date}.xlsx`;
+      const filename = 'Leads_Export_' + date + '.xlsx';
       XLSX.writeFile(wb, filename);
       
-      showToast(`Exported ${allLeads.length} leads to ${filename}`, 'success');
+      showToast('Exported ' + allLeads.length + ' leads to ' + filename, 'success');
     }
-
     function showToast(msg, type='success'){
       const el = document.getElementById('toast');
       el.textContent = msg;
