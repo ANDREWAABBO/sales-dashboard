@@ -1955,31 +1955,33 @@
 
 
 // CHECK FOR DUPLICATES against existing database
-        importBtn.textContent = 'Checking for duplicates...';
-        
-        for (let i = 0; i < importValidLeads.length; i++) {
-          const importLead = importValidLeads[i];
-          const existingLead = allLeads.find(dbLead => 
-            dbLead.companyName && importLead.companyName &&
-            dbLead.companyName.toLowerCase().trim() === importLead.companyName.toLowerCase().trim() &&
-            ((dbLead.contactName && importLead.contactName && 
-              dbLead.contactName.toLowerCase().trim() === importLead.contactName.toLowerCase().trim()) ||
-             (!dbLead.contactName && !importLead.contactName))
-          );
-          
-          if (existingLead) {
-            importLead._isDuplicate = true;
-            importLead._existingLead = existingLead;
-            importLead._duplicateAction = 'skip'; // default action
-            importLead._errors = importLead._errors || [];
-            importLead._errors.push('DUPLICATE: This lead already exists in database');
-            
-            // Move to error leads so user can resolve
-            importErrorLeads.push(importLead);
-            importValidLeads.splice(i, 1);
-            i--; // adjust index after removal
-          }
-        }
+importBtn.textContent = 'Checking for duplicates...';
+
+const duplicateLeads = [];
+
+for (let i = importValidLeads.length - 1; i >= 0; i--) {
+  const importLead = importValidLeads[i];
+  const existingLead = allLeads.find(dbLead => 
+    dbLead.companyName && importLead.companyName &&
+    dbLead.companyName.toLowerCase().trim() === importLead.companyName.toLowerCase().trim() &&
+    ((dbLead.contactName && importLead.contactName && 
+      dbLead.contactName.toLowerCase().trim() === importLead.contactName.toLowerCase().trim()) ||
+     (!dbLead.contactName && !importLead.contactName))
+  );
+  
+  if (existingLead) {
+    importLead._isDuplicate = true;
+    importLead._existingLead = existingLead;
+    importLead._duplicateAction = 'skip';
+    importLead._errors = ['DUPLICATE: This lead already exists in database (Added: ' + formatDate(existingLead.dateAdded) + ')'];
+    
+    duplicateLeads.push(importLead);
+    importValidLeads.splice(i, 1);
+  }
+}
+
+// Add duplicates to error leads
+importErrorLeads = importErrorLeads.concat(duplicateLeads);
 
 
 
