@@ -2213,28 +2213,28 @@ function validateErrorRow(index) {
       document.getElementById('completeImportBtn').disabled = !allFixed;
     }
 
-    async function importValidRowsOnly() {
+   async function importValidRowsOnly() {
       if (!confirm('Import ' + importValidLeads.length + ' valid rows? Rows with errors will be skipped.')) {
         return;
       }
 
       await performImport(importValidLeads);
-      document.getElementById('fixErrorsModal').style.display = 'none';
-      closeImportModal();
     }
 
     async function completeImportWithFixes() {
       const allLeadsToImport = importValidLeads.concat(importErrorLeads);
       await performImport(allLeadsToImport);
-      document.getElementById('fixErrorsModal').style.display = 'none';
-      closeImportModal();
     }
 
     async function performImport(leadsArray) {
       let successCount = 0;
       let failCount = 0;
 
-      const progressMsg = showToast('Importing ' + leadsArray.length + ' leads...', 'info');
+      // Create a visible importing indicator
+      const importingDiv = document.createElement('div');
+      importingDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e3a8a;color:white;padding:30px 50px;border-radius:12px;z-index:10000;font-size:18px;font-weight:600;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+      importingDiv.innerHTML = 'Importing <span id="importProgress">0</span>/' + leadsArray.length + ' leads...';
+      document.body.appendChild(importingDiv);
 
       for (let i = 0; i < leadsArray.length; i++) {
         try {
@@ -2260,8 +2260,15 @@ function validateErrorRow(index) {
           failCount++;
           console.error('Error importing lead ' + (i + 1) + ':', error);
         }
+
+        // Update progress
+        document.getElementById('importProgress').textContent = i + 1;
       }
 
+      // Remove importing indicator
+      document.body.removeChild(importingDiv);
+
+      // Show success/failure message
       if (successCount > 0) {
         showToast('✅ Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
         await loadLeads();
@@ -2269,8 +2276,16 @@ function validateErrorRow(index) {
         showToast('❌ Failed to import any leads', 'error');
       }
 
+      // Clean up
       importValidLeads = [];
       importErrorLeads = [];
+      
+      // IMPORTANT: Close the fix errors modal and reset import modal
+      document.getElementById('fixErrorsModal').style.display = 'none';
+      document.getElementById('importModal').style.display = 'none';
+      document.getElementById('excelFileInput').value = '';
+      document.getElementById('filePreview').style.display = 'none';
+      document.getElementById('importBtn').disabled = true;
     }
 
 
