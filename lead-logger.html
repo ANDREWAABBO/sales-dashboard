@@ -1886,9 +1886,17 @@
             }
           });
 
+          // GUARDRAIL 1: Remove "LEAVE BLANK" text from Lead ID
+          if (lead.leadId) {
+            const leadIdValue = lead.leadId.trim().toUpperCase();
+            if (leadIdValue === 'LEAVE BLANK' || leadIdValue === 'LEAVEBLANK') {
+              delete lead.leadId; // Remove it so it's treated as blank
+            }
+          }
+
           // Check if this is an update (has Lead ID) or new lead (no Lead ID)
           if (lead.leadId) {
-            // This is an existing lead - check if it exists in database
+            // HAS LEAD ID - Check if it exists in database
             const existingLead = allLeads.find(dbLead => dbLead.leadId === lead.leadId);
             if (existingLead) {
               lead._isUpdate = true;
@@ -1898,8 +1906,26 @@
               rowErrors.push('Lead ID "' + lead.leadId + '" not found in database');
             }
           } else {
-            // No Lead ID - this will be a new lead
-            lead._isUpdate = false;
+            // GUARDRAIL 2: NO LEAD ID - Check if this company already exists (possible accidental deletion)
+            const existingLead = allLeads.find(dbLead => 
+              dbLead.companyName && lead.companyName &&
+              dbLead.companyName.toLowerCase().trim() === lead.companyName.toLowerCase().trim() &&
+              ((dbLead.contactName && lead.contactName && 
+                dbLead.contactName.toLowerCase().trim() === lead.contactName.toLowerCase().trim()) ||
+               (!dbLead.contactName && !lead.contactName))
+            );
+            
+            if (existingLead) {
+              // DUPLICATE DETECTED - Lead ID missing but company exists
+              lead._isDuplicate = true;
+              lead._existingLead = existingLead;
+              lead._duplicateAction = 'skip';
+              lead._isUpdate = false;
+              rowErrors.push('POSSIBLE DUPLICATE: Lead ID missing but company "' + lead.companyName + '" exists in database (Added: ' + formatDate(existingLead.dateAdded) + ')');
+            } else {
+              // Truly new lead
+              lead._isUpdate = false;
+            }
           }
 
           // Set defaults
@@ -2051,7 +2077,30 @@ function showFixErrorsModal() {
           <div class="error-row-title">Row ${lead._rowNumber}: ${lead.companyName || 'Unknown Company'}</div>
           <span class="error-badge" id="badge-${index}">${lead._errors.length} Error${lead._errors.length !== 1 ? 's' : ''}</span>
         </div>
-        <div class="error-list" id="error-list-${index}">
+        ${lead._isDuplicate ? `
+          <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:15px;border-left:4px solid #f59e0b;">
+            <strong style="color:#92400e;">⚠️ POSSIBLE DUPLICATE - LEAD ID MISSING</strong>
+            <p style="color:#78350f;font-size:14px;margin:8px 0 12px 0;">
+              Lead ID is missing, but this company matches: <strong>${lead._existingLead.companyName}</strong> (Added: ${formatDate(lead._existingLead.dateAdded)})<br>
+              <em>Did you accidentally delete the Lead ID from an export file?</em>
+            </p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="radio" name="duplicate-${index}" value="skip" checked onchange="setDuplicateAction(${index}, 'skip')">
+                <span style="color:#78350f;font-size:14px;">Skip (Keep Existing)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="radio" name="duplicate-${index}" value="update" onchange="setDuplicateAction(${index}, 'update')">
+                <span style="color:#78350f;font-size:14px;">Update Existing Lead</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="radio" name="duplicate-${index}" value="new" onchange="setDuplicateAction(${index}, 'new')">
+                <span style="color:#78350f;font-size:14px;">Add as New (Create Duplicate)</span>
+              </label>
+            </div>
+          </div>
+        ` : ''}
+        <div class="error-list" id="error-list-${index}" ${lead._isDuplicate && lead._duplicateAction === 'skip' ? 'style="display:none;"' : ''}>
           ${errorsListHTML}
         </div>
           <div class="error-row-fields">
@@ -2182,6 +2231,42 @@ function showFixErrorsModal() {
       document.getElementById('fixErrorsModal').style.display = 'block';
     }
 
+
+
+
+
+
+function setDuplicateAction(index, action) {
+      const lead = importErrorLeads[index];
+      lead._duplicateAction = action;
+      
+      const errorList = document.getElementById('error-list-' + index);
+      const badge = document.getElementById('badge-' + index);
+      const errorRow = document.getElementById('error-row-' + index);
+      
+      if (action === 'skip') {
+        // Hide error list and mark as resolved
+        errorList.style.display = 'none';
+        errorRow.classList.add('fixed');
+        badge.classList.add('fixed');
+        badge.textContent = 'Will Skip ✓';
+        lead._errors = []; // Clear errors since we're skipping
+      } else {
+        // Show error list for validation
+        errorList.style.display = 'block';
+        errorRow.classList.remove('fixed');
+        badge.classList.remove('fixed');
+        
+        if (action === 'update') {
+          badge.textContent = 'Will Update';
+        } else if (action === 'new') {
+          badge.textContent = 'Will Import';
+        }
+      }
+      
+      // Check if all errors are fixed
+      checkAllErrorsFixed();
+    }
 
 
     
@@ -2388,6 +2473,9 @@ function importValidRowsOnly() {
           const leadData = Object.assign({}, leadsArray[i]);
           const isUpdate = leadData._isUpdate;
           const existingLeadId = leadData._existingLeadId;
+          const isDuplicate = leadData._isDuplicate;
+          const duplicateAction = leadData._duplicateAction;
+          const existingLead = leadData._existingLead;
           
           // Clean up internal flags
           delete leadData._rowNumber;
@@ -2395,8 +2483,40 @@ function importValidRowsOnly() {
           delete leadData._originalData;
           delete leadData._isUpdate;
           delete leadData._existingLeadId;
+          delete leadData._isDuplicate;
+          delete leadData._duplicateAction;
+          delete leadData._existingLead;
 
-          // If this is an update (has Lead ID and exists in database)
+          // Handle duplicates (missing Lead ID but company exists)
+          if (isDuplicate) {
+            if (duplicateAction === 'skip') {
+              // Skip this lead, keep existing
+              successCount++;
+              document.getElementById('importProgress').textContent = i + 1;
+              continue;
+            } else if (duplicateAction === 'update') {
+              // Update the existing lead
+              const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(safeLeadId(existingLead)), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+                body: JSON.stringify({ action: 'updateLead', leadId: safeLeadId(existingLead), updates: leadData })
+              });
+
+              const result = await response.json();
+              if (result.status === 'success') {
+                successCount++;
+              } else {
+                failCount++;
+                console.error('Failed to update lead ' + (i + 1) + ':', result.message);
+              }
+              
+              document.getElementById('importProgress').textContent = i + 1;
+              continue;
+            }
+            // If action is 'new', fall through to add as new lead
+          }
+
+          // Handle Lead ID-based updates (has Lead ID and exists in database)
           if (isUpdate && existingLeadId) {
             const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(existingLeadId), {
               method: 'POST',
