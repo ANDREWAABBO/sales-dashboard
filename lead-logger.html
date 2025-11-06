@@ -1952,6 +1952,39 @@
           }
         });
 
+
+
+// CHECK FOR DUPLICATES against existing database
+        importBtn.textContent = 'Checking for duplicates...';
+        
+        for (let i = 0; i < importValidLeads.length; i++) {
+          const importLead = importValidLeads[i];
+          const existingLead = allLeads.find(dbLead => 
+            dbLead.companyName && importLead.companyName &&
+            dbLead.companyName.toLowerCase().trim() === importLead.companyName.toLowerCase().trim() &&
+            ((dbLead.contactName && importLead.contactName && 
+              dbLead.contactName.toLowerCase().trim() === importLead.contactName.toLowerCase().trim()) ||
+             (!dbLead.contactName && !importLead.contactName))
+          );
+          
+          if (existingLead) {
+            importLead._isDuplicate = true;
+            importLead._existingLead = existingLead;
+            importLead._duplicateAction = 'skip'; // default action
+            importLead._errors = importLead._errors || [];
+            importLead._errors.push('DUPLICATE: This lead already exists in database');
+            
+            // Move to error leads so user can resolve
+            importErrorLeads.push(importLead);
+            importValidLeads.splice(i, 1);
+            i--; // adjust index after removal
+          }
+        }
+
+
+
+        
+
         // If NO errors, import all immediately
         if (importErrorLeads.length === 0) {
           await performImport(importValidLeads);
@@ -1991,13 +2024,33 @@ function showFixErrorsModal() {
         const errorsListHTML = '<ul>' + lead._errors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
         
         errorRowDiv.innerHTML = `
-          <div class="error-row-header">
-            <div class="error-row-title">Row ${lead._rowNumber}: ${lead.companyName || 'Unknown Company'}</div>
-            <span class="error-badge" id="badge-${index}">${lead._errors.length} Error${lead._errors.length !== 1 ? 's' : ''}</span>
+        <div class="error-row-header">
+          <div class="error-row-title">Row ${lead._rowNumber}: ${lead.companyName || 'Unknown Company'}</div>
+          <span class="error-badge" id="badge-${index}">${lead._errors.length} Error${lead._errors.length !== 1 ? 's' : ''}</span>
+        </div>
+        ${lead._isDuplicate ? `
+          <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:15px;border-left:4px solid #f59e0b;">
+            <strong style="color:#92400e;">⚠️ DUPLICATE FOUND</strong>
+            <p style="color:#78350f;font-size:14px;margin:8px 0 12px 0;">This lead matches: <strong>${lead._existingLead.companyName}</strong> (Added: ${formatDate(lead._existingLead.dateAdded)})</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="radio" name="duplicate-${index}" value="skip" checked onchange="setDuplicateAction(${index}, 'skip')">
+                <span style="color:#78350f;font-size:14px;">Skip (Keep Existing)</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="radio" name="duplicate-${index}" value="update" onchange="setDuplicateAction(${index}, 'update')">
+                <span style="color:#78350f;font-size:14px;">Update Existing</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="radio" name="duplicate-${index}" value="new" onchange="setDuplicateAction(${index}, 'new')">
+                <span style="color:#78350f;font-size:14px;">Import as New</span>
+              </label>
+            </div>
           </div>
-          <div class="error-list" id="error-list-${index}">
-            ${errorsListHTML}
-          </div>
+        ` : ''}
+        <div class="error-list" id="error-list-${index}" ${lead._isDuplicate && lead._duplicateAction === 'skip' ? 'style="display:none;"' : ''}>
+          ${errorsListHTML}
+        </div>
           <div class="error-row-fields">
             <div class="error-field-group">
               <label>Business Unit *</label>
@@ -2157,6 +2210,46 @@ function showConfirm(title, message, onConfirm) {
 
 
 
+
+function setDuplicateAction(index, action) {
+      const lead = importErrorLeads[index];
+      lead._duplicateAction = action;
+      
+      const errorList = document.getElementById('error-list-' + index);
+      const badge = document.getElementById('badge-' + index);
+      const errorRow = document.getElementById('error-row-' + index);
+      
+      if (action === 'skip') {
+        // Hide error list and mark as resolved
+        errorList.style.display = 'none';
+        errorRow.classList.add('fixed');
+        badge.classList.add('fixed');
+        badge.textContent = 'Will Skip ✓';
+        lead._errors = []; // Clear errors since we're skipping
+      } else {
+        // Show error list for validation
+        errorList.style.display = 'block';
+        errorRow.classList.remove('fixed');
+        badge.classList.remove('fixed');
+        
+        if (action === 'update') {
+          badge.textContent = 'Will Update';
+        } else if (action === 'new') {
+          badge.textContent = 'Will Import';
+        }
+        
+        // Re-validate if updating or importing as new
+        validateErrorRow(index);
+      }
+      
+      checkAllErrorsFixed();
+    }
+
+
+
+
+    
+
 function validateErrorRow(index) {
       const lead = importErrorLeads[index];
       const errors = [];
@@ -2286,9 +2379,44 @@ function importValidRowsOnly() {
       for (let i = 0; i < leadsArray.length; i++) {
         try {
           const leadData = Object.assign({}, leadsArray[i]);
-          delete leadData._rowNumber;
-          delete leadData._errors;
-          delete leadData._originalData;
+const isDuplicate = leadData._isDuplicate;
+const duplicateAction = leadData._duplicateAction;
+const existingLead = leadData._existingLead;
+
+delete leadData._rowNumber;
+delete leadData._errors;
+delete leadData._originalData;
+delete leadData._isDuplicate;
+delete leadData._duplicateAction;
+delete leadData._existingLead;
+
+// Skip if duplicate action is 'skip'
+if (isDuplicate && duplicateAction === 'skip') {
+  successCount++;
+  continue;
+}
+
+// If updating existing lead, use updateLead action
+if (isDuplicate && duplicateAction === 'update') {
+  const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(safeLeadId(existingLead)), {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: JSON.stringify({ action: 'updateLead', leadId: safeLeadId(existingLead), updates: leadData })
+  });
+
+  const result = await response.json();
+  if (result.status === 'success') {
+    successCount++;
+  } else {
+    failCount++;
+    console.error('Failed to update lead ' + (i + 1) + ':', result.message);
+  }
+  
+  document.getElementById('importProgress').textContent = i + 1;
+  continue;
+}
+
+// Otherwise, import as new lead
 
           const response = await fetch(WEB_APP_URL + '?action=addLead', {
             method: 'POST',
