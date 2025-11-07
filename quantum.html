@@ -614,6 +614,20 @@
       
       // Check if we have URL parameters (coming from lead logger)
       if (urlParams.toString()) {
+        // IMPORTANT: Store parameters in variables BEFORE clearing URL
+        var leadData = {
+          companyName: urlParams.get('companyName'),
+          contactName: urlParams.get('contactName'),
+          customerAddress: urlParams.get('customerAddress'),
+          customerZip: urlParams.get('customerZip'),
+          preparedBy: urlParams.get('preparedBy'),
+          preparedByPhone: urlParams.get('preparedByPhone'),
+          preparedByEmail: urlParams.get('preparedByEmail')
+        };
+        
+        // Clear URL parameters immediately
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
         // Step 1: Auto-open the warning modal first
         if (typeof openQuantumProposalGenerator === 'function') {
           openQuantumProposalGenerator();
@@ -626,41 +640,41 @@
                 buttons[i].click();
                 observer.disconnect();
                 
-                // Step 3: Simple timeout to wait for form, then pre-fill
+                // Step 3: Wait for form, then pre-fill with stored data
                 setTimeout(function() {
-                  if (urlParams.has('companyName')) {
+                  if (leadData.companyName) {
                     var companyField = document.getElementById('quantumCompanyName');
-                    if (companyField) companyField.value = urlParams.get('companyName');
+                    if (companyField) companyField.value = leadData.companyName;
                   }
                   
-                  if (urlParams.has('contactName')) {
+                  if (leadData.contactName) {
                     var contactNameField = document.getElementById('quantumContactName');
-                    if (contactNameField) contactNameField.value = urlParams.get('contactName');
+                    if (contactNameField) contactNameField.value = leadData.contactName;
                   }
                   
-                  if (urlParams.has('customerAddress')) {
+                  if (leadData.customerAddress) {
                     var addressField = document.getElementById('customerAddress');
-                    if (addressField) addressField.value = urlParams.get('customerAddress');
+                    if (addressField) addressField.value = leadData.customerAddress;
                   }
                   
-                  if (urlParams.has('customerZip')) {
+                  if (leadData.customerZip) {
                     var zipField = document.getElementById('customerZip');
-                    if (zipField) zipField.value = urlParams.get('customerZip');
+                    if (zipField) zipField.value = leadData.customerZip;
                   }
                   
-                  if (urlParams.has('preparedBy')) {
+                  if (leadData.preparedBy) {
                     var preparedByField = document.getElementById('quantumPreparedBy');
-                    if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
+                    if (preparedByField) preparedByField.value = leadData.preparedBy;
                   }
                   
-                  if (urlParams.has('preparedByPhone')) {
+                  if (leadData.preparedByPhone) {
                     var phoneField = document.getElementById('quantumPreparedByPhone');
-                    if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
+                    if (phoneField) phoneField.value = leadData.preparedByPhone;
                   }
                   
-                  if (urlParams.has('preparedByEmail')) {
+                  if (leadData.preparedByEmail) {
                     var emailField = document.getElementById('quantumPreparedByEmail');
-                    if (emailField) emailField.value = urlParams.get('preparedByEmail');
+                    if (emailField) emailField.value = leadData.preparedByEmail;
                   }
                 }, 500);
                 break;
@@ -670,9 +684,6 @@
           
           observer.observe(document.body, { childList: true, subtree: true });
         }
-        
-        // Clear URL parameters after processing
-        window.history.replaceState({}, document.title, window.location.pathname);
       }
     });
     
