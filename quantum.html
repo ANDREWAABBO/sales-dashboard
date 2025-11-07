@@ -626,51 +626,43 @@
                 buttons[i].click();
                 observer.disconnect();
                 
-                // Step 3: Wait a moment for form to start rendering, then watch for fields
+                // Step 3: Simple timeout to wait for form, then pre-fill
                 setTimeout(function() {
-                  var formObserver = new MutationObserver(function(mutations) {
+                  if (urlParams.has('companyName')) {
                     var companyField = document.getElementById('quantumCompanyName');
-                    if (companyField) {
-                      formObserver.disconnect();
-                      
-                      if (urlParams.has('companyName')) {
-                        companyField.value = urlParams.get('companyName');
-                      }
-                      
-                      if (urlParams.has('contactName')) {
-                        var contactNameField = document.getElementById('quantumContactName');
-                        if (contactNameField) contactNameField.value = urlParams.get('contactName');
-                      }
-                      
-                      if (urlParams.has('customerAddress')) {
-                        var addressField = document.getElementById('customerAddress');
-                        if (addressField) addressField.value = urlParams.get('customerAddress');
-                      }
-                      
-                      if (urlParams.has('customerZip')) {
-                        var zipField = document.getElementById('customerZip');
-                        if (zipField) zipField.value = urlParams.get('customerZip');
-                      }
-                      
-                      if (urlParams.has('preparedBy')) {
-                        var preparedByField = document.getElementById('quantumPreparedBy');
-                        if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
-                      }
-                      
-                      if (urlParams.has('preparedByPhone')) {
-                        var phoneField = document.getElementById('quantumPreparedByPhone');
-                        if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
-                      }
-                      
-                      if (urlParams.has('preparedByEmail')) {
-                        var emailField = document.getElementById('quantumPreparedByEmail');
-                        if (emailField) emailField.value = urlParams.get('preparedByEmail');
-                      }
-                    }
-                  });
+                    if (companyField) companyField.value = urlParams.get('companyName');
+                  }
                   
-                  formObserver.observe(document.body, { childList: true, subtree: true });
-                }, 200);
+                  if (urlParams.has('contactName')) {
+                    var contactNameField = document.getElementById('quantumContactName');
+                    if (contactNameField) contactNameField.value = urlParams.get('contactName');
+                  }
+                  
+                  if (urlParams.has('customerAddress')) {
+                    var addressField = document.getElementById('customerAddress');
+                    if (addressField) addressField.value = urlParams.get('customerAddress');
+                  }
+                  
+                  if (urlParams.has('customerZip')) {
+                    var zipField = document.getElementById('customerZip');
+                    if (zipField) zipField.value = urlParams.get('customerZip');
+                  }
+                  
+                  if (urlParams.has('preparedBy')) {
+                    var preparedByField = document.getElementById('quantumPreparedBy');
+                    if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
+                  }
+                  
+                  if (urlParams.has('preparedByPhone')) {
+                    var phoneField = document.getElementById('quantumPreparedByPhone');
+                    if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
+                  }
+                  
+                  if (urlParams.has('preparedByEmail')) {
+                    var emailField = document.getElementById('quantumPreparedByEmail');
+                    if (emailField) emailField.value = urlParams.get('preparedByEmail');
+                  }
+                }, 500);
                 break;
               }
             }
