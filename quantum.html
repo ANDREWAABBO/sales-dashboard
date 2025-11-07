@@ -618,55 +618,63 @@
         if (typeof openQuantumProposalGenerator === 'function') {
           openQuantumProposalGenerator();
           
-          // Step 2: Wait for warning modal, then find and click "I Understand - Continue" button
-          setTimeout(function() {
-            // Find the continue button by its text content
+          // Step 2: Watch for the Continue button to appear, then click it
+          var observer = new MutationObserver(function(mutations) {
             var buttons = document.querySelectorAll('button');
             for (var i = 0; i < buttons.length; i++) {
               if (buttons[i].textContent.includes('I Understand - Continue')) {
                 buttons[i].click();
+                observer.disconnect();
+                
+                // Step 3: Watch for proposal form fields to appear, then pre-fill
+                var formObserver = new MutationObserver(function(mutations) {
+                  var companyField = document.getElementById('quantumCompanyName');
+                  if (companyField) {
+                    formObserver.disconnect();
+                    
+                    if (urlParams.has('companyName')) {
+                      companyField.value = urlParams.get('companyName');
+                    }
+                    
+                    if (urlParams.has('contactName')) {
+                      var contactNameField = document.getElementById('quantumContactName');
+                      if (contactNameField) contactNameField.value = urlParams.get('contactName');
+                    }
+                    
+                    if (urlParams.has('customerAddress')) {
+                      var addressField = document.getElementById('customerAddress');
+                      if (addressField) addressField.value = urlParams.get('customerAddress');
+                    }
+                    
+                    if (urlParams.has('customerZip')) {
+                      var zipField = document.getElementById('customerZip');
+                      if (zipField) zipField.value = urlParams.get('customerZip');
+                    }
+                    
+                    if (urlParams.has('preparedBy')) {
+                      var preparedByField = document.getElementById('quantumPreparedBy');
+                      if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
+                    }
+                    
+                    if (urlParams.has('preparedByPhone')) {
+                      var phoneField = document.getElementById('quantumPreparedByPhone');
+                      if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
+                    }
+                    
+                    if (urlParams.has('preparedByEmail')) {
+                      var emailField = document.getElementById('quantumPreparedByEmail');
+                      if (emailField) emailField.value = urlParams.get('preparedByEmail');
+                    }
+                  }
+                });
+                
+                formObserver.observe(document.body, { childList: true, subtree: true });
                 break;
               }
             }
-            
-            // Step 3: Wait for proposal form modal, then pre-fill fields
-            setTimeout(function() {
-              if (urlParams.has('companyName')) {
-                var companyNameField = document.getElementById('quantumCompanyName');
-                if (companyNameField) companyNameField.value = urlParams.get('companyName');
-              }
-              
-              if (urlParams.has('contactName')) {
-                var contactNameField = document.getElementById('quantumContactName');
-                if (contactNameField) contactNameField.value = urlParams.get('contactName');
-              }
-              
-              if (urlParams.has('customerAddress')) {
-                var addressField = document.getElementById('customerAddress');
-                if (addressField) addressField.value = urlParams.get('customerAddress');
-              }
-              
-              if (urlParams.has('customerZip')) {
-                var zipField = document.getElementById('customerZip');
-                if (zipField) zipField.value = urlParams.get('customerZip');
-              }
-              
-              if (urlParams.has('preparedBy')) {
-                var preparedByField = document.getElementById('quantumPreparedBy');
-                if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
-              }
-              
-              if (urlParams.has('preparedByPhone')) {
-                var phoneField = document.getElementById('quantumPreparedByPhone');
-                if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
-              }
-              
-              if (urlParams.has('preparedByEmail')) {
-                var emailField = document.getElementById('quantumPreparedByEmail');
-                if (emailField) emailField.value = urlParams.get('preparedByEmail');
-              }
-            }, 500);
-          }, 800);
+          });
+          
+          observer.observe(document.body, { childList: true, subtree: true });
         }
         
         // Clear URL parameters after processing
