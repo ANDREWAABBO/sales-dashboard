@@ -558,6 +558,52 @@
     window.currentProposalFilter = 'active';
     window.currentServiceFilter = 'active';
 
+/* ====== URL Parameter Pre-fill (Lead Logger Integration) ====== */
+    window.addEventListener('DOMContentLoaded', function() {
+      var urlParams = new URLSearchParams(window.location.search);
+      
+      if (urlParams.has('companyName')) {
+        var companyNameField = document.getElementById('companyName');
+        if (companyNameField) companyNameField.value = urlParams.get('companyName');
+      }
+      
+      if (urlParams.has('contactName')) {
+        var contactNameField = document.getElementById('contactName');
+        if (contactNameField) contactNameField.value = urlParams.get('contactName');
+      }
+      
+      if (urlParams.has('customerAddress')) {
+        var addressField = document.getElementById('customerAddress');
+        if (addressField) addressField.value = urlParams.get('customerAddress');
+      }
+      
+      if (urlParams.has('customerZip')) {
+        var zipField = document.getElementById('customerZip');
+        if (zipField) zipField.value = urlParams.get('customerZip');
+      }
+      
+      if (urlParams.has('preparedBy')) {
+        var preparedByField = document.getElementById('preparedBy');
+        if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
+      }
+      
+      if (urlParams.has('preparedByPhone')) {
+        var phoneField = document.getElementById('preparedByPhone');
+        if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
+      }
+      
+      if (urlParams.has('preparedByEmail')) {
+        var emailField = document.getElementById('preparedByEmail');
+        if (emailField) emailField.value = urlParams.get('preparedByEmail');
+      }
+      
+      if (urlParams.toString()) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+
+    
+
     /* ====== Tiny UI helpers ====== */
     const helperCSS = document.createElement('style');
     helperCSS.textContent = `
@@ -1280,8 +1326,7 @@
       if (existingOverlay) existingOverlay.remove();
 
       window.allServiceAgreements = null;
-      window.currentServiceFilter = 'active';
-
+      window.currentServiceFilter = 'active'
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
       overlay.style.display = 'block';
