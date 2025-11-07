@@ -1531,7 +1531,7 @@
         fridgeCount: fridgeCount,
         scannerCount: scannerCount,
         rfidRolls: rfidRolls,
-        vinylWrap: 'No', // Default values for fields not in lead
+        vinylWrap: 'No',
         goldSupport: 'No'
       };
 
@@ -1542,7 +1542,6 @@
       submitBtn.textContent = 'Generating...';
 
       try {
-        // Use your existing Quantum Web App URL
         const QUANTUM_URL = 'https://script.google.com/macros/s/AKfycbxo7BkKNseerdgo0fBmIHkRcWF7XPt8EeuqRN_9hVgoqKVA1AxudQeStsdu_kyM7ADXHA/exec';
         
         const params = new URLSearchParams();
@@ -1550,19 +1549,25 @@
           if (formData[key]) params.append(key, formData[key]);
         });
 
-        // Call Quantum API
         const response = await fetch(`${QUANTUM_URL}?${params.toString()}`);
         const result = await response.json();
+
+        // DEBUG: Log the response
+        console.log('QUANTUM API RESPONSE:', result);
+        console.log('PDF URL:', result.pdfUrl);
 
         if (result.status === 'success') {
           closeProposalModal('quantumProposalModal');
           
-          // Show success message with PDF link
           showToast(`Quantum proposal generated successfully for ${lead.companyName}`, 'success');
           
-          // Open PDF in new tab
+          // Check if pdfUrl exists
           if (result.pdfUrl) {
+            console.log('Opening PDF:', result.pdfUrl);
             window.open(result.pdfUrl, '_blank');
+          } else {
+            console.error('No pdfUrl in response!');
+            alert('PDF generated but no download link received. Check backend.');
           }
           
         } else {
