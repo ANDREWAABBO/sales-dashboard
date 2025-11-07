@@ -614,7 +614,9 @@
       
       // Check if we have URL parameters (coming from lead logger)
       if (urlParams.toString()) {
-        // IMPORTANT: Store parameters in variables BEFORE clearing URL
+        console.log('URL Parameters detected:', urlParams.toString());
+        
+        // Store parameters in variables BEFORE clearing URL
         var leadData = {
           companyName: urlParams.get('companyName'),
           contactName: urlParams.get('contactName'),
@@ -625,11 +627,14 @@
           preparedByEmail: urlParams.get('preparedByEmail')
         };
         
+        console.log('Stored lead data:', leadData);
+        
         // Clear URL parameters immediately
         window.history.replaceState({}, document.title, window.location.pathname);
         
         // Step 1: Auto-open the warning modal first
         if (typeof openQuantumProposalGenerator === 'function') {
+          console.log('Opening warning modal...');
           openQuantumProposalGenerator();
           
           // Step 2: Watch for the Continue button to appear, then click it
@@ -637,46 +642,59 @@
             var buttons = document.querySelectorAll('button');
             for (var i = 0; i < buttons.length; i++) {
               if (buttons[i].textContent.includes('I Understand - Continue')) {
+                console.log('Found Continue button, clicking...');
                 buttons[i].click();
                 observer.disconnect();
                 
-                // Step 3: Wait for form, then pre-fill with stored data
+                // Step 3: Wait longer for form, then pre-fill with stored data
                 setTimeout(function() {
-                  if (leadData.companyName) {
-                    var companyField = document.getElementById('quantumCompanyName');
-                    if (companyField) companyField.value = leadData.companyName;
+                  console.log('Attempting to fill form fields...');
+                  
+                  var companyField = document.getElementById('quantumCompanyName');
+                  console.log('Company field found:', companyField !== null);
+                  if (companyField && leadData.companyName) {
+                    companyField.value = leadData.companyName;
+                    console.log('Set company name:', leadData.companyName);
                   }
                   
-                  if (leadData.contactName) {
-                    var contactNameField = document.getElementById('quantumContactName');
-                    if (contactNameField) contactNameField.value = leadData.contactName;
+                  var contactNameField = document.getElementById('quantumContactName');
+                  if (contactNameField && leadData.contactName) {
+                    contactNameField.value = leadData.contactName;
+                    console.log('Set contact name:', leadData.contactName);
                   }
                   
-                  if (leadData.customerAddress) {
-                    var addressField = document.getElementById('customerAddress');
-                    if (addressField) addressField.value = leadData.customerAddress;
+                  var addressField = document.getElementById('customerAddress');
+                  if (addressField && leadData.customerAddress) {
+                    addressField.value = leadData.customerAddress;
+                    console.log('Set address:', leadData.customerAddress);
                   }
                   
-                  if (leadData.customerZip) {
-                    var zipField = document.getElementById('customerZip');
-                    if (zipField) zipField.value = leadData.customerZip;
+                  var zipField = document.getElementById('customerZip');
+                  if (zipField && leadData.customerZip) {
+                    zipField.value = leadData.customerZip;
+                    console.log('Set zip:', leadData.customerZip);
                   }
                   
-                  if (leadData.preparedBy) {
-                    var preparedByField = document.getElementById('quantumPreparedBy');
-                    if (preparedByField) preparedByField.value = leadData.preparedBy;
+                  var preparedByField = document.getElementById('quantumPreparedBy');
+                  if (preparedByField && leadData.preparedBy) {
+                    preparedByField.value = leadData.preparedBy;
+                    console.log('Set prepared by:', leadData.preparedBy);
                   }
                   
-                  if (leadData.preparedByPhone) {
-                    var phoneField = document.getElementById('quantumPreparedByPhone');
-                    if (phoneField) phoneField.value = leadData.preparedByPhone;
+                  var phoneField = document.getElementById('quantumPreparedByPhone');
+                  if (phoneField && leadData.preparedByPhone) {
+                    phoneField.value = leadData.preparedByPhone;
+                    console.log('Set phone:', leadData.preparedByPhone);
                   }
                   
-                  if (leadData.preparedByEmail) {
-                    var emailField = document.getElementById('quantumPreparedByEmail');
-                    if (emailField) emailField.value = leadData.preparedByEmail;
+                  var emailField = document.getElementById('quantumPreparedByEmail');
+                  if (emailField && leadData.preparedByEmail) {
+                    emailField.value = leadData.preparedByEmail;
+                    console.log('Set email:', leadData.preparedByEmail);
                   }
-                }, 500);
+                  
+                  console.log('Form fill complete!');
+                }, 1000);
                 break;
               }
             }
