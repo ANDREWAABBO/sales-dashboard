@@ -609,101 +609,110 @@
 
 
 /* ====== URL Parameter Pre-fill (Lead Logger Integration) ====== */
-    window.addEventListener('DOMContentLoaded', function() {
-      var urlParams = new URLSearchParams(window.location.search);
-      
-      // Check if we have URL parameters (coming from lead logger)
-      if (urlParams.toString()) {
-        console.log('URL Parameters detected:', urlParams.toString());
+    (function() {
+      function initPrefill() {
+        var urlParams = new URLSearchParams(window.location.search);
         
-        // Store parameters in variables BEFORE clearing URL
-        var leadData = {
-          companyName: urlParams.get('companyName'),
-          contactName: urlParams.get('contactName'),
-          customerAddress: urlParams.get('customerAddress'),
-          customerZip: urlParams.get('customerZip'),
-          preparedBy: urlParams.get('preparedBy'),
-          preparedByPhone: urlParams.get('preparedByPhone'),
-          preparedByEmail: urlParams.get('preparedByEmail')
-        };
-        
-        console.log('Stored lead data:', leadData);
-        
-        // Clear URL parameters immediately
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Step 1: Auto-open the warning modal first
-        if (typeof openQuantumProposalGenerator === 'function') {
-          console.log('Opening warning modal...');
-          openQuantumProposalGenerator();
+        // Check if we have URL parameters (coming from lead logger)
+        if (urlParams.toString()) {
+          console.log('URL Parameters detected:', urlParams.toString());
           
-          // Step 2: Watch for the Continue button to appear, then click it
-          var observer = new MutationObserver(function(mutations) {
-            var buttons = document.querySelectorAll('button');
-            for (var i = 0; i < buttons.length; i++) {
-              if (buttons[i].textContent.includes('I Understand - Continue')) {
-                console.log('Found Continue button, clicking...');
-                buttons[i].click();
-                observer.disconnect();
-                
-                // Step 3: Wait longer for form, then pre-fill with stored data
-                setTimeout(function() {
-                  console.log('Attempting to fill form fields...');
+          // Store parameters in variables BEFORE clearing URL
+          var leadData = {
+            companyName: urlParams.get('companyName'),
+            contactName: urlParams.get('contactName'),
+            customerAddress: urlParams.get('customerAddress'),
+            customerZip: urlParams.get('customerZip'),
+            preparedBy: urlParams.get('preparedBy'),
+            preparedByPhone: urlParams.get('preparedByPhone'),
+            preparedByEmail: urlParams.get('preparedByEmail')
+          };
+          
+          console.log('Stored lead data:', leadData);
+          
+          // Clear URL parameters immediately
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Step 1: Auto-open the warning modal first
+          if (typeof openQuantumProposalGenerator === 'function') {
+            console.log('Opening warning modal...');
+            openQuantumProposalGenerator();
+            
+            // Step 2: Watch for the Continue button to appear, then click it
+            var observer = new MutationObserver(function(mutations) {
+              var buttons = document.querySelectorAll('button');
+              for (var i = 0; i < buttons.length; i++) {
+                if (buttons[i].textContent.includes('I Understand - Continue')) {
+                  console.log('Found Continue button, clicking...');
+                  buttons[i].click();
+                  observer.disconnect();
                   
-                  var companyField = document.getElementById('quantumCompanyName');
-                  console.log('Company field found:', companyField !== null);
-                  if (companyField && leadData.companyName) {
-                    companyField.value = leadData.companyName;
-                    console.log('Set company name:', leadData.companyName);
-                  }
-                  
-                  var contactNameField = document.getElementById('quantumContactName');
-                  if (contactNameField && leadData.contactName) {
-                    contactNameField.value = leadData.contactName;
-                    console.log('Set contact name:', leadData.contactName);
-                  }
-                  
-                  var addressField = document.getElementById('customerAddress');
-                  if (addressField && leadData.customerAddress) {
-                    addressField.value = leadData.customerAddress;
-                    console.log('Set address:', leadData.customerAddress);
-                  }
-                  
-                  var zipField = document.getElementById('customerZip');
-                  if (zipField && leadData.customerZip) {
-                    zipField.value = leadData.customerZip;
-                    console.log('Set zip:', leadData.customerZip);
-                  }
-                  
-                  var preparedByField = document.getElementById('quantumPreparedBy');
-                  if (preparedByField && leadData.preparedBy) {
-                    preparedByField.value = leadData.preparedBy;
-                    console.log('Set prepared by:', leadData.preparedBy);
-                  }
-                  
-                  var phoneField = document.getElementById('quantumPreparedByPhone');
-                  if (phoneField && leadData.preparedByPhone) {
-                    phoneField.value = leadData.preparedByPhone;
-                    console.log('Set phone:', leadData.preparedByPhone);
-                  }
-                  
-                  var emailField = document.getElementById('quantumPreparedByEmail');
-                  if (emailField && leadData.preparedByEmail) {
-                    emailField.value = leadData.preparedByEmail;
-                    console.log('Set email:', leadData.preparedByEmail);
-                  }
-                  
-                  console.log('Form fill complete!');
-                }, 1000);
-                break;
+                  // Step 3: Wait for form, then pre-fill with stored data
+                  setTimeout(function() {
+                    console.log('Attempting to fill form fields...');
+                    
+                    var companyField = document.getElementById('quantumCompanyName');
+                    console.log('Company field found:', companyField !== null);
+                    if (companyField && leadData.companyName) {
+                      companyField.value = leadData.companyName;
+                      console.log('Set company name:', leadData.companyName);
+                    }
+                    
+                    var contactNameField = document.getElementById('quantumContactName');
+                    if (contactNameField && leadData.contactName) {
+                      contactNameField.value = leadData.contactName;
+                      console.log('Set contact name:', leadData.contactName);
+                    }
+                    
+                    var addressField = document.getElementById('customerAddress');
+                    if (addressField && leadData.customerAddress) {
+                      addressField.value = leadData.customerAddress;
+                      console.log('Set address:', leadData.customerAddress);
+                    }
+                    
+                    var zipField = document.getElementById('customerZip');
+                    if (zipField && leadData.customerZip) {
+                      zipField.value = leadData.customerZip;
+                      console.log('Set zip:', leadData.customerZip);
+                    }
+                    
+                    var preparedByField = document.getElementById('quantumPreparedBy');
+                    if (preparedByField && leadData.preparedBy) {
+                      preparedByField.value = leadData.preparedBy;
+                      console.log('Set prepared by:', leadData.preparedBy);
+                    }
+                    
+                    var phoneField = document.getElementById('quantumPreparedByPhone');
+                    if (phoneField && leadData.preparedByPhone) {
+                      phoneField.value = leadData.preparedByPhone;
+                      console.log('Set phone:', leadData.preparedByPhone);
+                    }
+                    
+                    var emailField = document.getElementById('quantumPreparedByEmail');
+                    if (emailField && leadData.preparedByEmail) {
+                      emailField.value = leadData.preparedByEmail;
+                      console.log('Set email:', leadData.preparedByEmail);
+                    }
+                    
+                    console.log('Form fill complete!');
+                  }, 1000);
+                  break;
+                }
               }
-            }
-          });
-          
-          observer.observe(document.body, { childList: true, subtree: true });
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true });
+          }
         }
       }
-    });
+      
+      // Run immediately if page already loaded, otherwise wait for DOMContentLoaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPrefill);
+      } else {
+        initPrefill();
+      }
+    })();
     
 
     // NEW: View Quantum Material in PDF Modal - DEFINE FIRST
