@@ -607,6 +607,52 @@
     // Video Library Configuration
     const VIDEO_LIBRARY_URL = 'https://script.google.com/macros/s/AKfycbxFS2mSdcK0SSF4qFPRKF_jUVqnVkSBW4btCLCbVyy_3MWo4SR4cJ-CNURGf4xRPk3a/exec';
 
+
+/* ====== URL Parameter Pre-fill (Lead Logger Integration) ====== */
+    window.addEventListener('DOMContentLoaded', function() {
+      var urlParams = new URLSearchParams(window.location.search);
+      
+      if (urlParams.has('companyName')) {
+        var companyNameField = document.getElementById('quantumCompanyName');
+        if (companyNameField) companyNameField.value = urlParams.get('companyName');
+      }
+      
+      if (urlParams.has('contactName')) {
+        var contactNameField = document.getElementById('quantumContactName');
+        if (contactNameField) contactNameField.value = urlParams.get('contactName');
+      }
+      
+      if (urlParams.has('customerAddress')) {
+        var addressField = document.getElementById('customerAddress');
+        if (addressField) addressField.value = urlParams.get('customerAddress');
+      }
+      
+      if (urlParams.has('customerZip')) {
+        var zipField = document.getElementById('customerZip');
+        if (zipField) zipField.value = urlParams.get('customerZip');
+      }
+      
+      if (urlParams.has('preparedBy')) {
+        var preparedByField = document.getElementById('quantumPreparedBy');
+        if (preparedByField) preparedByField.value = urlParams.get('preparedBy');
+      }
+      
+      if (urlParams.has('preparedByPhone')) {
+        var phoneField = document.getElementById('quantumPreparedByPhone');
+        if (phoneField) phoneField.value = urlParams.get('preparedByPhone');
+      }
+      
+      if (urlParams.has('preparedByEmail')) {
+        var emailField = document.getElementById('quantumPreparedByEmail');
+        if (emailField) emailField.value = urlParams.get('preparedByEmail');
+      }
+      
+      if (urlParams.toString()) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    });
+    
+
     // NEW: View Quantum Material in PDF Modal - DEFINE FIRST
     window.viewQuantumMaterialPDF = function viewQuantumMaterialPDF(fileId, title, fileType) {
       const materialsOverlay = document.querySelector('.modal-overlay');
