@@ -1479,7 +1479,7 @@
         document.body.removeChild(script);
 
         if (data.status === 'success') {
-          const sorted = (data.serviceAgreements || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+          const sorted = (data.data || []).sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
           sorted.forEach(agreement => {
             if (!agreement.status) {
               agreement.status = 'active';
