@@ -1219,13 +1219,9 @@
         monthlyTotal = basePrice + (discountedPrice * additionalUnits);
       }
 
-      const estimatedMonthlyPurchases = fridgeCount * 300;
-      const monthlySubsidyAmount = (estimatedMonthlyPurchases * subsidyPercentage) / 100;
-
       let txt = `Total Kiosks: ${fridgeCount}<br>`;
       txt += `Monthly Service Fee: ${monthlyTotal.toFixed(2)}<br>`;
       txt += `Subsidy: ${subsidyPercentage}% discount<br>`;
-      txt += `Estimated Monthly Subsidy: ${monthlySubsidyAmount.toFixed(2)}`;
       document.getElementById('servicePricingSummary').innerHTML = txt;
     }
 
