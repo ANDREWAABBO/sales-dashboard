@@ -1591,6 +1591,31 @@ function viewServiceAgreementPDF(fileId, fileName, status) {
   document.body.appendChild(overlay);
 }
 
+async function toggleServiceAgreementArchiveFromViewer(fileId, currentStatus, fileName) {
+  const newStatus = currentStatus === 'archived' ? 'active' : 'archived';
+  const action = newStatus === 'archived' ? 'archive' : 'restore';
+  
+  if (!confirm(`Are you sure you want to ${action} this service agreement?`)) {
+    return;
+  }
+  
+  try {
+    await toggleServiceAgreementArchive(fileId, currentStatus, null);
+    closePDFViewer();
+    setTimeout(openServiceAgreementViewer, 200);
+  } catch (error) {
+    console.error('Archive error:', error);
+    showPopup(`Failed to ${action} agreement: ${error.message}`, 'error');
+  }
+}
+
+
+
+
+
+
+
+
 
 
 
