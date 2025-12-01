@@ -1561,28 +1561,39 @@
       displayServiceAgreements(finalFiltered);
     }
 
-    function viewServiceAgreementPDF(fileId, fileName) {
-      closePDFViewer();
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.style.display = 'block';
+    
+    
+    
+function viewServiceAgreementPDF(fileId, fileName, status) {
+  closePDFViewer();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.style.display = 'block';
 
-      const pdfModal = document.createElement('div');
-      pdfModal.className = 'pdf-modal';
-      const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+  const pdfModal = document.createElement('div');
+  pdfModal.className = 'pdf-modal';
+  const viewerUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+  
+  const currentStatus = status || 'active';
+  const archiveButtonText = currentStatus === 'archived' ? 'Restore' : 'Archive';
 
-      pdfModal.innerHTML = `
-        <div class="pdf-header">
-          <h3>${fileName}</h3>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);" style="padding: 10px 20px;">Back to Library</button>
-            <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding: 10px 20px;">Download</button>
-          </div>
-        </div>
-        <div class="pdf-viewer"><iframe src="${viewerUrl}" allowfullscreen></iframe></div>`;
-      overlay.appendChild(pdfModal);
-      document.body.appendChild(overlay);
-    }
+  pdfModal.innerHTML = `
+    <div class="pdf-header">
+      <h3>${fileName}</h3>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openServiceAgreementViewer, 200);" style="padding: 10px 20px;">Back to Library</button>
+        <button class="btn btn-secondary" onclick="window.open('https://drive.google.com/uc?export=download&id=${fileId}', '_blank')" style="padding: 10px 20px;">Download</button>
+        <button class="btn archive-btn" onclick="toggleServiceAgreementArchiveFromViewer('${fileId}', '${currentStatus}', '${fileName}')" style="padding: 10px 20px;">${archiveButtonText}</button>
+      </div>
+    </div>
+    <div class="pdf-viewer"><iframe src="${viewerUrl}" allowfullscreen></iframe></div>`;
+  overlay.appendChild(pdfModal);
+  document.body.appendChild(overlay);
+}
+
+
+
+
 
     /* ====== Backdrop close for all overlays (ignore auth overlay) ====== */
     window.addEventListener('click', function (event) {
