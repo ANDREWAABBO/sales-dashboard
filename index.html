@@ -1600,9 +1600,34 @@ async function toggleServiceAgreementArchiveFromViewer(fileId, currentStatus, fi
   }
   
   try {
-    await toggleServiceAgreementArchive(fileId, currentStatus, null);
-    closePDFViewer();
-    setTimeout(openServiceAgreementViewer, 200);
+    const callbackName = 'serviceArchiveCallback_' + Date.now();
+    const promise = new Promise((resolve, reject) => {
+      window[callbackName] = (data) => { delete window[callbackName]; resolve(data); };
+      setTimeout(() => { delete window[callbackName]; reject(new Error('Request timeout')); }, 15000);
+    });
+
+    const script = document.createElement('script');
+    script.src = `${SERVICE_AGREEMENTS_API_URL}?action=updateArchiveStatus&fileId=${fileId}&status=${newStatus}&companyName=${encodeURIComponent(fileName)}&callback=${callbackName}`;
+    document.body.appendChild(script);
+    
+    const data = await promise;
+    document.body.removeChild(script);
+
+    if (data.status === 'success') {
+      // Update local data
+      if (window.allServiceAgreements) {
+        const agreement = window.allServiceAgreements.find(a => a.id === fileId);
+        if (agreement) {
+          agreement.status = newStatus;
+          agreement.archivedDate = newStatus === 'archived' ? new Date().toISOString() : '';
+        }
+      }
+      showPopup(`Service agreement ${action}d successfully!`, 'success');
+      closePDFViewer();
+      setTimeout(openServiceAgreementViewer, 200);
+    } else {
+      throw new Error(data.message || 'Unknown error');
+    }
   } catch (error) {
     console.error('Archive error:', error);
     showPopup(`Failed to ${action} agreement: ${error.message}`, 'error');
