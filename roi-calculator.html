@@ -604,24 +604,14 @@ function init(){
   document.getElementById('modeTag').title = operatorMode ? 'No token in URL → Operator Mode' : 'Viewing with a time-limited token';
   document.getElementById('opButtons').style.display = operatorMode ? 'flex' : 'none';
 
-  // wire buttons
-  var s1 = document.getElementById('btnShare'); var s2 = document.getElementById('btnShare2');
-  if (s1) s1.onclick = openShare;
-  if (s2) s2.onclick = openShare;
-  document.getElementById('btnManage').onclick = openManage;
-  document.getElementById('btnGenShare').onclick = createShare;
-  document.getElementById('btnPDF').onclick = generatePDF;
+  // If guest mode (has token), validate it FIRST before allowing access
+  if (!operatorMode) {
+    validateGuestAccess();
+    return; // Don't continue until validation completes
+  }
 
-  // inputs -> recalc
-  document.querySelectorAll('input').forEach(function(el){
-    el.addEventListener('input', function(){ if (el.id==='foodPercent'){ syncPercents(); } update(); });
-  });
-
-  // try to fetch base rates from backend (token optional)
-  fetchBaseRates();
-  renderFixedCosts();
-  syncPercents();
-  update();
+  // Operator mode continues normally
+  setupCalculator();
 }
 
 function fetchBaseRates(){
