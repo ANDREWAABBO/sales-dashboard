@@ -483,6 +483,34 @@
       </div>
     </div>
   </div>
+
+
+  <!-- Guest Usage Modal -->
+<div id="guestUsageModal" class="modal-overlay">
+  <div class="modal" style="max-width:900px;" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">
+      <h3 style="margin:0;color:#2d3748;font-size:1.8em;">ROI Calculator Guest Usage</h3>
+      <button class="close-btn" onclick="closeGuestUsageModal()">✕</button>
+    </div>
+    <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+      <select id="guestUsageFilter" class="archive-filter" style="min-width:180px;" onchange="filterGuestUsage()">
+        <option value="active">Active Links</option>
+        <option value="expired">Expired Links</option>
+        <option value="revoked">Revoked Links</option>
+        <option value="all">All Links</option>
+      </select>
+      <button class="btn refresh-btn" onclick="loadGuestUsage()" style="background:#10b981;padding:10px 20px;">🔄 Refresh</button>
+    </div>
+    <div id="guestUsageList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
+      <div style="text-align:center;padding:40px;">
+        <div class="loading-spinner"></div>
+        <p style="margin-top:20px;color:#718096;">Loading guest usage data...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
   <!-- Quantum Proposal Generator Modal -->
   <div id="quantumProposalModal" class="modal-overlay">
     <div class="modal" onclick="event.stopPropagation()">
@@ -609,6 +637,197 @@
   <script>
     // Video Library Configuration
     const VIDEO_LIBRARY_URL = 'https://script.google.com/macros/s/AKfycbxFS2mSdcK0SSF4qFPRKF_jUVqnVkSBW4btCLCbVyy_3MWo4SR4cJ-CNURGf4xRPk3a/exec';
+
+
+    // ROI Calculator Guest Usage
+const ROI_CALCULATOR_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
+window.allGuestTokens = [];
+
+window.openGuestUsageModal = function openGuestUsageModal() {
+  const modal = document.getElementById('guestUsageModal');
+  if (modal) {
+    modal.style.display = 'block';
+    loadGuestUsage();
+  }
+};
+
+window.closeGuestUsageModal = function closeGuestUsageModal() {
+  const modal = document.getElementById('guestUsageModal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.loadGuestUsage = function loadGuestUsage() {
+  const listContainer = document.getElementById('guestUsageList');
+  if (listContainer) {
+    listContainer.innerHTML = 
+      '<div style="text-align:center;padding:40px;">' +
+        '<div class="loading-spinner"></div>' +
+        '<p style="margin-top:20px;color:#718096;">Loading guest usage data...</p>' +
+      '</div>';
+  }
+
+  fetch(ROI_CALCULATOR_URL + '?action=listTokens&onlyActive=false&maxRows=50')
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      if (data.status === 'success') {
+        window.allGuestTokens = data.data.tokens || [];
+        filterGuestUsage();
+      } else {
+        throw new Error(data.message || 'Failed to load tokens');
+      }
+    })
+    .catch(function(error) {
+      if (listContainer) {
+        listContainer.innerHTML = 
+          '<div style="text-align:center;padding:40px;">' +
+            '<p style="color:#e53e3e;margin-bottom:20px;font-size:18px;">Unable to load guest usage data</p>' +
+            '<p style="color:#718096;margin-bottom:20px;">Error: ' + error.message + '</p>' +
+            '<button class="btn btn-primary" onclick="loadGuestUsage()">Try Again</button>' +
+          '</div>';
+      }
+    });
+};
+
+window.filterGuestUsage = function filterGuestUsage() {
+  const filter = document.getElementById('guestUsageFilter').value;
+  const now = new Date();
+  
+  let filtered = window.allGuestTokens.filter(function(token) {
+    const isExpired = token.expiresAt && new Date(token.expiresAt) < now;
+    const isRevoked = !token.active;
+    const isActive = token.active && !isExpired;
+    
+    if (filter === 'active') return isActive;
+    if (filter === 'expired') return isExpired && token.active;
+    if (filter === 'revoked') return isRevoked;
+    return true;
+  });
+  
+  displayGuestUsage(filtered);
+};
+
+window.displayGuestUsage = function displayGuestUsage(tokens) {
+  const listContainer = document.getElementById('guestUsageList');
+  if (!listContainer) return;
+  
+  if (tokens.length === 0) {
+    listContainer.innerHTML = 
+      '<div style="text-align:center;padding:40px;color:#718096;">' +
+        '<p style="font-size:18px;">No links found matching this filter.</p>' +
+      '</div>';
+    return;
+  }
+  
+  const now = new Date();
+  
+  listContainer.innerHTML = tokens.map(function(token) {
+    const isExpired = token.expiresAt && new Date(token.expiresAt) < now;
+    const isRevoked = !token.active;
+    const isActive = token.active && !isExpired;
+    
+    let statusBadge, statusColor;
+    if (isRevoked) {
+      statusBadge = 'Revoked';
+      statusColor = 'background:#fee2e2;color:#b91c1c;';
+    } else if (isExpired) {
+      statusBadge = 'Expired';
+      statusColor = 'background:#fef3c7;color:#92400e;';
+    } else {
+      statusBadge = 'Active';
+      statusColor = 'background:#d1fae5;color:#065f46;';
+    }
+    
+    const daysRemaining = isActive && token.expiresAt 
+      ? Math.ceil((new Date(token.expiresAt) - now) / (1000 * 60 * 60 * 24))
+      : 0;
+    
+    const expiresText = isActive 
+      ? daysRemaining + ' day' + (daysRemaining !== 1 ? 's' : '') + ' remaining'
+      : (token.expiresAt ? new Date(token.expiresAt).toLocaleDateString() : 'N/A');
+    
+    const revokeButton = isActive 
+      ? '<button class="btn" onclick="revokeGuestToken(\'' + token.token + '\', \'' + (token.clientName || 'Guest').replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#e53e3e;font-size:14px;">Revoke</button>'
+      : '';
+    
+    return (
+      '<div style="background:white;padding:20px;border-radius:12px;border:2px solid #e2e8f0;transition:all .3s ease;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:15px;">' +
+          '<div style="flex:1;min-width:200px;">' +
+            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">' +
+              '<h4 style="margin:0;color:#2d3748;font-size:16px;">' + (token.clientName || '(No client name)') + '</h4>' +
+              '<span style="' + statusColor + 'padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;">' + statusBadge + '</span>' +
+            '</div>' +
+            '<div style="color:#718096;font-size:13px;line-height:1.6;">' +
+              '<div>Created: ' + (token.createdDate ? new Date(token.createdDate).toLocaleDateString() : 'N/A') + ' by ' + (token.createdBy || 'Unknown') + '</div>' +
+              '<div>Expires: ' + expiresText + '</div>' +
+              '<div>Last Accessed: ' + (token.lastAccessed ? new Date(token.lastAccessed).toLocaleString() : 'Never') + '</div>' +
+              '<div>Access Count: ' + (token.accessCount || 0) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:10px;align-items:center;">' +
+            '<button class="btn btn-secondary" onclick="copyGuestLink(\'' + token.shareUrl + '\')" style="padding:10px 20px;font-size:14px;">📋 Copy Link</button>' +
+            revokeButton +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+};
+
+window.copyGuestLink = function copyGuestLink(url) {
+  navigator.clipboard.writeText(url).then(function() {
+    showQuantumPopup('<div class="success-popup"><p>✅ Link copied to clipboard!</p></div>', 'success');
+  }).catch(function() {
+    showQuantumPopup('<div class="error-popup"><p>❌ Failed to copy link</p></div>', 'error');
+  });
+};
+
+window.revokeGuestToken = function revokeGuestToken(token, clientName) {
+  const confirmOverlay = document.createElement('div');
+  confirmOverlay.className = 'modal-overlay';
+  confirmOverlay.style.display = 'block';
+  confirmOverlay.style.zIndex = '20000';
+
+  confirmOverlay.innerHTML = 
+    '<div class="modal" style="max-width:500px;" onclick="event.stopPropagation()">' +
+      '<h3 style="margin-bottom:20px;color:#2d3748;">Revoke Guest Link?</h3>' +
+      '<p style="color:#4a5568;margin-bottom:10px;line-height:1.6;">Are you sure you want to revoke access for:</p>' +
+      '<p style="color:#1e3a8a;font-weight:600;margin-bottom:20px;font-size:1.1em;">' + clientName + '</p>' +
+      '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will immediately block access to the ROI calculator for this link.</p>' +
+      '<div style="display:flex;gap:15px;margin-top:25px;">' +
+        '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
+        '<button class="btn" onclick="confirmRevokeToken(\'' + token + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#e53e3e;">🚫 Revoke Access</button>' +
+      '</div>' +
+    '</div>';
+  
+  document.body.appendChild(confirmOverlay);
+};
+
+window.confirmRevokeToken = function confirmRevokeToken(token) {
+  const listContainer = document.getElementById('guestUsageList');
+  if (listContainer) {
+    listContainer.innerHTML = 
+      '<div style="text-align:center;padding:40px;">' +
+        '<div class="loading-spinner"></div>' +
+        '<p style="margin-top:20px;color:#718096;">Revoking access...</p>' +
+      '</div>';
+  }
+
+  fetch(ROI_CALCULATOR_URL + '?action=deactivateToken&token=' + encodeURIComponent(token))
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      if (data.status === 'success') {
+        showQuantumPopup('<div class="success-popup"><h3>✅ Access Revoked</h3><p>The guest link has been deactivated.</p></div>', 'success');
+        loadGuestUsage();
+      } else {
+        throw new Error(data.message || 'Failed to revoke token');
+      }
+    })
+    .catch(function(error) {
+      showQuantumPopup('<div class="error-popup"><h3>❌ Revoke Failed</h3><p>' + error.message + '</p></div>', 'error');
+      loadGuestUsage();
+    });
+};
 
 
 /* ====== URL Parameter Pre-fill (Lead Logger Integration) ====== */
