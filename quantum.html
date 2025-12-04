@@ -493,13 +493,13 @@
       <button class="close-btn" onclick="closeGuestUsageModal()">✕</button>
     </div>
     <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
-      <select id="guestUsageFilter" class="archive-filter" style="min-width:180px;" onchange="filterGuestUsage()">
+      <select id="guestUsageFilter" class="category-dropdown" style="min-width:220px;padding:14px 18px;font-size:16px;" onchange="filterGuestUsage()">
         <option value="active">Active Links</option>
         <option value="expired">Expired Links</option>
         <option value="revoked">Revoked Links</option>
         <option value="all">All Links</option>
       </select>
-      <button class="btn refresh-btn" onclick="loadGuestUsage()" style="background:#10b981;padding:10px 20px;">🔄 Refresh</button>
+      <button class="btn" onclick="loadGuestUsage()" style="background:#10b981;padding:14px 24px;font-size:16px;">🔄 Refresh</button>
     </div>
     <div id="guestUsageList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
       <div style="text-align:center;padding:40px;">
