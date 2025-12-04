@@ -614,6 +614,84 @@ function init(){
   setupCalculator();
 }
 
+
+
+function validateGuestAccess() {
+  fetch(BACKEND_URL + '?action=validateAccess&token=' + encodeURIComponent(accessToken))
+  .then(function(res){ return res.json(); })
+  .then(function(result){
+    if (result.status === 'success') {
+      // Valid token - show calculator
+      setupCalculator();
+      // Optionally show expiration warning if close to expiry
+      if (result.data && result.data.daysRemaining <= 2) {
+        toast('This link expires in ' + result.data.daysRemaining + ' day(s)', 'warn');
+      }
+    } else {
+      // Invalid or expired - block access
+      showAccessDenied(result.message, result.data && result.data.expired);
+    }
+  })
+  .catch(function(err){
+    showAccessDenied('Unable to verify access. Please try again later.', false);
+  });
+}
+
+
+
+
+  function showAccessDenied(message, isExpired) {
+  var card = document.querySelector('.card');
+  card.innerHTML = 
+    '<div style="padding:60px 40px;text-align:center">' +
+      '<div style="font-size:64px;margin-bottom:20px">' + (isExpired ? '⏰' : '🔒') + '</div>' +
+      '<h2 style="color:#b91c1c;margin:0 0 12px">' + (isExpired ? 'Link Expired' : 'Access Denied') + '</h2>' +
+      '<p style="color:#64748b;margin:0 0 24px;max-width:400px;margin-left:auto;margin-right:auto">' + 
+        (isExpired 
+          ? 'This ROI calculator link has expired. Please contact your sales representative for a new link.'
+          : message || 'This link is invalid or has been revoked.') +
+      '</p>' +
+    '</div>';
+}
+
+  
+  
+
+
+function setupCalculator() {
+  // wire buttons
+  var s1 = document.getElementById('btnShare'); var s2 = document.getElementById('btnShare2');
+  if (s1) s1.onclick = openShare;
+  if (s2) s2.onclick = openShare;
+  var manageBtn = document.getElementById('btnManage');
+  if (manageBtn) manageBtn.onclick = openManage;
+  var genBtn = document.getElementById('btnGenShare');
+  if (genBtn) genBtn.onclick = createShare;
+  var pdfBtn = document.getElementById('btnPDF');
+  if (pdfBtn) pdfBtn.onclick = generatePDF;
+
+  // inputs -> recalc
+  document.querySelectorAll('input').forEach(function(el){
+    el.addEventListener('input', function(){ if (el.id==='foodPercent'){ syncPercents(); } update(); });
+  });
+
+  // try to fetch base rates from backend (token optional)
+  fetchBaseRates();
+  renderFixedCosts();
+  syncPercents();
+  update();
+}
+```
+
+**Tokens remaining:** ~195,000
+
+That's all 4 functions. Deploy to GitHub and test the expired token link again:
+```
+https://andrewaabbo.github.io/sales-dashboard/roi-calculator.html?token=23a9de52c0b446b2
+
+
+  
+
 function fetchBaseRates(){
   try{
     if (accessToken){
