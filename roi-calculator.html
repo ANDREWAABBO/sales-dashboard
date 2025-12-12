@@ -265,15 +265,15 @@
   <div class="modal">
     <h4>Share / Get Link <span class="pill">7-day access</span></h4>
     <div class="fg">
-      <label>Client name (optional)</label>
-      <input id="clientName" type="text" placeholder="e.g., Acme HQ">
+      <label>Client/Prospect Name <span style="color:#dc2626">*</span></label>
+      <input id="clientName" type="text" placeholder="e.g., Acme HQ, Jefferson, Costa Rica Lead" required>
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">Required for tracking on dashboard</div>
     </div>
     <div class="fg">
       <label>Link</label>
-      <input id="shareUrlBox" type="text" readonly placeholder="Click Generate to create link">
+      <input id="shareUrlBox" type="text" readonly placeholder="Enter client name, then click Generate">
     </div>
     <div class="actions">
-      <!-- Copy button removed (auto-copy on Generate) -->
       <button class="btn" id="btnGenShare">Generate</button>
       <button class="btn secondary" onclick="closeShare()">Close</button>
     </div>
@@ -903,7 +903,16 @@ function createShare(){
   var btn       = document.getElementById('btnGenShare');
   var urlBox    = document.getElementById('shareUrlBox');
   var createdBy = (localStorage.getItem('dashboardUser')||sessionStorage.getItem('dashboardUser')||'Operator');
-  var clientName= document.getElementById('clientName').value||'';
+  var clientName = (document.getElementById('clientName').value || '').trim();
+
+  // Require client name
+  if (!clientName) {
+    document.getElementById('clientName').style.borderColor = '#dc2626';
+    document.getElementById('clientName').focus();
+    toast('Please enter a client/prospect name for tracking', 'warn');
+    return;
+  }
+  document.getElementById('clientName').style.borderColor = '#d1d5db';
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span>Generating…';
