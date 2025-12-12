@@ -322,6 +322,8 @@ var baseRates = {
 };
 var accessToken = null;
 var operatorMode = true;
+var sessionStartTime = null;
+var downloadedPDF = false;
 
 /* ===========================
    PDF Generation Function
@@ -577,7 +579,13 @@ function generatePDF() {
     var timestamp = new Date().toISOString().slice(0, 10);
     var filename = 'Smart-Fridge-ROI-Report-' + timestamp + '.pdf';
     
-    doc.save(filename);
+ doc.save(filename);
+    
+    // Track PDF download for guests
+    if (!operatorMode) {
+      downloadedPDF = true;
+      sendSessionData();
+    }
     
     toast('PDF downloaded to your Downloads folder!');
 
@@ -675,22 +683,60 @@ function setupCalculator() {
     el.addEventListener('input', function(){ if (el.id==='foodPercent'){ syncPercents(); } update(); });
   });
 
-  // try to fetch base rates from backend (token optional)
+// try to fetch base rates from backend (token optional)
   fetchBaseRates();
   renderFixedCosts();
   syncPercents();
   update();
+
+  // Start session tracking for guests
+  if (!operatorMode && accessToken) {
+    sessionStartTime = new Date();
+    
+    // Track when they leave the page
+    window.addEventListener('beforeunload', sendSessionData);
+    
+    // Also send data every 60 seconds in case they close abruptly
+    setInterval(function() {
+      sendSessionData();
+    }, 60000);
+  }
 }
-```
-
-**Tokens remaining:** ~195,000
-
-That's all 4 functions. Deploy to GitHub and test the expired token link again:
-```
-https://andrewaabbo.github.io/sales-dashboard/roi-calculator.html?token=23a9de52c0b446b2
 
 
+function sendSessionData() {
+  if (operatorMode || !accessToken || !sessionStartTime) return;
   
+  try {
+    var inputs = readInputs();
+    var pf = calcPerFridge(inputs);
+    var monthlyNet = pf.netSheet * inputs.fridgeCount;
+    var annual = (monthlyNet * 12) + (pf.serviceRevenue * inputs.fridgeCount * 12);
+    
+    var duration = Math.round((new Date() - sessionStartTime) / 1000);
+    
+    var params = new URLSearchParams();
+    params.append('action', 'trackSession');
+    params.append('token', accessToken);
+    params.append('fridgeCount', inputs.fridgeCount);
+    params.append('transactions', inputs.transactions);
+    params.append('margin', inputs.margin);
+    params.append('monthlyProfit', monthlyNet.toFixed(2));
+    params.append('annualProfit', annual.toFixed(2));
+    params.append('sessionDuration', duration);
+    params.append('downloadedPDF', downloadedPDF ? 'true' : 'false');
+    
+    // Use sendBeacon for reliability on page unload
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(BACKEND_URL + '?' + params.toString());
+    } else {
+      fetch(BACKEND_URL + '?' + params.toString());
+    }
+  } catch (e) {
+    // Silent fail
+  }
+}
+
 
 function fetchBaseRates(){
   try{
