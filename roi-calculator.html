@@ -302,8 +302,7 @@ var BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7C
 var IN_NET_INCLUDE_CELLULAR   = true;
 var IN_NET_INCLUDE_LICENSE    = true;
 var IN_NET_INCLUDE_RFID       = true;
-var IN_NET_INCLUDE_ENGAGE     = true;
-var IN_NET_INCLUDE_GATEWAY    = true;
+var IN_NET_INCLUDE_TXFEES     = true;
 var IN_NET_INCLUDE_MERCHANT   = true;
 var IN_NET_INCLUDE_SWIPE      = true;
 var IN_NET_INCLUDE_LABOR      = true;
@@ -422,10 +421,8 @@ function generatePDF() {
     doc.setFont('helvetica', 'normal');
     doc.text('? Cellular: $25.00 /month', 115, rightY); rightY += 4;
     doc.text('? License Fee: $175.00 /month', 115, rightY); rightY += 4;
-    doc.text('? Engage Transaction Fees ($0.15/tx)', 115, rightY); rightY += 4;
-    doc.text('? Gateway Transaction Fees ($0.07/tx)', 115, rightY); rightY += 4;
-    doc.text('? Merchant Interchange: 2.50% of sales', 115, rightY); rightY += 4;
-    doc.text('? Merchant Swipe Fee: $0.03 per tx', 115, rightY); rightY += 4;
+    doc.text('? Transaction Fees: $0.25/tx', 115, rightY); rightY += 4;
+    doc.text('? Merchant Fees: AVG 2.25% + $0.03/tx', 115, rightY); rightY += 4;
     doc.text('? RFID Tags: $0.18 per tag', 115, rightY);
 
     y = Math.max(y + 10, rightY + 10);
@@ -534,9 +531,8 @@ function generatePDF() {
       {label: 'Spoilage (at cost)', per: pf.spoilageCost, all: pf.spoilageCost * inputs.fridgeCount},
       {label: 'Cellular', per: pf.cellular, all: pf.cellular * inputs.fridgeCount},
       {label: 'License Fee', per: pf.license, all: pf.license * inputs.fridgeCount},
-      {label: 'Engage Transaction Fees', per: pf.engage, all: pf.engage * inputs.fridgeCount},
-      {label: 'Gateway Transaction Fees', per: pf.gateway, all: pf.gateway * inputs.fridgeCount},
-      {label: 'Merchant % Fee', per: pf.merchantPct, all: pf.merchantPct * inputs.fridgeCount},
+      {label: 'Transaction Fees', per: pf.transactionFees, all: pf.transactionFees * inputs.fridgeCount},
+      {label: 'Merchant Interchange (2.25%)', per: pf.merchantPct, all: pf.merchantPct * inputs.fridgeCount},
       {label: 'Merchant Swipe Fee', per: pf.swipe, all: pf.swipe * inputs.fridgeCount},
       {label: 'RFID Tags', per: pf.rfid, all: pf.rfid * inputs.fridgeCount},
       {label: 'Labor', per: pf.labor, all: pf.labor * inputs.fridgeCount},
@@ -820,8 +816,7 @@ function calcPerFridge(inputs){
       (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
       (IN_NET_INCLUDE_RFID     ? rfid     : 0) +
-      (IN_NET_INCLUDE_ENGAGE   ? engage   : 0) +
-      (IN_NET_INCLUDE_GATEWAY  ? gateway  : 0) +
+      (IN_NET_INCLUDE_ENGAGE   ? transactionFees : 0) +
       (IN_NET_INCLUDE_MERCHANT ? merchantPct : 0) +
       (IN_NET_INCLUDE_SWIPE    ? swipe    : 0) +
       (IN_NET_INCLUDE_LABOR    ? labor    : 0) +
@@ -833,7 +828,7 @@ function calcPerFridge(inputs){
 
   return {
     salesRevenue: salesRevenue, serviceRevenue: serviceRevenue,
-    cogs: cogs, spoilageCost: spoilageCost, cellular: cellular, license: license, rfid: rfid, engage: engage, gateway: gateway, merchantPct: merchantPct, swipe: swipe, labor: labor, misc: misc, financing: financing,
+    cogs: cogs, spoilageCost: spoilageCost, cellular: cellular, license: license, rfid: rfid, transactionFees: transactionFees, merchantPct: merchantPct, swipe: swipe, labor: labor, misc: misc, financing: financing,
     totalCosts: totalCosts,
     netSheet: netSheet
   };
@@ -897,9 +892,8 @@ function renderBreakdown(pf, inputs){
   addRow('Spoilage (at cost)',                 pf.spoilageCost,   pf.spoilageCost*fc);
   addRow('Cellular',                           pf.cellular,       pf.cellular*fc);
   addRow('License Fee',                        pf.license,        pf.license*fc);
-  addRow('Engage <b>Transactions</b> Fees ($0.15/tx)',   pf.engage,         pf.engage*fc);
-  addRow('Gateway <b>Transactions</b> Fees ($0.13/tx)',  pf.gateway,        pf.gateway*fc);
-  addRow('Merchant % Fee (2.50% of sales)',    pf.merchantPct,    pf.merchantPct*fc);
+  addRow('Transaction Fees ($0.25/tx)',        pf.transactionFees, pf.transactionFees*fc);
+  addRow('Merchant Interchange (2.25% of sales)', pf.merchantPct,    pf.merchantPct*fc);
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
   
