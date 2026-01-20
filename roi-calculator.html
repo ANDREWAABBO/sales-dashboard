@@ -312,8 +312,8 @@ var IN_NET_INCLUDE_FINANCING  = true;
 var baseRates = {
   fixedCosts:{
     cellular:25, licenseFee:175, rfidTagsPerTag:0.18,
-    engageTransactionFee:0.15, gatewayTransactionFee:0.13,
-    merchantAccountPercent:2.5, merchantAccountSwipeFee:0.03
+    transactionFee:0.25,
+    merchantInterchangePercent:2.25, merchantSwipeFee:0.03
   }
 };
 var accessToken = null;
@@ -816,7 +816,7 @@ function calcPerFridge(inputs){
       (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
       (IN_NET_INCLUDE_RFID     ? rfid     : 0) +
-      (IN_NET_INCLUDE_ENGAGE   ? transactionFees : 0) +
+      (IN_NET_INCLUDE_TXFEES   ? transactionFees : 0) +
       (IN_NET_INCLUDE_MERCHANT ? merchantPct : 0) +
       (IN_NET_INCLUDE_SWIPE    ? swipe    : 0) +
       (IN_NET_INCLUDE_LABOR    ? labor    : 0) +
