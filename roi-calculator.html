@@ -188,7 +188,7 @@
         <div class="panel" style="background:#eef6ff;border-color:#bfdbfe;margin-top:8px">
           <h3 style="margin-bottom:6px">Fixed Costs & Fees (per fridge):</h3>
           <div id="fixedCostsSummary" class="subtle">
-            ? License Fee: $199.00 /month Includes Cellular<br>
+            ? Technology Fee: $199.00 /month (Includes Cellular)<br>
             ? Transaction Fees: $0.25/tx<br>
             ? Merchant Fees: Interchange Rate AVG 2.25% + $0.03 per tx<br>
             ? RFID Tags: $0.18 per tag
@@ -311,7 +311,7 @@ var IN_NET_INCLUDE_FINANCING  = true;
 
 var baseRates = {
   fixedCosts:{
-    cellular:25, licenseFee:175, rfidTagsPerTag:0.18,
+    licenseFee:199, rfidTagsPerTag:0.18,
     transactionFee:0.25,
     merchantInterchangePercent:2.25, merchantSwipeFee:0.03
   }
@@ -419,8 +419,7 @@ function generatePDF() {
     doc.setTextColor(107, 114, 128);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('? Cellular: $25.00 /month', 115, rightY); rightY += 4;
-    doc.text('? License Fee: $175.00 /month', 115, rightY); rightY += 4;
+    doc.text('? Technology Fee: $199.00 /month (Includes Cellular)', 115, rightY); rightY += 4;
     doc.text('? Transaction Fees: $0.25/tx', 115, rightY); rightY += 4;
     doc.text('? Merchant Fees: AVG 2.25% + $0.03/tx', 115, rightY); rightY += 4;
     doc.text('? RFID Tags: $0.18 per tag', 115, rightY);
@@ -756,8 +755,7 @@ function syncPercents(){
 function renderFixedCosts(){
   var r = baseRates.fixedCosts;
   document.getElementById('fixedCostsSummary').innerHTML = 
-    '? Cellular: $' + fmt2(r.cellular) + ' /month<br>' +
-    '? License Fee: $' + fmt2(r.licenseFee) + ' /month<br>' +
+    '? Technology Fee: $' + fmt2(r.licenseFee) + ' /month (Includes Cellular)<br>' +
     '? Transaction Fees: $' + fmt2(r.transactionFee) + '/tx<br>' +
     '? Merchant Fees: Interchange Rate AVG ' + Number(r.merchantInterchangePercent).toFixed(2) + '% + $' + fmt2(r.merchantSwipeFee) + ' per tx<br>' +
     '? RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
