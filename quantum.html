@@ -591,6 +591,16 @@
         </select>
         <small>New customers typically need 1 scanner per location. Additional scanners for backup or multiple sites.</small>
       </div>
+
+
+      <div class="form-group">
+        <label for="warrantyType">Warranty *</label>
+        <select id="warrantyType" name="warrantyType" required onchange="updateQuantumPricingSummary()">
+          <option value="1year" selected>1 Year Limited Warranty (Standard)</option>
+          <option value="5year">5 Year Limited Warranty (+$300)</option>
+        </select>
+        <small>Upgrade to 5-year warranty for extended coverage.</small>
+      </div>
   
       <div class="form-row">
         <div class="form-group">
@@ -1639,12 +1649,16 @@ function confirmUnhideVideo(fileId, fileName) {
       }
       return Math.round(baseFreight * distanceMultiplier);
     }
+
+
+    
   
     window.updateQuantumPricingSummary = function updateQuantumPricingSummary() {
       const fridgeCount = parseInt(document.getElementById('quantumFridgeCount').value) || 1;
       const scannerCount = parseInt(document.getElementById('scannerCount').value) || 0;
       const rfidRolls = parseInt(document.getElementById('rfidRolls').value) || 0;
       const shippingPerUnit = parseFloat(document.getElementById('shippingPerUnit').value) || 0;
+      const warrantyType = document.getElementById('warrantyType').value;
       const vinylWrap = false;
       const goldSupport = false;
   
@@ -1653,13 +1667,14 @@ function confirmUnhideVideo(fileId, fileName) {
       const rfidRollPrice = 180;
       const wrapPrice = fridgeCount === 1 ? 645 : (fridgeCount * 547.50);
       const shipping = shippingPerUnit * fridgeCount;
+      const warrantyUpgrade = warrantyType === '5year' ? 300 : 0;
   
       const fridgeTotal = fridgeCount * fridgePrice;
       const scannerTotal = scannerCount * scannerPrice;
       const rfidTotal = rfidRolls * rfidRollPrice;
       const wrapTotal = vinylWrap ? wrapPrice : 0;
   
-      const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + shipping;
+      const oneTimeTotal = fridgeTotal + scannerTotal + rfidTotal + wrapTotal + shipping + warrantyUpgrade;
   
       const monthlyLicense = fridgeCount * 175;
       const monthlyLTE = fridgeCount * 25;
@@ -1672,6 +1687,7 @@ function confirmUnhideVideo(fileId, fileName) {
       if (scannerCount > 0) html += '<div>RFID Scanners (' + scannerCount + '): $' + scannerTotal.toLocaleString() + '</div>';
       if (rfidRolls > 0) html += '<div>RFID Tags (' + rfidRolls + ' rolls): $' + rfidTotal.toLocaleString() + '</div>';
       if (vinylWrap) html += '<div>Vinyl Wrap: $' + wrapTotal.toLocaleString() + '</div>';
+      if (warrantyUpgrade > 0) html += '<div>5 Year Warranty Upgrade: $' + warrantyUpgrade.toLocaleString() + '</div>';
       html += '<div>Shipping (' + fridgeCount + ' × $' + shippingPerUnit + '): $' + shipping.toLocaleString() + '</div>' +
         '<div style="font-weight:bold;color:#1e3a8a;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">' +
           'One-Time Total: $' + oneTimeTotal.toLocaleString() +
@@ -1688,6 +1704,12 @@ function confirmUnhideVideo(fileId, fileName) {
         '</div>';
       document.getElementById('quantumPricingSummary').innerHTML = html;
     };
+
+
+
+
+
+    
   
     window.generateQuantumProposal = function generateQuantumProposal(event) {
       if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -1713,6 +1735,7 @@ function confirmUnhideVideo(fileId, fileName) {
           shippingPerUnit: document.getElementById('shippingPerUnit').value || '0',
           shippingMethod: document.getElementById('shippingMethod').value,
           countryOfOrigin: document.getElementById('countryOfOrigin').value,
+          warrantyType: document.getElementById('warrantyType').value,
           vinylWrap: 'No',
           goldSupport: 'No'
         };
