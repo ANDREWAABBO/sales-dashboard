@@ -299,7 +299,6 @@
 var BACKEND_URL = 'https://script.google.com/macros/s/AKfycbyliQpOEuz0QMKWMtHW7Cjlhqf2qEmLNTXI4TDY8THVPbKXzyqkIJ5dbIsHtb8JegHc_Q/exec';
 
 /* "What the sheet includes in Total Costs" switches */
-var IN_NET_INCLUDE_CELLULAR   = true;
 var IN_NET_INCLUDE_LICENSE    = true;
 var IN_NET_INCLUDE_RFID       = true;
 var IN_NET_INCLUDE_TXFEES     = true;
@@ -528,8 +527,7 @@ function generatePDF() {
     var breakdownData = [
       {label: 'COGS', per: pf.cogs, all: pf.cogs * inputs.fridgeCount},
       {label: 'Spoilage (at cost)', per: pf.spoilageCost, all: pf.spoilageCost * inputs.fridgeCount},
-      {label: 'Cellular', per: pf.cellular, all: pf.cellular * inputs.fridgeCount},
-      {label: 'License Fee', per: pf.license, all: pf.license * inputs.fridgeCount},
+      {label: 'Technology Fee (Includes Cellular)', per: pf.license, all: pf.license * inputs.fridgeCount},
       {label: 'Transaction Fees', per: pf.transactionFees, all: pf.transactionFees * inputs.fridgeCount},
       {label: 'Merchant Interchange (2.25%)', per: pf.merchantPct, all: pf.merchantPct * inputs.fridgeCount},
       {label: 'Merchant Swipe Fee', per: pf.swipe, all: pf.swipe * inputs.fridgeCount},
@@ -799,19 +797,17 @@ function calcPerFridge(inputs){
   var merchantPct = salesRevenue * (r.merchantInterchangePercent/100);
   var swipe  = inputs.transactions * r.merchantSwipeFee;
 
-  var cellular = r.cellular;
   var license  = r.licenseFee;
   var labor    = inputs.laborRate * inputs.laborHours * 4;
   var misc     = inputs.miscCosts;
   var financing= inputs.financing;
 
   var costsNoFinance =
-      cogs + spoilageCost + cellular + license + rfid + transactionFees + merchantPct + swipe + labor + misc;
+      cogs + spoilageCost + license + rfid + transactionFees + merchantPct + swipe + labor + misc;
 
   var totalCosts = costsNoFinance + financing;
 
   var totalCostsBlock =
-      (IN_NET_INCLUDE_CELLULAR ? cellular : 0) +
       (IN_NET_INCLUDE_LICENSE  ? license  : 0) +
       (IN_NET_INCLUDE_RFID     ? rfid     : 0) +
       (IN_NET_INCLUDE_TXFEES   ? transactionFees : 0) +
@@ -826,7 +822,7 @@ function calcPerFridge(inputs){
 
   return {
     salesRevenue: salesRevenue, serviceRevenue: serviceRevenue,
-    cogs: cogs, spoilageCost: spoilageCost, cellular: cellular, license: license, rfid: rfid, transactionFees: transactionFees, merchantPct: merchantPct, swipe: swipe, labor: labor, misc: misc, financing: financing,
+    cogs: cogs, spoilageCost: spoilageCost, license: license, rfid: rfid, transactionFees: transactionFees, merchantPct: merchantPct, swipe: swipe, labor: labor, misc: misc, financing: financing,
     totalCosts: totalCosts,
     netSheet: netSheet
   };
@@ -888,8 +884,7 @@ function renderBreakdown(pf, inputs){
   addSec('Costs');
   addRow('COGS',                               pf.cogs,           pf.cogs*fc);
   addRow('Spoilage (at cost)',                 pf.spoilageCost,   pf.spoilageCost*fc);
-  addRow('Cellular',                           pf.cellular,       pf.cellular*fc);
-  addRow('License Fee',                        pf.license,        pf.license*fc);
+  addRow('Technology Fee (Includes Cellular)', pf.license,        pf.license*fc);
   addRow('Transaction Fees ($0.25/tx)',        pf.transactionFees, pf.transactionFees*fc);
   addRow('Merchant Interchange (2.25% of sales)', pf.merchantPct,    pf.merchantPct*fc);
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
