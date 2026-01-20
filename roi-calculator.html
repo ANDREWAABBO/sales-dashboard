@@ -762,10 +762,8 @@ function renderFixedCosts(){
   document.getElementById('fixedCostsSummary').innerHTML = 
     '? Cellular: $' + fmt2(r.cellular) + ' /month<br>' +
     '? License Fee: $' + fmt2(r.licenseFee) + ' /month<br>' +
-    '? Engage <b>Transactions</b> Fees <i>($' + fmt2(r.engageTransactionFee) + '/tx)</i><br>' +
-    '? Gateway <b>Transactions</b> Fees <i>($' + fmt2(r.gatewayTransactionFee) + '/tx)</i><br>' +
-    '? Merchant Interchange: ' + Number(r.merchantAccountPercent).toFixed(2) + '% of sales revenue<br>' +
-    '? Merchant Swipe Fee: $' + fmt2(r.merchantAccountSwipeFee) + ' per tx<br>' +
+    '? Transaction Fees: $' + fmt2(r.transactionFee) + '/tx<br>' +
+    '? Merchant Fees: Interchange Rate AVG ' + Number(r.merchantInterchangePercent).toFixed(2) + '% + $' + fmt2(r.merchantSwipeFee) + ' per tx<br>' +
     '? RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
 }
 
