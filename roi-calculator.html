@@ -801,10 +801,9 @@ function calcPerFridge(inputs){
   var spoilageCost = cogs * (inputs.spoilage/100);
 
   var rfid   = inputs.transactions * r.rfidTagsPerTag;
-  var engage = inputs.transactions * r.engageTransactionFee;
-  var gateway= inputs.transactions * r.gatewayTransactionFee;
-  var merchantPct = salesRevenue * (r.merchantAccountPercent/100);
-  var swipe  = inputs.transactions * r.merchantAccountSwipeFee;
+  var transactionFees = inputs.transactions * r.transactionFee;
+  var merchantPct = salesRevenue * (r.merchantInterchangePercent/100);
+  var swipe  = inputs.transactions * r.merchantSwipeFee;
 
   var cellular = r.cellular;
   var license  = r.licenseFee;
