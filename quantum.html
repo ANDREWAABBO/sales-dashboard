@@ -1707,7 +1707,21 @@ function confirmUnhideVideo(fileId, fileName) {
 
 
 
-
+    window.resetQuantumProposalForm = function resetQuantumProposalForm() {
+      document.getElementById('quantumCompanyName').value = '';
+      document.getElementById('quantumContactName').value = '';
+      document.getElementById('customerAddress').value = '';
+      document.getElementById('customerZip').value = '';
+      document.getElementById('quantumPreparedBy').value = '';
+      document.getElementById('quantumPreparedByPhone').value = '';
+      document.getElementById('quantumPreparedByEmail').value = '';
+      document.getElementById('customerType').value = 'new';
+      document.getElementById('quantumFridgeCount').value = '1';
+      document.getElementById('scannerCount').value = '1';
+      document.getElementById('warrantyType').value = '1year';
+      document.getElementById('rfidRolls').value = '5';
+      document.getElementById('shippingPerUnit').value = '600';
+    };
 
     
   
@@ -1754,6 +1768,7 @@ function confirmUnhideVideo(fileId, fileName) {
         .then(function(result) {
           if (result.status === 'success') {
             closeQuantumModal('quantumProposalModal');
+            resetQuantumProposalForm();
             showQuantumPopup(
               '<div class="success-popup">' +
                 '<h3>✅ Proposal Generated Successfully</h3>' +
