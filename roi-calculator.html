@@ -418,10 +418,10 @@ function generatePDF() {
     doc.setTextColor(107, 114, 128);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('? Technology Fee: $199.00 /month (Includes Cellular)', 115, rightY); rightY += 4;
-    doc.text('? Transaction Fees: $0.25/tx', 115, rightY); rightY += 4;
-    doc.text('? Merchant Fees: AVG 2.25% + $0.03/tx', 115, rightY); rightY += 4;
-    doc.text('? RFID Tags: $0.18 per tag', 115, rightY);
+    doc.text('- Technology Fee: $199.00 /month (Includes Cellular)', 115, rightY); rightY += 4;
+    doc.text('- Transaction Fees: $0.25/tx', 115, rightY); rightY += 4;
+    doc.text('- Merchant Fees: AVG 2.25% + $0.03/tx', 115, rightY); rightY += 4;
+    doc.text('- RFID Tags: $0.18 per tag', 115, rightY);
 
     y = Math.max(y + 10, rightY + 10);
 
