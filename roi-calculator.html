@@ -97,7 +97,7 @@
     <div class="hdr">
       <div class="hdr-left">
         <h1>Smart Food Fridge ROI Calculator
-          <span id="modeTag" class="tag" title="No token in URL → Operator Mode">Operator Mode</span>
+          <span id="modeTag" class="tag" title="No token in URL ? Operator Mode">Operator Mode</span>
         </h1>
       </div>
       <div class="hdr-right" id="opButtons" style="display:flex">
@@ -188,13 +188,10 @@
         <div class="panel" style="background:#eef6ff;border-color:#bfdbfe;margin-top:8px">
           <h3 style="margin-bottom:6px">Fixed Costs & Fees (per fridge):</h3>
           <div id="fixedCostsSummary" class="subtle">
-            • Cellular: $25.00 /month<br>
-            • License Fee: $175.00 /month<br>
-            • Engage <b>Transactions</b> Fees <i>($0.15/tx)</i><br>
-            • Gateway <b>Transactions</b> Fees <i>($0.07/tx)</i><br>
-            • Merchant Interchange: 2.50% of sales revenue<br>
-            • Merchant Swipe Fee: $0.03 per tx<br>
-            • RFID Tags: $0.18 per tag
+            ? License Fee: $199.00 /month Includes Cellular<br>
+            ? Transaction Fees: $0.25/tx<br>
+            ? Merchant Fees: Interchange Rate AVG 2.25% + $0.03 per tx<br>
+            ? RFID Tags: $0.18 per tag
           </div>
         </div>
       </div>
@@ -248,7 +245,7 @@
             <th style="width:160px">All Fridges</th>
           </tr>
         </thead>
-        <tbody id="breakdownBody"><tr><td colspan="3" class="subtle">Enter inputs to see a detailed cost breakdown…</td></tr></tbody>
+        <tbody id="breakdownBody"><tr><td colspan="3" class="subtle">Enter inputs to see a detailed cost breakdown?</td></tr></tbody>
       </table>
     </div>
 
@@ -288,7 +285,7 @@
       <label>Filter by "Created By"</label>
       <input id="filterCreatedBy" type="text" placeholder="(optional)">
     </div>
-    <div id="tokenList" class="subtle">Loading…</div>
+    <div id="tokenList" class="subtle">Loading?</div>
     <div class="actions">
       <button class="btn secondary" onclick="closeManage()">Close</button>
     </div>
@@ -423,13 +420,13 @@ function generatePDF() {
     doc.setTextColor(107, 114, 128);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('• Cellular: $25.00 /month', 115, rightY); rightY += 4;
-    doc.text('• License Fee: $175.00 /month', 115, rightY); rightY += 4;
-    doc.text('• Engage Transaction Fees ($0.15/tx)', 115, rightY); rightY += 4;
-    doc.text('• Gateway Transaction Fees ($0.07/tx)', 115, rightY); rightY += 4;
-    doc.text('• Merchant Interchange: 2.50% of sales', 115, rightY); rightY += 4;
-    doc.text('• Merchant Swipe Fee: $0.03 per tx', 115, rightY); rightY += 4;
-    doc.text('• RFID Tags: $0.18 per tag', 115, rightY);
+    doc.text('? Cellular: $25.00 /month', 115, rightY); rightY += 4;
+    doc.text('? License Fee: $175.00 /month', 115, rightY); rightY += 4;
+    doc.text('? Engage Transaction Fees ($0.15/tx)', 115, rightY); rightY += 4;
+    doc.text('? Gateway Transaction Fees ($0.07/tx)', 115, rightY); rightY += 4;
+    doc.text('? Merchant Interchange: 2.50% of sales', 115, rightY); rightY += 4;
+    doc.text('? Merchant Swipe Fee: $0.03 per tx', 115, rightY); rightY += 4;
+    doc.text('? RFID Tags: $0.18 per tag', 115, rightY);
 
     y = Math.max(y + 10, rightY + 10);
 
@@ -609,7 +606,7 @@ function init(){
   if (operatorMode && window.Auth && !Auth.checkAuth()) return;
 
   document.getElementById('modeTag').textContent = operatorMode ? 'Operator Mode' : 'Guest Link';
-  document.getElementById('modeTag').title = operatorMode ? 'No token in URL → Operator Mode' : 'Viewing with a time-limited token';
+  document.getElementById('modeTag').title = operatorMode ? 'No token in URL ? Operator Mode' : 'Viewing with a time-limited token';
   document.getElementById('opButtons').style.display = operatorMode ? 'flex' : 'none';
 
   // If guest mode (has token), validate it FIRST before allowing access
@@ -652,7 +649,7 @@ function validateGuestAccess() {
   var card = document.querySelector('.card');
   card.innerHTML = 
     '<div style="padding:60px 40px;text-align:center">' +
-      '<div style="font-size:64px;margin-bottom:20px">' + (isExpired ? '⏰' : '🔒') + '</div>' +
+      '<div style="font-size:64px;margin-bottom:20px">' + (isExpired ? '?' : '?') + '</div>' +
       '<h2 style="color:#b91c1c;margin:0 0 12px">' + (isExpired ? 'Link Expired' : 'Access Denied') + '</h2>' +
       '<p style="color:#64748b;margin:0 0 24px;max-width:400px;margin-left:auto;margin-right:auto">' + 
         (isExpired 
@@ -763,13 +760,13 @@ function syncPercents(){
 function renderFixedCosts(){
   var r = baseRates.fixedCosts;
   document.getElementById('fixedCostsSummary').innerHTML = 
-    '• Cellular: $' + fmt2(r.cellular) + ' /month<br>' +
-    '• License Fee: $' + fmt2(r.licenseFee) + ' /month<br>' +
-    '• Engage <b>Transactions</b> Fees <i>($' + fmt2(r.engageTransactionFee) + '/tx)</i><br>' +
-    '• Gateway <b>Transactions</b> Fees <i>($' + fmt2(r.gatewayTransactionFee) + '/tx)</i><br>' +
-    '• Merchant Interchange: ' + Number(r.merchantAccountPercent).toFixed(2) + '% of sales revenue<br>' +
-    '• Merchant Swipe Fee: $' + fmt2(r.merchantAccountSwipeFee) + ' per tx<br>' +
-    '• RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
+    '? Cellular: $' + fmt2(r.cellular) + ' /month<br>' +
+    '? License Fee: $' + fmt2(r.licenseFee) + ' /month<br>' +
+    '? Engage <b>Transactions</b> Fees <i>($' + fmt2(r.engageTransactionFee) + '/tx)</i><br>' +
+    '? Gateway <b>Transactions</b> Fees <i>($' + fmt2(r.gatewayTransactionFee) + '/tx)</i><br>' +
+    '? Merchant Interchange: ' + Number(r.merchantAccountPercent).toFixed(2) + '% of sales revenue<br>' +
+    '? Merchant Swipe Fee: $' + fmt2(r.merchantAccountSwipeFee) + ' per tx<br>' +
+    '? RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
 }
 
 /* ===========================
@@ -909,7 +906,7 @@ function renderBreakdown(pf, inputs){
   addRow('Merchant Swipe Fee ($0.03/tx)',      pf.swipe,          pf.swipe*fc);
   addRow('RFID Tags ($0.18/tx)',               pf.rfid,           pf.rfid*fc);
   
-  var laborCalc = 'Labor ($' + inputs.laborRate + '/hr × ' + inputs.laborHours + ' hrs/week × 4 weeks)';
+  var laborCalc = 'Labor ($' + inputs.laborRate + '/hr ? ' + inputs.laborHours + ' hrs/week ? 4 weeks)';
   addRow(laborCalc,                            pf.labor,          pf.labor*fc);
   
   addRow('Miscellaneous',                      pf.misc,           pf.misc*fc);
@@ -961,7 +958,7 @@ function createShare(){
   document.getElementById('clientName').style.borderColor = '#d1d5db';
 
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>Generating…';
+  btn.innerHTML = '<span class="spin"></span>Generating?';
   urlBox.value = '';
 
   var u = BACKEND_URL + '?action=generateToken&createdBy=' + encodeURIComponent(createdBy) + '&clientName=' + encodeURIComponent(clientName);
@@ -983,7 +980,7 @@ function createShare(){
 
       if (copied) {
         closeShare();
-        toast('Guest link copied. It\'s valid for 7 days — share it with your client.');
+        toast('Guest link copied. It\'s valid for 7 days ? share it with your client.');
       } else {
         urlBox.focus();
         toast('Couldn\'t auto-copy. Press Ctrl+C (Cmd+C on Mac) to copy the link.', 'warn');
@@ -1013,7 +1010,7 @@ function closeManage(){ document.getElementById('manageOverlay').style.display='
 
 function loadTokens(){
   var listBox = document.getElementById('tokenList');
-  listBox.textContent = 'Loading…';
+  listBox.textContent = 'Loading?';
   var createdBy = (document.getElementById('filterCreatedBy').value||'').trim();
   var url = BACKEND_URL + '?action=listTokens&onlyActive=false&maxRows=50' + (createdBy ? '&createdBy=' + encodeURIComponent(createdBy) : '');
   fetch(url)
@@ -1028,7 +1025,7 @@ function loadTokens(){
         '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center">' +
           '<div>' +
             '<div style="font-weight:700">' + (t.clientName || '(no client name)') + ' ' + active + '</div>' +
-            '<div class="subtle">Created: ' + (t.createdDate ? new Date(t.createdDate).toLocaleDateString() : '—') + ' • Expires: ' + (t.expiresAt? new Date(t.expiresAt).toLocaleDateString():'—') + ' • Accesses: ' + (t.accessCount||0) + '</div>' +
+            '<div class="subtle">Created: ' + (t.createdDate ? new Date(t.createdDate).toLocaleDateString() : '?') + ' ? Expires: ' + (t.expiresAt? new Date(t.expiresAt).toLocaleDateString():'?') + ' ? Accesses: ' + (t.accessCount||0) + '</div>' +
             '<div class="subtle" style="word-break:break-all">' + t.shareUrl + '</div>' +
           '</div>' +
           '<div>' +
