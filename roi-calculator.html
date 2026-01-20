@@ -753,10 +753,10 @@ function syncPercents(){
 function renderFixedCosts(){
   var r = baseRates.fixedCosts;
   document.getElementById('fixedCostsSummary').innerHTML = 
-    '? Technology Fee: $' + fmt2(r.licenseFee) + ' /month (Includes Cellular)<br>' +
-    '? Transaction Fees: $' + fmt2(r.transactionFee) + '/tx<br>' +
-    '? Merchant Fees: Interchange Rate AVG ' + Number(r.merchantInterchangePercent).toFixed(2) + '% + $' + fmt2(r.merchantSwipeFee) + ' per tx<br>' +
-    '? RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
+    '&#8226; Technology Fee: $' + fmt2(r.licenseFee) + ' /month (Includes Cellular)<br>' +
+    '&#8226; Transaction Fees: $' + fmt2(r.transactionFee) + '/tx<br>' +
+    '&#8226; Merchant Fees: Interchange Rate AVG ' + Number(r.merchantInterchangePercent).toFixed(2) + '% + $' + fmt2(r.merchantSwipeFee) + ' per tx<br>' +
+    '&#8226; RFID Tags: $' + fmt2(r.rfidTagsPerTag) + ' per tag';
 }
 
 /* ===========================
