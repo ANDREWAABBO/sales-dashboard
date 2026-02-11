@@ -937,6 +937,17 @@
         window.open(url, '_blank');
 
         closeModal('proposalModal');
+        
+        // Reset form fields
+        document.getElementById('companyName').value = '';
+        document.getElementById('contactName').value = '';
+        document.getElementById('customerAddress').value = '';
+        document.getElementById('customerZip').value = '';
+        document.getElementById('fridgeCount').value = '1';
+        document.getElementById('monthlyFee').value = '795';
+        document.getElementById('deliveryFee').value = '';
+        updatePricingSummary();
+        
         showPopup(`
           <div class="success-popup">
             <h3>Proposal Generation Started!</h3>
