@@ -1659,9 +1659,9 @@ async function toggleServiceAgreementArchiveFromViewer(fileId, currentStatus, fi
 
 
 
-    /* ====== Backdrop close for all overlays (ignore auth overlay) ====== */
+    /* ====== Backdrop close for all overlays (ignore auth overlay and proposal modals) ====== */
     window.addEventListener('click', function (event) {
-      if (event.target.classList.contains('modal-overlay') && event.target.id !== 'loginOverlay') {
+      if (event.target.classList.contains('modal-overlay') && event.target.id !== 'loginOverlay' && event.target.id !== 'proposalModal' && event.target.id !== 'serviceAgreementModal') {
         event.target.remove();
       }
     });
