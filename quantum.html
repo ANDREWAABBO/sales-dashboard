@@ -827,14 +827,14 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
     .then(function(response) { return response.json(); })
     .then(function(data) {
       if (data.status === 'success') {
-        showQuantumPopup('<div class="success-popup"><h3>? Access Revoked</h3><p>The guest link has been deactivated.</p></div>', 'success');
+        showQuantumPopup('<div class="success-popup"><h3>Access Revoked</h3><p>The guest link has been deactivated.</p></div>', 'success');
         loadGuestUsage();
       } else {
         throw new Error(data.message || 'Failed to revoke token');
       }
     })
     .catch(function(error) {
-      showQuantumPopup('<div class="error-popup"><h3>? Revoke Failed</h3><p>' + error.message + '</p></div>', 'error');
+      showQuantumPopup('<div class="error-popup"><h3>Revoke Failed</h3><p>' + error.message + '</p></div>', 'error');
       loadGuestUsage();
     });
 };
@@ -974,7 +974,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
         '<div class="pdf-header">' +
           '<h3>' + title + '</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumAboutUs, 200);" style="padding:10px 20px;">? Back to Materials</button>' +
+            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumAboutUs, 200);" style="padding:10px 20px;">Back to Materials</button>' +
             '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:10px 20px;">? Download</button>' +
             '<button class="close-btn" onclick="closePDFViewer()">?</button>' +
           '</div>' +
@@ -1061,7 +1061,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
               '<p style="margin:0;color:#64748b;font-size:.95em;line-height:1.5;">' + m.description + '</p>' +
             '</div>' +
             '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
-              '<button class="btn btn-primary" onclick="viewQuantumMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/'/g, "\\'") + '\', \'' + m.type + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">?? View PDF</button>' +
+              '<button class="btn btn-primary" onclick="viewQuantumMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/'/g, "\\'") + '\', \'' + m.type + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">View PDF</button>' +
               '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">? Download</button>' +
             '</div>' +
           '</div>'
@@ -1300,7 +1300,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
         '<div class="video-player-header">' +
           '<h3 style="margin:0;font-size:1.2em;">' + fileName + '</h3>' +
           '<div style="display:flex;gap:10px;">' +
-            '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:8px 16px;">? Download</button>' +
+            '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:8px 16px;">Download</button>' +
             '<button class="close-btn" onclick="closeVideoPlayer()">?</button>' +
           '</div>' +
         '</div>' +
