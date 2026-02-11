@@ -908,7 +908,7 @@
     async function generateProposal(event) {
       if (event) { event.preventDefault(); event.stopPropagation(); }
       const submitBtn = document.getElementById('generateBtn');
-      const originalText = submitBtn.innerHTML;
+      const originalText = 'Generate Proposal PDF';
       if (submitBtn.disabled) return;
 
       submitBtn.disabled = true;
@@ -935,6 +935,12 @@
         Object.keys(formData).forEach(k => params.append(k, formData[k]));
         const url = `${WEB_APP_URL}?${params.toString()}`;
         window.open(url, '_blank');
+
+        // Re-enable button after short delay
+        setTimeout(function() {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Generate Proposal PDF';
+        }, 1000);
 
         closeModal('proposalModal');
         
