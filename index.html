@@ -883,19 +883,15 @@
     function updatePricingSummary() {
       const fridgeCount = parseInt(document.getElementById('fridgeCount').value) || 1;
       const basePrice   = parseInt(document.getElementById('monthlyFee').value) || 795;
-      const additionalDeliveryFee = parseInt(document.getElementById('deliveryFee').value) || 0;
+      const setupFee = parseInt(document.getElementById('deliveryFee').value) || 0;
 
       let monthlyTotal = basePrice;
-      let baseSetupFee = 295;
 
       if (fridgeCount > 1) {
         const additionalUnits = fridgeCount - 1;
         const discountedPrice = basePrice - 100;
         monthlyTotal = basePrice + (discountedPrice * additionalUnits);
-        baseSetupFee = 295 + (79 * additionalUnits);
       }
-
-      const totalSetupFee = baseSetupFee + additionalDeliveryFee;
 
       let pricingText = `Monthly Total: $${monthlyTotal}/month`;
       if (fridgeCount > 1) {
@@ -905,10 +901,7 @@
       } else {
         pricingText += '<br>';
       }
-      pricingText += `Setup & Delivery Fee: $${totalSetupFee} (one-time)`;
-      if (additionalDeliveryFee > 0) {
-        pricingText += `<br><small style="color: #1e3a8a;">Base: $${baseSetupFee} + Additional: ${additionalDeliveryFee.toFixed(2)}</small>`;
-      }
+      pricingText += `Setup & Delivery Fee: $${setupFee} (one-time)`;
       document.getElementById('pricingSummary').innerHTML = pricingText;
     }
     async function generateProposal(event) {
@@ -1017,7 +1010,7 @@
                 onclick="document.getElementById('proposalSearch').value=''; this.style.display='none'; filterProposals();"
                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
                        background: #e2e8f0; border: none; border-radius: 50%; width: 30px; height: 30px;
-                       cursor: pointer; display: none; transition: all 0.3s ease; font-size: 18px; color: #4a5568;">?</button>
+                       cursor: pointer; display: none; transition: all 0.3s ease; font-size: 18px; color: #4a5568;">&#10005;</button>
             </div>
           </div>
           <div id="proposalsList" style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
@@ -1244,6 +1237,11 @@
       const serviceModal = document.getElementById('serviceAgreementModal');
       if (serviceModal) {
         serviceModal.style.display = 'block';
+        const submitBtn = document.getElementById('generateServiceBtn');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Generate Service Agreement PDF';
+        }
         updateServiceAgreementPricing();
       }
     }
