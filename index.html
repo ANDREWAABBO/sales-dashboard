@@ -867,6 +867,12 @@
       const proposalModal = document.getElementById('proposalModal');
       if (proposalModal) {
         proposalModal.style.display = 'block';
+        // Reset button state in case it got stuck
+        const submitBtn = document.getElementById('generateBtn');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Generate Proposal PDF';
+        }
         updatePricingSummary();
       }
     }
