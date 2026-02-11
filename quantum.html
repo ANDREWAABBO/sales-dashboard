@@ -1301,7 +1301,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
           '<h3 style="margin:0;font-size:1.2em;">' + fileName + '</h3>' +
           '<div style="display:flex;gap:10px;">' +
             '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:8px 16px;">Download</button>' +
-            '<button class="close-btn" onclick="closeVideoPlayer()">?</button>' +
+            '<button class="close-btn" onclick="closeVideoPlayer()">&#10005;</button>' +
           '</div>' +
         '</div>' +
         '<div class="video-player-content">' +
@@ -1332,7 +1332,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
       '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will move it to the Hidden folder.</p>' +
       '<div style="display:flex;gap:15px;margin-top:25px;">' +
         '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
-        '<button class="btn" onclick="confirmHideVideo(\'' + fileId + '\', \'' + fileName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#e53e3e;">? Hide Video</button>' +
+        '<button class="btn" onclick="confirmHideVideo(\'' + fileId + '\', \'' + fileName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#e53e3e;">Hide Video</button>' +
       '</div>' +
     '</div>';
   
