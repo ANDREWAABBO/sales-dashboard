@@ -976,7 +976,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
           '<div style="display:flex;gap:10px;align-items:center;">' +
             '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumAboutUs, 200);" style="padding:10px 20px;">Back to Materials</button>' +
             '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:10px 20px;">? Download</button>' +
-            '<button class="close-btn" onclick="closePDFViewer()">?</button>' +
+            '<button class="close-btn" onclick="closePDFViewer()">&#10005;</button>' +
           '</div>' +
         '</div>' +
         '<div class="pdf-viewer">' +
@@ -1006,7 +1006,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
         '<div class="pdf-header">' +
           '<h3>New Customer Account Setup Form</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">? Download PDF</button>' +
+            '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">Download PDF</button>' +
             '<button class="close-btn" onclick="closePDFViewer()">?</button>' +
           '</div>' +
         '</div>' +
@@ -1105,7 +1105,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
   modal.innerHTML = 
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
       '<h3 id="videoLibraryTitle" style="margin:0;color:#2d3748;font-size:1.8em;">Video Library</h3>' +
-      '<button class="close-btn" onclick="closeVideoLibrary()">?</button>' +
+      '<button class="close-btn" onclick="closeVideoLibrary()">&#10005;</button>' +
     '</div>' +
     '<div class="search-box">' +
       '<input type="text" id="videoSearch" placeholder="Search videos..." oninput="filterVideos()">' +
