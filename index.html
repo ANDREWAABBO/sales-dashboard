@@ -1035,6 +1035,10 @@
 
     window.refreshProposals = function() {
       window.allProposals = null;
+      const list = document.getElementById('proposalsList');
+      if (list) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading-spinner"></div><p style="margin-top: 20px; color: #718096;">Refreshing proposals...</p></div>';
+      }
       loadProposalsFromDrive();
     };
 
@@ -1422,6 +1426,10 @@
 
     window.refreshServiceAgreements = function() {
       window.allServiceAgreements = null;
+      const list = document.getElementById('serviceAgreementsList');
+      if (list) {
+        list.innerHTML = '<div style="text-align: center; padding: 40px;"><div class="loading-spinner"></div><p style="margin-top: 20px; color: #718096;">Refreshing service agreements...</p></div>';
+      }
       loadServiceAgreementsFromDrive();
     };
 
