@@ -975,7 +975,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
           '<h3>' + title + '</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
             '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumAboutUs, 200);" style="padding:10px 20px;">Back to Materials</button>' +
-            '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:10px 20px;">? Download</button>' +
+            '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:10px 20px;">Download</button>' +
             '<button class="close-btn" onclick="closePDFViewer()">&#10005;</button>' +
           '</div>' +
         '</div>' +
@@ -1007,7 +1007,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
           '<h3>New Customer Account Setup Form</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
             '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">Download PDF</button>' +
-            '<button class="close-btn" onclick="closePDFViewer()">?</button>' +
+            '<button class="close-btn" onclick="closePDFViewer()">&#10005;</button>' +
           '</div>' +
         '</div>' +
         '<div class="pdf-viewer">' +
@@ -1062,7 +1062,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
             '</div>' +
             '<div style="display:flex;gap:15px;flex-wrap:wrap;">' +
               '<button class="btn btn-primary" onclick="viewQuantumMaterialPDF(\'' + m.id + '\', \'' + m.title.replace(/'/g, "\\'") + '\', \'' + m.type + '\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">View PDF</button>' +
-              '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">? Download</button>' +
+              '<button class="btn btn-secondary" onclick="window.open(\'' + downloadUrl + '\',\'_blank\')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Download</button>' +
             '</div>' +
           '</div>'
         );
@@ -1071,7 +1071,7 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
       modal.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">' +
           '<h3 style="margin:0;color:#2d3748;font-size:1.8em;">How We Stack Up - Marketing Materials</h3>' +
-          '<button class="close-btn" onclick="closeModal()">?</button>' +
+          '<button class="close-btn" onclick="closeModal()">&#10005;</button>' +
         '</div>' +
         '<div style="display:grid;gap:20px;">' + cards + '</div>';
   
@@ -1424,7 +1424,7 @@ function confirmUnhideVideo(fileId, fileName) {
       }
     })
     .catch(error => {
-      showVideoPopup('? Error: ' + error.message, 'error');
+      showVideoPopup('Error: ' + error.message, 'error');
       loadVideos();
     });
 }
@@ -1766,8 +1766,8 @@ function confirmUnhideVideo(fileId, fileName) {
                 '<p><strong>Configuration:</strong> ' + formData.fridgeCount + ' fridges, ' + formData.scannerCount + ' scanners</p>' +
                 '<p><strong>Total Cost:</strong> $' + result.data.pricing.oneTimeTotal.toLocaleString() + ' one-time + $' + result.data.pricing.monthlyTotal + '/month</p>' +
                 '<div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">' +
-                  '<button class="btn btn-primary" onclick="window.open(\'' + result.pdfUrl + '\', \'_blank\')" style="padding:12px 24px;">? View PDF</button>' +
-                  '<button class="btn btn-secondary" onclick="window.open(\'' + result.pdfUrl.replace('/view?', '/export?format=pdf&') + '\', \'_blank\')" style="padding:12px 24px;">? Download</button>' +
+                  '<button class="btn btn-primary" onclick="window.open(\'' + result.pdfUrl + '\', \'_blank\')" style="padding:12px 24px;">View PDF</button>' +
+                  '<button class="btn btn-secondary" onclick="window.open(\'' + result.pdfUrl.replace('/view?', '/export?format=pdf&') + '\', \'_blank\')" style="padding:12px 24px;">Download</button>' +
                 '</div>' +
               '</div>',
               'success'
@@ -1793,7 +1793,7 @@ function confirmUnhideVideo(fileId, fileName) {
       } catch (error) {
         showQuantumPopup(
           '<div class="error-popup">' +
-            '<h3>? Error Generating Proposal</h3>' +
+            '<h3>Error Generating Proposal</h3>' +
             '<p>' + error.message + '</p>' +
             '<p>Please try again or contact support if the problem persists.</p>' +
           '</div>',
@@ -1841,8 +1841,8 @@ function confirmUnhideVideo(fileId, fileName) {
         '<div class="pdf-header">' +
           '<h3>Master Services Agreement (Food Fridge)</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">? Download PDF</button>' +
-            '<button class="close-btn" onclick="closePDFViewer()">?</button>' +
+            '<button class="btn btn-secondary" onclick="window.open(\'' + pdfUrl + '\',\'_blank\')" style="padding:10px 20px;">Download PDF</button>' +
+            '<button class="close-btn" onclick="closePDFViewer()">&#10005;</button>' +
           '</div>' +
         '</div>' +
         '<div class="pdf-viewer">' +
@@ -2025,8 +2025,8 @@ function confirmUnhideVideo(fileId, fileName) {
       proposalsList.innerHTML = filtered.map(function(proposal) {
         const isArchived = proposal.status === 'archived';
         const archiveButtonHtml = isArchived 
-          ? '<button class="btn" onclick="unarchiveQuantumProposal(\'' + proposal.id + '\', \'' + proposal.companyName.replace(/'/g, "\\'") + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;background:#10b981;">?? Restore</button>'
-          : '<button class="btn" onclick="archiveQuantumProposal(\'' + proposal.id + '\', \'' + proposal.companyName.replace(/'/g, "\\'") + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;background:#f59e0b;">? Archive</button>';
+          ? '<button class="btn" onclick="unarchiveQuantumProposal(\'' + proposal.id + '\', \'' + proposal.companyName.replace(/'/g, "\\'") + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;background:#10b981;">Restore</button>'
+          : '<button class="btn" onclick="archiveQuantumProposal(\'' + proposal.id + '\', \'' + proposal.companyName.replace(/'/g, "\\'") + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;background:#f59e0b;">Archive</button>';
         
         return (
           '<div class="proposal-item" style="background:white;padding:25px;border-radius:15px;border:2px solid #e2e8f0;transition:all .3s ease;box-shadow:0 2px 8px rgba(0,0,0,0.05);" onmouseover="this.style.borderColor=\'#1e3a8a\'; this.style.transform=\'translateY(-3px)\'; this.style.boxShadow=\'0 8px 20px rgba(0,0,0,0.1)\'" onmouseout="this.style.borderColor=\'#e2e8f0\'; this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 2px 8px rgba(0,0,0,0.05)\'">' +
@@ -2064,7 +2064,7 @@ function confirmUnhideVideo(fileId, fileName) {
           '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will move it back to the active proposals library.</p>' +
           '<div style="display:flex;gap:15px;margin-top:25px;">' +
             '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
-            '<button class="btn" onclick="confirmUnarchiveQuantumProposal(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#10b981;">?? Restore</button>' +
+            '<button class="btn" onclick="confirmUnarchiveQuantumProposal(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#10b981;">Restore</button>' +
           '</div>' +
         '</div>';
       
