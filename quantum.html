@@ -1354,13 +1354,13 @@ function confirmHideVideo(fileId, fileName) {
     .then(data => {
       if (data.status === 'success') {
         loadVideos();
-        showVideoPopup('? Video hidden successfully', 'success');
+        showVideoPopup('Video hidden successfully', 'success');
       } else {
         throw new Error(data.message || 'Failed to hide video');
       }
     })
     .catch(error => {
-      showVideoPopup('? Error: ' + error.message, 'error');
+      showVideoPopup('Error: ' + error.message, 'error');
       loadVideos();
     });
 }
@@ -1392,7 +1392,7 @@ function confirmHideVideo(fileId, fileName) {
       '</div>' +
       '<div style="display:flex;gap:15px;margin-top:25px;">' +
         '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
-        '<button class="btn" onclick="confirmUnhideVideo(\'' + fileId + '\', \'' + fileName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#10b981;">?? Restore Video</button>' +
+        '<button class="btn" onclick="confirmUnhideVideo(\'' + fileId + '\', \'' + fileName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#10b981;">Restore Video</button>' +
       '</div>' +
     '</div>';
   
@@ -1418,7 +1418,7 @@ function confirmUnhideVideo(fileId, fileName) {
     .then(data => {
       if (data.status === 'success') {
         loadVideos();
-        showVideoPopup('? Video restored to ' + targetCategory, 'success');
+        showVideoPopup('Video restored to ' + targetCategory, 'success');
       } else {
         throw new Error(data.message || 'Failed to restore video');
       }
@@ -1760,7 +1760,7 @@ function confirmUnhideVideo(fileId, fileName) {
             resetQuantumProposalForm();
             showQuantumPopup(
               '<div class="success-popup">' +
-                '<h3>? Proposal Generated Successfully</h3>' +
+                '<h3>Proposal Generated Successfully</h3>' +
                 '<p>Your Smart Food Fridge proposal has been created and saved to Library.</p>' +
                 '<p><strong>Company:</strong> ' + formData.companyName + '</p>' +
                 '<p><strong>Configuration:</strong> ' + formData.fridgeCount + ' fridges, ' + formData.scannerCount + ' scanners</p>' +
@@ -1779,7 +1779,7 @@ function confirmUnhideVideo(fileId, fileName) {
         .catch(function(error) {
           showQuantumPopup(
             '<div class="error-popup">' +
-              '<h3>? Error Generating Proposal</h3>' +
+              '<h3>Error Generating Proposal</h3>' +
               '<p>' + error.message + '</p>' +
               '<p>Please try again or contact support if the problem persists.</p>' +
             '</div>',
@@ -1867,7 +1867,7 @@ function confirmUnhideVideo(fileId, fileName) {
       modal.innerHTML = 
         '<div class="pdf-header">' +
           '<h3>ROI Calculator</h3>' +
-          '<button class="close-btn" onclick="document.querySelector(\'.roi-overlay\').remove()">?</button>' +
+          '<button class="close-btn" onclick="document.querySelector(\'.roi-overlay\').remove()">&#10005;</button>' +
         '</div>' +
         '<div class="pdf-viewer">' +
           '<iframe src="' + src + '" width="100%" height="100%" allowfullscreen></iframe>' +
@@ -1903,9 +1903,9 @@ function confirmUnhideVideo(fileId, fileName) {
         '<div style="margin-bottom:20px;display:flex;gap:10px;">' +
           '<div style="flex:1;position:relative;">' +
             '<input type="text" id="quantumProposalSearch" placeholder="Search by company name..." style="width:100%;padding:15px 45px 15px 15px;font-size:16px;border:2px solid #e2e8f0;border-radius:10px;transition:all .3s ease;" onkeyup="filterQuantumProposals()" onfocus="this.style.borderColor=\'#1e3a8a\'" onblur="this.style.borderColor=\'#e2e8f0\'">' +
-            '<button id="clearQuantumSearchBtn" onclick="document.getElementById(\'quantumProposalSearch\').value=\'\'; this.style.display=\'none\'; filterQuantumProposals();" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">?</button>' +
+            '<button id="clearQuantumSearchBtn" onclick="document.getElementById(\'quantumProposalSearch\').value=\'\'; this.style.display=\'none\'; filterQuantumProposals();" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:#e2e8f0;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:none;transition:all .3s ease;font-size:18px;color:#4a5568;">&#10005;</button>' +
           '</div>' +
-          '<button id="toggleArchiveBtn" class="btn" onclick="toggleArchiveView()" style="padding:15px 25px;white-space:nowrap;background:#64748b;">? Show Archive</button>' +
+          '<button id="toggleArchiveBtn" class="btn" onclick="toggleArchiveView()" style="padding:15px 25px;white-space:nowrap;background:#64748b;">Show Archive</button>' +
         '</div>' +
         '<div id="quantumProposalsList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">' +
           '<div style="text-align:center;padding:40px;">' +
@@ -1925,11 +1925,11 @@ function confirmUnhideVideo(fileId, fileName) {
       const libraryTitle = document.getElementById('libraryTitle');
       
       if (window.showArchivedProposals) {
-        toggleBtn.textContent = '? Show Active';
+        toggleBtn.textContent = 'Show Active';
         toggleBtn.style.background = '#1e3a8a';
         libraryTitle.textContent = 'Archived Proposals';
       } else {
-        toggleBtn.textContent = '? Show Archive';
+        toggleBtn.textContent = 'Show Archive';
         toggleBtn.style.background = '#64748b';
         libraryTitle.textContent = 'Quantum Proposal Library';
       }
@@ -2040,8 +2040,8 @@ function confirmUnhideVideo(fileId, fileName) {
                 '</p>' +
               '</div>' +
               '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
-                '<button class="btn btn-primary" onclick="viewQuantumProposalPDF(\'' + proposal.id + '\', \'' + proposal.companyName + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">? View</button>' +
-                '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + proposal.id + '\', \'_blank\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">? Download</button>' +
+                '<button class="btn btn-primary" onclick="viewQuantumProposalPDF(\'' + proposal.id + '\', \'' + proposal.companyName + '\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">View</button>' +
+                '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + proposal.id + '\', \'_blank\')" style="padding:14px 28px;font-size:16px;font-weight:600;min-width:120px;">Download</button>' +
                 archiveButtonHtml +
               '</div>' +
             '</div>' +
@@ -2103,7 +2103,7 @@ function confirmUnhideVideo(fileId, fileName) {
           delete window[callbackName];
           showQuantumPopup(
             '<div class="error-popup">' +
-              '<h3>? Restore Failed</h3>' +
+              '<h3>Restore Failed</h3>' +
               '<p>Unable to restore the proposal. Please try again.</p>' +
             '</div>',
             'error'
@@ -2117,7 +2117,7 @@ function confirmUnhideVideo(fileId, fileName) {
           if (data.status === 'success') {
             showQuantumPopup(
               '<div class="success-popup">' +
-                '<h3>? Proposal Restored</h3>' +
+                '<h3>Proposal Restored</h3>' +
                 '<p>The proposal for <strong>' + companyName + '</strong> has been restored to active proposals.</p>' +
               '</div>',
               'success'
@@ -2162,7 +2162,7 @@ function confirmUnhideVideo(fileId, fileName) {
           '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will move it to the Archived Proposals folder.</p>' +
           '<div style="display:flex;gap:15px;margin-top:25px;">' +
             '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
-            '<button class="btn" onclick="confirmArchiveQuantumProposal(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#f59e0b;">? Archive</button>' +
+            '<button class="btn" onclick="confirmArchiveQuantumProposal(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#f59e0b;">Archive</button>' +
           '</div>' +
         '</div>';
       
@@ -2201,7 +2201,7 @@ function confirmUnhideVideo(fileId, fileName) {
           delete window[callbackName];
           showQuantumPopup(
             '<div class="error-popup">' +
-              '<h3>? Archive Failed</h3>' +
+              '<h3>Archive Failed</h3>' +
               '<p>Unable to archive the proposal. Please try again.</p>' +
             '</div>',
             'error'
@@ -2215,7 +2215,7 @@ function confirmUnhideVideo(fileId, fileName) {
           if (data.status === 'success') {
             showQuantumPopup(
               '<div class="success-popup">' +
-                '<h3>? Proposal Archived</h3>' +
+                '<h3>Proposal Archived</h3>' +
                 '<p>The proposal for <strong>' + companyName + '</strong> has been archived.</p>' +
               '</div>',
               'success'
@@ -2299,14 +2299,14 @@ function confirmUnhideVideo(fileId, fileName) {
       const isArchived = proposal && proposal.status === 'archived';
       
       const archiveButton = isArchived
-        ? '<button class="btn" onclick="unarchiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#10b981;">?? Restore</button>'
+        ? '<button class="btn" onclick="unarchiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#10b981;">Restore</button>'
         : '<button class="btn" onclick="archiveFromViewer(\'' + fileId + '\', \'' + companyName.replace(/'/g, "\\'") + '\')" style="padding:10px 20px;background:#f59e0b;">? Archive</button>';
   
       pdfModal.innerHTML = 
         '<div class="pdf-header">' +
           '<h3>Proposal for ' + companyName + '</h3>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">? Back to Library</button>' +
+            '<button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openQuantumProposalViewer, 200);" style="padding:10px 20px;">Back to Library</button>' +
             '<button class="btn btn-secondary" onclick="window.open(\'https://drive.google.com/uc?export=download&id=' + fileId + '\', \'_blank\')" style="padding:10px 20px;">? Download</button>' +
             archiveButton +
           '</div>' +
