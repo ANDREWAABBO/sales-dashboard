@@ -490,7 +490,7 @@
   <div class="modal" style="max-width:900px;" onclick="event.stopPropagation()">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;padding-bottom:15px;border-bottom:2px solid #e2e8f0;">
       <h3 style="margin:0;color:#2d3748;font-size:1.8em;">ROI Calculator Guest Usage</h3>
-      <button class="close-btn" onclick="closeGuestUsageModal()">?</button>
+      <button class="close-btn" onclick="closeGuestUsageModal()">&#10005;</button>
     </div>
     <div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
       <select id="guestUsageFilter" class="category-dropdown" style="min-width:220px;padding:14px 18px;font-size:16px;" onchange="filterGuestUsage()">
@@ -499,7 +499,7 @@
         <option value="revoked">Revoked Links</option>
         <option value="all">All Links</option>
       </select>
-      <button class="btn" onclick="loadGuestUsage()" style="background:#10b981;padding:14px 24px;font-size:16px;">? Refresh</button>
+      <button class="btn" onclick="loadGuestUsage()" style="background:#10b981;padding:14px 24px;font-size:16px;">&#8635; Refresh</button>
     </div>
     <div id="guestUsageList" style="display:grid;gap:15px;max-height:60vh;overflow-y:auto;">
       <div style="text-align:center;padding:40px;">
@@ -775,7 +775,7 @@ window.displayGuestUsage = function displayGuestUsage(tokens) {
             '</div>' +
           '</div>' +
           '<div style="display:flex;gap:10px;align-items:center;">' +
-            '<button class="btn btn-secondary" onclick="copyGuestLink(\'' + token.shareUrl + '\')" style="padding:10px 20px;font-size:14px;">? Copy Link</button>' +
+            '<button class="btn btn-secondary" onclick="copyGuestLink(\'' + token.shareUrl + '\')" style="padding:10px 20px;font-size:14px;">Copy Link</button>' +
             revokeButton +
           '</div>' +
         '</div>' +
@@ -786,9 +786,9 @@ window.displayGuestUsage = function displayGuestUsage(tokens) {
 
 window.copyGuestLink = function copyGuestLink(url) {
   navigator.clipboard.writeText(url).then(function() {
-    showQuantumPopup('<div class="success-popup"><p>? Link copied to clipboard!</p></div>', 'success');
+    showQuantumPopup('<div class="success-popup"><p>Link copied to clipboard!</p></div>', 'success');
   }).catch(function() {
-    showQuantumPopup('<div class="error-popup"><p>? Failed to copy link</p></div>', 'error');
+    showQuantumPopup('<div class="error-popup"><p>Failed to copy link</p></div>', 'error');
   });
 };
 
@@ -806,7 +806,7 @@ window.revokeGuestToken = function revokeGuestToken(token, clientName) {
       '<p style="color:#718096;margin-bottom:25px;font-size:0.95em;">This will immediately block access to the ROI calculator for this link.</p>' +
       '<div style="display:flex;gap:15px;margin-top:25px;">' +
         '<button class="btn btn-secondary" onclick="this.closest(\'.modal-overlay\').remove()" style="flex:1;">Cancel</button>' +
-        '<button class="btn" onclick="confirmRevokeToken(\'' + token + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#e53e3e;">? Revoke Access</button>' +
+        '<button class="btn" onclick="confirmRevokeToken(\'' + token + '\'); this.closest(\'.modal-overlay\').remove();" style="flex:1;background:#e53e3e;">Revoke Access</button>' +
       '</div>' +
     '</div>';
   
