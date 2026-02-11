@@ -713,36 +713,29 @@
       ];
 
       const cards = welcomePackageDocs.map(doc => {
-        let viewUrl, downloadUrl, buttons;
+        let downloadUrl, buttons;
         
         if (doc.type === 'form') {
-          // Special handling for Google Forms - shareable link only
-          viewUrl = doc.shareUrl;
           buttons = `
-            <button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">New Customer Questions</button>
-            <button class="btn btn-secondary" onclick="copyToClipboard('Please Fill Out New Customer Questions: ${viewUrl}')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Share Link</button>
+            <button class="btn btn-primary" onclick="window.open('${doc.shareUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">New Customer Questions</button>
+            <button class="btn btn-secondary" onclick="copyToClipboard('Please Fill Out New Customer Questions: ${doc.shareUrl}')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Share Link</button>
           `;
         } else {
-          // Generate PDF exports for all other document types (no direct document access)
           if (doc.type === 'slides') { 
-            viewUrl = `https://docs.google.com/presentation/d/${doc.id}/export/pdf`; 
             downloadUrl = `https://docs.google.com/presentation/d/${doc.id}/export/pdf`; 
           }
           else if (doc.type === 'docs') { 
-            viewUrl = `https://docs.google.com/document/d/${doc.id}/export?format=pdf`; 
             downloadUrl = `https://docs.google.com/document/d/${doc.id}/export?format=pdf`; 
           }
           else if (doc.type === 'sheets') { 
-            viewUrl = `https://docs.google.com/spreadsheets/d/${doc.id}/export?format=pdf&portrait=true&fitw=true`; 
             downloadUrl = `https://docs.google.com/spreadsheets/d/${doc.id}/export?format=pdf&portrait=true&fitw=true`; 
           }
-          else { // Already PDF files
-            viewUrl = `https://drive.google.com/uc?export=download&id=${doc.id}`; 
+          else {
             downloadUrl = `https://drive.google.com/uc?export=download&id=${doc.id}`; 
           }
           
           buttons = `
-            <button class="btn btn-primary" onclick="window.open('${viewUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">View PDF</button>
+            <button class="btn btn-primary" onclick="viewWelcomePackagePDF('${doc.id}', '${doc.title}', '${doc.type}')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">View PDF</button>
             <button class="btn btn-secondary" onclick="window.open('${downloadUrl}','_blank')" style="padding:12px 24px;font-size:.9em;min-width:120px;font-weight:600;">Download PDF</button>
           `;
         }
@@ -766,6 +759,45 @@
         '<div style="display:grid;gap:20px;">' + cards + '</div>';
 
       overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+    }
+
+    // View Welcome Package PDF in modal
+    function viewWelcomePackagePDF(docId, title, type) {
+      closeWelcomeModal();
+      
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.style.display = 'block';
+
+      const pdfModal = document.createElement('div');
+      pdfModal.className = 'pdf-modal';
+
+      let pdfUrl, downloadUrl;
+      if (type === 'slides') {
+        pdfUrl = `https://docs.google.com/presentation/d/${docId}/export/pdf`;
+      } else if (type === 'docs') {
+        pdfUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
+      } else {
+        pdfUrl = `https://drive.google.com/uc?export=download&id=${docId}`;
+      }
+      downloadUrl = pdfUrl;
+
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+
+      pdfModal.innerHTML = `
+        <div class="pdf-header">
+          <h3>${title}</h3>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-primary" onclick="closePDFViewer(); setTimeout(openWelcomePackageViewer, 200);" style="padding: 10px 20px;">Back to Welcome Package</button>
+            <button class="btn btn-secondary" onclick="window.open('${downloadUrl}', '_blank')" style="padding: 10px 20px;">Download PDF</button>
+          </div>
+        </div>
+        <div class="pdf-viewer">
+          <iframe src="${viewerUrl}" allowfullscreen></iframe>
+        </div>`;
+      
+      overlay.appendChild(pdfModal);
       document.body.appendChild(overlay);
     }
 
