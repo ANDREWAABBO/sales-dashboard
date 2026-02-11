@@ -1208,8 +1208,8 @@ window.confirmRevokeToken = function confirmRevokeToken(token) {
   const videoCards = filtered.map(video => {
     const isHidden = video.status === 'hidden';
     const actionButton = isHidden
-      ? '<button class="video-action-btn primary" onclick="unhideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">?? Show</button>'
-      : '<button class="video-action-btn danger" onclick="hideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">? Hide</button>';
+      ? '<button class="video-action-btn primary" onclick="unhideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">Show</button>'
+      : '<button class="video-action-btn danger" onclick="hideVideo(\'' + video.id + '\', \'' + video.name.replace(/'/g, "\\'") + '\')">Hide</button>';
 
     const categoryBadge = video.category && video.category !== 'Hidden' 
       ? '<div style="background:#dbeafe;color:#1e3a8a;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;margin-top:8px;display:inline-block;">' + video.category + '</div>'
