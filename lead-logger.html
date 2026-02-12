@@ -100,9 +100,12 @@
     /* Sortable table headers */
     th.sortable{cursor:pointer;user-select:none;padding-right:22px!important;transition:background .15s}
     th.sortable:hover{background:#152e6e}
-    th.sortable::after{content:'?';position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;opacity:.5}
-    th.sortable.asc::after{content:'?';opacity:1}
-    th.sortable.desc::after{content:'?';opacity:1}
+    th.sortable::after{content:'';position:absolute;right:8px;top:50%;transform:translateY(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid rgba(255,255,255,.4);margin-top:3px}
+    th.sortable::before{content:'';position:absolute;right:8px;top:50%;transform:translateY(-50%);border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:5px solid rgba(255,255,255,.4);margin-top:-5px}
+    th.sortable.asc::before{border-bottom-color:#fff}
+    th.sortable.asc::after{border-top-color:rgba(255,255,255,.3)}
+    th.sortable.desc::after{border-top-color:#fff}
+    th.sortable.desc::before{border-bottom-color:rgba(255,255,255,.3)}
     .empty-state{text-align:center;padding:60px 20px;color:#718096}
     .empty-state h3{font-size:1.25rem;margin-bottom:10px;color:#4a5568}
     .loading{text-align:center;padding:40px;color:#718096}
@@ -2564,10 +2567,16 @@ function exportLeadsToExcel() {
     // ============ APPT MADE TOGGLE ============
 
     async function toggleApptMade(el, leadId, newVal) {
-      var oldText = el.textContent;
-      el.textContent = '...';
-      el.style.opacity = '0.5';
+      // Instant UI update
+      el.textContent = newVal;
+      el.className = 'appt-toggle ' + (newVal === 'Yes' ? 'yes' : 'no');
+      el.setAttribute('onclick', "toggleApptMade(this,'" + leadId + "','" + (newVal === 'Yes' ? 'No' : 'Yes') + "')");
 
+      // Update local data immediately
+      var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
+      if (lead) lead.appointmentMade = newVal;
+
+      // Save in background
       try {
         var res = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(String(leadId)), {
           method: 'POST',
@@ -2576,21 +2585,13 @@ function exportLeadsToExcel() {
         });
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Update failed');
-
-        // Update the element
-        el.textContent = newVal;
-        el.className = 'appt-toggle ' + (newVal === 'Yes' ? 'yes' : 'no');
-        el.setAttribute('onclick', "toggleApptMade(this,'" + leadId + "','" + (newVal === 'Yes' ? 'No' : 'Yes') + "')");
-        el.style.opacity = '1';
-
-        // Update allLeads array
-        var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
-        if (lead) lead.appointmentMade = newVal;
-
-        showToast('Appointment ' + (newVal === 'Yes' ? 'confirmed' : 'cleared'), 'success');
       } catch (err) {
-        el.textContent = oldText;
-        el.style.opacity = '1';
+        // Revert on failure
+        var oldVal = (newVal === 'Yes') ? 'No' : 'Yes';
+        el.textContent = oldVal;
+        el.className = 'appt-toggle ' + (oldVal === 'Yes' ? 'yes' : 'no');
+        el.setAttribute('onclick', "toggleApptMade(this,'" + leadId + "','" + newVal + "')");
+        if (lead) lead.appointmentMade = oldVal;
         showToast('Error: ' + err.message, 'error');
       }
     }
