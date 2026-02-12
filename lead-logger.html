@@ -25,13 +25,13 @@
 
     /* IMPROVED TABLE WITH SCROLLING AND CENTERED TEXT */
     .table-container{overflow:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:70vh;position:relative}
-    table{width:100%;border-collapse:collapse;background:#fff;min-width:1400px}
-    th{background:#1e3a8a;color:#fff;padding:15px;text-align:center;font-weight:600;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:2px solid #152e6e;box-shadow:0 2px 4px rgba(0,0,0,.15)}
-    td{padding:12px 8px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;border-bottom:none;vertical-align:middle;font-size:13px}
-    /* Wrap contact name (4th col) and rep name (7th col) */
-    td:nth-child(4),td:nth-child(7){white-space:normal;word-wrap:break-word;max-width:100px}
-    /* Compact bus unit column */
-    td:nth-child(3){max-width:90px;white-space:normal;word-wrap:break-word;font-size:12px}
+    table{width:100%;border-collapse:collapse;background:#fff;min-width:1500px}
+    th{background:#1e3a8a;color:#fff;padding:10px 8px;text-align:center;font-weight:600;font-size:12px;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:2px solid #152e6e;box-shadow:0 2px 4px rgba(0,0,0,.15)}
+    td{padding:10px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;border-bottom:none;vertical-align:middle;font-size:13px}
+    /* Allow wrapping only on company name */
+    td:nth-child(2){white-space:normal;word-wrap:break-word;max-width:150px}
+    /* Bus unit small */
+    td:nth-child(3){font-size:11px;max-width:70px;white-space:normal;word-wrap:break-word}
     tbody tr{border-bottom:1px solid #e2e8f0}
     tbody tr:last-child{border-bottom:none}
     tr:hover{background:#f7fafc}
@@ -133,8 +133,8 @@
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
     .form-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
     .btn-cancel{background:linear-gradient(135deg,#a0aec0 0%,#718096 100%)}
-    .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
-    .btn-small{padding:6px 12px;font-size:12px;border-radius:6px;white-space:nowrap}
+    .action-buttons{display:grid;grid-template-columns:1fr 1fr;gap:4px;min-width:130px}
+    .btn-small{padding:4px 6px;font-size:11px;border-radius:4px;white-space:nowrap;text-align:center}
     #leadModal .modal-content{max-height:90vh;display:flex;flex-direction:column;overflow-y:auto}
     #leadModal .form-actions{position:sticky;bottom:0;background:#fff;padding-top:12px;margin-top:12px;border-top:1px solid #e2e8f0;z-index:1}
 
@@ -364,16 +364,16 @@
       <table id="leadsTable" style="display:none;">
         <thead>
           <tr>
-            <th class="sortable" data-sort="dateAdded" style="width:80px">Date Added</th>
-            <th class="sortable" data-sort="companyName">Company Name</th>
-            <th class="sortable" data-sort="businessUnit">Bus. Unit</th>
-            <th class="sortable col-wrap" data-sort="contactName">Contact Name</th>
-            <th>Phone Number</th>
-            <th>Email Address</th>
-            <th class="sortable col-wrap" data-sort="repName">Rep Name</th>
+            <th class="sortable" data-sort="dateAdded" style="min-width:75px">Date</th>
+            <th class="sortable" data-sort="companyName">Company</th>
+            <th class="sortable" data-sort="businessUnit" style="min-width:55px">Unit</th>
+            <th class="sortable" data-sort="contactName">Contact</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th class="sortable" data-sort="repName">Rep</th>
             <th class="sortable" data-sort="status">Status</th>
             <th class="sortable" data-sort="followUp">Follow Up</th>
-            <th class="sortable" data-sort="appointmentMade">Appt Made</th>
+            <th class="sortable" data-sort="appointmentMade">Appt</th>
             <th class="sortable" data-sort="appointmentDate">Appt Date</th>
             <th>Notes</th>
             <th>Actions</th>
@@ -1010,7 +1010,7 @@
           : `<span class="notes-clickable empty" onclick="inlineNotesEdit(this,'${leadId}')">+ Add Note</span>`,
         `<div class="action-buttons">
            <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
-           <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Generate Proposal</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Proposal</button>
            <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
            <button class="btn btn-small btn-danger" onclick="openDeleteModal('${leadId}')">Delete</button>
          </div>`
