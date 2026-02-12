@@ -90,6 +90,19 @@
     .status-dead{background:#e2e8f0;color:#718096}
     .appointment-yes{color:#48bb78;font-weight:600}
     .appointment-no{color:#e53e3e}
+
+    /* Clickable Appt Made toggle */
+    .appt-toggle{cursor:pointer;padding:3px 10px;border-radius:12px;font-size:13px;font-weight:600;display:inline-block;transition:.2s;user-select:none}
+    .appt-toggle.yes{background:#d1fae5;color:#059669;border:1px solid #a7f3d0}
+    .appt-toggle.no{background:#fee2e2;color:#e53e3e;border:1px solid #fecaca}
+    .appt-toggle:hover{transform:scale(1.05);box-shadow:0 2px 6px rgba(0,0,0,.1)}
+
+    /* Sortable table headers */
+    th.sortable{cursor:pointer;user-select:none;position:relative;padding-right:20px!important;transition:.15s}
+    th.sortable:hover{background:rgba(255,255,255,.15)}
+    th.sortable::after{content:'?';position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:11px;opacity:.5}
+    th.sortable.asc::after{content:'?';opacity:1}
+    th.sortable.desc::after{content:'?';opacity:1}
     .empty-state{text-align:center;padding:60px 20px;color:#718096}
     .empty-state h3{font-size:1.25rem;margin-bottom:10px;color:#4a5568}
     .loading{text-align:center;padding:40px;color:#718096}
@@ -323,16 +336,16 @@
       <table id="leadsTable" style="display:none;">
         <thead>
           <tr>
-            <th>Date Added</th>
-            <th>Company Name</th>
-            <th>Contact Name</th>
+            <th class="sortable" data-sort="dateAdded">Date Added</th>
+            <th class="sortable" data-sort="companyName">Company Name</th>
+            <th class="sortable" data-sort="contactName">Contact Name</th>
             <th>Phone Number</th>
             <th>Email Address</th>
-            <th>Rep Name</th>
-            <th>Status</th>
-            <th>Follow Up</th>
-            <th>Appt Made</th>
-            <th>Appt Date</th>
+            <th class="sortable" data-sort="repName">Rep Name</th>
+            <th class="sortable" data-sort="status">Status</th>
+            <th class="sortable" data-sort="followUp">Follow Up</th>
+            <th class="sortable" data-sort="appointmentMade">Appt Made</th>
+            <th class="sortable" data-sort="appointmentDate">Appt Date</th>
             <th>Notes</th>
             <th>Actions</th>
           </tr>
@@ -764,6 +777,7 @@
       setupPhoneFormatting();
       setupRepPhoneFormatting();
       setupNotesTooltip();
+      initSortableHeaders();
     });
 
     function setupPhoneFormatting(){
@@ -944,7 +958,6 @@
       const followUp = formatDate(lead.followUp);
       const appointmentDate = formatDate(lead.appointmentDate);
       const statusClass = getStatusClass(lead.status);
-      const appointmentClass = (lead.appointmentMade === 'Yes') ? 'appointment-yes' : 'appointment-no';
       const notes = (lead.notes != null) ? String(lead.notes) : '';
 
       const cells = [
@@ -958,7 +971,7 @@
         followUp
           ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','followUp')">${followUp}</span>`
           : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','followUp')">+ Add Date</span>`,
-        `<span class="${appointmentClass}">${lead.appointmentMade || 'No'}</span>`,
+        `<span class="appt-toggle ${(lead.appointmentMade === 'Yes') ? 'yes' : 'no'}" onclick="toggleApptMade(this,'${leadId}','${lead.appointmentMade === 'Yes' ? 'No' : 'Yes'}')">${lead.appointmentMade || 'No'}</span>`,
         appointmentDate
           ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">${appointmentDate}</span>`
           : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">+ Add Date</span>`,
@@ -1023,7 +1036,7 @@
         return matchRep && matchStatus && matchUnit && matchSearch;
       });
 
-      displayLeads(filtered);
+      displayLeads(sortLeads(filtered));
     }
 
     function updateRepFilter(){
@@ -2488,6 +2501,102 @@ function exportLeadsToExcel() {
 
     // ============ INLINE DATE EDITING ============
 
+    // ============ SORTING STATE ============
+    var currentSortField = null;
+    var currentSortDir = null; // 'asc' or 'desc'
+
+    function initSortableHeaders() {
+      document.querySelectorAll('th.sortable').forEach(function(th) {
+        th.addEventListener('click', function() {
+          var field = this.getAttribute('data-sort');
+          if (currentSortField === field) {
+            // Cycle: asc -> desc -> none
+            if (currentSortDir === 'asc') currentSortDir = 'desc';
+            else if (currentSortDir === 'desc') { currentSortDir = null; currentSortField = null; }
+            else currentSortDir = 'asc';
+          } else {
+            currentSortField = field;
+            currentSortDir = 'asc';
+          }
+          // Update header classes
+          document.querySelectorAll('th.sortable').forEach(function(h) { h.classList.remove('asc','desc'); });
+          if (currentSortDir) this.classList.add(currentSortDir);
+          filterLeads();
+        });
+      });
+    }
+
+    function sortLeads(leads) {
+      if (!currentSortField || !currentSortDir) return leads;
+      var field = currentSortField;
+      var dir = currentSortDir === 'asc' ? 1 : -1;
+
+      return leads.slice().sort(function(a, b) {
+        var av = a[field] || '';
+        var bv = b[field] || '';
+
+        // Date fields: sort by actual date, empties last
+        if (field === 'dateAdded' || field === 'followUp' || field === 'appointmentDate') {
+          var da = av ? new Date(av).getTime() : null;
+          var db = bv ? new Date(bv).getTime() : null;
+          if (da === null && db === null) return 0;
+          if (da === null) return 1;  // empties always last
+          if (db === null) return -1;
+          return (da - db) * dir;
+        }
+
+        // Appt Made: Yes before No (or reverse)
+        if (field === 'appointmentMade') {
+          var ya = (String(av).toLowerCase() === 'yes') ? 1 : 0;
+          var yb = (String(bv).toLowerCase() === 'yes') ? 1 : 0;
+          return (ya - yb) * dir;
+        }
+
+        // String fields
+        av = String(av).toLowerCase();
+        bv = String(bv).toLowerCase();
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      });
+    }
+
+    // ============ APPT MADE TOGGLE ============
+
+    async function toggleApptMade(el, leadId, newVal) {
+      var oldText = el.textContent;
+      el.textContent = '...';
+      el.style.opacity = '0.5';
+
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(String(leadId)), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'updateLead', leadId: String(leadId), updates: { appointmentMade: newVal } })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Update failed');
+
+        // Update the element
+        el.textContent = newVal;
+        el.className = 'appt-toggle ' + (newVal === 'Yes' ? 'yes' : 'no');
+        el.setAttribute('onclick', "toggleApptMade(this,'" + leadId + "','" + (newVal === 'Yes' ? 'No' : 'Yes') + "')");
+        el.style.opacity = '1';
+
+        // Update allLeads array
+        var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
+        if (lead) lead.appointmentMade = newVal;
+
+        showToast('Appointment ' + (newVal === 'Yes' ? 'confirmed' : 'cleared'), 'success');
+      } catch (err) {
+        el.textContent = oldText;
+        el.style.opacity = '1';
+        showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    // ============ INLINE DATE FUNCTIONS ============
+
     function inlineDateEdit(el, leadId, field) {
       // Don't open if already editing
       if (el.querySelector('input')) return;
@@ -2713,6 +2822,7 @@ function exportLeadsToExcel() {
     window.saveEmailSettings = saveEmailSettings;
     window.sendTestReminder = sendTestReminder;
     window.inlineDateEdit = inlineDateEdit;
+    window.toggleApptMade = toggleApptMade;
   </script>
 </body>
 </html>
