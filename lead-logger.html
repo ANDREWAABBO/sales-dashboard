@@ -199,7 +199,7 @@
     }
 
     .error-list li:before {
-      content: "• ";
+      content: "? ";
       font-weight: bold;
     }
 
@@ -249,11 +249,11 @@
 
     <div class="controls">
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">← Back to Dashboard</button>
+        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">? Back to Dashboard</button>
         <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
-        <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)">📄 Download Excel Template</button>
-        <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)">📤 Import Excel File</button>
-        <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)">📥 Export Current Leads</button>
+        <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)">? Download Excel Template</button>
+        <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)">? Import Excel File</button>
+        <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)">? Export Current Leads</button>
       </div>
 
       <div class="filters">
@@ -490,7 +490,7 @@
           <li>Click "Import Leads" to upload</li>
         </ol>
         <p style="color:#e53e3e;margin-top:10px;font-weight:600;">
-          ⚠️ Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
+          ?? Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
         </p>
       </div>
 
@@ -523,7 +523,7 @@
       
       <div style="background:#fff3cd;padding:15px;border-radius:8px;margin:20px 0;border:1px solid #ffc107;">
         <p style="color:#856404;font-weight:600;margin-bottom:10px;">
-          ⚠️ <span id="errorSummary">Found validation errors in your import file</span>
+          ?? <span id="errorSummary">Found validation errors in your import file</span>
         </p>
         <p style="color:#856404;font-size:14px;">
           Fix the errors below, or import only the valid rows and fix the rest later.
@@ -723,7 +723,7 @@
         }
         
         updateRepFilter();
-        filterLeads(); // ← render using current dropdowns (default = Active)
+        filterLeads(); // ? render using current dropdowns (default = Active)
       }catch(err){
         console.error('loadLeads error:', err);
         document.getElementById('loadingState').style.display='none';
@@ -814,7 +814,7 @@
       const appointmentDate = formatDate(lead.appointmentDate);
       const statusClass = getStatusClass(lead.status);
       const appointmentClass = (lead.appointmentMade === 'Yes') ? 'appointment-yes' : 'appointment-no';
-      const notes = lead.notes || '';
+      const notes = (lead.notes != null) ? String(lead.notes) : '';
 
       const cells = [
         dateAdded,
@@ -1084,11 +1084,11 @@
 
     async function archiveLead(btnEl, leadId){
       const id = String(leadId || '').trim();
-      if (!id){ showToast('Could not determine lead ID — refresh and try again.', 'error'); return; }
+      if (!id){ showToast('Could not determine lead ID ? refresh and try again.', 'error'); return; }
       if (!confirm('Archive this lead?')) return;
 
       const prevHtml = btnEl.innerHTML;
-      btnEl.disabled = true; btnEl.innerHTML = 'Archiving…';
+      btnEl.disabled = true; btnEl.innerHTML = 'Archiving?';
 
       try{
         const url = WEB_APP_URL + '?action=archiveLead&leadId=' + encodeURIComponent(id);
@@ -1306,18 +1306,18 @@
       const instructionsData = [
         ['LEAD IMPORT TEMPLATE - INSTRUCTIONS'],
         [''],
-        ['⚠️ ⚠️ ⚠️ IMPORTANT: LEAD ID COLUMN ⚠️ ⚠️ ⚠️'],
+        ['?? ?? ?? IMPORTANT: LEAD ID COLUMN ?? ?? ??'],
         [''],
         ['FOR NEW LEADS:'],
-        ['• DELETE the "LEAVE BLANK" text and leave the Lead ID cell EMPTY'],
-        ['• The system will automatically generate a unique Lead ID when you import'],
-        ['• DO NOT type anything in the Lead ID column for new leads'],
+        ['? DELETE the "LEAVE BLANK" text and leave the Lead ID cell EMPTY'],
+        ['? The system will automatically generate a unique Lead ID when you import'],
+        ['? DO NOT type anything in the Lead ID column for new leads'],
         [''],
         ['FOR UPDATING EXISTING LEADS:'],
-        ['• Only use exports from the system (they have Lead IDs filled in)'],
-        ['• Do NOT manually type Lead IDs'],
+        ['? Only use exports from the system (they have Lead IDs filled in)'],
+        ['? Do NOT manually type Lead IDs'],
         [''],
-        ['═══════════════════════════════════════════════════════════'],
+        ['???????????????????????????????????????????????????????????'],
         [''],
         ['REQUIRED FIELDS (must have values):'],
         ['- Business Unit'],
@@ -1327,8 +1327,8 @@
         ['- Rep Email'],
         [''],
         ['VALID VALUES - Business Unit:'],
-        ['• Abbondanza Vending'],
-        ['• Quantum Solutions'],
+        ['? Abbondanza Vending'],
+        ['? Quantum Solutions'],
         [''],
         ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
         ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
@@ -1336,14 +1336,14 @@
         ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
         [''],
         ['VALID VALUES - Status:'],
-        ['• Active'],
-        ['• Follow Up Later'],
-        ['• Not Qualified'],
-        ['• Dead'],
+        ['? Active'],
+        ['? Follow Up Later'],
+        ['? Not Qualified'],
+        ['? Dead'],
         [''],
         ['VALID VALUES - Appointment Made:'],
-        ['• Yes'],
-        ['• No'],
+        ['? Yes'],
+        ['? No'],
         [''],
         ['FORMAT REQUIREMENTS:'],
         ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
@@ -1743,7 +1743,7 @@ function showFixErrorsModal() {
         </div>
         ${lead._isDuplicate ? `
           <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:15px;border-left:4px solid #f59e0b;">
-            <strong style="color:#92400e;">⚠️ POSSIBLE DUPLICATE - LEAD ID MISSING</strong>
+            <strong style="color:#92400e;">?? POSSIBLE DUPLICATE - LEAD ID MISSING</strong>
             <p style="color:#78350f;font-size:14px;margin:8px 0 12px 0;">
               Lead ID is missing, but this company matches: <strong>${lead._existingLead.companyName}</strong> (Added: ${formatDate(lead._existingLead.dateAdded)})<br>
               <em>Did you accidentally delete the Lead ID from an export file?</em>
@@ -1913,7 +1913,7 @@ function setDuplicateAction(index, action) {
         errorList.style.display = 'none';
         errorRow.classList.add('fixed');
         badge.classList.add('fixed');
-        badge.textContent = 'Will Skip ✓';
+        badge.textContent = 'Will Skip ?';
         lead._errors = []; // Clear errors since we're skipping
       } else {
         // Show error list for validation
@@ -1980,7 +1980,7 @@ function setDuplicateAction(index, action) {
         errorList.style.display = 'none';
         errorRow.classList.add('fixed');
         badge.classList.add('fixed');
-        badge.textContent = 'Will Skip ✓';
+        badge.textContent = 'Will Skip ?';
         lead._errors = []; // Clear errors since we're skipping
       } else {
         // Show error list for validation
@@ -2082,7 +2082,7 @@ function validateErrorRow(index) {
       if (errors.length === 0) {
         errorRow.classList.add('fixed');
         badge.classList.add('fixed');
-        badge.textContent = 'Fixed ✓';
+        badge.textContent = 'Fixed ?';
         errorList.style.display = 'none';
       } else {
         errorRow.classList.remove('fixed');
@@ -2225,10 +2225,10 @@ function importValidRowsOnly() {
 
       // Show success/failure message
       if (successCount > 0) {
-        showToast('✅ Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
+        showToast('? Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
         await loadLeads();
       } else {
-        showToast('❌ Failed to import any leads', 'error');
+        showToast('? Failed to import any leads', 'error');
       }
 
       // Clean up
@@ -2311,14 +2311,14 @@ function exportLeadsToExcel() {
         ['- Rep Email'],
         [''],
         ['IMPORTANT: Lead ID Column'],
-        ['• The Lead ID column is used to identify existing leads'],
-        ['• When you re-import this file, leads will be UPDATED (not duplicated)'],
-        ['• DO NOT modify or delete the Lead ID column'],
-        ['• Leave Lead ID blank ONLY if adding a brand new lead'],
+        ['? The Lead ID column is used to identify existing leads'],
+        ['? When you re-import this file, leads will be UPDATED (not duplicated)'],
+        ['? DO NOT modify or delete the Lead ID column'],
+        ['? Leave Lead ID blank ONLY if adding a brand new lead'],
         [''],
         ['VALID VALUES - Business Unit:'],
-        ['• Abbondanza Vending'],
-        ['• Quantum Solutions'],
+        ['? Abbondanza Vending'],
+        ['? Quantum Solutions'],
         [''],
         ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
         ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
@@ -2326,14 +2326,14 @@ function exportLeadsToExcel() {
         ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
         [''],
         ['VALID VALUES - Status:'],
-        ['• Active'],
-        ['• Follow Up Later'],
-        ['• Not Qualified'],
-        ['• Dead'],
+        ['? Active'],
+        ['? Follow Up Later'],
+        ['? Not Qualified'],
+        ['? Dead'],
         [''],
         ['VALID VALUES - Appointment Made:'],
-        ['• Yes'],
-        ['• No'],
+        ['? Yes'],
+        ['? No'],
         [''],
         ['FORMAT REQUIREMENTS:'],
         ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
