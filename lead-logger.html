@@ -15,9 +15,10 @@
     /* STICKY CONTROLS - Stay at top when scrolling */
     .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:15px;position:sticky;top:0;z-index:100;background:rgba(255,255,255,.98);padding:15px 0;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.1)}
     
-    .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.2s;text-decoration:none;display:inline-block}
+    .btn{padding:12px 24px;background:#1e3a8a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
     .btn:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(30,58,138,.35);background:#1e40af}
     .btn-secondary{background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)}
+    .btn svg{width:16px;height:16px;flex-shrink:0}
     .filters{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
     select,input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;transition:border-color .2s}
     select:focus,input[type="search"]:focus{outline:none;border-color:#667eea}
@@ -137,6 +138,12 @@
     .btn-danger{background:linear-gradient(135deg,#e53e3e 0%,#c53030 100%)}
     .btn-danger:hover{background:linear-gradient(135deg,#c53030 0%,#9b2c2c 100%)}
 
+    /* Inline SVG icon styling */
+    .icon-inline{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+    .icon-inline svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .icon-warning svg{width:18px;height:18px;stroke:#856404;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .icon-success svg{width:18px;height:18px;stroke:#38a169;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .icon-error svg{width:18px;height:18px;stroke:#e53e3e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
 
 /* Error Fixing Modal Styles */
     .error-row {
@@ -249,11 +256,11 @@
 
     <div class="controls">
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)">? Back to Dashboard</button>
-        <button class="btn btn-secondary" onclick="openAddLeadModal()">+ Add New Lead</button>
-        <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)">? Download Excel Template</button>
-        <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)">? Import Excel File</button>
-        <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)">? Export Current Leads</button>
+        <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button>
+        <button class="btn btn-secondary" onclick="openAddLeadModal()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Lead</button>
+        <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download Excel Template</button>
+        <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Import Excel File</button>
+        <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Current Leads</button>
       </div>
 
       <div class="filters">
@@ -266,7 +273,7 @@
           <option value="Not Qualified">Not Qualified</option>
           <option value="Dead">Dead (Archived)</option>
         </select>
-        <input type="search" id="searchInput" placeholder="Search leads..." onkeyup="filterLeads()"/>
+        <input type="search" id="searchInput" placeholder="Search leads, city, state, zip..." onkeyup="filterLeads()"/>
       </div>
     </div>
 
@@ -490,7 +497,7 @@
           <li>Click "Import Leads" to upload</li>
         </ol>
         <p style="color:#e53e3e;margin-top:10px;font-weight:600;">
-          ?? Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
+          <span class="icon-inline"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53e3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Required fields: Business Unit, Company Name, Rep Name, Rep Phone, Rep Email
         </p>
       </div>
 
@@ -523,7 +530,7 @@
       
       <div style="background:#fff3cd;padding:15px;border-radius:8px;margin:20px 0;border:1px solid #ffc107;">
         <p style="color:#856404;font-weight:600;margin-bottom:10px;">
-          ?? <span id="errorSummary">Found validation errors in your import file</span>
+          <span class="icon-inline"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> <span id="errorSummary">Found validation errors in your import file</span>
         </p>
         <p style="color:#856404;font-size:14px;">
           Fix the errors below, or import only the valid rows and fix the rest later.
@@ -596,6 +603,13 @@
   <div id="toast" class="toast"></div>
 
   <script>
+    // ====== SVG ICON HELPERS ======
+    var SVG_ICONS = {
+      warning: '<span class="icon-inline"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>',
+      checkCircle: '<span class="icon-inline"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>',
+      xCircle: '<span class="icon-inline"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>'
+    };
+
     // ====== CONFIG ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
@@ -883,7 +897,8 @@
           (l.emailAddress && l.emailAddress.toLowerCase().includes(q)) ||
           (l.customerAddress && l.customerAddress.toLowerCase().includes(q)) ||
           (l.customerState && l.customerState.toLowerCase().includes(q)) ||
-          (l.customerZip && String(l.customerZip).toLowerCase().includes(q));
+          (l.customerZip && String(l.customerZip).toLowerCase().includes(q)) ||
+          (l.notes && String(l.notes).toLowerCase().includes(q));
         return matchRep && matchStatus && matchUnit && matchSearch;
       });
 
@@ -1176,7 +1191,7 @@
         const out = await res.json();
         if (out.status !== 'success') throw new Error(out.message || 'Delete failed');
 
-        showToast(`Lead "${currentLeadToDelete.companyName}" deleted permanently`, 'success');
+        showToast('Lead "' + currentLeadToDelete.companyName + '" deleted permanently', 'success');
         closeDeleteModal();
         await loadLeads(); // Refresh the lead list
         
@@ -1309,18 +1324,18 @@
       const instructionsData = [
         ['LEAD IMPORT TEMPLATE - INSTRUCTIONS'],
         [''],
-        ['?? ?? ?? IMPORTANT: LEAD ID COLUMN ?? ?? ??'],
+        ['IMPORTANT: LEAD ID COLUMN'],
         [''],
         ['FOR NEW LEADS:'],
-        ['? DELETE the "LEAVE BLANK" text and leave the Lead ID cell EMPTY'],
-        ['? The system will automatically generate a unique Lead ID when you import'],
-        ['? DO NOT type anything in the Lead ID column for new leads'],
+        ['- DELETE the "LEAVE BLANK" text and leave the Lead ID cell EMPTY'],
+        ['- The system will automatically generate a unique Lead ID when you import'],
+        ['- DO NOT type anything in the Lead ID column for new leads'],
         [''],
         ['FOR UPDATING EXISTING LEADS:'],
-        ['? Only use exports from the system (they have Lead IDs filled in)'],
-        ['? Do NOT manually type Lead IDs'],
+        ['- Only use exports from the system (they have Lead IDs filled in)'],
+        ['- Do NOT manually type Lead IDs'],
         [''],
-        ['???????????????????????????????????????????????????????????'],
+        ['==============================================================='],
         [''],
         ['REQUIRED FIELDS (must have values):'],
         ['- Business Unit'],
@@ -1330,8 +1345,8 @@
         ['- Rep Email'],
         [''],
         ['VALID VALUES - Business Unit:'],
-        ['? Abbondanza Vending'],
-        ['? Quantum Solutions'],
+        ['- Abbondanza Vending'],
+        ['- Quantum Solutions'],
         [''],
         ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
         ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
@@ -1339,14 +1354,14 @@
         ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
         [''],
         ['VALID VALUES - Status:'],
-        ['? Active'],
-        ['? Follow Up Later'],
-        ['? Not Qualified'],
-        ['? Dead'],
+        ['- Active'],
+        ['- Follow Up Later'],
+        ['- Not Qualified'],
+        ['- Dead'],
         [''],
         ['VALID VALUES - Appointment Made:'],
-        ['? Yes'],
-        ['? No'],
+        ['- Yes'],
+        ['- No'],
         [''],
         ['FORMAT REQUIREMENTS:'],
         ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
@@ -1746,7 +1761,7 @@ function showFixErrorsModal() {
         </div>
         ${lead._isDuplicate ? `
           <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:15px;border-left:4px solid #f59e0b;">
-            <strong style="color:#92400e;">?? POSSIBLE DUPLICATE - LEAD ID MISSING</strong>
+            <strong style="color:#92400e;">${SVG_ICONS.warning} POSSIBLE DUPLICATE - LEAD ID MISSING</strong>
             <p style="color:#78350f;font-size:14px;margin:8px 0 12px 0;">
               Lead ID is missing, but this company matches: <strong>${lead._existingLead.companyName}</strong> (Added: ${formatDate(lead._existingLead.dateAdded)})<br>
               <em>Did you accidentally delete the Lead ID from an export file?</em>
@@ -1929,9 +1944,11 @@ function setDuplicateAction(index, action) {
         } else if (action === 'new') {
           badge.textContent = 'Will Import';
         }
+        
+        // Re-validate if updating or importing as new
+        validateErrorRow(index);
       }
       
-      // Check if all errors are fixed
       checkAllErrorsFixed();
     }
 
@@ -1966,44 +1983,6 @@ function showConfirm(title, message, onConfirm) {
       }
       confirmCallback = null;
     }
-
-
-
-
-function setDuplicateAction(index, action) {
-      const lead = importErrorLeads[index];
-      lead._duplicateAction = action;
-      
-      const errorList = document.getElementById('error-list-' + index);
-      const badge = document.getElementById('badge-' + index);
-      const errorRow = document.getElementById('error-row-' + index);
-      
-      if (action === 'skip') {
-        // Hide error list and mark as resolved
-        errorList.style.display = 'none';
-        errorRow.classList.add('fixed');
-        badge.classList.add('fixed');
-        badge.textContent = 'Will Skip ?';
-        lead._errors = []; // Clear errors since we're skipping
-      } else {
-        // Show error list for validation
-        errorList.style.display = 'block';
-        errorRow.classList.remove('fixed');
-        badge.classList.remove('fixed');
-        
-        if (action === 'update') {
-          badge.textContent = 'Will Update';
-        } else if (action === 'new') {
-          badge.textContent = 'Will Import';
-        }
-        
-        // Re-validate if updating or importing as new
-        validateErrorRow(index);
-      }
-      
-      checkAllErrorsFixed();
-    }
-
 
 
 
@@ -2228,10 +2207,10 @@ function importValidRowsOnly() {
 
       // Show success/failure message
       if (successCount > 0) {
-        showToast('? Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
+        showToast('Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
         await loadLeads();
       } else {
-        showToast('? Failed to import any leads', 'error');
+        showToast('Failed to import any leads', 'error');
       }
 
       // Clean up
@@ -2314,14 +2293,14 @@ function exportLeadsToExcel() {
         ['- Rep Email'],
         [''],
         ['IMPORTANT: Lead ID Column'],
-        ['? The Lead ID column is used to identify existing leads'],
-        ['? When you re-import this file, leads will be UPDATED (not duplicated)'],
-        ['? DO NOT modify or delete the Lead ID column'],
-        ['? Leave Lead ID blank ONLY if adding a brand new lead'],
+        ['- The Lead ID column is used to identify existing leads'],
+        ['- When you re-import this file, leads will be UPDATED (not duplicated)'],
+        ['- DO NOT modify or delete the Lead ID column'],
+        ['- Leave Lead ID blank ONLY if adding a brand new lead'],
         [''],
         ['VALID VALUES - Business Unit:'],
-        ['? Abbondanza Vending'],
-        ['? Quantum Solutions'],
+        ['- Abbondanza Vending'],
+        ['- Quantum Solutions'],
         [''],
         ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
         ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
@@ -2329,14 +2308,14 @@ function exportLeadsToExcel() {
         ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
         [''],
         ['VALID VALUES - Status:'],
-        ['? Active'],
-        ['? Follow Up Later'],
-        ['? Not Qualified'],
-        ['? Dead'],
+        ['- Active'],
+        ['- Follow Up Later'],
+        ['- Not Qualified'],
+        ['- Dead'],
         [''],
         ['VALID VALUES - Appointment Made:'],
-        ['? Yes'],
-        ['? No'],
+        ['- Yes'],
+        ['- No'],
         [''],
         ['FORMAT REQUIREMENTS:'],
         ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
@@ -2416,3 +2395,11 @@ function exportLeadsToExcel() {
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
