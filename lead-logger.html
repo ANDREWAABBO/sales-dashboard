@@ -275,6 +275,14 @@
     .status-dot.inactive{background:#cbd5e0}
     .email-status{display:flex;align-items:center;font-size:13px;color:#718096;margin-top:12px;padding:10px;background:#fff;border-radius:6px;border:1px solid #e2e8f0}
 
+    /* Clickable inline date cells */
+    .date-clickable{cursor:pointer;color:#2563eb;border-bottom:1px dashed #2563eb;padding:2px 4px;border-radius:4px;transition:.2s;display:inline-block;min-width:80px;text-align:center}
+    .date-clickable:hover{background:#ebf5ff;color:#1e40af}
+    .date-clickable.empty{color:#a0aec0;border-bottom:1px dashed #cbd5e0;font-style:italic;font-size:13px}
+    .date-clickable.empty:hover{background:#f7fafc;color:#718096}
+    .date-inline-input{width:140px;padding:4px 8px;border:2px solid #2563eb;border-radius:6px;font-size:13px;text-align:center}
+    .date-inline-input:focus{outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.2)}
+
     
   </style>
 </head>
@@ -947,9 +955,13 @@
         lead.emailAddress || '',
         lead.repName || '',
         `<span class="status-badge ${statusClass}">${lead.status || 'Active'}</span>`,
-        followUp,
+        followUp
+          ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','followUp')">${followUp}</span>`
+          : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','followUp')">+ Add Date</span>`,
         `<span class="${appointmentClass}">${lead.appointmentMade || 'No'}</span>`,
-        appointmentDate,
+        appointmentDate
+          ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">${appointmentDate}</span>`
+          : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">+ Add Date</span>`,
         notes,
         `<div class="action-buttons">
            <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
@@ -2474,6 +2486,103 @@ function exportLeadsToExcel() {
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
+    // ============ INLINE DATE EDITING ============
+
+    function inlineDateEdit(el, leadId, field) {
+      // Don't open if already editing
+      if (el.querySelector('input')) return;
+
+      var currentText = el.textContent.trim();
+      var currentVal = '';
+      
+      // Parse existing date to YYYY-MM-DD for the input
+      if (currentText && currentText !== '+ Add Date') {
+        var parts = currentText.split('/');
+        if (parts.length === 3) {
+          currentVal = parts[2] + '-' + parts[0].padStart(2,'0') + '-' + parts[1].padStart(2,'0');
+        }
+      }
+
+      var input = document.createElement('input');
+      input.type = 'date';
+      input.className = 'date-inline-input';
+      input.value = currentVal;
+
+      el.innerHTML = '';
+      el.style.borderBottom = 'none';
+      el.appendChild(input);
+      input.focus();
+
+      var saved = false;
+
+      function saveDate() {
+        if (saved) return;
+        saved = true;
+
+        var newVal = input.value;
+
+        if (!newVal) {
+          // Cleared the date
+          el.innerHTML = '<span class="date-clickable empty" onclick="inlineDateEdit(this,\'' + leadId + '\',\'' + field + '\')">+ Add Date</span>';
+          el.style.borderBottom = '';
+          el.className = '';
+          sendInlineDateUpdate(leadId, field, '');
+          return;
+        }
+
+        // Format for display MM/DD/YYYY
+        var d = new Date(newVal + 'T00:00:00');
+        var display = ('0' + (d.getMonth()+1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2) + '/' + d.getFullYear();
+        
+        el.innerHTML = display;
+        el.className = 'date-clickable';
+        el.style.borderBottom = '';
+        el.onclick = function(){ inlineDateEdit(el, leadId, field); };
+
+        sendInlineDateUpdate(leadId, field, newVal);
+      }
+
+      input.addEventListener('change', saveDate);
+      input.addEventListener('blur', function() {
+        setTimeout(saveDate, 150);
+      });
+      input.addEventListener('keydown', function(ev) {
+        if (ev.key === 'Escape') {
+          saved = true;
+          if (currentText && currentText !== '+ Add Date') {
+            el.innerHTML = currentText;
+            el.className = 'date-clickable';
+          } else {
+            el.innerHTML = '+ Add Date';
+            el.className = 'date-clickable empty';
+          }
+          el.style.borderBottom = '';
+          el.onclick = function(){ inlineDateEdit(el, leadId, field); };
+        }
+        if (ev.key === 'Enter') saveDate();
+      });
+    }
+
+    async function sendInlineDateUpdate(leadId, field, value) {
+      try {
+        var updates = {};
+        updates[field] = value;
+
+        var res = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(String(leadId)), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'updateLead', leadId: String(leadId), updates: updates })
+        });
+
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Update failed');
+        showToast(field === 'followUp' ? 'Follow-up date updated' : 'Appointment date updated', 'success');
+      } catch (err) {
+        console.error('Inline date update error:', err);
+        showToast('Error updating date: ' + err.message, 'error');
+      }
+    }
+
     // ============ SETTINGS / EMAIL REMINDER FUNCTIONS ============
 
     function openSettingsModal() {
@@ -2603,6 +2712,7 @@ function exportLeadsToExcel() {
     window.toggleEmailSettings = toggleEmailSettings;
     window.saveEmailSettings = saveEmailSettings;
     window.sendTestReminder = sendTestReminder;
+    window.inlineDateEdit = inlineDateEdit;
   </script>
 </body>
 </html>
