@@ -101,6 +101,17 @@
     .appt-toggle.no{background:#fee2e2;color:#e53e3e;border:1px solid #fecaca}
     .appt-toggle:hover{transform:scale(1.05);box-shadow:0 2px 6px rgba(0,0,0,.1)}
 
+    /* Clickable status badge */
+    .status-badge{cursor:pointer;position:relative;transition:.15s}
+    .status-badge:hover{transform:scale(1.05);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+    .status-dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:50;overflow:hidden;min-width:140px;margin-top:4px}
+    .status-dropdown-item{padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:.1s;white-space:nowrap}
+    .status-dropdown-item:hover{background:#f1f5f9}
+    .status-dropdown-item.active-opt{color:#48bb78;background:#f0fff4}
+    .status-dropdown-item.followup-opt{color:#ecc94b;background:#fffff0}
+    .status-dropdown-item.notqual-opt{color:#a0aec0;background:#f7fafc}
+    .status-dropdown-item.dead-opt{color:#e53e3e;background:#fff5f5}
+
     /* Sortable table headers */
     th.sortable{cursor:pointer;user-select:none;padding-right:22px!important;transition:background .15s}
     th.sortable:hover{background:#152e6e}
@@ -997,7 +1008,7 @@
         lead.phoneNumber || '',
         lead.emailAddress || '',
         lead.repName || '',
-        `<span class="status-badge ${statusClass}">${lead.status || 'Active'}</span>`,
+        `<span class="status-badge ${statusClass}" onclick="openStatusPicker(event,this,'${leadId}')">${lead.status || 'Active'}</span>`,
         followUp
           ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','followUp')">${followUp}</span>`
           : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','followUp')">+ Add Date</span>`,
@@ -2532,6 +2543,74 @@ function exportLeadsToExcel() {
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
 
+    // ============ INLINE STATUS PICKER ============
+
+    function openStatusPicker(evt, el, leadId) {
+      evt.stopPropagation();
+      // Close any existing dropdown
+      closeStatusPicker();
+
+      var currentStatus = el.textContent.trim();
+      var statuses = [
+        { value: 'Active', label: 'Active', cls: 'active-opt' },
+        { value: 'Follow Up Later', label: 'Follow Up Later', cls: 'followup-opt' },
+        { value: 'Not Qualified', label: 'Not Qualified', cls: 'notqual-opt' },
+        { value: 'Dead', label: 'Dead', cls: 'dead-opt' }
+      ];
+
+      var dd = document.createElement('div');
+      dd.className = 'status-dropdown';
+      dd.id = 'statusPickerDD';
+
+      statuses.forEach(function(s) {
+        var item = document.createElement('div');
+        item.className = 'status-dropdown-item ' + s.cls;
+        item.textContent = s.label;
+        if (s.value === currentStatus) item.style.fontWeight = '800';
+        item.addEventListener('click', function(e) {
+          e.stopPropagation();
+          closeStatusPicker();
+          if (s.value === currentStatus) return;
+          // Instant UI update
+          el.textContent = s.value;
+          el.className = 'status-badge ' + getStatusClass(s.value);
+          // Update local data
+          var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
+          if (lead) lead.status = s.value;
+          // Background save
+          sendInlineStatusUpdate(leadId, s.value);
+        });
+        dd.appendChild(item);
+      });
+
+      el.style.position = 'relative';
+      el.appendChild(dd);
+
+      // Close on outside click
+      setTimeout(function() {
+        document.addEventListener('click', closeStatusPicker, { once: true });
+      }, 10);
+    }
+
+    function closeStatusPicker() {
+      var existing = document.getElementById('statusPickerDD');
+      if (existing) existing.remove();
+    }
+
+    async function sendInlineStatusUpdate(leadId, value) {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(String(leadId)), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'updateLead', leadId: String(leadId), updates: { status: value } })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Update failed');
+      } catch (err) {
+        showToast('Error updating status: ' + err.message, 'error');
+      }
+    }
+
     // ============ INLINE DATE EDITING ============
 
     // ============ SORTING STATE ============
@@ -2956,6 +3035,7 @@ function exportLeadsToExcel() {
     window.inlineDateEdit = inlineDateEdit;
     window.toggleApptMade = toggleApptMade;
     window.inlineNotesEdit = inlineNotesEdit;
+    window.openStatusPicker = openStatusPicker;
   </script>
 </body>
 </html>
