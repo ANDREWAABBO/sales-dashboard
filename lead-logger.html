@@ -880,7 +880,10 @@
           (l.companyName && l.companyName.toLowerCase().includes(q)) ||
           (l.contactName && l.contactName.toLowerCase().includes(q)) ||
           (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
-          (l.emailAddress && l.emailAddress.toLowerCase().includes(q));
+          (l.emailAddress && l.emailAddress.toLowerCase().includes(q)) ||
+          (l.customerAddress && l.customerAddress.toLowerCase().includes(q)) ||
+          (l.customerState && l.customerState.toLowerCase().includes(q)) ||
+          (l.customerZip && String(l.customerZip).toLowerCase().includes(q));
         return matchRep && matchStatus && matchUnit && matchSearch;
       });
 
