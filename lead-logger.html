@@ -299,6 +299,18 @@
     .date-inline-input{width:140px;padding:4px 8px;border:2px solid #2563eb;border-radius:6px;font-size:13px;text-align:center}
     .date-inline-input:focus{outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.2)}
 
+    /* Clickable inline notes */
+    .notes-clickable{cursor:pointer;color:#4a5568;border-radius:4px;padding:2px 4px;transition:.2s;display:block;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+    .notes-clickable:hover{background:#ebf5ff;color:#1e40af}
+    .notes-clickable.empty{color:#a0aec0;font-style:italic;font-size:13px}
+    .notes-clickable.empty:hover{background:#f7fafc;color:#718096}
+    .notes-inline-input{width:200px;min-height:60px;padding:6px 8px;border:2px solid #2563eb;border-radius:6px;font-size:13px;font-family:inherit;resize:vertical}
+    .notes-inline-input:focus{outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.2)}
+    .notes-inline-actions{display:flex;gap:4px;margin-top:4px}
+    .notes-inline-actions button{padding:3px 10px;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer}
+    .notes-inline-actions .notes-save{background:#2563eb;color:white}
+    .notes-inline-actions .notes-cancel{background:#e2e8f0;color:#4a5568}
+
     
   </style>
 </head>
@@ -978,7 +990,9 @@
         appointmentDate
           ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">${appointmentDate}</span>`
           : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">+ Add Date</span>`,
-        notes,
+        notes
+          ? `<span class="notes-clickable" onclick="inlineNotesEdit(this,'${leadId}')">${notes.length > 50 ? notes.substring(0,50) + '...' : notes}</span>`
+          : `<span class="notes-clickable empty" onclick="inlineNotesEdit(this,'${leadId}')">+ Add Note</span>`,
         `<div class="action-buttons">
            <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
            <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Generate Proposal</button>
@@ -991,8 +1005,9 @@
         const td = document.createElement('td'); 
         td.innerHTML = html; 
         
-        // Add hover functionality to notes column (11th column, index 10)
+        // Add hover tooltip for notes column (index 10) - show full notes on hover
         if (index === 10 && notes.trim() !== '') {
+          td.setAttribute('data-full-notes', notes);
           td.addEventListener('mouseenter', (e) => showNotesTooltip(e.target, notes));
           td.addEventListener('mouseleave', hideNotesTooltip);
         }
@@ -2693,6 +2708,92 @@ function exportLeadsToExcel() {
       }
     }
 
+    // ============ INLINE NOTES EDITING ============
+
+    function inlineNotesEdit(el, leadId) {
+      if (el.querySelector('textarea')) return;
+
+      // Get full notes from the lead data
+      var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
+      var currentNotes = lead ? String(lead.notes || '') : '';
+
+      var container = el.parentElement || el;
+      hideNotesTooltip(); // hide any hover tooltip
+
+      var wrapper = document.createElement('div');
+
+      var textarea = document.createElement('textarea');
+      textarea.className = 'notes-inline-input';
+      textarea.value = currentNotes;
+      textarea.placeholder = 'Enter notes...';
+
+      var actions = document.createElement('div');
+      actions.className = 'notes-inline-actions';
+
+      var saveBtn = document.createElement('button');
+      saveBtn.className = 'notes-save';
+      saveBtn.textContent = 'Save';
+
+      var cancelBtn = document.createElement('button');
+      cancelBtn.className = 'notes-cancel';
+      cancelBtn.textContent = 'Cancel';
+
+      actions.appendChild(saveBtn);
+      actions.appendChild(cancelBtn);
+      wrapper.appendChild(textarea);
+      wrapper.appendChild(actions);
+
+      el.innerHTML = '';
+      el.style.maxWidth = 'none';
+      el.style.overflow = 'visible';
+      el.appendChild(wrapper);
+      textarea.focus();
+
+      function restore(text) {
+        el.style.maxWidth = '';
+        el.style.overflow = '';
+        if (text && text.trim()) {
+          el.innerHTML = text.length > 50 ? text.substring(0, 50) + '...' : text;
+          el.className = 'notes-clickable';
+        } else {
+          el.innerHTML = '+ Add Note';
+          el.className = 'notes-clickable empty';
+        }
+        el.onclick = function() { inlineNotesEdit(el, leadId); };
+      }
+
+      saveBtn.addEventListener('click', function() {
+        var newNotes = textarea.value;
+        restore(newNotes);
+        // Update local data instantly
+        if (lead) lead.notes = newNotes;
+        // Save in background
+        sendInlineNotesUpdate(leadId, newNotes);
+      });
+
+      cancelBtn.addEventListener('click', function() {
+        restore(currentNotes);
+      });
+
+      textarea.addEventListener('keydown', function(ev) {
+        if (ev.key === 'Escape') { restore(currentNotes); }
+      });
+    }
+
+    async function sendInlineNotesUpdate(leadId, value) {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(String(leadId)), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'updateLead', leadId: String(leadId), updates: { notes: value } })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Update failed');
+      } catch (err) {
+        showToast('Error saving notes: ' + err.message, 'error');
+      }
+    }
+
     // ============ SETTINGS / EMAIL REMINDER FUNCTIONS ============
 
     function openSettingsModal() {
@@ -2824,6 +2925,7 @@ function exportLeadsToExcel() {
     window.sendTestReminder = sendTestReminder;
     window.inlineDateEdit = inlineDateEdit;
     window.toggleApptMade = toggleApptMade;
+    window.inlineNotesEdit = inlineNotesEdit;
   </script>
 </body>
 </html>
