@@ -104,7 +104,7 @@
     /* Clickable status badge */
     .status-badge{cursor:pointer;position:relative;transition:.15s}
     .status-badge:hover{transform:scale(1.05);box-shadow:0 2px 6px rgba(0,0,0,.15)}
-    .status-dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:50;overflow:hidden;min-width:140px;margin-top:4px}
+    .status-dropdown{position:fixed;background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:999;overflow:hidden;min-width:150px}
     .status-dropdown-item{padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:.1s;white-space:nowrap}
     .status-dropdown-item:hover{background:#f1f5f9}
     .status-dropdown-item.active-opt{color:#48bb78;background:#f0fff4}
@@ -2583,8 +2583,11 @@ function exportLeadsToExcel() {
         dd.appendChild(item);
       });
 
-      el.style.position = 'relative';
-      el.appendChild(dd);
+      // Position below the badge using fixed coords
+      var rect = el.getBoundingClientRect();
+      dd.style.top = (rect.bottom + 4) + 'px';
+      dd.style.left = (rect.left + rect.width / 2 - 75) + 'px';
+      document.body.appendChild(dd);
 
       // Close on outside click
       setTimeout(function() {
