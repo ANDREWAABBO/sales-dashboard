@@ -338,7 +338,7 @@ function generatePDF() {
     var totalRevenue = salesRevenue + serviceRev;
     var monthlyCosts = pf.totalCosts * inputs.fridgeCount;
     var monthlyNet = pf.netSheet * inputs.fridgeCount;
-    var annual = (monthlyNet * 12) + (pf.serviceRevenue * inputs.fridgeCount * 12);
+    var annual = monthlyNet * 12;
 
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF();
@@ -701,7 +701,7 @@ function sendSessionData() {
     var inputs = readInputs();
     var pf = calcPerFridge(inputs);
     var monthlyNet = pf.netSheet * inputs.fridgeCount;
-    var annual = (monthlyNet * 12) + (pf.serviceRevenue * inputs.fridgeCount * 12);
+    var annual = monthlyNet * 12;
     
     var duration = Math.round((new Date() - sessionStartTime) / 1000);
     
@@ -841,7 +841,7 @@ function update(){
   var monthlyCosts = pf.totalCosts     * i.fridgeCount;
   var monthlyNet   = pf.netSheet       * i.fridgeCount;
 
-  var annual       = (monthlyNet * 12) + (pf.serviceRevenue * i.fridgeCount * 12);
+  var annual       = monthlyNet * 12;
 
   setText('kpiSalesRevenue',  usd2(salesRevenue));
   setText('kpiServiceRevenue',usd2(serviceRev));
