@@ -378,13 +378,7 @@
 
         <div class="form-group">
           <label for="monthlyFee">Base Monthly Rate (1st Unit) *</label>
-          <select id="monthlyFee" name="monthlyFee" required onchange="updatePricingSummary()">
-            <option value="395">$395/month</option>
-            <option value="495">$495/month</option>
-            <option value="595">$595/month</option>
-            <option value="695">$695/month</option>
-            <option value="795" selected>$795/month</option>
-          </select>
+          <input type="number" id="monthlyFee" name="monthlyFee" min="0" step="1" value="795" required oninput="updatePricingSummary()">
         </div>
       </div>
 
@@ -479,13 +473,7 @@
 
         <div class="form-group">
           <label for="serviceMonthlyFee">Monthly Service Fee (1st Unit) *</label>
-          <select id="serviceMonthlyFee" name="serviceMonthlyFee" required onchange="updateServiceAgreementPricing()">
-            <option value="395">$395/month</option>
-            <option value="495">$495/month</option>
-            <option value="595">$595/month</option>
-            <option value="695">$695/month</option>
-            <option value="795" selected>$795/month</option>
-          </select>
+          <input type="number" id="serviceMonthlyFee" name="serviceMonthlyFee" min="0" step="1" value="795" required oninput="updateServiceAgreementPricing()">
         </div>
       </div>
 
