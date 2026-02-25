@@ -217,6 +217,38 @@
     .as-explainer{margin-top:18px;padding:14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
     .as-explainer-title{font-weight:700;color:#dc2626;margin-bottom:8px;font-size:13px}
     .as-flow{display:flex;align-items:center;gap:8px;font-size:12px;color:#4a5568;flex-wrap:wrap}
+
+    /* ====== EMAIL TEMPLATES MODAL ====== */
+    .et-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+    .et-list{margin-bottom:0}
+    .et-item{display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0;cursor:pointer;transition:.15s}
+    .et-item:hover{border-color:#10b981;background:#ecfdf5}
+    .et-item.active{border-color:#10b981;background:#ecfdf5;box-shadow:0 0 0 2px rgba(16,185,129,.2)}
+    .et-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .et-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+    .et-info{flex:1;min-width:0}
+    .et-name{font-weight:600;font-size:13px;color:#1e293b}
+    .et-subject{font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .et-actions{display:flex;gap:4px;flex-shrink:0}
+    .et-btn{padding:4px 8px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:10px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:3px;transition:.15s}
+    .et-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
+    .et-btn.edit{color:#10b981;border-color:#a7f3d0}
+    .et-btn.edit:hover{background:#ecfdf5}
+    .et-btn.del{color:#ef4444;border-color:#fecaca}
+    .et-btn.del:hover{background:#fef2f2}
+    .et-empty{text-align:center;padding:30px;color:#94a3b8;font-size:13px}
+    .et-form{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:10px}
+    .et-form h4{color:#1e293b;margin-bottom:14px;font-size:14px;display:flex;align-items:center;gap:6px}
+    .et-field{margin-bottom:12px}
+    .et-field label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:4px}
+    .et-field input,.et-field textarea{width:100%;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;font-family:inherit}
+    .et-field input:focus,.et-field textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .et-field textarea{min-height:120px;resize:vertical;line-height:1.5}
+    .et-placeholders{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px 12px;margin-top:8px}
+    .et-placeholders-title{font-size:11px;font-weight:700;color:#065f46;margin-bottom:6px}
+    .et-placeholder-tag{display:inline-block;padding:2px 8px;background:#d1fae5;color:#065f46;border-radius:4px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;transition:.1s}
+    .et-placeholder-tag:hover{background:#a7f3d0}
+    .et-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9}
   </style>
 </head>
 <body>
@@ -256,7 +288,7 @@
         </button>
         <button class="tbtn tbtn-blue" onclick="openTemplatesModal()">
           <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Templates
+          Email Templates
         </button>
       </div>
     </div>
@@ -395,6 +427,25 @@
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeAttemptsModal()">Cancel</button>
         <button class="btn-save" id="saveAttemptsBtn" onclick="saveAttemptsToBackend()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMAIL TEMPLATES MODAL -->
+  <div class="modal-overlay" id="templatesModal">
+    <div class="modal-card" style="max-width:700px;width:94%">
+      <div class="modal-hdr">
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Email Templates
+        </h3>
+        <p>Create and manage email templates for follow-up outreach</p>
+      </div>
+      <div class="modal-body" id="templatesModalBody" style="max-height:65vh">
+        <div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading templates...</p></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeTemplatesModal()">Close</button>
       </div>
     </div>
   </div>
@@ -975,7 +1026,197 @@
         btn.textContent = 'Save';
       }
     }
-    function openTemplatesModal(singleId) { showToast('Email templates - coming soon', 'success'); }
+    // ══════════════════════════════════════════════
+    //  EMAIL TEMPLATES — FULL IMPLEMENTATION
+    // ══════════════════════════════════════════════
+
+    var emailTemplates = [];
+    var etEditingId = null; // null = list view, 'new' = adding, or template ID = editing
+
+    function openTemplatesModal(singleId) {
+      etEditingId = null;
+      document.getElementById('templatesModal').classList.add('show');
+      document.getElementById('templatesModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading templates...</p></div>';
+      loadTemplatesFromBackend();
+    }
+
+    function closeTemplatesModal() {
+      document.getElementById('templatesModal').classList.remove('show');
+      etEditingId = null;
+    }
+
+    async function loadTemplatesFromBackend() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getEmailTemplates');
+        var data = await res.json();
+        if (data.status === 'success') {
+          emailTemplates = data.templates || [];
+        } else {
+          emailTemplates = [];
+        }
+      } catch(e) {
+        emailTemplates = [];
+      }
+      renderTemplatesModal();
+    }
+
+    function renderTemplatesModal() {
+      var body = document.getElementById('templatesModalBody');
+
+      // If editing/adding, show form
+      if (etEditingId !== null) {
+        renderTemplateForm(body);
+        return;
+      }
+
+      // List view
+      var h = '';
+      h += '<div class="et-toolbar">';
+      h += '  <span style="font-size:13px;color:#64748b;font-weight:500">' + emailTemplates.length + ' template' + (emailTemplates.length !== 1 ? 's' : '') + '</span>';
+      h += '  <button class="tbtn tbtn-green" onclick="startNewTemplate()" style="font-size:12px;padding:8px 16px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Template</button>';
+      h += '</div>';
+
+      if (emailTemplates.length === 0) {
+        h += '<div class="et-empty"><svg viewBox="0 0 24 24" style="width:36px;height:36px;stroke:#cbd5e0;fill:none;stroke-width:1.5;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>No email templates yet.<br>Create one to start sending follow-up emails.</div>';
+      } else {
+        h += '<div class="et-list">';
+        for (var i = 0; i < emailTemplates.length; i++) {
+          var t = emailTemplates[i];
+          h += '<div class="et-item" id="et-item-' + i + '">';
+          h += '  <div class="et-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>';
+          h += '  <div class="et-info"><div class="et-name">' + esc(t.name) + '</div><div class="et-subject">' + esc(t.subject || 'No subject') + '</div></div>';
+          h += '  <div class="et-actions">';
+          h += '    <button class="et-btn edit" onclick="startEditTemplate(\'' + t.id + '\')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>';
+          h += '    <button class="et-btn del" onclick="deleteTemplate(\'' + t.id + '\',' + i + ')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</button>';
+          h += '  </div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+
+      body.innerHTML = h;
+    }
+
+    function startNewTemplate() {
+      etEditingId = 'new';
+      renderTemplatesModal();
+    }
+
+    function startEditTemplate(id) {
+      etEditingId = id;
+      renderTemplatesModal();
+    }
+
+    function renderTemplateForm(body) {
+      var isNew = (etEditingId === 'new');
+      var t = isNew ? {name:'', subject:'', body:''} : emailTemplates.find(function(x) { return x.id === etEditingId; });
+      if (!t) { etEditingId = null; renderTemplatesModal(); return; }
+
+      var h = '';
+      h += '<div class="et-form">';
+      h += '  <h4><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#1e293b;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> ' + (isNew ? 'New Template' : 'Edit Template') + '</h4>';
+
+      h += '  <div class="et-field"><label>Template Name</label><input type="text" id="etName" value="' + esc(t.name) + '" placeholder="e.g. Initial Outreach"/></div>';
+      h += '  <div class="et-field"><label>Email Subject</label><input type="text" id="etSubject" value="' + esc(t.subject) + '" placeholder="e.g. Following up on our conversation"/></div>';
+      h += '  <div class="et-field"><label>Email Body</label><textarea id="etBody" placeholder="Type your email body here. Use placeholders like {Company} to auto-fill data.">' + esc(t.body) + '</textarea></div>';
+
+      h += '  <div class="et-placeholders">';
+      h += '    <div class="et-placeholders-title">Available Placeholders (click to insert):</div>';
+      var placeholders = ['{Company}','{Contact}','{Email}','{Phone}','{Rep}','{Date}'];
+      for (var i = 0; i < placeholders.length; i++) {
+        h += '<span class="et-placeholder-tag" onclick="insertPlaceholder(\'' + placeholders[i] + '\')">' + placeholders[i] + '</span>';
+      }
+      h += '  </div>';
+
+      h += '  <div class="et-form-actions">';
+      h += '    <button class="btn-cancel" onclick="cancelTemplateEdit()" style="padding:7px 16px;font-size:12px">Cancel</button>';
+      h += '    <button class="btn-save" id="etSaveBtn" onclick="saveTemplate()" style="padding:7px 16px;font-size:12px">' + (isNew ? 'Create Template' : 'Save Changes') + '</button>';
+      h += '  </div>';
+      h += '</div>';
+
+      body.innerHTML = h;
+    }
+
+    function insertPlaceholder(tag) {
+      var textarea = document.getElementById('etBody');
+      if (!textarea) return;
+      var start = textarea.selectionStart;
+      var end = textarea.selectionEnd;
+      var text = textarea.value;
+      textarea.value = text.substring(0, start) + tag + text.substring(end);
+      textarea.selectionStart = textarea.selectionEnd = start + tag.length;
+      textarea.focus();
+    }
+
+    function cancelTemplateEdit() {
+      etEditingId = null;
+      renderTemplatesModal();
+    }
+
+    async function saveTemplate() {
+      var name = document.getElementById('etName').value.trim();
+      var subject = document.getElementById('etSubject').value.trim();
+      var bodyText = document.getElementById('etBody').value.trim();
+
+      if (!name) { showToast('Template name is required', 'error'); return; }
+      if (!subject) { showToast('Subject line is required', 'error'); return; }
+      if (!bodyText) { showToast('Email body is required', 'error'); return; }
+
+      var btn = document.getElementById('etSaveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      var isNew = (etEditingId === 'new');
+      var payload;
+      if (isNew) {
+        payload = { action: 'addEmailTemplate', template: { name: name, subject: subject, body: bodyText } };
+      } else {
+        payload = { action: 'updateEmailTemplate', templateId: etEditingId, updates: { name: name, subject: subject, body: bodyText } };
+      }
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Save failed');
+        showToast(isNew ? 'Template created' : 'Template updated', 'success');
+        etEditingId = null;
+        await loadTemplatesFromBackend();
+      } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.textContent = isNew ? 'Create Template' : 'Save Changes';
+      }
+    }
+
+    function deleteTemplate(id, index) {
+      var item = document.getElementById('et-item-' + index);
+      var name = emailTemplates[index].name;
+      if (item) {
+        item.style.background = '#fef2f2';
+        item.style.borderColor = '#fecaca';
+        item.innerHTML = '<span style="color:#ef4444;font-weight:600;font-size:12px">Delete "' + esc(name) + '"?</span><div style="display:flex;gap:6px;margin-left:auto"><button class="et-btn" style="color:#4a5568;border-color:#cbd5e0" onclick="renderTemplatesModal()">Cancel</button><button class="et-btn del" onclick="confirmDeleteTemplate(\'' + id + '\')"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Confirm</button></div>';
+      }
+    }
+
+    async function confirmDeleteTemplate(id) {
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'deleteEmailTemplate', templateId: id })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Delete failed');
+        showToast('Template deleted', 'success');
+        await loadTemplatesFromBackend();
+      } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+      }
+    }
     function batchSend() { showToast('Batch send - coming soon', 'success'); }
 
     // ══════════════════════════════════════════════
