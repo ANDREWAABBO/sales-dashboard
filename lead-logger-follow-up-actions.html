@@ -79,13 +79,13 @@
     .row-cb{width:16px;height:16px;cursor:pointer;accent-color:#10b981}
 
     /* Action pills */
-    .pill{padding:3px 0;border-radius:10px;font-size:10px;font-weight:600;display:block;margin:1px auto;width:66px;text-align:center;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .pill{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;display:block;margin:1px auto;width:auto;max-width:100%;text-align:center;cursor:pointer;white-space:nowrap}
     .pill-stack:hover .pill,.pill-grid:hover .pill{opacity:.8}
     .pill-stack,.pill-grid{transition:.15s}
     .pill-stack:hover,.pill-grid:hover{transform:scale(1.03)}
     .pill-stack{display:flex;flex-direction:column;align-items:center;gap:1px}
-    .pill-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;justify-items:center}
-    td.td-action{padding:6px 2px}
+    .pill-grid{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
+    td.td-action{padding:4px 2px}
     .p-email{background:#dbeafe;color:#1e40af}
     .p-call{background:#fef3c7;color:#92400e}
     .p-fu{background:#d1fae5;color:#065f46}
@@ -93,22 +93,22 @@
     .p-prop{background:#e0f2fe;color:#0369a1}
 
     /* Stacked label rows */
-    .label-stack{display:flex;flex-direction:column;gap:4px;align-items:center}
-    .label-row{display:flex;align-items:center;gap:5px;justify-content:center;white-space:nowrap}
-    .lr-tag{padding:2px 0;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:48px;text-align:center;flex-shrink:0;display:inline-block}
+    .label-stack{display:flex;flex-direction:column;gap:1px;align-items:center}
+    .label-row{display:flex;align-items:center;gap:3px;justify-content:center;white-space:nowrap}
+    .lr-tag{padding:2px 0;border-radius:6px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:36px;text-align:center;flex-shrink:0;display:inline-block}
     .t-email{background:#dbeafe;color:#1e40af}
     .t-call{background:#fef3c7;color:#92400e}
     .t-fu{background:#d1fae5;color:#065f46}
     .t-appt{background:#fce7f3;color:#9d174d}
     .t-prop{background:#e0f2fe;color:#0369a1}
-    .lr-val{font-size:13px;font-weight:600;color:#1e293b}
-    .lr-date{font-size:13px;color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981}
-    .lr-dim{font-size:12px;color:#a0aec0}
+    .lr-val{font-size:11px;font-weight:600;color:#1e293b}
+    .lr-date{font-size:11px;color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981}
+    .lr-dim{font-size:10px;color:#a0aec0}
 
     /* Attempt counter */
-    .att{display:inline-flex;align-items:center;gap:2px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 4px}
-    .att-n{font-weight:700;font-size:14px;color:#263238;min-width:18px;text-align:center}
-    .att-b{width:18px;height:18px;border-radius:3px;border:1px solid #cbd5e0;background:#fff;cursor:pointer;font-size:11px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
+    .att{display:inline-flex;align-items:center;gap:1px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 3px}
+    .att-n{font-weight:700;font-size:12px;color:#263238;min-width:14px;text-align:center}
+    .att-b{width:16px;height:16px;border-radius:3px;border:1px solid #cbd5e0;background:#fff;cursor:pointer;font-size:10px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
     .att-b:hover{background:#10b981;color:#fff;border-color:#10b981}
     .att-dead{border-color:#fecaca;background:#fef2f2}
     .att-dead .att-n{color:#ef4444}
@@ -492,7 +492,14 @@
       'Appt Made':     {pill:'p-appt', tag:'t-appt'},
       'Proposal Sent': {pill:'p-prop', tag:'t-prop'}
     };
-    const LABEL_SHORT = {'Email':'Email','Call':'Call','Follow Up':'FU','Appt Made':'Appt','Proposal Sent':'Prop'};
+    const LABEL_SHORT_MAP = {'Email':'EM','Call':'CALL','Follow Up':'FU','Appt Made':'APPT','Proposal Sent':'PROP'};
+    function labelShort(name) {
+      if (LABEL_SHORT_MAP[name]) return LABEL_SHORT_MAP[name];
+      // Auto-abbreviate: take first letters of each word, max 4 chars
+      var words = name.trim().split(/\s+/);
+      if (words.length === 1) return words[0].substring(0,4).toUpperCase();
+      return words.map(function(w){return w[0]}).join('').substring(0,4).toUpperCase();
+    }
 
     // ── Default label configs ──
     const DEFAULT_LABELS = [
@@ -632,8 +639,7 @@
     // ── Pill renderer ──
     function renderPills(labels, actionId) {
       if (labels.length === 0) return '<span class="pill pill-needs" onclick="assignLabel(\'' + actionId + '\')">+ Assign Label</span>';
-      var cls = labels.length > 1 ? 'pill-grid' : 'pill-stack';
-      var h = '<div class="' + cls + '" onclick="assignLabel(\'' + actionId + '\')" style="cursor:pointer" title="Click to change labels">';
+      var h = '<div class="pill-grid" onclick="assignLabel(\'' + actionId + '\')" style="cursor:pointer" title="Click to change labels">';
       for (var i = 0; i < labels.length; i++) {
         var css = LABEL_CSS[labels[i]] || {pill:'p-email'};
         h += '<span class="pill ' + css.pill + '">' + esc(labels[i]) + '</span>';
@@ -650,7 +656,7 @@
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
-        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var short = labelShort(labels[i]);
         var dt = (a.actionDates || {})[labels[i]] || '';
         h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
         h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-dim">&mdash;</span>';
@@ -667,7 +673,7 @@
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
-        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var short = labelShort(labels[i]);
         var wv = (a.who || {})[labels[i]] || '';
         h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val">' + (wv ? esc(wv) : '\u2014') + '</span></div>';
       }
@@ -692,7 +698,7 @@
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
-        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var short = labelShort(labels[i]);
         h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
         if (!labelTracksAttempts(labels[i])) {
           h += '<span class="lr-dim">\u2014</span>';
@@ -719,7 +725,7 @@
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
-        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var short = labelShort(labels[i]);
         var ldv = (a.lastDates || {})[labels[i]] || '';
         if (!labelTracksAttempts(labels[i])) {
           h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-dim">\u2014</span></div>';
