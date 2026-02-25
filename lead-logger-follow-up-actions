@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Follow Up Actions - Abbondanza Sales</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;min-height:100vh;padding:20px}
+    .container{max-width:99%;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);border:1px solid #e5e7eb;overflow:hidden}
+
+    /* Header bar */
+    .header-bar{background:linear-gradient(135deg,#263238,#37474f);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .header-bar h1{color:#fff;font-size:20px;display:flex;align-items:center;gap:10px}
+    .header-bar h1 svg{width:22px;height:22px;stroke:#fff}
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .toolbar input[type="search"]{padding:8px 12px;border:none;border-radius:6px;font-size:12px;width:180px;background:rgba(255,255,255,.15);color:#fff}
+    .toolbar input[type="search"]::placeholder{color:rgba(255,255,255,.6)}
+    .toolbar input[type="search"]:focus{outline:none;background:rgba(255,255,255,.25)}
+    .toolbar select{padding:8px 10px;border:none;border-radius:6px;font-size:11px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+    .toolbar select option{color:#333;background:#fff}
+
+    .tbtn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;display:inline-flex;align-items:center;gap:5px;color:#fff;transition:.15s}
+    .tbtn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+    .tbtn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .tbtn-teal{background:linear-gradient(135deg,#14b8a6,#0d9488)}
+    .tbtn-orange{background:linear-gradient(135deg,#f59e0b,#d97706)}
+    .tbtn-purple{background:linear-gradient(135deg,#7c3aed,#6d28d9)}
+    .tbtn-blue{background:linear-gradient(135deg,#10b981,#059669)}
+    .tbtn-green{background:linear-gradient(135deg,#059669,#047857)}
+    .tbtn-gray{background:linear-gradient(135deg,#6b7280,#4b5563)}
+    .tbtn-red{background:linear-gradient(135deg,#ef4444,#dc2626)}
+
+    /* Batch bar */
+    .batch-bar{display:none;align-items:center;gap:12px;padding:10px 24px;background:linear-gradient(135deg,#263238,#37474f);color:#fff;font-size:13px;font-weight:600}
+    .batch-bar.show{display:flex}
+    .batch-count{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:12px;font-size:12px}
+    .batch-btn{padding:7px 18px;background:#fff;color:#263238;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+    .batch-btn:hover{background:#eff6ff}
+    .batch-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .batch-btn.send{background:linear-gradient(135deg,#059669,#047857);color:#fff}
+    @keyframes glowGreen{0%{box-shadow:0 0 4px rgba(5,150,105,.3)}50%{box-shadow:0 0 16px rgba(5,150,105,.8),0 0 30px rgba(5,150,105,.4)}100%{box-shadow:0 0 4px rgba(5,150,105,.3)}}
+    .batch-btn.send.glow{animation:glowGreen 2s ease-in-out infinite}
+    .batch-clear{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:12px;margin-left:auto}
+
+    /* Table wrapper */
+    .table-wrap{background:#fff;overflow:hidden}
+    .table-scroll{overflow-x:auto;max-height:75vh;overflow-y:auto}
+    table{width:100%;border-collapse:collapse;min-width:1450px}
+    th{background:#263238;color:#fff;padding:10px 6px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:5}
+    th .sub{font-size:8px;opacity:.6;font-weight:400;display:block;text-transform:none;letter-spacing:0}
+    td{padding:8px 6px;text-align:center;font-size:11px;color:#2d3748;border-bottom:1px solid #edf2f7;vertical-align:middle}
+    tbody tr:hover td{background:#f7fafc}
+    tbody tr:last-child td{border-bottom:none}
+    .row-dead td{background:#fef2f2!important}
+
+    /* Checkbox */
+    .row-cb{width:16px;height:16px;cursor:pointer;accent-color:#10b981}
+
+    /* Action pills */
+    .pill{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;display:block;margin:2px auto;width:fit-content;cursor:pointer}
+    .pill-stack{display:flex;flex-direction:column;align-items:center;gap:2px}
+    .pill-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;justify-items:center}
+    .p-email{background:#dbeafe;color:#1e40af}
+    .p-call{background:#fef3c7;color:#92400e}
+    .p-fu{background:#d1fae5;color:#065f46}
+    .p-appt{background:#fce7f3;color:#9d174d}
+    .p-prop{background:#e0f2fe;color:#0369a1}
+
+    /* Stacked label rows */
+    .label-stack{display:flex;flex-direction:column;gap:4px;align-items:center}
+    .label-row{display:flex;align-items:center;gap:5px;justify-content:center;white-space:nowrap}
+    .lr-tag{padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;min-width:42px;text-align:center;flex-shrink:0}
+    .t-email{background:#dbeafe;color:#1e40af}
+    .t-call{background:#fef3c7;color:#92400e}
+    .t-fu{background:#d1fae5;color:#065f46}
+    .t-appt{background:#fce7f3;color:#9d174d}
+    .t-prop{background:#e0f2fe;color:#0369a1}
+    .lr-val{font-size:11px;font-weight:600;color:#1e293b}
+    .lr-date{font-size:11px;color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981}
+    .lr-dim{font-size:10px;color:#a0aec0}
+
+    /* Attempt counter */
+    .att{display:inline-flex;align-items:center;gap:2px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 4px}
+    .att-n{font-weight:700;font-size:12px;color:#263238;min-width:16px;text-align:center}
+    .att-b{width:16px;height:16px;border-radius:3px;border:1px solid #cbd5e0;background:#fff;cursor:pointer;font-size:10px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
+    .att-b:hover{background:#10b981;color:#fff;border-color:#10b981}
+    .att-dead{border-color:#fecaca;background:#fef2f2}
+    .att-dead .att-n{color:#ef4444}
+
+    /* Editable phone */
+    .phone-link{color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981;font-size:10px}
+    .phone-link:hover{background:#ecfdf5}
+
+    /* Notes */
+    .notes-snip{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:#4a5568;display:inline-block;font-size:11px}
+    .notes-snip.empty{color:#a0aec0;font-style:italic}
+
+    /* Alert button */
+    .alert-btn{padding:5px 10px;border-radius:5px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+    .alert-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .alert-btn:hover{transform:scale(1.05)}
+
+    /* Small action buttons */
+    .btn-sm{padding:4px 8px;font-size:9px;border-radius:4px;border:none;color:#fff;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+    .btn-sm svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    /* Toast */
+    .toast{position:fixed;top:20px;right:20px;padding:14px 24px;border-radius:10px;color:#fff;font-weight:600;font-size:14px;z-index:9999;animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px}
+    .toast svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+    .toast-success{background:linear-gradient(135deg,#059669,#047857)}
+    .toast-error{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Loading */
+    .loading{text-align:center;padding:60px;color:#64748b}
+    .spinner{display:inline-block;width:36px;height:36px;border:3px solid #e2e8f0;border-top:3px solid #10b981;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .empty-state{text-align:center;padding:60px 20px;color:#64748b}
+    .empty-state h3{font-size:1.1rem;margin-bottom:8px;color:#4a5568}
+
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center}
+    .modal-overlay.show{display:flex}
+    .modal-card{background:#fff;border-radius:14px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;animation:modalIn .2s ease}
+    @keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    .modal-hdr{background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:18px 24px}
+    .modal-hdr h3{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}
+    .modal-hdr h3 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+    .modal-hdr p{margin:4px 0 0;opacity:.8;font-size:12px}
+    .modal-body{padding:20px 24px;color:#2d3748;max-height:60vh;overflow-y:auto}
+    .modal-footer{padding:14px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e2e8f0}
+    .modal-footer button{padding:9px 20px;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px}
+    .modal-footer .btn-cancel{background:#e2e8f0;color:#4a5568}
+    .modal-footer .btn-save{background:#10b981;color:#fff}
+    .modal-footer .btn-danger{background:#ef4444;color:#fff}
+
+    /* Inline edit input */
+    .inline-input{padding:4px 8px;border:2px solid #10b981;border-radius:6px;font-size:11px;text-align:center;width:110px}
+    .inline-input:focus{outline:none;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+
+    /* Notes edit overlay */
+    .notes-edit-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999;display:flex;justify-content:center;align-items:center}
+    .notes-edit-card{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:90vw;max-width:700px;overflow:hidden}
+    .notes-edit-header{background:#263238;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+    .notes-edit-header h3{margin:0;font-size:16px}
+    .notes-edit-body{padding:20px 24px}
+    .notes-edit-body textarea{width:100%;min-height:200px;padding:14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5}
+    .notes-edit-body textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .notes-edit-footer{padding:12px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0}
+    .notes-edit-footer button{padding:9px 20px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header-bar">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Follow Up Actions
+      </h1>
+      <div class="toolbar">
+        <input type="search" id="searchInput" placeholder="Search..." oninput="filterTable()"/>
+        <select id="actionFilter" onchange="filterTable()">
+          <option value="">All Actions</option>
+          <option value="Email">Email</option>
+          <option value="Call">Call</option>
+          <option value="Follow Up">Follow Up</option>
+          <option value="Appt Made">Appt Made</option>
+          <option value="Proposal Sent">Proposal Sent</option>
+        </select>
+        <button class="tbtn tbtn-gray" onclick="goToLeadDB()">
+          <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Leads
+        </button>
+        <button class="tbtn tbtn-teal" onclick="openLabelsModal()">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Labels
+        </button>
+        <button class="tbtn tbtn-orange" onclick="openTeamModal()">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Team
+        </button>
+        <button class="tbtn tbtn-purple" onclick="openAttemptsModal()">
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Attempts
+          <svg viewBox="0 0 24 24" style="width:12px;height:12px;margin-left:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="tbtn tbtn-blue" onclick="openTemplatesModal()">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Templates
+        </button>
+      </div>
+    </div>
+
+    <!-- BATCH BAR -->
+    <div class="batch-bar" id="batchBar">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span class="batch-count" id="batchCount">0 selected</span>
+      <button class="batch-btn" onclick="openTemplatesModal()">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Choose Template
+      </button>
+      <button class="batch-btn send" id="batchSendBtn" onclick="batchSend()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Batch Send
+      </button>
+      <button class="batch-clear" onclick="clearSelection()">&#10005; Clear</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <p style="margin-top:12px">Loading follow up actions...</p>
+      </div>
+
+      <div class="table-scroll" id="tableScroll" style="display:none">
+        <table>
+          <thead><tr>
+            <th style="width:3%"><input type="checkbox" class="row-cb" id="selectAll" onchange="toggleSelectAll(this)"/></th>
+            <th style="width:10%">Company</th>
+            <th style="width:8%">Action</th>
+            <th style="width:9%">Action Date</th>
+            <th style="width:10%">Who</th>
+            <th style="width:10%">Attempt</th>
+            <th style="width:9%">Last Date<span class="sub">auto on attempt</span></th>
+            <th style="width:7%">Phone<span class="sub">syncs Lead DB</span></th>
+            <th style="width:10%">Notes</th>
+            <th style="width:5%">Email</th>
+            <th style="width:5%">Proposal</th>
+            <th style="width:7%">Alert</th>
+          </tr></thead>
+          <tbody id="fuTableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display:none">
+        <h3>No follow up actions yet</h3>
+        <p>Actions will appear here when leads are created or actions are added.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer"></div>
+
+  <!-- NOTES EDIT (injected dynamically) -->
+
+  <script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
+
+    let allActions = [];
+    let selectedIds = new Set();
+    let maxAttempts = 5;
+
+    // ── Label → CSS class map ──
+    const LABEL_CSS = {
+      'Email':         {pill:'p-email', tag:'t-email'},
+      'Call':          {pill:'p-call',  tag:'t-call'},
+      'Follow Up':     {pill:'p-fu',   tag:'t-fu'},
+      'Appt Made':     {pill:'p-appt', tag:'t-appt'},
+      'Proposal Sent': {pill:'p-prop', tag:'t-prop'}
+    };
+    const LABEL_SHORT = {'Email':'Email','Call':'Call','Follow Up':'FU','Appt Made':'Appt','Proposal Sent':'Prop'};
+
+    // ══════════ INIT ══════════
+    window.addEventListener('DOMContentLoaded', () => {
+      loadActions();
+      loadMaxAttempts();
+    });
+
+    // ══════════ DATA LOADING ══════════
+    async function loadActions() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        allActions = data.actions || [];
+        renderTable();
+      } catch(e) {
+        showToast('Error loading actions: ' + e.message, 'error');
+        document.getElementById('loadingState').innerHTML = '<p style="color:#ef4444">Failed to load. Check connection.</p>';
+      }
+    }
+
+    async function loadMaxAttempts() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getMaxAttempts');
+        var data = await res.json();
+        if (data.status === 'success') maxAttempts = data.maxAttempts || 5;
+      } catch(e) { /* use default */ }
+    }
+
+    // ══════════ RENDER TABLE ══════════
+    function renderTable() {
+      var filtered = getFilteredActions();
+      document.getElementById('loadingState').style.display = 'none';
+
+      if (filtered.length === 0) {
+        document.getElementById('tableScroll').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+      document.getElementById('tableScroll').style.display = 'block';
+      document.getElementById('emptyState').style.display = 'none';
+
+      var tbody = document.getElementById('fuTableBody');
+      var html = '';
+
+      for (var i = 0; i < filtered.length; i++) {
+        var a = filtered[i];
+        var isDead = a.status === 'Dead';
+        var labels = a.actions || [];
+        var checked = selectedIds.has(a.id) ? ' checked' : '';
+
+        html += '<tr class="' + (isDead ? 'row-dead' : '') + '" data-id="' + a.id + '">';
+
+        // Checkbox
+        html += '<td><input type="checkbox" class="row-cb"' + checked + (isDead ? ' disabled' : '') + ' onchange="toggleRow(this,\'' + a.id + '\')"/></td>';
+
+        // Company
+        html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
+
+        // Action pills
+        html += '<td>' + renderPills(labels) + '</td>';
+
+        // Action Date
+        html += '<td>' + renderActionDates(a, labels) + '</td>';
+
+        // Who
+        html += '<td>' + renderWho(a, labels) + '</td>';
+
+        // Attempt
+        html += '<td>' + renderAttempts(a, labels, isDead) + '</td>';
+
+        // Last Date
+        html += '<td>' + renderLastDates(a, labels, isDead) + '</td>';
+
+        // Phone
+        html += '<td>' + (isDead
+          ? '<span style="font-size:10px">' + esc(a.phone) + '</span>'
+          : '<span class="phone-link" onclick="editPhone(\'' + a.id + '\')">' + esc(a.phone || 'Add') + '</span>') + '</td>';
+
+        // Notes
+        var noteDisplay = a.notes ? esc(a.notes) : '+ Add Note';
+        var noteClass = a.notes ? 'notes-snip' : 'notes-snip empty';
+        if (isDead) noteClass += '" style="color:#ef4444';
+        html += '<td><span class="' + noteClass + '" onclick="editNotes(\'' + a.id + '\')">' + noteDisplay + '</span></td>';
+
+        // Email Send
+        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="openTemplatesModal(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send</button>') + '</td>';
+
+        // Proposal
+        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#059669,#047857)" onclick="openProposal(\'' + a.leadId + '\')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Prop</button>') + '</td>';
+
+        // Alert
+        html += '<td>' + (isDead
+          ? '<span style="font-size:10px;color:#ef4444;font-weight:700">DEAD</span>'
+          : '<button class="alert-btn" onclick="sendAlert(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Alert</button>') + '</td>';
+
+        html += '</tr>';
+      }
+      tbody.innerHTML = html;
+    }
+
+    // ── Pill renderer ──
+    function renderPills(labels) {
+      if (labels.length === 0) return '<span style="color:#a0aec0">&mdash;</span>';
+      var cls = labels.length > 2 ? 'pill-grid' : 'pill-stack';
+      var h = '<div class="' + cls + '">';
+      for (var i = 0; i < labels.length; i++) {
+        var css = LABEL_CSS[labels[i]] || {pill:'p-email'};
+        h += '<span class="pill ' + css.pill + '">' + esc(labels[i]) + '</span>';
+      }
+      return h + '</div>';
+    }
+
+    // ── Stacked fields for multi-label ──
+    function renderActionDates(a, labels) {
+      if (labels.length <= 1) {
+        var d = (a.actionDates || {})[labels[0]] || '';
+        return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span style="color:#a0aec0">&mdash;</span>';
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var dt = (a.actionDates || {})[labels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
+        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-dim">&mdash;</span>';
+        h += '</div>';
+      }
+      return h + '</div>';
+    }
+
+    function renderWho(a, labels) {
+      if (labels.length <= 1) {
+        var w = (a.who || {})[labels[0]] || '';
+        return '<strong>' + esc(w || '&mdash;') + '</strong>';
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var wv = (a.who || {})[labels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val">' + esc(wv || '&mdash;') + '</span></div>';
+      }
+      return h + '</div>';
+    }
+
+    function renderAttempts(a, labels, isDead) {
+      if (labels.length <= 1) {
+        var n = (a.attempts || {})[labels[0]] || 0;
+        if (isDead) return '<div class="att att-dead"><span class="att-n">' + n + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
+        return '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',-1)">&minus;</button><span class="att-n">' + n + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',1)">+</button></div>';
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var n2 = (a.attempts || {})[labels[i]] || 0;
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
+        if (isDead) {
+          h += '<div class="att att-dead"><span class="att-n">' + n2 + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
+        } else {
+          h += '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',-1)">&minus;</button><span class="att-n">' + n2 + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',1)">+</button></div>';
+        }
+        h += '</div>';
+      }
+      return h + '</div>';
+    }
+
+    function renderLastDates(a, labels, isDead) {
+      if (labels.length <= 1) {
+        var ld = (a.lastDates || {})[labels[0]] || '';
+        return isDead ? '<span style="color:#ef4444">' + esc(ld || '&mdash;') + '</span>' : esc(ld || '&mdash;');
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var ldv = (a.lastDates || {})[labels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-dim">' + esc(ldv || '&mdash;') + '</span></div>';
+      }
+      return h + '</div>';
+    }
+
+    // ══════════ FILTERING ══════════
+    function getFilteredActions() {
+      var search = (document.getElementById('searchInput').value || '').toLowerCase();
+      var actionFilter = document.getElementById('actionFilter').value;
+      return allActions.filter(function(a) {
+        if (actionFilter && !(a.actions || []).includes(actionFilter)) return false;
+        if (search) {
+          var haystack = (a.company + ' ' + a.phone + ' ' + a.notes + ' ' + JSON.stringify(a.who)).toLowerCase();
+          if (haystack.indexOf(search) === -1) return false;
+        }
+        return true;
+      });
+    }
+
+    function filterTable() { renderTable(); }
+
+    // ══════════ SELECTION / BATCH ══════════
+    function toggleRow(cb, id) {
+      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+      updateBatchBar();
+    }
+
+    function toggleSelectAll(cb) {
+      var rows = document.querySelectorAll('#fuTableBody .row-cb:not([disabled])');
+      rows.forEach(function(r) { r.checked = cb.checked; });
+      selectedIds.clear();
+      if (cb.checked) {
+        allActions.forEach(function(a) { if (a.status !== 'Dead') selectedIds.add(a.id); });
+      }
+      updateBatchBar();
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      document.querySelectorAll('#fuTableBody .row-cb').forEach(function(r) { r.checked = false; });
+      document.getElementById('selectAll').checked = false;
+      updateBatchBar();
+    }
+
+    function updateBatchBar() {
+      var bar = document.getElementById('batchBar');
+      if (selectedIds.size > 0) {
+        bar.classList.add('show');
+        document.getElementById('batchCount').textContent = selectedIds.size + ' selected';
+      } else {
+        bar.classList.remove('show');
+      }
+    }
+
+    // ══════════ ATTEMPT CHANGE ══════════
+    async function changeAttempt(actionId, label, delta) {
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST',
+          headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateAttempt', actionId:actionId, label:label, delta:delta})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+
+        // Update local data
+        var a = allActions.find(function(x) { return x.id === actionId; });
+        if (a) {
+          if (data.attempts) a.attempts = data.attempts;
+          if (data.lastDates) a.lastDates = data.lastDates;
+          if (data.isDead) a.status = 'Dead';
+        }
+        renderTable();
+        if (data.isDead) showToast('Lead marked as DEAD - max attempts reached', 'error');
+      } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+      }
+    }
+
+    // ══════════ INLINE EDITS ══════════
+    function editPhone(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var td = document.querySelector('tr[data-id="' + actionId + '"] td:nth-child(8)');
+      var current = a.phone || '';
+      td.innerHTML = '<input class="inline-input" type="text" value="' + esc(current) + '" onblur="savePhone(\'' + actionId + '\',this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>';
+      td.querySelector('input').focus();
+    }
+
+    async function savePhone(actionId, input) {
+      var val = input.value.trim();
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{phone:val}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        var a = allActions.find(function(x) { return x.id === actionId; });
+        if (a) a.phone = val;
+        renderTable();
+      } catch(e) { showToast('Error saving phone: ' + e.message, 'error'); renderTable(); }
+    }
+
+    function editActionDate(actionId, label) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return;
+      var current = (a.actionDates || {})[label] || '';
+
+      // Convert display date to input date
+      var inputVal = '';
+      if (current) {
+        var parts = current.split('/');
+        if (parts.length === 3) inputVal = (parts[2].length === 2 ? '20' + parts[2] : parts[2]) + '-' + parts[0].padStart(2,'0') + '-' + parts[1].padStart(2,'0');
+        else inputVal = current;
+      }
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Edit Date</h3><p>' + esc(label) + ' - ' + esc(a.company) + '</p></div><div class="modal-body"><input type="date" id="dateEditInput" value="' + inputVal + '" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:16px"/></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveActionDate(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div></div>';
+      document.body.appendChild(overlay);
+    }
+
+    async function saveActionDate(actionId, label, btn) {
+      var val = document.getElementById('dateEditInput').value;
+      if (!val) { btn.closest('.modal-overlay').remove(); return; }
+      var d = new Date(val + 'T00:00:00');
+      var formatted = String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
+
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var dates = a.actionDates || {};
+      dates[label] = formatted;
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{actionDates:dates}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        a.actionDates = dates;
+        renderTable();
+        showToast('Date updated', 'success');
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      btn.closest('.modal-overlay').remove();
+    }
+
+    function editNotes(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var overlay = document.createElement('div');
+      overlay.className = 'notes-edit-overlay';
+      overlay.innerHTML = '<div class="notes-edit-card"><div class="notes-edit-header"><div><h3>' + esc(a.company) + '</h3></div><button onclick="this.closest(\'.notes-edit-overlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&#10005;</button></div><div class="notes-edit-body"><textarea id="notesEditArea">' + esc(a.notes || '') + '</textarea></div><div class="notes-edit-footer"><button onclick="this.closest(\'.notes-edit-overlay\').remove()" style="background:#e2e8f0;color:#4a5568">Cancel</button><button onclick="saveNotes(\'' + actionId + '\')" style="background:#10b981;color:#fff">Save Notes</button></div></div>';
+      document.body.appendChild(overlay);
+      document.getElementById('notesEditArea').focus();
+    }
+
+    async function saveNotes(actionId) {
+      var val = document.getElementById('notesEditArea').value.trim();
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{notes:val}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        var a = allActions.find(function(x) { return x.id === actionId; });
+        if (a) a.notes = val;
+        renderTable();
+        showToast('Notes saved', 'success');
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      var overlay = document.querySelector('.notes-edit-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    // ══════════ ALERT ══════════
+    async function sendAlert(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      showToast('Alert sent for ' + a.company, 'success');
+    }
+
+    // ══════════ NAV / PLACEHOLDER STUBS ══════════
+    function goToLeadDB() { window.location.href = 'lead-logger.html'; }
+    function openProposal(leadId) { showToast('Proposal generator opening...', 'success'); }
+    function openLabelsModal() { showToast('Labels settings - coming soon', 'success'); }
+    function openTeamModal() { showToast('Team settings - coming soon', 'success'); }
+    function openAttemptsModal() { showToast('Attempts settings - coming soon', 'success'); }
+    function openTemplatesModal(singleId) { showToast('Email templates - coming soon', 'success'); }
+    function batchSend() { showToast('Batch send - coming soon', 'success'); }
+
+    // ══════════ UTILS ══════════
+    function esc(s) {
+      if (!s) return '';
+      var d = document.createElement('div');
+      d.textContent = String(s);
+      return d.innerHTML;
+    }
+
+    function showToast(msg, type) {
+      var c = document.getElementById('toastContainer');
+      var icon = type === 'success'
+        ? '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      var t = document.createElement('div');
+      t.className = 'toast toast-' + (type || 'success');
+      t.innerHTML = icon + esc(msg);
+      c.appendChild(t);
+      setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; setTimeout(function() { t.remove(); }, 300); }, 3000);
+    }
+  </script>
+</body>
+</html>
