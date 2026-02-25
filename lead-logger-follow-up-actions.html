@@ -7,18 +7,21 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;min-height:100vh;padding:20px}
-    .container{max-width:99%;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);border:1px solid #e5e7eb;overflow:visible}
+    .container{max-width:99%;margin:0 auto}
 
-    /* Header bar */
-    .header-bar{background:linear-gradient(135deg,#263238,#37474f);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-radius:14px 14px 0 0}
-    .header-bar h1{color:#fff;font-size:20px;display:flex;align-items:center;gap:10px}
-    .header-bar h1 svg{width:22px;height:22px;stroke:#fff}
-    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .toolbar input[type="search"]{padding:10px 15px;border:none;border-radius:8px;font-size:14px;width:200px;background:rgba(255,255,255,.15);color:#fff}
-    .toolbar input[type="search"]::placeholder{color:rgba(255,255,255,.6)}
-    .toolbar input[type="search"]:focus{outline:none;background:rgba(255,255,255,.25)}
-    .toolbar select{padding:10px 15px;border:none;border-radius:8px;font-size:14px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
-    .toolbar select option{color:#333;background:#fff}
+    /* Title header */
+    .title-bar{background:linear-gradient(135deg,#263238,#37474f);padding:20px 30px;text-align:center;border-radius:14px 14px 0 0}
+    .title-bar h1{color:#fff;font-size:24px;font-weight:700;font-style:italic;margin:0}
+
+    /* Button row */
+    .btn-row{background:#fff;padding:20px 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #e5e7eb}
+
+    /* Filter row */
+    .filter-row{background:#fff;padding:12px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .filter-row select{padding:8px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;color:#2d3748;cursor:pointer}
+    .filter-row select:focus{outline:none;border-color:#667eea}
+    .filter-row input[type="search"]{padding:8px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;color:#2d3748;width:240px}
+    .filter-row input[type="search"]:focus{outline:none;border-color:#667eea}
 
     .tbtn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px;color:#fff;transition:.15s}
     .tbtn:hover{transform:translateY(-1px);filter:brightness(1.1)}
@@ -44,14 +47,15 @@
     .batch-clear{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:12px;margin-left:auto}
 
     /* Table wrapper */
-    .table-wrap{background:#fff}
-    .table-scroll{overflow-x:auto}
-    table{width:100%;border-collapse:collapse;min-width:1450px}
-    th{background:#263238;color:#fff;padding:14px 10px;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:5}
+    .table-container{overflow:auto;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:70vh;position:relative}
+    table{width:100%;border-collapse:collapse;background:#fff;min-width:1450px}
+    th{background:#1e3a8a;color:#fff;padding:14px 10px;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:10;border-bottom:1px solid #cbd5e1}
     th .sub{font-size:9px;opacity:.6;font-weight:400;display:block;text-transform:none;letter-spacing:0}
-    td{padding:12px 8px;text-align:center;font-size:13px;color:#2d3748;border-bottom:1px solid #edf2f7;vertical-align:middle}
+    td{padding:12px 8px;text-align:center;font-size:13px;color:#2d3748;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+    td:nth-child(2){white-space:normal;word-break:break-word;max-width:200px}
+    tbody tr{border-bottom:1px solid #e2e8f0}
+    tbody tr:last-child{border-bottom:none}
     tbody tr:hover td{background:#f7fafc}
-    tbody tr:last-child td{border-bottom:none}
     .row-dead td{background:#fef2f2!important}
     .row-unlabeled td{background:#fffbeb!important}
     .pill-needs{background:#fef3c7;color:#92400e;border:1px dashed #d97706;cursor:pointer;animation:pulse-needs 2s infinite;font-size:12px}
@@ -270,44 +274,48 @@
 </head>
 <body>
   <div class="container">
-    <!-- HEADER -->
-    <div class="header-bar">
-      <h1>
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-        Follow Up Actions
-      </h1>
-      <div class="toolbar">
-        <input type="search" id="searchInput" placeholder="Search..." oninput="filterTable()"/>
-        <select id="actionFilter" onchange="filterTable()">
-          <option value="">All Actions</option>
-          <option value="Email">Email</option>
-          <option value="Call">Call</option>
-          <option value="Follow Up">Follow Up</option>
-          <option value="Appt Made">Appt Made</option>
-          <option value="Proposal Sent">Proposal Sent</option>
-        </select>
-        <button class="tbtn tbtn-gray" onclick="goToLeadDB()">
-          <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Leads
-        </button>
-        <button class="tbtn tbtn-teal" onclick="openLabelsModal()">
-          <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-          Action Labels
-        </button>
-        <button class="tbtn tbtn-orange" onclick="openTeamModal()">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Team Members
-        </button>
-        <button class="tbtn tbtn-purple" onclick="openAttemptsModal()">
-          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          Lead Attempts
-          <svg viewBox="0 0 24 24" style="width:12px;height:12px;margin-left:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
-        <button class="tbtn tbtn-blue" onclick="openTemplatesModal()">
-          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Email Templates
-        </button>
-      </div>
+    <!-- TITLE HEADER -->
+    <div class="title-bar">
+      <h1>Follow Up Actions</h1>
+    </div>
+
+    <!-- BUTTON ROW -->
+    <div class="btn-row">
+      <button class="tbtn tbtn-gray" onclick="goToLeadDB()">
+        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Back to Leads
+      </button>
+      <button class="tbtn tbtn-teal" onclick="openLabelsModal()">
+        <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Action Labels
+      </button>
+      <button class="tbtn tbtn-orange" onclick="openTeamModal()">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Team Members
+      </button>
+      <button class="tbtn tbtn-purple" onclick="openAttemptsModal()">
+        <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Lead Attempts
+        <svg viewBox="0 0 24 24" style="width:12px;height:12px;margin-left:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="tbtn tbtn-blue" onclick="openTemplatesModal()">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Email Templates
+      </button>
+    </div>
+
+    <!-- FILTER ROW -->
+    <div class="filter-row">
+      <select id="actionFilter" onchange="filterTable()">
+        <option value="">All Actions</option>
+        <option value="Email">Email</option>
+        <option value="Call">Call</option>
+        <option value="Follow Up">Follow Up</option>
+        <option value="Appt Made">Appt Made</option>
+        <option value="Proposal Sent">Proposal Sent</option>
+        <option value="Unlabeled">Unlabeled</option>
+      </select>
+      <input type="search" id="searchInput" placeholder="Search leads, company, notes..." oninput="filterTable()"/>
     </div>
 
     <!-- BATCH BAR -->
@@ -326,15 +334,14 @@
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrap">
+    <div class="table-container" id="tableContainer">
       <div id="loadingState" class="loading">
         <div class="spinner"></div>
         <p style="margin-top:12px">Loading follow up actions...</p>
       </div>
 
-      <div class="table-scroll" id="tableScroll" style="display:none">
-        <table>
-          <thead><tr>
+      <table id="fuTable" style="display:none">
+        <thead><tr>
             <th style="width:3%"><input type="checkbox" class="row-cb" id="selectAll" onchange="toggleSelectAll(this)"/></th>
             <th style="width:10%">Company</th>
             <th style="width:8%">Action</th>
@@ -350,7 +357,6 @@
           </tr></thead>
           <tbody id="fuTableBody"></tbody>
         </table>
-      </div>
 
       <div id="emptyState" class="empty-state" style="display:none">
         <h3>No follow up actions yet</h3>
@@ -547,11 +553,11 @@
       document.getElementById('loadingState').style.display = 'none';
 
       if (filtered.length === 0) {
-        document.getElementById('tableScroll').style.display = 'none';
+        document.getElementById('fuTable').style.display = 'none';
         document.getElementById('emptyState').style.display = 'block';
         return;
       }
-      document.getElementById('tableScroll').style.display = 'block';
+      document.getElementById('fuTable').style.display = 'table';
       document.getElementById('emptyState').style.display = 'none';
 
       var tbody = document.getElementById('fuTableBody');
@@ -706,7 +712,9 @@
       var search = (document.getElementById('searchInput').value || '').toLowerCase();
       var actionFilter = document.getElementById('actionFilter').value;
       return allActions.filter(function(a) {
-        if (actionFilter && !(a.actions || []).includes(actionFilter)) return false;
+        if (actionFilter === 'Unlabeled') {
+          if ((a.actions || []).length > 0) return false;
+        } else if (actionFilter && !(a.actions || []).includes(actionFilter)) return false;
         if (search) {
           var haystack = (a.company + ' ' + a.phone + ' ' + a.notes + ' ' + JSON.stringify(a.who)).toLowerCase();
           if (haystack.indexOf(search) === -1) return false;
