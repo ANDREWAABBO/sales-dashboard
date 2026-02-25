@@ -149,6 +149,49 @@
     .notes-edit-body textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
     .notes-edit-footer{padding:12px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0}
     .notes-edit-footer button{padding:9px 20px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+
+    /* ====== LABEL SETTINGS MODAL ====== */
+    .ls-add-row{display:flex;justify-content:flex-end;margin-bottom:14px}
+    .ls-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0;transition:.15s}
+    .ls-item:hover{border-color:#cbd5e0}
+    .ls-pill{padding:4px 12px;border-radius:10px;font-size:11px;font-weight:700;min-width:90px;text-align:center;flex-shrink:0}
+    .ls-tags{flex:1;display:flex;flex-wrap:wrap;gap:4px;min-height:22px}
+    .ls-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .ls-tag-date{background:#d1fae5;color:#065f46}
+    .ls-tag-email-rem{background:#fef3c7;color:#92400e}
+    .ls-tag-popup{background:#fee2e2;color:#dc2626}
+    .ls-tag-nodate{background:#e2e8f0;color:#64748b}
+    .ls-tag-norem{background:#e2e8f0;color:#64748b}
+    .ls-edit-btn{padding:4px 10px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:11px;cursor:pointer;color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
+    .ls-edit-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .ls-edit-btn:hover{background:#ecfdf5;border-color:#10b981}
+    .ls-panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:10px;display:none;animation:modalIn .15s ease}
+    .ls-panel.open{display:block}
+    .ls-panel h4{color:#1e293b;margin-bottom:14px;font-size:14px;display:flex;align-items:center;gap:6px}
+    .ls-field{margin-bottom:14px}
+    .ls-field label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:4px}
+    .ls-field input[type="text"],.ls-field input[type="number"]{width:100%;max-width:260px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px}
+    .ls-field input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .ls-toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .ls-toggle{width:38px;height:22px;border-radius:22px;background:#cbd5e0;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+    .ls-toggle.on{background:#10b981}
+    .ls-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+    .ls-toggle.on::after{left:18px}
+    .ls-toggle-label{font-size:12px;color:#2d3748;font-weight:500}
+    .ls-indent{margin-left:48px;margin-top:-4px;margin-bottom:12px}
+    .ls-indent label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:3px}
+    .ls-indent input{padding:6px 8px;border:1px solid #cbd5e0;border-radius:5px;font-size:12px;width:80px}
+    .ls-indent input:focus{outline:none;border-color:#10b981}
+    .ls-delete-row{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
+    .ls-delete-btn{padding:5px 12px;border-radius:5px;border:1px solid #fecaca;background:#fff;font-size:11px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s}
+    .ls-delete-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .ls-delete-btn:hover{background:#fef2f2;border-color:#ef4444}
+
+    /* Center loading modal */
+    .loading-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:9999;display:flex;justify-content:center;align-items:center}
+    .loading-modal-card{background:#fff;padding:30px 50px;border-radius:12px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+    .loading-modal-card .spinner{margin-bottom:10px}
+    .loading-modal-card p{color:#4a5568;font-size:14px;font-weight:600}
   </style>
 </head>
 <body>
@@ -174,7 +217,7 @@
           Leads
         </button>
         <button class="tbtn tbtn-teal" onclick="openLabelsModal()">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
           Labels
         </button>
         <button class="tbtn tbtn-orange" onclick="openTeamModal()">
@@ -245,7 +288,28 @@
   <!-- TOAST CONTAINER -->
   <div id="toastContainer"></div>
 
-  <!-- NOTES EDIT (injected dynamically) -->
+  <!-- LABEL SETTINGS MODAL -->
+  <div class="modal-overlay" id="labelsModal">
+    <div class="modal-card" style="max-width:620px;width:94%">
+      <div class="modal-hdr">
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Label Settings
+        </h3>
+        <p>Each label is independent &mdash; configure dates &amp; reminders per label</p>
+      </div>
+      <div class="modal-body" id="labelsModalBody" style="max-height:65vh">
+        <!-- Rendered by JS -->
+        <div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading labels...</p></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeLabelsModal()">Cancel</button>
+        <button class="btn-save" id="saveLabelsBtn" onclick="saveLabelsToBackend()">
+          Save Labels
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
@@ -264,8 +328,21 @@
     };
     const LABEL_SHORT = {'Email':'Email','Call':'Call','Follow Up':'FU','Appt Made':'Appt','Proposal Sent':'Prop'};
 
+    // ── Default label configs ──
+    const DEFAULT_LABELS = [
+      {name:'Email',         requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, color:'#dbeafe', textColor:'#1e40af'},
+      {name:'Call',          requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, color:'#fef3c7', textColor:'#92400e'},
+      {name:'Follow Up',     requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:false, loginDaysAfter:0, color:'#d1fae5', textColor:'#065f46'},
+      {name:'Appt Made',     requiresDate:true,  emailReminder:true,  emailDaysBefore:2,  loginPopup:false, loginDaysAfter:0, color:'#fce7f3', textColor:'#9d174d'},
+      {name:'Proposal Sent', requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:true,  loginDaysAfter:3, color:'#e0f2fe', textColor:'#0369a1'}
+    ];
+
+    // Working copy for the modal
+    let labelsConfig = [];
+    let labelsExpandedIndex = -1;
+
     // ══════════ INIT ══════════
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', function() {
       loadActions();
       loadMaxAttempts();
     });
@@ -627,11 +704,227 @@
     // ══════════ NAV / PLACEHOLDER STUBS ══════════
     function goToLeadDB() { window.location.href = 'lead-logger.html'; }
     function openProposal(leadId) { showToast('Proposal generator opening...', 'success'); }
-    function openLabelsModal() { showToast('Labels settings - coming soon', 'success'); }
     function openTeamModal() { showToast('Team settings - coming soon', 'success'); }
     function openAttemptsModal() { showToast('Attempts settings - coming soon', 'success'); }
     function openTemplatesModal(singleId) { showToast('Email templates - coming soon', 'success'); }
     function batchSend() { showToast('Batch send - coming soon', 'success'); }
+
+    // ══════════════════════════════════════════════
+    //  LABEL SETTINGS MODAL — FULL IMPLEMENTATION
+    // ══════════════════════════════════════════════
+
+    function openLabelsModal() {
+      labelsExpandedIndex = -1;
+      document.getElementById('labelsModal').classList.add('show');
+      document.getElementById('labelsModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading labels...</p></div>';
+      loadLabelsFromBackend();
+    }
+
+    function closeLabelsModal() {
+      document.getElementById('labelsModal').classList.remove('show');
+    }
+
+    async function loadLabelsFromBackend() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getLabels');
+        var data = await res.json();
+        if (data.status === 'success' && data.labels && data.labels.length > 0) {
+          labelsConfig = JSON.parse(JSON.stringify(data.labels));
+        } else {
+          labelsConfig = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+        }
+      } catch(e) {
+        labelsConfig = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+      }
+      renderLabelsModal();
+    }
+
+    function renderLabelsModal() {
+      var body = document.getElementById('labelsModalBody');
+      var h = '';
+
+      // Add label button
+      h += '<div class="ls-add-row"><button class="tbtn tbtn-green" onclick="addNewLabel()" style="font-size:12px;padding:8px 16px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Label</button></div>';
+
+      for (var i = 0; i < labelsConfig.length; i++) {
+        var lb = labelsConfig[i];
+        var pillCss = getLabelPillStyle(lb);
+        var isExpanded = (labelsExpandedIndex === i);
+
+        // Summary tags
+        var tags = '';
+        if (lb.requiresDate) {
+          tags += '<span class="ls-tag ls-tag-date"><svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Date Required</span>';
+        } else {
+          tags += '<span class="ls-tag ls-tag-nodate">No Date</span>';
+        }
+        if (lb.emailReminder) {
+          tags += '<span class="ls-tag ls-tag-email-rem"><svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Email: ' + lb.emailDaysBefore + 'd before</span>';
+        }
+        if (lb.loginPopup) {
+          tags += '<span class="ls-tag ls-tag-popup"><svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Popup: ' + lb.loginDaysAfter + 'd after</span>';
+        }
+        if (!lb.emailReminder && !lb.loginPopup) {
+          tags += '<span class="ls-tag ls-tag-norem">No Reminders</span>';
+        }
+
+        // Label item row
+        h += '<div class="ls-item" id="ls-item-' + i + '">';
+        h += '  <span class="ls-pill" style="' + pillCss + '">' + esc(lb.name) + '</span>';
+        h += '  <div class="ls-tags">' + tags + '</div>';
+        h += '  <button class="ls-edit-btn" onclick="toggleLabelPanel(' + i + ')">';
+        h += '    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+        h += '    Edit';
+        h += '  </button>';
+        h += '</div>';
+
+        // Expandable edit panel
+        h += '<div class="ls-panel' + (isExpanded ? ' open' : '') + '" id="ls-panel-' + i + '">';
+        h += '  <h4><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#1e293b;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit: ' + esc(lb.name) + '</h4>';
+
+        // Label Name
+        h += '  <div class="ls-field"><label>Label Name</label><input type="text" value="' + esc(lb.name) + '" onchange="updateLabelField(' + i + ',\'name\',this.value)"/></div>';
+
+        // Requires Date toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.requiresDate ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'requiresDate\',this)"></div><span class="ls-toggle-label">Requires Date</span></div>';
+
+        // Email Reminder toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.emailReminder ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'emailReminder\',this)"></div><span class="ls-toggle-label">Email Reminder</span></div>';
+
+        // Days BEFORE (shown if emailReminder on)
+        h += '  <div class="ls-indent" id="ls-emaildays-' + i + '" style="' + (lb.emailReminder ? '' : 'display:none') + '"><label>Days BEFORE date</label><input type="number" min="0" max="30" value="' + (lb.emailDaysBefore || 0) + '" onchange="updateLabelField(' + i + ',\'emailDaysBefore\',parseInt(this.value)||0)"/></div>';
+
+        // Login Popup toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.loginPopup ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'loginPopup\',this)"></div><span class="ls-toggle-label">Follow-Up Reminder (login popup)</span></div>';
+
+        // Days AFTER (shown if loginPopup on)
+        h += '  <div class="ls-indent" id="ls-popupdays-' + i + '" style="' + (lb.loginPopup ? '' : 'display:none') + '"><label>Days AFTER date to force follow-up</label><input type="number" min="0" max="30" value="' + (lb.loginDaysAfter || 0) + '" onchange="updateLabelField(' + i + ',\'loginDaysAfter\',parseInt(this.value)||0)"/></div>';
+
+        // Delete label
+        h += '  <div class="ls-delete-row"><button class="ls-delete-btn" onclick="deleteLabel(' + i + ')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete Label</button></div>';
+
+        h += '</div>';
+      }
+
+      body.innerHTML = h;
+    }
+
+    function getLabelPillStyle(lb) {
+      return 'background:' + (lb.color || '#e2e8f0') + ';color:' + (lb.textColor || '#4a5568');
+    }
+
+    function toggleLabelPanel(index) {
+      if (labelsExpandedIndex === index) {
+        labelsExpandedIndex = -1;
+      } else {
+        labelsExpandedIndex = index;
+      }
+      renderLabelsModal();
+    }
+
+    function updateLabelField(index, field, value) {
+      if (index >= 0 && index < labelsConfig.length) {
+        labelsConfig[index][field] = value;
+        // Re-render to update summary tags if name changed
+        if (field === 'name') renderLabelsModal();
+      }
+    }
+
+    function toggleLabelBool(index, field, el) {
+      if (index >= 0 && index < labelsConfig.length) {
+        labelsConfig[index][field] = !labelsConfig[index][field];
+        el.classList.toggle('on');
+
+        // Show/hide related indent fields
+        if (field === 'emailReminder') {
+          var indent = document.getElementById('ls-emaildays-' + index);
+          if (indent) indent.style.display = labelsConfig[index][field] ? '' : 'none';
+        }
+        if (field === 'loginPopup') {
+          var indent = document.getElementById('ls-popupdays-' + index);
+          if (indent) indent.style.display = labelsConfig[index][field] ? '' : 'none';
+        }
+      }
+    }
+
+    function addNewLabel() {
+      labelsConfig.push({
+        name: 'New Label',
+        requiresDate: false,
+        emailReminder: false,
+        emailDaysBefore: 0,
+        loginPopup: false,
+        loginDaysAfter: 0,
+        color: '#e2e8f0',
+        textColor: '#4a5568'
+      });
+      labelsExpandedIndex = labelsConfig.length - 1;
+      renderLabelsModal();
+      // Scroll to bottom
+      var body = document.getElementById('labelsModalBody');
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function deleteLabel(index) {
+      if (labelsConfig.length <= 1) {
+        showToast('Cannot delete the last label', 'error');
+        return;
+      }
+      var name = labelsConfig[index].name;
+      // Show inline confirmation
+      var panel = document.getElementById('ls-panel-' + index);
+      var item = document.getElementById('ls-item-' + index);
+      if (panel) panel.remove();
+      if (item) {
+        item.style.background = '#fef2f2';
+        item.style.borderColor = '#fecaca';
+        item.innerHTML = '<span style="color:#ef4444;font-weight:600;font-size:12px">Delete "' + esc(name) + '"?</span><div style="display:flex;gap:6px;margin-left:auto"><button class="ls-edit-btn" style="color:#4a5568;border-color:#cbd5e0" onclick="renderLabelsModal()">Cancel</button><button class="ls-edit-btn" style="color:#ef4444;border-color:#fecaca;background:#fef2f2" onclick="confirmDeleteLabel(' + index + ')"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Confirm</button></div>';
+      }
+    }
+
+    function confirmDeleteLabel(index) {
+      labelsConfig.splice(index, 1);
+      if (labelsExpandedIndex === index) labelsExpandedIndex = -1;
+      else if (labelsExpandedIndex > index) labelsExpandedIndex--;
+      renderLabelsModal();
+    }
+
+    async function saveLabelsToBackend() {
+      // Validate: no empty names, no duplicates
+      for (var i = 0; i < labelsConfig.length; i++) {
+        if (!labelsConfig[i].name || !labelsConfig[i].name.trim()) {
+          showToast('Label at position ' + (i + 1) + ' has no name', 'error');
+          return;
+        }
+      }
+      var names = labelsConfig.map(function(l) { return l.name.trim().toLowerCase(); });
+      var unique = new Set(names);
+      if (unique.size !== names.length) {
+        showToast('Duplicate label names found — each label must have a unique name', 'error');
+        return;
+      }
+
+      var btn = document.getElementById('saveLabelsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'saveLabels', labels: labelsConfig })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Save failed');
+        showToast('Label settings saved', 'success');
+        closeLabelsModal();
+      } catch(e) {
+        showToast('Error saving labels: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Labels';
+      }
+    }
 
     // ══════════ UTILS ══════════
     function esc(s) {
