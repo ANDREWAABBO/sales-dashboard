@@ -94,7 +94,7 @@
     /* Stacked label rows */
     .label-stack{display:flex;flex-direction:column;gap:4px;align-items:center}
     .label-row{display:flex;align-items:center;gap:5px;justify-content:center;white-space:nowrap}
-    .lr-tag{padding:2px 7px;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;min-width:42px;text-align:center;flex-shrink:0}
+    .lr-tag{padding:2px 0;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:48px;text-align:center;flex-shrink:0;display:inline-block}
     .t-email{background:#dbeafe;color:#1e40af}
     .t-call{background:#fef3c7;color:#92400e}
     .t-fu{background:#d1fae5;color:#065f46}
@@ -495,11 +495,11 @@
 
     // ── Default label configs ──
     const DEFAULT_LABELS = [
-      {name:'Email',         requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, color:'#dbeafe', textColor:'#1e40af'},
-      {name:'Call',          requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, color:'#fef3c7', textColor:'#92400e'},
-      {name:'Follow Up',     requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:false, loginDaysAfter:0, color:'#d1fae5', textColor:'#065f46'},
-      {name:'Appt Made',     requiresDate:true,  emailReminder:true,  emailDaysBefore:2,  loginPopup:false, loginDaysAfter:0, color:'#fce7f3', textColor:'#9d174d'},
-      {name:'Proposal Sent', requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:true,  loginDaysAfter:3, color:'#e0f2fe', textColor:'#0369a1'}
+      {name:'Email',         requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, trackAttempts:true, color:'#dbeafe', textColor:'#1e40af'},
+      {name:'Call',          requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, trackAttempts:true, color:'#fef3c7', textColor:'#92400e'},
+      {name:'Follow Up',     requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:false, loginDaysAfter:0, trackAttempts:false, color:'#d1fae5', textColor:'#065f46'},
+      {name:'Appt Made',     requiresDate:true,  emailReminder:true,  emailDaysBefore:2,  loginPopup:false, loginDaysAfter:0, trackAttempts:false, color:'#fce7f3', textColor:'#9d174d'},
+      {name:'Proposal Sent', requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:true,  loginDaysAfter:3, trackAttempts:false, color:'#e0f2fe', textColor:'#0369a1'}
     ];
 
     // Working copy for the modal
@@ -673,8 +673,17 @@
       return h + '</div>';
     }
 
+    function labelTracksAttempts(labelName) {
+      var labels = availableLabels.length > 0 ? availableLabels : DEFAULT_LABELS;
+      for (var i = 0; i < labels.length; i++) {
+        if (labels[i].name === labelName) return labels[i].trackAttempts !== false;
+      }
+      return true; // default to tracking
+    }
+
     function renderAttempts(a, labels, isDead) {
       if (labels.length <= 1) {
+        if (!labelTracksAttempts(labels[0])) return '<span style="color:#a0aec0">\u2014</span>';
         var n = (a.attempts || {})[labels[0]] || 0;
         if (isDead) return '<div class="att att-dead"><span class="att-n">' + n + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
         return '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',-1)">&minus;</button><span class="att-n">' + n + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',1)">+</button></div>';
@@ -683,12 +692,16 @@
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
         var short = LABEL_SHORT[labels[i]] || labels[i];
-        var n2 = (a.attempts || {})[labels[i]] || 0;
         h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
-        if (isDead) {
-          h += '<div class="att att-dead"><span class="att-n">' + n2 + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
+        if (!labelTracksAttempts(labels[i])) {
+          h += '<span class="lr-dim">\u2014</span>';
         } else {
-          h += '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',-1)">&minus;</button><span class="att-n">' + n2 + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',1)">+</button></div>';
+          var n2 = (a.attempts || {})[labels[i]] || 0;
+          if (isDead) {
+            h += '<div class="att att-dead"><span class="att-n">' + n2 + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
+          } else {
+            h += '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',-1)">&minus;</button><span class="att-n">' + n2 + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',1)">+</button></div>';
+          }
         }
         h += '</div>';
       }
@@ -697,6 +710,7 @@
 
     function renderLastDates(a, labels, isDead) {
       if (labels.length <= 1) {
+        if (!labelTracksAttempts(labels[0])) return '<span style="color:#a0aec0">\u2014</span>';
         var ld = (a.lastDates || {})[labels[0]] || '';
         if (!ld) return isDead ? '<span style="color:#ef4444">\u2014</span>' : '<span style="color:#a0aec0">\u2014</span>';
         return isDead ? '<span style="color:#ef4444">' + esc(ld) + '</span>' : esc(ld);
@@ -706,7 +720,11 @@
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
         var short = LABEL_SHORT[labels[i]] || labels[i];
         var ldv = (a.lastDates || {})[labels[i]] || '';
-        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-dim">' + (ldv ? esc(ldv) : '\u2014') + '</span></div>';
+        if (!labelTracksAttempts(labels[i])) {
+          h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-dim">\u2014</span></div>';
+        } else {
+          h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-dim">' + (ldv ? esc(ldv) : '\u2014') + '</span></div>';
+        }
       }
       return h + '</div>';
     }
@@ -1586,6 +1604,9 @@
         if (!lb.emailReminder && !lb.loginPopup) {
           tags += '<span class="ls-tag ls-tag-norem">No Reminders</span>';
         }
+        if (lb.trackAttempts === false) {
+          tags += '<span class="ls-tag" style="background:#f1f5f9;color:#64748b">No Counter</span>';
+        }
 
         // Label item row
         h += '<div class="ls-item" id="ls-item-' + i + '">';
@@ -1606,6 +1627,9 @@
 
         // Requires Date toggle
         h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.requiresDate ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'requiresDate\',this)"></div><span class="ls-toggle-label">Requires Date</span></div>';
+
+        // Track Attempts toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.trackAttempts !== false ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'trackAttempts\',this)"></div><span class="ls-toggle-label">Track Attempts</span></div>';
 
         // Email Reminder toggle
         h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.emailReminder ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'emailReminder\',this)"></div><span class="ls-toggle-label">Email Reminder</span></div>';
@@ -1674,6 +1698,7 @@
         emailDaysBefore: 0,
         loginPopup: false,
         loginDaysAfter: 0,
+        trackAttempts: true,
         color: '#e2e8f0',
         textColor: '#4a5568'
       });
