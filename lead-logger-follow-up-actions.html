@@ -207,6 +207,16 @@
     .tm-remove svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
     .tm-remove:hover{background:#fef2f2;border-color:#ef4444}
     .tm-empty{text-align:center;padding:24px;color:#94a3b8;font-size:13px}
+
+    /* ====== ATTEMPT SETTINGS MODAL ====== */
+    .as-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+    .as-label{font-weight:600;font-size:14px;color:#1e293b}
+    .as-desc{font-size:12px;color:#64748b;margin-top:2px}
+    .as-input{width:68px;text-align:center;font-size:18px;font-weight:700;padding:8px;border:2px solid #e2e8f0;border-radius:8px;color:#263238}
+    .as-input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .as-explainer{margin-top:18px;padding:14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
+    .as-explainer-title{font-weight:700;color:#dc2626;margin-bottom:8px;font-size:13px}
+    .as-flow{display:flex;align-items:center;gap:8px;font-size:12px;color:#4a5568;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -344,6 +354,47 @@
         <button class="btn-save" id="saveTeamBtn" onclick="saveTeamToBackend()">
           Save Team
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTEMPT SETTINGS MODAL -->
+  <div class="modal-overlay" id="attemptsModal">
+    <div class="modal-card" style="max-width:460px;width:90%">
+      <div class="modal-hdr">
+        <h3>
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Attempt Settings
+        </h3>
+        <p>Per-label max &mdash; Dead syncs to Lead DB</p>
+      </div>
+      <div class="modal-body" id="attemptsModalBody">
+        <div class="as-row">
+          <div>
+            <div class="as-label">Max Attempts Before Dead</div>
+            <div class="as-desc">Any label counter hits this &rarr; Dead</div>
+          </div>
+          <input type="number" class="as-input" id="maxAttemptsInput" min="1" max="20" value="5"/>
+        </div>
+        <div class="as-explainer">
+          <div class="as-explainer-title">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-2px;margin-right:3px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            What happens:
+          </div>
+          <div class="as-flow">
+            <div class="att att-dead" style="display:inline-flex"><span class="att-n" style="color:#ef4444" id="asPreviewNum">5</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>
+            <span>&rarr;</span>
+            <span style="color:#ef4444;font-weight:700">Row RED</span>
+            <span>&rarr;</span>
+            <span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">Dead</span>
+            <span>&rarr;</span>
+            <span style="font-weight:600">Syncs to Lead DB</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeAttemptsModal()">Cancel</button>
+        <button class="btn-save" id="saveAttemptsBtn" onclick="saveAttemptsToBackend()">Save</button>
       </div>
     </div>
   </div>
@@ -880,7 +931,50 @@
         btn.textContent = 'Save Team';
       }
     }
-    function openAttemptsModal() { showToast('Attempts settings - coming soon', 'success'); }
+    function openAttemptsModal() {
+      document.getElementById('attemptsModal').classList.add('show');
+      // Load current value
+      document.getElementById('maxAttemptsInput').value = maxAttempts;
+      document.getElementById('asPreviewNum').textContent = maxAttempts;
+      // Live-update preview when input changes
+      document.getElementById('maxAttemptsInput').oninput = function() {
+        var v = parseInt(this.value) || 5;
+        document.getElementById('asPreviewNum').textContent = v;
+      };
+    }
+
+    function closeAttemptsModal() {
+      document.getElementById('attemptsModal').classList.remove('show');
+    }
+
+    async function saveAttemptsToBackend() {
+      var val = parseInt(document.getElementById('maxAttemptsInput').value);
+      if (!val || val < 1 || val > 20) {
+        showToast('Enter a number between 1 and 20', 'error');
+        return;
+      }
+      var btn = document.getElementById('saveAttemptsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'saveMaxAttempts', maxAttempts: val })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Save failed');
+        maxAttempts = val;
+        showToast('Max attempts set to ' + val, 'success');
+        closeAttemptsModal();
+      } catch(e) {
+        showToast('Error saving: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save';
+      }
+    }
     function openTemplatesModal(singleId) { showToast('Email templates - coming soon', 'success'); }
     function batchSend() { showToast('Batch send - coming soon', 'success'); }
 
