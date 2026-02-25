@@ -1,831 +1,1125 @@
-// COMPLETE GOOGLE APPS SCRIPT v16 — Leads + Email Reminders + Quick Date Update + Follow Up Actions
-// Leads Columns: A=ID, B=Date Added, C=Company Name, D=Business Unit, E=Contact Name,
-// F=Phone Number, G=Email Address, H=Rep Name, I=Follow Up, J=Status,
-// K=Appointment Made, L=Appointment Date, M=Notes, N=Last Modified,
-// O=Rep Phone, P=Rep Email, Q=Customer Address, R=Customer Zip
-//
-// FollowUpActions Columns: A=ID, B=LeadID, C=Company, D=Actions(JSON), E=ActionDates(JSON),
-// F=Who(JSON), G=Attempts(JSON), H=LastDates(JSON), I=Phone, J=Notes, K=Status, L=LastModified
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Follow Up Actions - Abbondanza Sales</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;min-height:100vh;padding:20px}
+    .container{max-width:99%;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.08);border:1px solid #e5e7eb;overflow:hidden}
 
-// ==================== LEAD FUNCTIONS ====================
+    /* Header bar */
+    .header-bar{background:linear-gradient(135deg,#263238,#37474f);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .header-bar h1{color:#fff;font-size:20px;display:flex;align-items:center;gap:10px}
+    .header-bar h1 svg{width:22px;height:22px;stroke:#fff}
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .toolbar input[type="search"]{padding:8px 12px;border:none;border-radius:6px;font-size:12px;width:180px;background:rgba(255,255,255,.15);color:#fff}
+    .toolbar input[type="search"]::placeholder{color:rgba(255,255,255,.6)}
+    .toolbar input[type="search"]:focus{outline:none;background:rgba(255,255,255,.25)}
+    .toolbar select{padding:8px 10px;border:none;border-radius:6px;font-size:11px;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}
+    .toolbar select option{color:#333;background:#fff}
 
-function addLead(leadData) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var dateAdded = new Date();
-    var newId = Utilities.getUuid();
-    sheet.appendRow([
-      newId, dateAdded,
-      leadData.companyName||'', leadData.businessUnit||'', leadData.contactName||'',
-      leadData.phoneNumber||'', leadData.emailAddress||'', leadData.repName||'',
-      leadData.followUp||'', leadData.status||'Active', leadData.appointmentMade||'No',
-      leadData.appointmentDate||'', leadData.notes||'', dateAdded,
-      leadData.repPhone||'', leadData.repEmail||'', leadData.customerAddress||'', leadData.customerZip||''
-    ]);
-    return {status:'success', message:'Lead added successfully', leadId:newId};
-  } catch(e) { return {status:'error', message:'Error adding lead: '+e.message}; }
-}
+    .tbtn{padding:7px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;display:inline-flex;align-items:center;gap:5px;color:#fff;transition:.15s}
+    .tbtn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+    .tbtn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    .tbtn-teal{background:linear-gradient(135deg,#14b8a6,#0d9488)}
+    .tbtn-orange{background:linear-gradient(135deg,#f59e0b,#d97706)}
+    .tbtn-purple{background:linear-gradient(135deg,#7c3aed,#6d28d9)}
+    .tbtn-blue{background:linear-gradient(135deg,#10b981,#059669)}
+    .tbtn-green{background:linear-gradient(135deg,#059669,#047857)}
+    .tbtn-gray{background:linear-gradient(135deg,#6b7280,#4b5563)}
+    .tbtn-red{background:linear-gradient(135deg,#ef4444,#dc2626)}
 
-function updateLead(leadId, updates) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var data = sheet.getDataRange().getValues();
-    var rowIndex = -1;
-    for (var i=1; i<data.length; i++) { if (data[i][0]==leadId) { rowIndex=i+1; break; } }
-    if (rowIndex===-1) return {status:'error', message:'Lead not found'};
-    var map = {companyName:3,businessUnit:4,contactName:5,phoneNumber:6,emailAddress:7,
-      repName:8,followUp:9,status:10,appointmentMade:11,appointmentDate:12,notes:13,
-      repPhone:15,repEmail:16,customerAddress:17,customerZip:18};
-    Object.keys(updates).forEach(function(f){ if(map[f]) sheet.getRange(rowIndex,map[f]).setValue(updates[f]||''); });
-    sheet.getRange(rowIndex,14).setValue(new Date());
-    return {status:'success', message:'Lead updated successfully'};
-  } catch(e) { return {status:'error', message:'Error updating lead: '+e.message}; }
-}
+    /* Batch bar */
+    .batch-bar{display:none;align-items:center;gap:12px;padding:10px 24px;background:linear-gradient(135deg,#263238,#37474f);color:#fff;font-size:13px;font-weight:600}
+    .batch-bar.show{display:flex}
+    .batch-count{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:12px;font-size:12px}
+    .batch-btn{padding:7px 18px;background:#fff;color:#263238;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+    .batch-btn:hover{background:#eff6ff}
+    .batch-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .batch-btn.send{background:linear-gradient(135deg,#059669,#047857);color:#fff}
+    @keyframes glowGreen{0%{box-shadow:0 0 4px rgba(5,150,105,.3)}50%{box-shadow:0 0 16px rgba(5,150,105,.8),0 0 30px rgba(5,150,105,.4)}100%{box-shadow:0 0 4px rgba(5,150,105,.3)}}
+    .batch-btn.send.glow{animation:glowGreen 2s ease-in-out infinite}
+    .batch-clear{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:12px;margin-left:auto}
 
-function getLeads() {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var data = sheet.getDataRange().getValues();
-    var leads = [];
-    for (var i=1; i<data.length; i++) {
-      var r = data[i];
-      if (!r[0]&&!r[2]) continue;
-      leads.push({id:r[0]||i, dateAdded:r[1]||'', companyName:r[2]||'', businessUnit:r[3]||'',
-        contactName:r[4]||'', phoneNumber:r[5]||'', emailAddress:r[6]||'', repName:r[7]||'',
-        followUp:r[8]||'', status:r[9]||'Active', appointmentMade:r[10]||'No',
-        appointmentDate:r[11]||'', notes:r[12]||'', lastModified:r[13]||'',
-        repPhone:r[14]||'', repEmail:r[15]||'', customerAddress:r[16]||'', customerZip:r[17]||''});
-    }
-    return {status:'success', leads:leads};
-  } catch(e) { return {status:'error', message:'Error getting leads: '+e.message, leads:[]}; }
-}
+    /* Table wrapper */
+    .table-wrap{background:#fff;overflow:hidden}
+    .table-scroll{overflow-x:auto;max-height:75vh;overflow-y:auto}
+    table{width:100%;border-collapse:collapse;min-width:1450px}
+    th{background:#263238;color:#fff;padding:10px 6px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;position:sticky;top:0;z-index:5}
+    th .sub{font-size:8px;opacity:.6;font-weight:400;display:block;text-transform:none;letter-spacing:0}
+    td{padding:8px 6px;text-align:center;font-size:11px;color:#2d3748;border-bottom:1px solid #edf2f7;vertical-align:middle}
+    tbody tr:hover td{background:#f7fafc}
+    tbody tr:last-child td{border-bottom:none}
+    .row-dead td{background:#fef2f2!important}
 
-function getCompanies() {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var data = sheet.getDataRange().getValues();
-    var companies = {}, units = {};
-    for (var i=1; i<data.length; i++) {
-      var c=String(data[i][2]||'').trim(), u=String(data[i][3]||'').trim();
-      if(c) companies[c]=1; if(u) units[u]=1;
-    }
-    return {status:'success', companies:Object.keys(companies).sort(), businessUnits:Object.keys(units).sort()};
-  } catch(e) { return {status:'error', message:e.message, companies:[], businessUnits:[]}; }
-}
+    /* Checkbox */
+    .row-cb{width:16px;height:16px;cursor:pointer;accent-color:#10b981}
 
-function archiveLead(leadId) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var data = sheet.getDataRange().getValues();
-    var rowIndex = -1;
-    for (var i=1; i<data.length; i++) { if(data[i][0]==leadId){rowIndex=i+1;break;} }
-    if (rowIndex===-1) return {status:'error', message:'Lead not found'};
-    sheet.getRange(rowIndex,10).setValue('Dead');
-    sheet.getRange(rowIndex,14).setValue(new Date());
-    return {status:'success', message:'Lead archived successfully'};
-  } catch(e) { return {status:'error', message:e.message}; }
-}
+    /* Action pills */
+    .pill{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:600;display:block;margin:2px auto;width:fit-content;cursor:pointer}
+    .pill-stack{display:flex;flex-direction:column;align-items:center;gap:2px}
+    .pill-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;justify-items:center}
+    .p-email{background:#dbeafe;color:#1e40af}
+    .p-call{background:#fef3c7;color:#92400e}
+    .p-fu{background:#d1fae5;color:#065f46}
+    .p-appt{background:#fce7f3;color:#9d174d}
+    .p-prop{background:#e0f2fe;color:#0369a1}
 
-function deleteLead(leadId) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var data = sheet.getDataRange().getValues();
-    var rowIndex=-1, companyName='';
-    for (var i=1; i<data.length; i++) { if(data[i][0]==leadId){rowIndex=i+1;companyName=data[i][2]||'Unknown';break;} }
-    if (rowIndex===-1) return {status:'error', message:'Lead not found'};
-    sheet.deleteRow(rowIndex);
-    return {status:'success', message:'Lead "'+companyName+'" deleted permanently', deletedLeadId:leadId, deletedCompanyName:companyName};
-  } catch(e) { return {status:'error', message:e.message}; }
-}
+    /* Stacked label rows */
+    .label-stack{display:flex;flex-direction:column;gap:4px;align-items:center}
+    .label-row{display:flex;align-items:center;gap:5px;justify-content:center;white-space:nowrap}
+    .lr-tag{padding:1px 6px;border-radius:6px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;min-width:42px;text-align:center;flex-shrink:0}
+    .t-email{background:#dbeafe;color:#1e40af}
+    .t-call{background:#fef3c7;color:#92400e}
+    .t-fu{background:#d1fae5;color:#065f46}
+    .t-appt{background:#fce7f3;color:#9d174d}
+    .t-prop{background:#e0f2fe;color:#0369a1}
+    .lr-val{font-size:11px;font-weight:600;color:#1e293b}
+    .lr-date{font-size:11px;color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981}
+    .lr-dim{font-size:10px;color:#a0aec0}
 
+    /* Attempt counter */
+    .att{display:inline-flex;align-items:center;gap:2px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 4px}
+    .att-n{font-weight:700;font-size:12px;color:#263238;min-width:16px;text-align:center}
+    .att-b{width:16px;height:16px;border-radius:3px;border:1px solid #cbd5e0;background:#fff;cursor:pointer;font-size:10px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
+    .att-b:hover{background:#10b981;color:#fff;border-color:#10b981}
+    .att-dead{border-color:#fecaca;background:#fef2f2}
+    .att-dead .att-n{color:#ef4444}
 
-// ==================== FOLLOW UP ACTIONS ====================
+    /* Editable phone */
+    .phone-link{color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981;font-size:10px}
+    .phone-link:hover{background:#ecfdf5}
 
-function getFollowUpActions() {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('FollowUpActions');
-    if (!sheet) return {status:'success', actions:[]};
-    var data = sheet.getDataRange().getValues();
-    var actions = [];
-    for (var i = 1; i < data.length; i++) {
-      var r = data[i];
-      if (!r[0] && !r[2]) continue;
-      actions.push({
-        id: r[0] || '',
-        leadId: r[1] || '',
-        company: r[2] || '',
-        actions: safeParseJSON_(r[3], []),
-        actionDates: safeParseJSON_(r[4], {}),
-        who: safeParseJSON_(r[5], {}),
-        attempts: safeParseJSON_(r[6], {}),
-        lastDates: safeParseJSON_(r[7], {}),
-        phone: r[8] || '',
-        notes: r[9] || '',
-        status: r[10] || 'Active',
-        lastModified: r[11] || ''
-      });
-    }
-    return {status:'success', actions:actions};
-  } catch(e) {
-    return {status:'error', message:'Error getting follow up actions: ' + e.message, actions:[]};
-  }
-}
+    /* Notes */
+    .notes-snip{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:#4a5568;display:inline-block;font-size:11px}
+    .notes-snip.empty{color:#a0aec0;font-style:italic}
 
-function addFollowUpAction(data) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('FollowUpActions');
-    if (!sheet) {
-      sheet = ss.insertSheet('FollowUpActions');
-      sheet.appendRow(['ID','LeadID','Company','Actions','ActionDates','Who','Attempts','LastDates','Phone','Notes','Status','LastModified']);
-    }
-    var newId = Utilities.getUuid();
-    var now = new Date();
-    sheet.appendRow([
-      newId,
-      data.leadId || '',
-      data.company || '',
-      JSON.stringify(data.actions || []),
-      JSON.stringify(data.actionDates || {}),
-      JSON.stringify(data.who || {}),
-      JSON.stringify(data.attempts || {}),
-      JSON.stringify(data.lastDates || {}),
-      data.phone || '',
-      data.notes || '',
-      'Active',
-      now
-    ]);
-    return {status:'success', message:'Follow up action added', actionId:newId};
-  } catch(e) {
-    return {status:'error', message:'Error adding follow up action: ' + e.message};
-  }
-}
+    /* Alert button */
+    .alert-btn{padding:5px 10px;border-radius:5px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+    .alert-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .alert-btn:hover{transform:scale(1.05)}
 
-function updateFollowUpAction(actionId, updates) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('FollowUpActions');
-    if (!sheet) return {status:'error', message:'FollowUpActions sheet not found'};
-    var data = sheet.getDataRange().getValues();
-    var rowIndex = -1;
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == actionId) { rowIndex = i + 1; break; }
-    }
-    if (rowIndex === -1) return {status:'error', message:'Action not found'};
+    /* Small action buttons */
+    .btn-sm{padding:4px 8px;font-size:9px;border-radius:4px;border:none;color:#fff;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+    .btn-sm svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-    var colMap = {
-      leadId:2, company:3, actions:4, actionDates:5, who:6,
-      attempts:7, lastDates:8, phone:9, notes:10, status:11
+    /* Toast */
+    .toast{position:fixed;top:20px;right:20px;padding:14px 24px;border-radius:10px;color:#fff;font-weight:600;font-size:14px;z-index:9999;animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px}
+    .toast svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+    .toast-success{background:linear-gradient(135deg,#059669,#047857)}
+    .toast-error{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    @keyframes toastIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Loading */
+    .loading{text-align:center;padding:60px;color:#64748b}
+    .spinner{display:inline-block;width:36px;height:36px;border:3px solid #e2e8f0;border-top:3px solid #10b981;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .empty-state{text-align:center;padding:60px 20px;color:#64748b}
+    .empty-state h3{font-size:1.1rem;margin-bottom:8px;color:#4a5568}
+
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center}
+    .modal-overlay.show{display:flex}
+    .modal-card{background:#fff;border-radius:14px;max-width:500px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;animation:modalIn .2s ease}
+    @keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    .modal-hdr{background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:18px 24px}
+    .modal-hdr h3{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}
+    .modal-hdr h3 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+    .modal-hdr p{margin:4px 0 0;opacity:.8;font-size:12px}
+    .modal-body{padding:20px 24px;color:#2d3748;max-height:60vh;overflow-y:auto}
+    .modal-footer{padding:14px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e2e8f0}
+    .modal-footer button{padding:9px 20px;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px}
+    .modal-footer .btn-cancel{background:#e2e8f0;color:#4a5568}
+    .modal-footer .btn-save{background:#10b981;color:#fff}
+    .modal-footer .btn-danger{background:#ef4444;color:#fff}
+
+    /* Inline edit input */
+    .inline-input{padding:4px 8px;border:2px solid #10b981;border-radius:6px;font-size:11px;text-align:center;width:110px}
+    .inline-input:focus{outline:none;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+
+    /* Notes edit overlay */
+    .notes-edit-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999;display:flex;justify-content:center;align-items:center}
+    .notes-edit-card{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:90vw;max-width:700px;overflow:hidden}
+    .notes-edit-header{background:#263238;color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+    .notes-edit-header h3{margin:0;font-size:16px}
+    .notes-edit-body{padding:20px 24px}
+    .notes-edit-body textarea{width:100%;min-height:200px;padding:14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;resize:vertical;line-height:1.5}
+    .notes-edit-body textarea:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .notes-edit-footer{padding:12px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid #e2e8f0}
+    .notes-edit-footer button{padding:9px 20px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer}
+
+    /* ====== LABEL SETTINGS MODAL ====== */
+    .ls-add-row{display:flex;justify-content:flex-end;margin-bottom:14px}
+    .ls-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0;transition:.15s}
+    .ls-item:hover{border-color:#cbd5e0}
+    .ls-pill{padding:4px 12px;border-radius:10px;font-size:11px;font-weight:700;min-width:90px;text-align:center;flex-shrink:0}
+    .ls-tags{flex:1;display:flex;flex-wrap:wrap;gap:4px;min-height:22px}
+    .ls-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .ls-tag-date{background:#d1fae5;color:#065f46}
+    .ls-tag-email-rem{background:#fef3c7;color:#92400e}
+    .ls-tag-popup{background:#fee2e2;color:#dc2626}
+    .ls-tag-nodate{background:#e2e8f0;color:#64748b}
+    .ls-tag-norem{background:#e2e8f0;color:#64748b}
+    .ls-edit-btn{padding:4px 10px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:11px;cursor:pointer;color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
+    .ls-edit-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .ls-edit-btn:hover{background:#ecfdf5;border-color:#10b981}
+    .ls-panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:10px;display:none;animation:modalIn .15s ease}
+    .ls-panel.open{display:block}
+    .ls-panel h4{color:#1e293b;margin-bottom:14px;font-size:14px;display:flex;align-items:center;gap:6px}
+    .ls-field{margin-bottom:14px}
+    .ls-field label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:4px}
+    .ls-field input[type="text"],.ls-field input[type="number"]{width:100%;max-width:260px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px}
+    .ls-field input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .ls-toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .ls-toggle{width:38px;height:22px;border-radius:22px;background:#cbd5e0;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
+    .ls-toggle.on{background:#10b981}
+    .ls-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+    .ls-toggle.on::after{left:18px}
+    .ls-toggle-label{font-size:12px;color:#2d3748;font-weight:500}
+    .ls-indent{margin-left:48px;margin-top:-4px;margin-bottom:12px}
+    .ls-indent label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:3px}
+    .ls-indent input{padding:6px 8px;border:1px solid #cbd5e0;border-radius:5px;font-size:12px;width:80px}
+    .ls-indent input:focus{outline:none;border-color:#10b981}
+    .ls-delete-row{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
+    .ls-delete-btn{padding:5px 12px;border-radius:5px;border:1px solid #fecaca;background:#fff;font-size:11px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s}
+    .ls-delete-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .ls-delete-btn:hover{background:#fef2f2;border-color:#ef4444}
+
+    /* Center loading modal */
+    .loading-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:9999;display:flex;justify-content:center;align-items:center}
+    .loading-modal-card{background:#fff;padding:30px 50px;border-radius:12px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+    .loading-modal-card .spinner{margin-bottom:10px}
+    .loading-modal-card p{color:#4a5568;font-size:14px;font-weight:600}
+
+    /* ====== TEAM MEMBERS MODAL ====== */
+    .tm-add-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .tm-add-row input{flex:1;min-width:120px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px}
+    .tm-add-row input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .tm-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0;transition:.15s}
+    .tm-item:hover{border-color:#cbd5e0}
+    .tm-avatar{width:32px;height:32px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+    .tm-info{flex:1;min-width:0}
+    .tm-name{font-weight:600;font-size:13px;color:#1e293b}
+    .tm-email{font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .tm-remove{padding:4px 10px;border-radius:4px;border:1px solid #fecaca;background:#fff;font-size:11px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
+    .tm-remove svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+    .tm-remove:hover{background:#fef2f2;border-color:#ef4444}
+    .tm-empty{text-align:center;padding:24px;color:#94a3b8;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- HEADER -->
+    <div class="header-bar">
+      <h1>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Follow Up Actions
+      </h1>
+      <div class="toolbar">
+        <input type="search" id="searchInput" placeholder="Search..." oninput="filterTable()"/>
+        <select id="actionFilter" onchange="filterTable()">
+          <option value="">All Actions</option>
+          <option value="Email">Email</option>
+          <option value="Call">Call</option>
+          <option value="Follow Up">Follow Up</option>
+          <option value="Appt Made">Appt Made</option>
+          <option value="Proposal Sent">Proposal Sent</option>
+        </select>
+        <button class="tbtn tbtn-gray" onclick="goToLeadDB()">
+          <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Leads
+        </button>
+        <button class="tbtn tbtn-teal" onclick="openLabelsModal()">
+          <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Labels
+        </button>
+        <button class="tbtn tbtn-orange" onclick="openTeamModal()">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Team
+        </button>
+        <button class="tbtn tbtn-purple" onclick="openAttemptsModal()">
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Attempts
+          <svg viewBox="0 0 24 24" style="width:12px;height:12px;margin-left:-2px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="tbtn tbtn-blue" onclick="openTemplatesModal()">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Templates
+        </button>
+      </div>
+    </div>
+
+    <!-- BATCH BAR -->
+    <div class="batch-bar" id="batchBar">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span class="batch-count" id="batchCount">0 selected</span>
+      <button class="batch-btn" onclick="openTemplatesModal()">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Choose Template
+      </button>
+      <button class="batch-btn send" id="batchSendBtn" onclick="batchSend()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Batch Send
+      </button>
+      <button class="batch-clear" onclick="clearSelection()">&#10005; Clear</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div id="loadingState" class="loading">
+        <div class="spinner"></div>
+        <p style="margin-top:12px">Loading follow up actions...</p>
+      </div>
+
+      <div class="table-scroll" id="tableScroll" style="display:none">
+        <table>
+          <thead><tr>
+            <th style="width:3%"><input type="checkbox" class="row-cb" id="selectAll" onchange="toggleSelectAll(this)"/></th>
+            <th style="width:10%">Company</th>
+            <th style="width:8%">Action</th>
+            <th style="width:9%">Action Date</th>
+            <th style="width:10%">Who</th>
+            <th style="width:10%">Attempt</th>
+            <th style="width:9%">Last Date<span class="sub">auto on attempt</span></th>
+            <th style="width:7%">Phone<span class="sub">syncs Lead DB</span></th>
+            <th style="width:10%">Notes</th>
+            <th style="width:5%">Email</th>
+            <th style="width:5%">Proposal</th>
+            <th style="width:7%">Alert</th>
+          </tr></thead>
+          <tbody id="fuTableBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display:none">
+        <h3>No follow up actions yet</h3>
+        <p>Actions will appear here when leads are created or actions are added.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer"></div>
+
+  <!-- LABEL SETTINGS MODAL -->
+  <div class="modal-overlay" id="labelsModal">
+    <div class="modal-card" style="max-width:620px;width:94%">
+      <div class="modal-hdr">
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Label Settings
+        </h3>
+        <p>Each label is independent &mdash; configure dates &amp; reminders per label</p>
+      </div>
+      <div class="modal-body" id="labelsModalBody" style="max-height:65vh">
+        <!-- Rendered by JS -->
+        <div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading labels...</p></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeLabelsModal()">Cancel</button>
+        <button class="btn-save" id="saveLabelsBtn" onclick="saveLabelsToBackend()">
+          Save Labels
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM MEMBERS MODAL -->
+  <div class="modal-overlay" id="teamModal">
+    <div class="modal-card" style="max-width:620px;width:94%">
+      <div class="modal-hdr">
+        <h3>
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Team Members
+        </h3>
+        <p>For WHO dropdown + Alert emails</p>
+      </div>
+      <div class="modal-body" id="teamModalBody" style="max-height:65vh">
+        <div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading team...</p></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeTeamModal()">Close</button>
+        <button class="btn-save" id="saveTeamBtn" onclick="saveTeamToBackend()">
+          Save Team
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
+
+    let allActions = [];
+    let selectedIds = new Set();
+    let maxAttempts = 5;
+
+    // ── Label → CSS class map ──
+    const LABEL_CSS = {
+      'Email':         {pill:'p-email', tag:'t-email'},
+      'Call':          {pill:'p-call',  tag:'t-call'},
+      'Follow Up':     {pill:'p-fu',   tag:'t-fu'},
+      'Appt Made':     {pill:'p-appt', tag:'t-appt'},
+      'Proposal Sent': {pill:'p-prop', tag:'t-prop'}
     };
-    var jsonCols = {actions:1, actionDates:1, who:1, attempts:1, lastDates:1};
+    const LABEL_SHORT = {'Email':'Email','Call':'Call','Follow Up':'FU','Appt Made':'Appt','Proposal Sent':'Prop'};
 
-    Object.keys(updates).forEach(function(field) {
-      if (colMap[field]) {
-        var val = updates[field];
-        if (jsonCols[field]) val = JSON.stringify(val);
-        sheet.getRange(rowIndex, colMap[field]).setValue(val || '');
-      }
-    });
-
-    sheet.getRange(rowIndex, 12).setValue(new Date());
-
-    // Sync phone back to Leads if changed
-    if (updates.phone !== undefined) {
-      var leadId = data[rowIndex - 1][1];
-      if (leadId) syncPhoneToLead(leadId, updates.phone);
-    }
-
-    // Sync notes back to Leads if changed
-    if (updates.notes !== undefined) {
-      var leadId2 = data[rowIndex - 1][1];
-      if (leadId2) syncNotesToLead(leadId2, updates.notes);
-    }
-
-    // Check dead status if attempts changed
-    if (updates.attempts) {
-      var deadResult = checkDeadStatus(actionId, updates.attempts);
-      if (deadResult && deadResult.isDead) return {status:'success', message:'Action updated - DEAD', isDead:true};
-    }
-
-    return {status:'success', message:'Action updated'};
-  } catch(e) {
-    return {status:'error', message:'Error updating follow up action: ' + e.message};
-  }
-}
-
-function deleteFollowUpAction(actionId) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('FollowUpActions');
-    if (!sheet) return {status:'error', message:'FollowUpActions sheet not found'};
-    var data = sheet.getDataRange().getValues();
-    var rowIndex = -1;
-    var company = '';
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == actionId) { rowIndex = i + 1; company = data[i][2] || 'Unknown'; break; }
-    }
-    if (rowIndex === -1) return {status:'error', message:'Action not found'};
-    sheet.deleteRow(rowIndex);
-    return {status:'success', message:'Action for "' + company + '" deleted'};
-  } catch(e) {
-    return {status:'error', message:'Error deleting follow up action: ' + e.message};
-  }
-}
-
-function updateAttempt(actionId, label, delta) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('FollowUpActions');
-    if (!sheet) return {status:'error', message:'FollowUpActions sheet not found'};
-    var data = sheet.getDataRange().getValues();
-    var rowIndex = -1;
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == actionId) { rowIndex = i + 1; break; }
-    }
-    if (rowIndex === -1) return {status:'error', message:'Action not found'};
-
-    var row = data[rowIndex - 1];
-    var attempts = safeParseJSON_(row[6], {});
-    var lastDates = safeParseJSON_(row[7], {});
-    var maxAttempts = getMaxAttempts();
-
-    var current = attempts[label] || 0;
-    var newVal = Math.max(0, current + delta);
-    attempts[label] = newVal;
-
-    // Auto-stamp last date on change
-    var today = new Date();
-    var todayStr = Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy');
-    if (delta !== 0) lastDates[label] = todayStr;
-
-    sheet.getRange(rowIndex, 7).setValue(JSON.stringify(attempts));
-    sheet.getRange(rowIndex, 8).setValue(JSON.stringify(lastDates));
-    sheet.getRange(rowIndex, 12).setValue(today);
-
-    // Check if any label hit max
-    var deadResult = checkDeadStatus(actionId, attempts);
-    if (deadResult && deadResult.isDead) {
-      return {status:'success', message:'Attempt updated - DEAD', isDead:true, attempts:attempts, lastDates:lastDates};
-    }
-
-    return {status:'success', message:'Attempt updated', attempts:attempts, lastDates:lastDates};
-  } catch(e) {
-    return {status:'error', message:'Error updating attempt: ' + e.message};
-  }
-}
-
-function syncPhoneToLead(leadId, phone) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    if (!sheet) return;
-    var data = sheet.getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == leadId) {
-        sheet.getRange(i + 1, 6).setValue(phone || '');
-        sheet.getRange(i + 1, 14).setValue(new Date());
-        return;
-      }
-    }
-  } catch(e) { Logger.log('syncPhoneToLead error: ' + e); }
-}
-
-function syncNotesToLead(leadId, notes) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    if (!sheet) return;
-    var data = sheet.getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][0] == leadId) {
-        sheet.getRange(i + 1, 13).setValue(notes || '');
-        sheet.getRange(i + 1, 14).setValue(new Date());
-        return;
-      }
-    }
-  } catch(e) { Logger.log('syncNotesToLead error: ' + e); }
-}
-
-function checkDeadStatus(actionId, attempts) {
-  try {
-    var maxAttempts = getMaxAttempts();
-    var isDead = false;
-    var labels = Object.keys(attempts);
-    for (var i = 0; i < labels.length; i++) {
-      if (attempts[labels[i]] >= maxAttempts) { isDead = true; break; }
-    }
-    if (!isDead) return {isDead:false};
-
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('FollowUpActions');
-    if (!sheet) return {isDead:false};
-    var data = sheet.getDataRange().getValues();
-    for (var j = 1; j < data.length; j++) {
-      if (data[j][0] == actionId) {
-        sheet.getRange(j + 1, 11).setValue('Dead');
-        sheet.getRange(j + 1, 12).setValue(new Date());
-        // Sync Dead to Leads
-        var leadId = data[j][1];
-        if (leadId) {
-          updateLead(leadId, {status:'Dead'});
-        }
-        break;
-      }
-    }
-    return {isDead:true};
-  } catch(e) { Logger.log('checkDeadStatus error: ' + e); return {isDead:false}; }
-}
-
-function getMaxAttempts() {
-  var val = PropertiesService.getScriptProperties().getProperty('maxAttempts');
-  return val ? parseInt(val, 10) : 5;
-}
-
-function saveMaxAttempts(n) {
-  try {
-    PropertiesService.getScriptProperties().setProperty('maxAttempts', String(n || 5));
-    return {status:'success', message:'Max attempts saved'};
-  } catch(e) { return {status:'error', message:e.message}; }
-}
-
-
-// ==================== LABEL SETTINGS ====================
-
-function getLabels() {
-  try {
-    var props = PropertiesService.getScriptProperties();
-    var raw = props.getProperty('labels');
-    if (raw) {
-      var labels = JSON.parse(raw);
-      if (Array.isArray(labels) && labels.length > 0) {
-        return {status:'success', labels:labels};
-      }
-    }
-    // Return defaults if nothing saved
-    return {status:'success', labels:[
+    // ── Default label configs ──
+    const DEFAULT_LABELS = [
       {name:'Email',         requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, color:'#dbeafe', textColor:'#1e40af'},
       {name:'Call',          requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, color:'#fef3c7', textColor:'#92400e'},
       {name:'Follow Up',     requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:false, loginDaysAfter:0, color:'#d1fae5', textColor:'#065f46'},
       {name:'Appt Made',     requiresDate:true,  emailReminder:true,  emailDaysBefore:2,  loginPopup:false, loginDaysAfter:0, color:'#fce7f3', textColor:'#9d174d'},
       {name:'Proposal Sent', requiresDate:true,  emailReminder:true,  emailDaysBefore:1,  loginPopup:true,  loginDaysAfter:3, color:'#e0f2fe', textColor:'#0369a1'}
-    ]};
-  } catch(e) {
-    return {status:'error', message:e.message};
-  }
-}
+    ];
 
-function saveLabels(labels) {
-  try {
-    if (!Array.isArray(labels) || labels.length === 0) {
-      return {status:'error', message:'Labels array is required'};
-    }
-    for (var i = 0; i < labels.length; i++) {
-      if (!labels[i].name || !labels[i].name.trim()) {
-        return {status:'error', message:'Label at position ' + (i + 1) + ' has no name'};
+    // Working copy for the modal
+    let labelsConfig = [];
+    let labelsExpandedIndex = -1;
+
+    // ══════════ INIT ══════════
+    window.addEventListener('DOMContentLoaded', function() {
+      loadActions();
+      loadMaxAttempts();
+    });
+
+    // ══════════ DATA LOADING ══════════
+    async function loadActions() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        allActions = data.actions || [];
+        renderTable();
+      } catch(e) {
+        showToast('Error loading actions: ' + e.message, 'error');
+        document.getElementById('loadingState').innerHTML = '<p style="color:#ef4444">Failed to load. Check connection.</p>';
       }
     }
-    PropertiesService.getScriptProperties().setProperty('labels', JSON.stringify(labels));
-    return {status:'success', message:'Labels saved'};
-  } catch(e) {
-    return {status:'error', message:e.message};
-  }
-}
 
+    async function loadMaxAttempts() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getMaxAttempts');
+        var data = await res.json();
+        if (data.status === 'success') maxAttempts = data.maxAttempts || 5;
+      } catch(e) { /* use default */ }
+    }
 
-function getOverdueActions() {
-  try {
-    var result = getFollowUpActions();
-    if (result.status !== 'success') return result;
-    var today = new Date(); today.setHours(0,0,0,0);
-    var overdue = [];
-    for (var i = 0; i < result.actions.length; i++) {
-      var action = result.actions[i];
-      if (action.status === 'Dead') continue;
-      var dates = action.actionDates || {};
-      var labels = Object.keys(dates);
-      for (var j = 0; j < labels.length; j++) {
-        var d = parseDate_(dates[labels[j]]);
-        if (d && d < today) {
-          overdue.push({
-            actionId: action.id,
-            company: action.company,
-            label: labels[j],
-            date: dates[labels[j]],
-            daysOverdue: Math.floor((today - d) / 86400000)
-          });
+    // ══════════ RENDER TABLE ══════════
+    function renderTable() {
+      var filtered = getFilteredActions();
+      document.getElementById('loadingState').style.display = 'none';
+
+      if (filtered.length === 0) {
+        document.getElementById('tableScroll').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+      document.getElementById('tableScroll').style.display = 'block';
+      document.getElementById('emptyState').style.display = 'none';
+
+      var tbody = document.getElementById('fuTableBody');
+      var html = '';
+
+      for (var i = 0; i < filtered.length; i++) {
+        var a = filtered[i];
+        var isDead = a.status === 'Dead';
+        var labels = a.actions || [];
+        var checked = selectedIds.has(a.id) ? ' checked' : '';
+
+        html += '<tr class="' + (isDead ? 'row-dead' : '') + '" data-id="' + a.id + '">';
+
+        // Checkbox
+        html += '<td><input type="checkbox" class="row-cb"' + checked + (isDead ? ' disabled' : '') + ' onchange="toggleRow(this,\'' + a.id + '\')"/></td>';
+
+        // Company
+        html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
+
+        // Action pills
+        html += '<td>' + renderPills(labels) + '</td>';
+
+        // Action Date
+        html += '<td>' + renderActionDates(a, labels) + '</td>';
+
+        // Who
+        html += '<td>' + renderWho(a, labels) + '</td>';
+
+        // Attempt
+        html += '<td>' + renderAttempts(a, labels, isDead) + '</td>';
+
+        // Last Date
+        html += '<td>' + renderLastDates(a, labels, isDead) + '</td>';
+
+        // Phone
+        html += '<td>' + (isDead
+          ? '<span style="font-size:10px">' + esc(a.phone) + '</span>'
+          : '<span class="phone-link" onclick="editPhone(\'' + a.id + '\')">' + esc(a.phone || 'Add') + '</span>') + '</td>';
+
+        // Notes
+        var noteDisplay = a.notes ? esc(a.notes) : '+ Add Note';
+        var noteClass = a.notes ? 'notes-snip' : 'notes-snip empty';
+        if (isDead) noteClass += '" style="color:#ef4444';
+        html += '<td><span class="' + noteClass + '" onclick="editNotes(\'' + a.id + '\')">' + noteDisplay + '</span></td>';
+
+        // Email Send
+        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="openTemplatesModal(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send</button>') + '</td>';
+
+        // Proposal
+        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#059669,#047857)" onclick="openProposal(\'' + a.leadId + '\')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Prop</button>') + '</td>';
+
+        // Alert
+        html += '<td>' + (isDead
+          ? '<span style="font-size:10px;color:#ef4444;font-weight:700">DEAD</span>'
+          : '<button class="alert-btn" onclick="sendAlert(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Alert</button>') + '</td>';
+
+        html += '</tr>';
+      }
+      tbody.innerHTML = html;
+    }
+
+    // ── Pill renderer ──
+    function renderPills(labels) {
+      if (labels.length === 0) return '<span style="color:#a0aec0">&mdash;</span>';
+      var cls = labels.length > 2 ? 'pill-grid' : 'pill-stack';
+      var h = '<div class="' + cls + '">';
+      for (var i = 0; i < labels.length; i++) {
+        var css = LABEL_CSS[labels[i]] || {pill:'p-email'};
+        h += '<span class="pill ' + css.pill + '">' + esc(labels[i]) + '</span>';
+      }
+      return h + '</div>';
+    }
+
+    // ── Stacked fields for multi-label ──
+    function renderActionDates(a, labels) {
+      if (labels.length <= 1) {
+        var d = (a.actionDates || {})[labels[0]] || '';
+        return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span style="color:#a0aec0">&mdash;</span>';
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var dt = (a.actionDates || {})[labels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
+        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-dim">&mdash;</span>';
+        h += '</div>';
+      }
+      return h + '</div>';
+    }
+
+    function renderWho(a, labels) {
+      if (labels.length <= 1) {
+        var w = (a.who || {})[labels[0]] || '';
+        return '<strong>' + esc(w || '&mdash;') + '</strong>';
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var wv = (a.who || {})[labels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val">' + esc(wv || '&mdash;') + '</span></div>';
+      }
+      return h + '</div>';
+    }
+
+    function renderAttempts(a, labels, isDead) {
+      if (labels.length <= 1) {
+        var n = (a.attempts || {})[labels[0]] || 0;
+        if (isDead) return '<div class="att att-dead"><span class="att-n">' + n + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
+        return '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',-1)">&minus;</button><span class="att-n">' + n + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',1)">+</button></div>';
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var n2 = (a.attempts || {})[labels[i]] || 0;
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
+        if (isDead) {
+          h += '<div class="att att-dead"><span class="att-n">' + n2 + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
+        } else {
+          h += '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',-1)">&minus;</button><span class="att-n">' + n2 + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',1)">+</button></div>';
+        }
+        h += '</div>';
+      }
+      return h + '</div>';
+    }
+
+    function renderLastDates(a, labels, isDead) {
+      if (labels.length <= 1) {
+        var ld = (a.lastDates || {})[labels[0]] || '';
+        return isDead ? '<span style="color:#ef4444">' + esc(ld || '&mdash;') + '</span>' : esc(ld || '&mdash;');
+      }
+      var h = '<div class="label-stack">';
+      for (var i = 0; i < labels.length; i++) {
+        var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
+        var short = LABEL_SHORT[labels[i]] || labels[i];
+        var ldv = (a.lastDates || {})[labels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-dim">' + esc(ldv || '&mdash;') + '</span></div>';
+      }
+      return h + '</div>';
+    }
+
+    // ══════════ FILTERING ══════════
+    function getFilteredActions() {
+      var search = (document.getElementById('searchInput').value || '').toLowerCase();
+      var actionFilter = document.getElementById('actionFilter').value;
+      return allActions.filter(function(a) {
+        if (actionFilter && !(a.actions || []).includes(actionFilter)) return false;
+        if (search) {
+          var haystack = (a.company + ' ' + a.phone + ' ' + a.notes + ' ' + JSON.stringify(a.who)).toLowerCase();
+          if (haystack.indexOf(search) === -1) return false;
+        }
+        return true;
+      });
+    }
+
+    function filterTable() { renderTable(); }
+
+    // ══════════ SELECTION / BATCH ══════════
+    function toggleRow(cb, id) {
+      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
+      updateBatchBar();
+    }
+
+    function toggleSelectAll(cb) {
+      var rows = document.querySelectorAll('#fuTableBody .row-cb:not([disabled])');
+      rows.forEach(function(r) { r.checked = cb.checked; });
+      selectedIds.clear();
+      if (cb.checked) {
+        allActions.forEach(function(a) { if (a.status !== 'Dead') selectedIds.add(a.id); });
+      }
+      updateBatchBar();
+    }
+
+    function clearSelection() {
+      selectedIds.clear();
+      document.querySelectorAll('#fuTableBody .row-cb').forEach(function(r) { r.checked = false; });
+      document.getElementById('selectAll').checked = false;
+      updateBatchBar();
+    }
+
+    function updateBatchBar() {
+      var bar = document.getElementById('batchBar');
+      if (selectedIds.size > 0) {
+        bar.classList.add('show');
+        document.getElementById('batchCount').textContent = selectedIds.size + ' selected';
+      } else {
+        bar.classList.remove('show');
+      }
+    }
+
+    // ══════════ ATTEMPT CHANGE ══════════
+    async function changeAttempt(actionId, label, delta) {
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST',
+          headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateAttempt', actionId:actionId, label:label, delta:delta})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+
+        // Update local data
+        var a = allActions.find(function(x) { return x.id === actionId; });
+        if (a) {
+          if (data.attempts) a.attempts = data.attempts;
+          if (data.lastDates) a.lastDates = data.lastDates;
+          if (data.isDead) a.status = 'Dead';
+        }
+        renderTable();
+        if (data.isDead) showToast('Lead marked as DEAD - max attempts reached', 'error');
+      } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+      }
+    }
+
+    // ══════════ INLINE EDITS ══════════
+    function editPhone(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var td = document.querySelector('tr[data-id="' + actionId + '"] td:nth-child(8)');
+      var current = a.phone || '';
+      td.innerHTML = '<input class="inline-input" type="text" value="' + esc(current) + '" onblur="savePhone(\'' + actionId + '\',this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>';
+      td.querySelector('input').focus();
+    }
+
+    async function savePhone(actionId, input) {
+      var val = input.value.trim();
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{phone:val}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        var a = allActions.find(function(x) { return x.id === actionId; });
+        if (a) a.phone = val;
+        renderTable();
+      } catch(e) { showToast('Error saving phone: ' + e.message, 'error'); renderTable(); }
+    }
+
+    function editActionDate(actionId, label) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return;
+      var current = (a.actionDates || {})[label] || '';
+
+      // Convert display date to input date
+      var inputVal = '';
+      if (current) {
+        var parts = current.split('/');
+        if (parts.length === 3) inputVal = (parts[2].length === 2 ? '20' + parts[2] : parts[2]) + '-' + parts[0].padStart(2,'0') + '-' + parts[1].padStart(2,'0');
+        else inputVal = current;
+      }
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Edit Date</h3><p>' + esc(label) + ' - ' + esc(a.company) + '</p></div><div class="modal-body"><input type="date" id="dateEditInput" value="' + inputVal + '" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:16px"/></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveActionDate(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div></div>';
+      document.body.appendChild(overlay);
+    }
+
+    async function saveActionDate(actionId, label, btn) {
+      var val = document.getElementById('dateEditInput').value;
+      if (!val) { btn.closest('.modal-overlay').remove(); return; }
+      var d = new Date(val + 'T00:00:00');
+      var formatted = String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
+
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var dates = a.actionDates || {};
+      dates[label] = formatted;
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{actionDates:dates}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        a.actionDates = dates;
+        renderTable();
+        showToast('Date updated', 'success');
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      btn.closest('.modal-overlay').remove();
+    }
+
+    function editNotes(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var overlay = document.createElement('div');
+      overlay.className = 'notes-edit-overlay';
+      overlay.innerHTML = '<div class="notes-edit-card"><div class="notes-edit-header"><div><h3>' + esc(a.company) + '</h3></div><button onclick="this.closest(\'.notes-edit-overlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&#10005;</button></div><div class="notes-edit-body"><textarea id="notesEditArea">' + esc(a.notes || '') + '</textarea></div><div class="notes-edit-footer"><button onclick="this.closest(\'.notes-edit-overlay\').remove()" style="background:#e2e8f0;color:#4a5568">Cancel</button><button onclick="saveNotes(\'' + actionId + '\')" style="background:#10b981;color:#fff">Save Notes</button></div></div>';
+      document.body.appendChild(overlay);
+      document.getElementById('notesEditArea').focus();
+    }
+
+    async function saveNotes(actionId) {
+      var val = document.getElementById('notesEditArea').value.trim();
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{notes:val}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        var a = allActions.find(function(x) { return x.id === actionId; });
+        if (a) a.notes = val;
+        renderTable();
+        showToast('Notes saved', 'success');
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      var overlay = document.querySelector('.notes-edit-overlay');
+      if (overlay) overlay.remove();
+    }
+
+    // ══════════ ALERT ══════════
+    async function sendAlert(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      showToast('Alert sent for ' + a.company, 'success');
+    }
+
+    // ══════════ NAV / PLACEHOLDER STUBS ══════════
+    function goToLeadDB() { window.location.href = 'lead-logger.html'; }
+    function openProposal(leadId) { showToast('Proposal generator opening...', 'success'); }
+    function openTeamModal() {
+      document.getElementById('teamModal').classList.add('show');
+      document.getElementById('teamModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading team...</p></div>';
+      loadTeamFromBackend();
+    }
+
+    function closeTeamModal() {
+      document.getElementById('teamModal').classList.remove('show');
+    }
+
+    // Working copy for the modal
+    var teamMembers = [];
+    var DEFAULT_TEAM = [
+      {name:'Julie Garley',    email:'julie.g@abbondanzavending.com'},
+      {name:'Andrew Torres',   email:'andrew.t@abbondanzavending.com'},
+      {name:'Sam Mitchell',    email:'sam.m@abbondanzavending.com'}
+    ];
+
+    // Avatar color palette
+    var AVATAR_COLORS = [
+      'linear-gradient(135deg,#6366f1,#8b5cf6)',
+      'linear-gradient(135deg,#059669,#10b981)',
+      'linear-gradient(135deg,#f59e0b,#d97706)',
+      'linear-gradient(135deg,#ef4444,#dc2626)',
+      'linear-gradient(135deg,#3b82f6,#2563eb)',
+      'linear-gradient(135deg,#ec4899,#db2777)',
+      'linear-gradient(135deg,#14b8a6,#0d9488)',
+      'linear-gradient(135deg,#f97316,#ea580c)'
+    ];
+
+    function getInitials(name) {
+      if (!name) return '?';
+      var parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+
+    async function loadTeamFromBackend() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+        var data = await res.json();
+        if (data.status === 'success' && data.members && data.members.length > 0) {
+          teamMembers = JSON.parse(JSON.stringify(data.members));
+        } else {
+          teamMembers = JSON.parse(JSON.stringify(DEFAULT_TEAM));
+        }
+      } catch(e) {
+        teamMembers = JSON.parse(JSON.stringify(DEFAULT_TEAM));
+      }
+      renderTeamModal();
+    }
+
+    function renderTeamModal() {
+      var body = document.getElementById('teamModalBody');
+      var h = '';
+
+      // Add form
+      h += '<div class="tm-add-row">';
+      h += '  <input type="text" id="tmNewName" placeholder="Name" />';
+      h += '  <input type="email" id="tmNewEmail" placeholder="Email" style="flex:1.5;min-width:180px" />';
+      h += '  <button class="tbtn tbtn-green" onclick="addTeamMember()" style="font-size:12px;padding:8px 14px;flex-shrink:0"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>';
+      h += '</div>';
+
+      if (teamMembers.length === 0) {
+        h += '<div class="tm-empty"><svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:#cbd5e0;fill:none;stroke-width:1.5;margin-bottom:8px;display:block;margin-left:auto;margin-right:auto"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>No team members yet. Add someone above.</div>';
+      } else {
+        for (var i = 0; i < teamMembers.length; i++) {
+          var m = teamMembers[i];
+          var color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+          h += '<div class="tm-item" id="tm-item-' + i + '">';
+          h += '  <div class="tm-avatar" style="background:' + color + '">' + getInitials(m.name) + '</div>';
+          h += '  <div class="tm-info"><div class="tm-name">' + esc(m.name) + '</div><div class="tm-email">' + esc(m.email) + '</div></div>';
+          h += '  <button class="tm-remove" onclick="removeTeamMember(' + i + ')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remove</button>';
+          h += '</div>';
+        }
+      }
+
+      body.innerHTML = h;
+    }
+
+    function addTeamMember() {
+      var nameInput = document.getElementById('tmNewName');
+      var emailInput = document.getElementById('tmNewEmail');
+      var name = nameInput.value.trim();
+      var email = emailInput.value.trim();
+
+      if (!name) { showToast('Please enter a name', 'error'); nameInput.focus(); return; }
+      if (!email || email.indexOf('@') === -1) { showToast('Please enter a valid email', 'error'); emailInput.focus(); return; }
+
+      // Check for duplicates
+      for (var i = 0; i < teamMembers.length; i++) {
+        if (teamMembers[i].email.toLowerCase() === email.toLowerCase()) {
+          showToast('A team member with that email already exists', 'error');
+          return;
+        }
+      }
+
+      teamMembers.push({name: name, email: email});
+      renderTeamModal();
+      showToast(name + ' added to team', 'success');
+    }
+
+    function removeTeamMember(index) {
+      var name = teamMembers[index].name;
+      var item = document.getElementById('tm-item-' + index);
+      if (item) {
+        item.style.background = '#fef2f2';
+        item.style.borderColor = '#fecaca';
+        item.innerHTML = '<span style="color:#ef4444;font-weight:600;font-size:12px">Remove "' + esc(name) + '"?</span><div style="display:flex;gap:6px;margin-left:auto"><button class="tm-remove" style="color:#4a5568;border-color:#cbd5e0" onclick="renderTeamModal()">Cancel</button><button class="tm-remove" onclick="confirmRemoveTeamMember(' + index + ')"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Confirm</button></div>';
+      }
+    }
+
+    function confirmRemoveTeamMember(index) {
+      teamMembers.splice(index, 1);
+      renderTeamModal();
+    }
+
+    async function saveTeamToBackend() {
+      var btn = document.getElementById('saveTeamBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'saveTeamMembers', members: teamMembers })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Save failed');
+        showToast('Team members saved', 'success');
+        closeTeamModal();
+      } catch(e) {
+        showToast('Error saving team: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Team';
+      }
+    }
+    function openAttemptsModal() { showToast('Attempts settings - coming soon', 'success'); }
+    function openTemplatesModal(singleId) { showToast('Email templates - coming soon', 'success'); }
+    function batchSend() { showToast('Batch send - coming soon', 'success'); }
+
+    // ══════════════════════════════════════════════
+    //  LABEL SETTINGS MODAL — FULL IMPLEMENTATION
+    // ══════════════════════════════════════════════
+
+    function openLabelsModal() {
+      labelsExpandedIndex = -1;
+      document.getElementById('labelsModal').classList.add('show');
+      document.getElementById('labelsModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading labels...</p></div>';
+      loadLabelsFromBackend();
+    }
+
+    function closeLabelsModal() {
+      document.getElementById('labelsModal').classList.remove('show');
+    }
+
+    async function loadLabelsFromBackend() {
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getLabels');
+        var data = await res.json();
+        if (data.status === 'success' && data.labels && data.labels.length > 0) {
+          labelsConfig = JSON.parse(JSON.stringify(data.labels));
+        } else {
+          labelsConfig = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+        }
+      } catch(e) {
+        labelsConfig = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+      }
+      renderLabelsModal();
+    }
+
+    function renderLabelsModal() {
+      var body = document.getElementById('labelsModalBody');
+      var h = '';
+
+      // Add label button
+      h += '<div class="ls-add-row"><button class="tbtn tbtn-green" onclick="addNewLabel()" style="font-size:12px;padding:8px 16px"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Label</button></div>';
+
+      for (var i = 0; i < labelsConfig.length; i++) {
+        var lb = labelsConfig[i];
+        var pillCss = getLabelPillStyle(lb);
+        var isExpanded = (labelsExpandedIndex === i);
+
+        // Summary tags
+        var tags = '';
+        if (lb.requiresDate) {
+          tags += '<span class="ls-tag ls-tag-date"><svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Date Required</span>';
+        } else {
+          tags += '<span class="ls-tag ls-tag-nodate">No Date</span>';
+        }
+        if (lb.emailReminder) {
+          tags += '<span class="ls-tag ls-tag-email-rem"><svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Email: ' + lb.emailDaysBefore + 'd before</span>';
+        }
+        if (lb.loginPopup) {
+          tags += '<span class="ls-tag ls-tag-popup"><svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:-1px;margin-right:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Popup: ' + lb.loginDaysAfter + 'd after</span>';
+        }
+        if (!lb.emailReminder && !lb.loginPopup) {
+          tags += '<span class="ls-tag ls-tag-norem">No Reminders</span>';
+        }
+
+        // Label item row
+        h += '<div class="ls-item" id="ls-item-' + i + '">';
+        h += '  <span class="ls-pill" style="' + pillCss + '">' + esc(lb.name) + '</span>';
+        h += '  <div class="ls-tags">' + tags + '</div>';
+        h += '  <button class="ls-edit-btn" onclick="toggleLabelPanel(' + i + ')">';
+        h += '    <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+        h += '    Edit';
+        h += '  </button>';
+        h += '</div>';
+
+        // Expandable edit panel
+        h += '<div class="ls-panel' + (isExpanded ? ' open' : '') + '" id="ls-panel-' + i + '">';
+        h += '  <h4><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#1e293b;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit: ' + esc(lb.name) + '</h4>';
+
+        // Label Name
+        h += '  <div class="ls-field"><label>Label Name</label><input type="text" value="' + esc(lb.name) + '" onchange="updateLabelField(' + i + ',\'name\',this.value)"/></div>';
+
+        // Requires Date toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.requiresDate ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'requiresDate\',this)"></div><span class="ls-toggle-label">Requires Date</span></div>';
+
+        // Email Reminder toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.emailReminder ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'emailReminder\',this)"></div><span class="ls-toggle-label">Email Reminder</span></div>';
+
+        // Days BEFORE (shown if emailReminder on)
+        h += '  <div class="ls-indent" id="ls-emaildays-' + i + '" style="' + (lb.emailReminder ? '' : 'display:none') + '"><label>Days BEFORE date</label><input type="number" min="0" max="30" value="' + (lb.emailDaysBefore || 0) + '" onchange="updateLabelField(' + i + ',\'emailDaysBefore\',parseInt(this.value)||0)"/></div>';
+
+        // Login Popup toggle
+        h += '  <div class="ls-toggle-row"><div class="ls-toggle' + (lb.loginPopup ? ' on' : '') + '" onclick="toggleLabelBool(' + i + ',\'loginPopup\',this)"></div><span class="ls-toggle-label">Follow-Up Reminder (login popup)</span></div>';
+
+        // Days AFTER (shown if loginPopup on)
+        h += '  <div class="ls-indent" id="ls-popupdays-' + i + '" style="' + (lb.loginPopup ? '' : 'display:none') + '"><label>Days AFTER date to force follow-up</label><input type="number" min="0" max="30" value="' + (lb.loginDaysAfter || 0) + '" onchange="updateLabelField(' + i + ',\'loginDaysAfter\',parseInt(this.value)||0)"/></div>';
+
+        // Delete label
+        h += '  <div class="ls-delete-row"><button class="ls-delete-btn" onclick="deleteLabel(' + i + ')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete Label</button></div>';
+
+        h += '</div>';
+      }
+
+      body.innerHTML = h;
+    }
+
+    function getLabelPillStyle(lb) {
+      return 'background:' + (lb.color || '#e2e8f0') + ';color:' + (lb.textColor || '#4a5568');
+    }
+
+    function toggleLabelPanel(index) {
+      if (labelsExpandedIndex === index) {
+        labelsExpandedIndex = -1;
+      } else {
+        labelsExpandedIndex = index;
+      }
+      renderLabelsModal();
+    }
+
+    function updateLabelField(index, field, value) {
+      if (index >= 0 && index < labelsConfig.length) {
+        labelsConfig[index][field] = value;
+        // Re-render to update summary tags if name changed
+        if (field === 'name') renderLabelsModal();
+      }
+    }
+
+    function toggleLabelBool(index, field, el) {
+      if (index >= 0 && index < labelsConfig.length) {
+        labelsConfig[index][field] = !labelsConfig[index][field];
+        el.classList.toggle('on');
+
+        // Show/hide related indent fields
+        if (field === 'emailReminder') {
+          var indent = document.getElementById('ls-emaildays-' + index);
+          if (indent) indent.style.display = labelsConfig[index][field] ? '' : 'none';
+        }
+        if (field === 'loginPopup') {
+          var indent = document.getElementById('ls-popupdays-' + index);
+          if (indent) indent.style.display = labelsConfig[index][field] ? '' : 'none';
         }
       }
     }
-    return {status:'success', overdue:overdue};
-  } catch(e) {
-    return {status:'error', message:'Error getting overdue actions: ' + e.message, overdue:[]};
-  }
-}
 
-function safeParseJSON_(val, fallback) {
-  if (!val) return fallback;
-  try { return JSON.parse(val); } catch(e) { return fallback; }
-}
+    function addNewLabel() {
+      labelsConfig.push({
+        name: 'New Label',
+        requiresDate: false,
+        emailReminder: false,
+        emailDaysBefore: 0,
+        loginPopup: false,
+        loginDaysAfter: 0,
+        color: '#e2e8f0',
+        textColor: '#4a5568'
+      });
+      labelsExpandedIndex = labelsConfig.length - 1;
+      renderLabelsModal();
+      // Scroll to bottom
+      var body = document.getElementById('labelsModalBody');
+      body.scrollTop = body.scrollHeight;
+    }
 
-
-// ==================== EMAIL SETTINGS ====================
-
-function getEmailSetting(k,d) { var v=PropertiesService.getScriptProperties().getProperty(k); return v!==null?v:(d||''); }
-function setEmailSetting(k,v) { PropertiesService.getScriptProperties().setProperty(k,String(v)); }
-
-function handleGetEmailSettings() {
-  try {
-    return {status:'success', settings:{
-      enabled: getEmailSetting('emailEnabled','false')==='true',
-      frequency: getEmailSetting('emailFrequency','daily'),
-      includeOverdue: getEmailSetting('emailIncludeOverdue','true')!=='false',
-      lookAheadDays: parseInt(getEmailSetting('emailLookAheadDays','1'),10),
-      lastSent: getEmailSetting('emailLastSent','')||null
-    }};
-  } catch(e) { return {status:'error', message:e.toString()}; }
-}
-
-function handleSaveEmailSettings(body) {
-  try {
-    var s=body.settings;
-    setEmailSetting('emailEnabled', s.enabled?'true':'false');
-    setEmailSetting('emailFrequency', s.frequency||'daily');
-    setEmailSetting('emailIncludeOverdue', s.includeOverdue?'true':'false');
-    setEmailSetting('emailLookAheadDays', String(s.lookAheadDays||1));
-    clearEmailTriggers();
-    if (s.enabled) createEmailTrigger(s.frequency);
-    return {status:'success', message:'Settings saved'};
-  } catch(e) { return {status:'error', message:e.toString()}; }
-}
-
-function clearEmailTriggers() {
-  var t=ScriptApp.getProjectTriggers();
-  for(var i=0;i<t.length;i++) { if(t[i].getHandlerFunction()==='sendFollowUpReminders') ScriptApp.deleteTrigger(t[i]); }
-}
-
-function createEmailTrigger(freq) {
-  if(freq==='daily') ScriptApp.newTrigger('sendFollowUpReminders').timeBased().everyDays(1).atHour(7).create();
-  else if(freq==='weekly_mon') ScriptApp.newTrigger('sendFollowUpReminders').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(7).create();
-  else if(freq==='weekly_fri') ScriptApp.newTrigger('sendFollowUpReminders').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(7).create();
-}
-
-function setupEmailTrigger() {
-  clearEmailTriggers();
-  if(getEmailSetting('emailEnabled','false')==='true') { createEmailTrigger(getEmailSetting('emailFrequency','daily')); Logger.log('Trigger created'); }
-  else Logger.log('Reminders disabled');
-}
-
-
-// ==================== CORE EMAIL SENDER ====================
-
-function parseDate_(val) {
-  if(!val) return null;
-  var d = (val instanceof Date) ? new Date(val) : new Date(String(val));
-  if(isNaN(d.getTime())) return null;
-  d.setHours(0,0,0,0);
-  return d;
-}
-
-function sendFollowUpReminders() {
-  if(getEmailSetting('emailEnabled','false')!=='true') { Logger.log('Disabled'); return; }
-
-  var includeOverdue = getEmailSetting('emailIncludeOverdue','true')!=='false';
-  var lookAheadDays = parseInt(getEmailSetting('emailLookAheadDays','1'),10);
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-  if(!sheet) { Logger.log('No Leads sheet'); return; }
-  var data = sheet.getDataRange().getValues();
-  if(data.length<2) return;
-
-  var today = new Date(); today.setHours(0,0,0,0);
-  var futureDate = new Date(today); futureDate.setDate(futureDate.getDate()+lookAheadDays);
-  var webAppUrl = ScriptApp.getService().getUrl();
-
-  var repItems = {};
-
-  for(var r=1; r<data.length; r++) {
-    var row=data[r];
-    if(!row[0]&&!row[2]) continue;
-    var status=String(row[9]||'').trim();
-    if(status==='Dead'||status==='Not Qualified') continue;
-
-    var leadId=row[0];
-    var repEmail=String(row[15]||'').trim();
-    var repName=String(row[7]||'').trim();
-    if(!repEmail||repEmail.indexOf('@')===-1) continue;
-
-    if(!repItems[repEmail]) repItems[repEmail]={repName:repName, items:[]};
-
-    var base = {
-      id:leadId, companyName:String(row[2]||''), contactName:String(row[4]||''),
-      phoneNumber:String(row[5]||''), emailAddress:String(row[6]||''),
-      notes:String(row[12]||'').substring(0,100)
-    };
-
-    // Follow-Up (Column I = index 8)
-    var fu = parseDate_(row[8]);
-    if(fu) {
-      var fuOver=fu<today, fuUp=fu>=today&&fu<=futureDate;
-      if(fuUp||(fuOver&&includeOverdue)) {
-        repItems[repEmail].items.push({
-          lead:base, date:fu,
-          dateFormatted:Utilities.formatDate(fu,Session.getScriptTimeZone(),'MM/dd/yyyy'),
-          type:'FOLLOW-UP', field:'followUp', isOverdue:fuOver, isToday:fu.getTime()===today.getTime(),
-          updateUrl:webAppUrl+'?action=updateDatePage&leadId='+leadId+'&field=followUp&company='+encodeURIComponent(base.companyName)
-        });
+    function deleteLabel(index) {
+      if (labelsConfig.length <= 1) {
+        showToast('Cannot delete the last label', 'error');
+        return;
+      }
+      var name = labelsConfig[index].name;
+      // Show inline confirmation
+      var panel = document.getElementById('ls-panel-' + index);
+      var item = document.getElementById('ls-item-' + index);
+      if (panel) panel.remove();
+      if (item) {
+        item.style.background = '#fef2f2';
+        item.style.borderColor = '#fecaca';
+        item.innerHTML = '<span style="color:#ef4444;font-weight:600;font-size:12px">Delete "' + esc(name) + '"?</span><div style="display:flex;gap:6px;margin-left:auto"><button class="ls-edit-btn" style="color:#4a5568;border-color:#cbd5e0" onclick="renderLabelsModal()">Cancel</button><button class="ls-edit-btn" style="color:#ef4444;border-color:#fecaca;background:#fef2f2" onclick="confirmDeleteLabel(' + index + ')"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Confirm</button></div>';
       }
     }
 
-    // Appointment Date (Column L = index 11)
-    var ap = parseDate_(row[11]);
-    if(ap) {
-      var apOver=ap<today, apUp=ap>=today&&ap<=futureDate;
-      if(apUp||(apOver&&includeOverdue)) {
-        repItems[repEmail].items.push({
-          lead:base, date:ap,
-          dateFormatted:Utilities.formatDate(ap,Session.getScriptTimeZone(),'MM/dd/yyyy'),
-          type:'APPT', field:'appointmentDate', isOverdue:apOver, isToday:ap.getTime()===today.getTime(),
-          updateUrl:webAppUrl+'?action=updateDatePage&leadId='+leadId+'&field=appointmentDate&company='+encodeURIComponent(base.companyName)
-        });
-      }
-    }
-  }
-
-  var emailsSent=0;
-  var todayFmt = Utilities.formatDate(today,Session.getScriptTimeZone(),'MMMM d, yyyy');
-
-  for(var email in repItems) {
-    var rep=repItems[email];
-    if(rep.items.length===0) continue;
-    rep.items.sort(function(a,b){return a.date-b.date;});
-
-    var overdue=[], todayList=[], upcoming=[];
-    for(var i=0;i<rep.items.length;i++) {
-      var it=rep.items[i];
-      if(it.isToday) todayList.push(it);
-      else if(it.isOverdue) overdue.push(it);
-      else upcoming.push(it);
+    function confirmDeleteLabel(index) {
+      labelsConfig.splice(index, 1);
+      if (labelsExpandedIndex === index) labelsExpandedIndex = -1;
+      else if (labelsExpandedIndex > index) labelsExpandedIndex--;
+      renderLabelsModal();
     }
 
-    var total=rep.items.length;
-    var subject='Daily Reminders - '+todayFmt+' ('+total+' item'+(total!==1?'s':'')+')';
-    var html=buildEmailV2(rep.repName, todayFmt, overdue, todayList, upcoming);
-
-    try {
-      MailApp.sendEmail({to:email, subject:subject, htmlBody:html});
-      emailsSent++;
-    } catch(e) { Logger.log('Failed: '+email+' '+e); }
-  }
-
-  setEmailSetting('emailLastSent', new Date().toISOString());
-  Logger.log('Sent to '+emailsSent+' rep(s)');
-}
-
-
-// ==================== EMAIL TEMPLATE V2 ====================
-
-function buildEmailV2(repName, todayFmt, overdue, todayList, upcoming) {
-  var h='';
-  h+='<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;max-width:640px;margin:0 auto;padding:20px;">';
-
-  // Header
-  h+='<div style="background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:white;padding:24px 30px;border-radius:12px 12px 0 0;">';
-  h+='<h1 style="margin:0;font-size:22px;">Daily Reminders</h1>';
-  h+='<p style="margin:8px 0 0 0;opacity:0.9;font-size:14px;">'+todayFmt+'</p>';
-  h+='</div>';
-
-  h+='<div style="background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:24px 30px;">';
-  h+='<p style="color:#4a5568;font-size:15px;margin:0 0 24px 0;">Hi '+(repName||'there')+', here\'s your daily snapshot:</p>';
-
-  // Overdue
-  if(overdue.length>0) {
-    h+='<div style="margin-bottom:24px;">';
-    h+='<h2 style="color:#e53e3e;font-size:15px;margin:0 0 14px 0;padding-bottom:8px;border-bottom:2px solid #fed7d7;">OVERDUE</h2>';
-    h+=buildDateGroups(overdue,'#fff5f5','#fed7d7','#e53e3e');
-    h+='</div>';
-  }
-
-  // Today
-  if(todayList.length>0) {
-    h+='<div style="margin-bottom:24px;">';
-    h+='<h2 style="color:#059669;font-size:15px;margin:0 0 14px 0;padding-bottom:8px;border-bottom:2px solid #d1fae5;">TODAY</h2>';
-    h+=buildRowTable(todayList,'#ecfdf5','#a7f3d0');
-    h+='</div>';
-  }
-
-  // Upcoming
-  if(upcoming.length>0) {
-    h+='<div style="margin-bottom:24px;">';
-    h+='<h2 style="color:#2563eb;font-size:15px;margin:0 0 14px 0;padding-bottom:8px;border-bottom:2px solid #bfdbfe;">UPCOMING</h2>';
-    h+=buildDateGroups(upcoming,'#f0f8ff','#bfdbfe','#2563eb');
-    h+='</div>';
-  }
-
-  // Summary
-  var total=overdue.length+todayList.length+upcoming.length;
-  h+='<div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 20px;margin-bottom:20px;">';
-  h+='<table style="width:100%;border:none;border-collapse:collapse;"><tr>';
-  h+='<td style="border:none;padding:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#e53e3e;">'+overdue.length+'</div><div style="font-size:11px;color:#718096;text-transform:uppercase;">Overdue</div></td>';
-  h+='<td style="border:none;padding:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#059669;">'+todayList.length+'</div><div style="font-size:11px;color:#718096;text-transform:uppercase;">Today</div></td>';
-  h+='<td style="border:none;padding:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#2563eb;">'+upcoming.length+'</div><div style="font-size:11px;color:#718096;text-transform:uppercase;">Upcoming</div></td>';
-  h+='<td style="border:none;padding:0;text-align:center;"><div style="font-size:24px;font-weight:700;color:#2d3748;">'+total+'</div><div style="font-size:11px;color:#718096;text-transform:uppercase;">Total</div></td>';
-  h+='</tr></table></div>';
-
-  h+='<div style="padding-top:16px;border-top:1px solid #e2e8f0;text-align:center;">';
-  h+='<p style="color:#718096;font-size:13px;margin:0;">Sent from Lead Database &mdash; Abbondanza Sales</p>';
-  h+='</div></div></div>';
-  return h;
-}
-
-function buildDateGroups(items, bg, border, dateColor) {
-  var groups={}, order=[];
-  for(var i=0;i<items.length;i++) {
-    var k=items[i].dateFormatted;
-    if(!groups[k]){groups[k]=[];order.push(k);}
-    groups[k].push(items[i]);
-  }
-  var h='';
-  for(var g=0;g<order.length;g++) {
-    h+='<div style="margin-bottom:14px;">';
-    h+='<div style="color:'+dateColor+';font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">'+order[g]+'</div>';
-    h+=buildRowTable(groups[order[g]], bg, border);
-    h+='</div>';
-  }
-  return h;
-}
-
-function buildRowTable(items, bg, border) {
-  var h='<table style="width:100%;border:none;border-collapse:collapse;background:'+bg+';border-radius:6px;">';
-  for(var i=0;i<items.length;i++) {
-    var it=items[i], last=(i===items.length-1);
-    var rb=last?'':'border-bottom:1px solid '+border+';';
-    h+='<tr style="'+rb+'">';
-    h+='<td style="border:none;padding:10px 14px;vertical-align:middle;width:32%;"><strong style="color:#2d3748;font-size:14px;">'+it.lead.companyName+'</strong></td>';
-    h+='<td style="border:none;padding:10px 6px;vertical-align:middle;color:#4a5568;font-size:13px;">'+(it.lead.contactName||'')+'</td>';
-    h+='<td style="border:none;padding:10px 6px;vertical-align:middle;color:#4a5568;font-size:13px;">'+(it.lead.phoneNumber||'')+'</td>';
-    h+='<td style="border:none;padding:10px 14px;vertical-align:middle;text-align:right;white-space:nowrap;">';
-    if(it.type==='FOLLOW-UP') h+='<span style="background:#2563eb;color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">FOLLOW-UP</span>';
-    else h+='<span style="background:#7c3aed;color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">APPT</span>';
-    h+=' <a href="'+it.updateUrl+'" style="color:#2563eb;font-size:11px;font-weight:600;text-decoration:none;margin-left:6px;">Update</a>';
-    h+='</td></tr>';
-  }
-  h+='</table>';
-  return h;
-}
-
-
-// ==================== QUICK DATE UPDATE PAGE ====================
-
-function handleUpdateDatePage(e) {
-  var leadId = e.parameter.leadId;
-  var field = e.parameter.field || 'followUp';
-  var companyName = decodeURIComponent(e.parameter.company || 'Unknown');
-  var fieldLabel = (field==='followUp') ? 'Follow-Up Date' : 'Appointment Date';
-  var webAppUrl = ScriptApp.getService().getUrl();
-
-  // Look up current value
-  var currentVal='', currentDisplay='Not set';
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
-    var data = sheet.getDataRange().getValues();
-    for(var i=1;i<data.length;i++) {
-      if(data[i][0]==leadId) {
-        var col = (field==='followUp') ? 8 : 11;
-        var raw = data[i][col];
-        if(raw instanceof Date && !isNaN(raw.getTime())) {
-          currentVal = Utilities.formatDate(raw, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-          currentDisplay = Utilities.formatDate(raw, Session.getScriptTimeZone(), 'MM/dd/yyyy');
-        } else if(raw) {
-          var d=new Date(String(raw));
-          if(!isNaN(d.getTime())) {
-            currentVal = Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-            currentDisplay = Utilities.formatDate(d, Session.getScriptTimeZone(), 'MM/dd/yyyy');
-          }
+    async function saveLabelsToBackend() {
+      // Validate: no empty names, no duplicates
+      for (var i = 0; i < labelsConfig.length; i++) {
+        if (!labelsConfig[i].name || !labelsConfig[i].name.trim()) {
+          showToast('Label at position ' + (i + 1) + ' has no name', 'error');
+          return;
         }
-        break;
+      }
+      var names = labelsConfig.map(function(l) { return l.name.trim().toLowerCase(); });
+      var unique = new Set(names);
+      if (unique.size !== names.length) {
+        showToast('Duplicate label names found — each label must have a unique name', 'error');
+        return;
+      }
+
+      var btn = document.getElementById('saveLabelsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'saveLabels', labels: labelsConfig })
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Save failed');
+        showToast('Label settings saved', 'success');
+        closeLabelsModal();
+      } catch(e) {
+        showToast('Error saving labels: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Labels';
       }
     }
-  } catch(err) { Logger.log('Lookup error: '+err); }
 
-  var pg = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
-  pg += '<meta name="viewport" content="width=device-width,initial-scale=1.0">';
-  pg += '<title>Update '+fieldLabel+'</title>';
-  pg += '<style>';
-  pg += 'body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f1f5f9;margin:0;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh}';
-  pg += '.card{background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.1);max-width:420px;width:100%;overflow:hidden}';
-  pg += '.hdr{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%);color:white;padding:24px 30px}';
-  pg += '.hdr h1{margin:0;font-size:20px} .hdr p{margin:6px 0 0;opacity:.85;font-size:14px}';
-  pg += '.bd{padding:24px 30px}';
-  pg += '.cur{background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}';
-  pg += '.cur-l{color:#718096;font-size:13px} .cur-v{color:#2d3748;font-weight:600;font-size:15px}';
-  pg += 'label{display:block;color:#4a5568;font-weight:600;font-size:14px;margin-bottom:8px}';
-  pg += 'input[type=date]{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:8px;font-size:16px;box-sizing:border-box}';
-  pg += 'input[type=date]:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15)}';
-  pg += '.acts{display:flex;gap:12px;margin-top:20px}';
-  pg += '.btn{flex:1;padding:12px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer}';
-  pg += '.btn-s{background:#2563eb;color:white} .btn-s:hover{background:#1e40af}';
-  pg += '.btn-c{background:#f1f5f9;color:#4a5568} .btn-c:hover{background:#e2e8f0}';
-  pg += '.btn:disabled{opacity:.5;cursor:not-allowed}';
-  pg += '.ok{display:none;text-align:center;padding:40px 30px}';
-  pg += '.ok-ic{width:64px;height:64px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}';
-  pg += '.ok h2{color:#059669;margin:0 0 8px} .ok p{color:#718096;margin:0;font-size:14px}';
-  pg += '</style></head><body>';
-
-  pg += '<div class="card">';
-  pg += '<div id="fv">';
-  pg += '<div class="hdr"><h1>'+companyName+'</h1><p>Update '+fieldLabel+'</p></div>';
-  pg += '<div class="bd">';
-  pg += '<div class="cur"><span class="cur-l">Current:</span><span class="cur-v">'+currentDisplay+'</span></div>';
-  pg += '<label for="nd">New '+fieldLabel+'</label>';
-  pg += '<input type="date" id="nd" value="'+currentVal+'">';
-  pg += '<div class="acts">';
-  pg += '<button class="btn btn-c" onclick="window.close()">Cancel</button>';
-  pg += '<button class="btn btn-s" id="sb" onclick="sv()">Save</button>';
-  pg += '</div></div></div>';
-
-  pg += '<div id="ov" class="ok">';
-  pg += '<div class="ok-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
-  pg += '<h2>Saved!</h2>';
-  pg += '<p>'+fieldLabel+' updated for '+companyName+'</p>';
-  pg += '<p style="margin-top:12px;color:#a0aec0;font-size:13px;">This window will close automatically...</p>';
-  pg += '</div></div>';
-
-  pg += '<script>';
-  pg += 'function sv(){';
-  pg += 'var v=document.getElementById("nd").value;';
-  pg += 'if(!v){alert("Please pick a date");return;}';
-  pg += 'var b=document.getElementById("sb");b.disabled=true;b.textContent="Saving...";';
-  pg += 'fetch("'+webAppUrl+'?action=quickUpdateDate&leadId='+leadId+'&field='+field+'&value="+encodeURIComponent(v))';
-  pg += '.then(function(r){return r.json()}).then(function(d){';
-  pg += 'if(d.status==="success"){document.getElementById("fv").style.display="none";document.getElementById("ov").style.display="block";';
-  pg += 'setTimeout(function(){try{window.close()}catch(e){}},2000);}';
-  pg += 'else{alert("Error: "+d.message);b.disabled=false;b.textContent="Save";}';
-  pg += '}).catch(function(e){alert("Error: "+e);b.disabled=false;b.textContent="Save";});';
-  pg += '}';
-  pg += '</script></body></html>';
-
-  return HtmlService.createHtmlOutput(pg).setTitle('Update Date').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-
-function handleQuickUpdateDate(e) {
-  try {
-    var leadId=e.parameter.leadId, field=e.parameter.field, value=e.parameter.value;
-    if(!leadId||!field||!value) return ContentService.createTextOutput(JSON.stringify({status:'error',message:'Missing parameters'})).setMimeType(ContentService.MimeType.JSON);
-    var updates={}; updates[field]=value;
-    return ContentService.createTextOutput(JSON.stringify(updateLead(leadId,updates))).setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({status:'error',message:err.toString()})).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-
-// ==================== doPost ====================
-
-function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    switch(data.action) {
-      case 'addLead': return ContentService.createTextOutput(JSON.stringify(addLead(data.lead)));
-      case 'updateLead': return ContentService.createTextOutput(JSON.stringify(updateLead(data.leadId, data.updates)));
-      case 'archiveLead': return ContentService.createTextOutput(JSON.stringify(archiveLead(data.leadId)));
-      case 'deleteLead': return ContentService.createTextOutput(JSON.stringify(deleteLead(data.leadId)));
-      case 'getLeads': return ContentService.createTextOutput(JSON.stringify(getLeads()));
-      case 'getCompanies': return ContentService.createTextOutput(JSON.stringify(getCompanies()));
-      case 'saveEmailSettings': return ContentService.createTextOutput(JSON.stringify(handleSaveEmailSettings(data)));
-      case 'getFollowUpActions': return ContentService.createTextOutput(JSON.stringify(getFollowUpActions()));
-      case 'addFollowUpAction': return ContentService.createTextOutput(JSON.stringify(addFollowUpAction(data.actionData)));
-      case 'updateFollowUpAction': return ContentService.createTextOutput(JSON.stringify(updateFollowUpAction(data.actionId, data.updates)));
-      case 'deleteFollowUpAction': return ContentService.createTextOutput(JSON.stringify(deleteFollowUpAction(data.actionId)));
-      case 'updateAttempt': return ContentService.createTextOutput(JSON.stringify(updateAttempt(data.actionId, data.label, data.delta)));
-      case 'getMaxAttempts': return ContentService.createTextOutput(JSON.stringify({status:'success', maxAttempts:getMaxAttempts()}));
-      case 'saveMaxAttempts': return ContentService.createTextOutput(JSON.stringify(saveMaxAttempts(data.maxAttempts)));
-      case 'getLabels': return ContentService.createTextOutput(JSON.stringify(getLabels()));
-      case 'saveLabels': return ContentService.createTextOutput(JSON.stringify(saveLabels(data.labels)));
-      default: return ContentService.createTextOutput(JSON.stringify({status:'error',message:'Unknown action: '+data.action}));
+    // ══════════ UTILS ══════════
+    function esc(s) {
+      if (!s) return '';
+      var d = document.createElement('div');
+      d.textContent = String(s);
+      return d.innerHTML;
     }
-  } catch(error) {
-    return ContentService.createTextOutput(JSON.stringify({status:'error',message:'Script error: '+error.message}));
-  }
-}
 
-// ==================== doGet ====================
-
-function doGet(e) {
-  try {
-    var action = e.parameter.action;
-    switch(action) {
-      case 'getLeads': return ContentService.createTextOutput(JSON.stringify(getLeads()));
-      case 'getCompanies': return ContentService.createTextOutput(JSON.stringify(getCompanies()));
-      case 'deleteLead':
-        var lid=e.parameter.leadId;
-        if(!lid) return ContentService.createTextOutput(JSON.stringify({status:'error',message:'Missing leadId'}));
-        return ContentService.createTextOutput(JSON.stringify(deleteLead(Number(lid))));
-      case 'getEmailSettings': return ContentService.createTextOutput(JSON.stringify(handleGetEmailSettings()));
-      case 'getFollowUpActions': return ContentService.createTextOutput(JSON.stringify(getFollowUpActions()));
-      case 'getOverdueActions': return ContentService.createTextOutput(JSON.stringify(getOverdueActions()));
-      case 'getMaxAttempts': return ContentService.createTextOutput(JSON.stringify({status:'success', maxAttempts:getMaxAttempts()}));
-      case 'getLabels': return ContentService.createTextOutput(JSON.stringify(getLabels()));
-      case 'sendTestReminder':
-        sendFollowUpReminders();
-        return ContentService.createTextOutput(JSON.stringify({status:'success',message:'Test reminder sent'}));
-      case 'updateDatePage': return handleUpdateDatePage(e);
-      case 'quickUpdateDate': return handleQuickUpdateDate(e);
-      default: return ContentService.createTextOutput(JSON.stringify({status:'error',message:'Unknown GET action: '+action}));
+    function showToast(msg, type) {
+      var c = document.getElementById('toastContainer');
+      var icon = type === 'success'
+        ? '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+        : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      var t = document.createElement('div');
+      t.className = 'toast toast-' + (type || 'success');
+      t.innerHTML = icon + esc(msg);
+      c.appendChild(t);
+      setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; setTimeout(function() { t.remove(); }, 300); }, 3000);
     }
-  } catch(error) {
-    return ContentService.createTextOutput(JSON.stringify({status:'error',message:'GET error: '+error.message}));
-  }
-}
+  </script>
+</body>
+</html>
