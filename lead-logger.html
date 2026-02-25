@@ -25,20 +25,18 @@
 
     /* IMPROVED TABLE WITH SCROLLING AND CENTERED TEXT */
     .table-container{overflow:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:70vh;position:relative}
-    table{width:100%;border-collapse:collapse;background:#fff;min-width:1500px}
+    table{width:100%;border-collapse:collapse;background:#fff;min-width:1000px}
     th{background:#1e3a8a;color:#fff;padding:10px 8px;text-align:center;font-weight:600;font-size:12px;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:2px solid #152e6e;box-shadow:0 2px 4px rgba(0,0,0,.15)}
     td{padding:10px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;border-bottom:none;vertical-align:middle;font-size:13px}
     /* Allow wrapping only on company name */
     td:nth-child(2){white-space:normal;word-wrap:break-word;max-width:150px}
-    /* Bus unit small */
-    td:nth-child(3){font-size:11px;max-width:70px;white-space:normal;word-wrap:break-word}
     tbody tr{border-bottom:1px solid #e2e8f0}
     tbody tr:last-child{border-bottom:none}
     tr:hover{background:#f7fafc}
     td:nth-child(2){white-space:normal;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-width:260px}
     
     /* Notes column with hover tooltip functionality */
-    td:nth-child(11){
+    td:nth-child(8){
       white-space:normal;
       word-break:break-word;
       overflow:hidden;
@@ -346,6 +344,7 @@
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn" onclick="goToDashboard()" style="background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Back to Dashboard</button>
         <button class="btn btn-secondary" onclick="openAddLeadModal()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add New Lead</button>
+        <button class="btn" onclick="window.location.href='lead-logger-follow-up-actions.html'" style="background:linear-gradient(135deg,#14b8a6 0%,#0d9488 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Follow Up Actions</button>
         <button class="btn" onclick="downloadLeadTemplate()" style="background:linear-gradient(135deg,#059669 0%,#047857 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download Excel Template</button>
         <button class="btn" onclick="openImportModal()" style="background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg> Import Excel File</button>
         <button class="btn" onclick="exportLeadsToExcel()" style="background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Current Leads</button>
@@ -354,7 +353,6 @@
 
       <div class="filters">
         <select id="repFilter" onchange="filterLeads()"><option value="">All Reps</option></select>
-        <select id="companyFilter" onchange="filterLeads()"><option value="">All Business Units</option></select>
         <select id="statusFilter" onchange="filterLeads()">
           <option value="">All Status</option>
           <option value="Active" selected>Active</option>
@@ -377,15 +375,11 @@
           <tr>
             <th class="sortable" data-sort="dateAdded" style="min-width:75px">Date</th>
             <th class="sortable" data-sort="companyName">Company</th>
-            <th class="sortable" data-sort="businessUnit" style="min-width:55px">Unit</th>
             <th class="sortable" data-sort="contactName">Contact</th>
             <th>Phone</th>
             <th>Email</th>
             <th class="sortable" data-sort="repName">Rep</th>
             <th class="sortable" data-sort="status">Status</th>
-            <th class="sortable" data-sort="followUp">Follow Up</th>
-            <th class="sortable" data-sort="appointmentMade">Appt</th>
-            <th class="sortable" data-sort="appointmentDate">Appt Date</th>
             <th>Notes</th>
             <th>Actions</th>
           </tr>
@@ -947,10 +941,12 @@
         const units = allUnits.sort();
 
         const sel = document.getElementById('companyFilter');
-        sel.innerHTML = '<option value="">All Business Units</option>';
-        units.forEach(u => {
-          const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
-        });
+        if (sel) {
+          sel.innerHTML = '<option value="">All Business Units</option>';
+          units.forEach(u => {
+            const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o);
+          });
+        }
 
         const bu = document.getElementById('businessUnit');
         const current = bu.value;
@@ -961,7 +957,9 @@
         const fallback = ['Abbondanza Vending','Quantum Solutions'];
 
         const sel = document.getElementById('companyFilter');
-        sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>'<option value="' + u + '">' + u + '</option>').join('');
+        if (sel) {
+          sel.innerHTML = '<option value="">All Business Units</option>' + fallback.map(u=>'<option value="' + u + '">' + u + '</option>').join('');
+        }
 
         const bu = document.getElementById('businessUnit');
         const current = bu.value;
@@ -1003,25 +1001,16 @@
       const cells = [
         dateAdded,
         `<strong>${lead.companyName || ''}</strong>`,
-        lead.businessUnit || '',
         lead.contactName || '',
         lead.phoneNumber || '',
         lead.emailAddress || '',
         lead.repName || '',
         `<span class="status-badge ${statusClass}" onclick="openStatusPicker(event,this,'${leadId}')">${lead.status || 'Active'}</span>`,
-        followUp
-          ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','followUp')">${followUp}</span>`
-          : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','followUp')">+ Add Date</span>`,
-        `<span class="appt-toggle ${(lead.appointmentMade === 'Yes') ? 'yes' : 'no'}" onclick="toggleApptMade(this,'${leadId}','${lead.appointmentMade === 'Yes' ? 'No' : 'Yes'}')">${lead.appointmentMade || 'No'}</span>`,
-        appointmentDate
-          ? `<span class="date-clickable" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">${appointmentDate}</span>`
-          : `<span class="date-clickable empty" onclick="inlineDateEdit(this,'${leadId}','appointmentDate')">+ Add Date</span>`,
         notes
           ? `<span class="notes-clickable" onclick="inlineNotesEdit(this,'${leadId}')">${notes.length > 50 ? notes.substring(0,50) + '...' : notes}</span>`
           : `<span class="notes-clickable empty" onclick="inlineNotesEdit(this,'${leadId}')">+ Add Note</span>`,
         `<div class="action-buttons">
            <button class="btn btn-small" style="background:#2563eb" onclick="editLead('${leadId}')">Edit</button>
-           <button class="btn btn-small" style="background:linear-gradient(135deg,#48bb78 0%,#38a169 100%)" onclick="generateProposal('${leadId}')">Proposal</button>
            <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
            <button class="btn btn-small btn-danger" onclick="openDeleteModal('${leadId}')">Delete</button>
          </div>`
@@ -1031,8 +1020,8 @@
         const td = document.createElement('td'); 
         td.innerHTML = html; 
         
-        // Add hover tooltip for notes column (index 11) - show full notes on hover
-        if (index === 11 && notes.trim() !== '') {
+        // Add hover tooltip for notes column (index 7) - show full notes on hover
+        if (index === 7 && notes.trim() !== '') {
           td.setAttribute('data-full-notes', notes);
           td.addEventListener('mouseenter', (e) => showNotesTooltip(e.target, notes));
           td.addEventListener('mouseleave', hideNotesTooltip);
@@ -1060,14 +1049,12 @@
 
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
-      const unit = document.getElementById('companyFilter').value;
       const status = document.getElementById('statusFilter').value;
       const q = document.getElementById('searchInput').value.toLowerCase();
 
       const filtered = (allLeads || []).filter(l => {
         const matchRep = !rep || ((l.repName||'').toLowerCase().includes(rep));
         const matchStatus = !status || (l.status === status);
-        const matchUnit = !unit || (l.businessUnit === unit);
         const matchSearch = !q ||
           (l.companyName && l.companyName.toLowerCase().includes(q)) ||
           (l.contactName && l.contactName.toLowerCase().includes(q)) ||
@@ -1077,7 +1064,7 @@
           (l.customerState && l.customerState.toLowerCase().includes(q)) ||
           (l.customerZip && String(l.customerZip).toLowerCase().includes(q)) ||
           (l.notes && String(l.notes).toLowerCase().includes(q));
-        return matchRep && matchStatus && matchUnit && matchSearch;
+        return matchRep && matchStatus && matchSearch;
       });
 
       displayLeads(sortLeads(filtered));
