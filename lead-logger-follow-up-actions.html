@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Follow Up Actions - Abbondanza Sales</title>
@@ -482,7 +483,7 @@
     let selectedIds = new Set();
     let maxAttempts = 5;
 
-    // ── Label → CSS class map ──
+    // ?? Label ? CSS class map ??
     const LABEL_CSS = {
       'Email':         {pill:'p-email', tag:'t-email'},
       'Call':          {pill:'p-call',  tag:'t-call'},
@@ -499,7 +500,7 @@
       return words.map(function(w){return w[0]}).join('').substring(0,4).toUpperCase();
     }
 
-    // ── Default label configs ──
+    // ?? Default label configs ??
     const DEFAULT_LABELS = [
       {name:'Email',         requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, trackAttempts:true, color:'#dbeafe', textColor:'#1e40af'},
       {name:'Call',          requiresDate:false, emailReminder:false, emailDaysBefore:0,  loginPopup:false, loginDaysAfter:0, trackAttempts:true, color:'#fef3c7', textColor:'#92400e'},
@@ -513,7 +514,7 @@
     let labelsExpandedIndex = -1;
     let availableLabels = [];
 
-    // ══════════ INIT ══════════
+    // ?????????? INIT ??????????
     window.addEventListener('DOMContentLoaded', function() {
       loadActions();
       loadMaxAttempts();
@@ -534,7 +535,7 @@
       }
     }
 
-    // ══════════ DATA LOADING ══════════
+    // ?????????? DATA LOADING ??????????
     async function loadActions() {
       try {
         var res = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
@@ -556,7 +557,7 @@
       } catch(e) { /* use default */ }
     }
 
-    // ══════════ RENDER TABLE ══════════
+    // ?????????? RENDER TABLE ??????????
     function renderTable() {
       var filtered = getFilteredActions();
       document.getElementById('loadingState').style.display = 'none';
@@ -593,9 +594,9 @@
         if (isUnlabeled) {
           // Unlabeled rows: show dashes for label-dependent columns
           html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">Assign label first</span></td>'; // Action Date
-          html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">—</span></td>'; // Who
-          html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">—</span></td>'; // Attempt
-          html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">—</span></td>'; // Last Date
+          html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">?</span></td>'; // Who
+          html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">?</span></td>'; // Attempt
+          html += '<td><span style="color:#d97706;font-size:12px;font-style:italic">?</span></td>'; // Last Date
         } else {
           // Action Date
           html += '<td>' + renderActionDates(a, labels) + '</td>';
@@ -634,7 +635,7 @@
       tbody.innerHTML = html;
     }
 
-    // ── Pill renderer ──
+    // ?? Pill renderer ??
     function renderPills(labels, actionId) {
       if (labels.length === 0) return '<span class="pill pill-needs" onclick="assignLabel(\'' + actionId + '\')">+ Assign Label</span>';
       var h = '<div class="pill-grid" onclick="assignLabel(\'' + actionId + '\')" style="cursor:pointer" title="Click to change labels">';
@@ -645,7 +646,7 @@
       return h + '</div>';
     }
 
-    // ── Stacked fields for multi-label ──
+    // ?? Stacked fields for multi-label ??
     function renderActionDates(a, labels) {
       if (labels.length <= 1) {
         var d = (a.actionDates || {})[labels[0]] || '';
@@ -734,7 +735,7 @@
       return h + '</div>';
     }
 
-    // ══════════ FILTERING ══════════
+    // ?????????? FILTERING ??????????
     function getFilteredActions() {
       var search = (document.getElementById('searchInput').value || '').toLowerCase();
       var actionFilter = document.getElementById('actionFilter').value;
@@ -752,7 +753,7 @@
 
     function filterTable() { renderTable(); }
 
-    // ══════════ SELECTION / BATCH ══════════
+    // ?????????? SELECTION / BATCH ??????????
     function toggleRow(cb, id) {
       if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
       updateBatchBar();
@@ -785,7 +786,7 @@
       }
     }
 
-    // ══════════ ASSIGN LABEL (instant save on click) ══════════
+    // ?????????? ASSIGN LABEL (instant save on click) ??????????
     var _labelPickerActionId = null;
 
     function assignLabel(actionId) {
@@ -840,7 +841,7 @@
       var status = document.getElementById('lpStatus');
       if (status) { status.textContent = 'Saving...'; status.style.color = '#d97706'; }
 
-      // Build data — preserve existing, init new, allow empty
+      // Build data ? preserve existing, init new, allow empty
       var action = allActions.find(function(x) { return x.id === actionId; });
       var oldWho = action ? (action.who || {}) : {};
       var oldAttempts = action ? (action.attempts || {}) : {};
@@ -891,7 +892,7 @@
       }
     }
 
-    // ══════════ ATTEMPT CHANGE ══════════
+    // ?????????? ATTEMPT CHANGE ??????????
     async function changeAttempt(actionId, label, delta) {
       // Instant UI update first
       var a = allActions.find(function(x) { return x.id === actionId; });
@@ -940,7 +941,7 @@
       }
     }
 
-    // ══════════ INLINE EDITS ══════════
+    // ?????????? INLINE EDITS ??????????
     function editPhone(actionId) {
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
@@ -1037,14 +1038,14 @@
       if (overlay) overlay.remove();
     }
 
-    // ══════════ ALERT ══════════
+    // ?????????? ALERT ??????????
     async function sendAlert(actionId) {
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
       showToast('Alert sent for ' + a.company, 'success');
     }
 
-    // ══════════ NAV / PLACEHOLDER STUBS ══════════
+    // ?????????? NAV / PLACEHOLDER STUBS ??????????
     function goToLeadDB() { window.location.href = 'lead-logger.html'; }
     function openProposal(leadId) { showToast('Proposal generator opening...', 'success'); }
     function openTeamModal() {
@@ -1230,9 +1231,9 @@
         btn.textContent = 'Save';
       }
     }
-    // ══════════════════════════════════════════════
-    //  EMAIL TEMPLATES — FULL IMPLEMENTATION
-    // ══════════════════════════════════════════════
+    // ??????????????????????????????????????????????
+    //  EMAIL TEMPLATES ? FULL IMPLEMENTATION
+    // ??????????????????????????????????????????????
 
     var emailTemplates = [];
     var etEditingId = null; // null = list view, 'new' = adding, or template ID = editing
@@ -1451,7 +1452,7 @@
       }
     }
 
-    // ── Preview template before sending ──
+    // ?? Preview template before sending ??
     function previewTemplate(templateId) {
       etPreviewTemplateId = templateId;
       renderTemplatesModal();
@@ -1551,9 +1552,9 @@
 
     function batchSend() { showToast('Batch send - coming soon', 'success'); }
 
-    // ══════════════════════════════════════════════
-    //  LABEL SETTINGS MODAL — FULL IMPLEMENTATION
-    // ══════════════════════════════════════════════
+    // ??????????????????????????????????????????????
+    //  LABEL SETTINGS MODAL ? FULL IMPLEMENTATION
+    // ??????????????????????????????????????????????
 
     function openLabelsModal() {
       labelsExpandedIndex = -1;
@@ -1749,7 +1750,7 @@
       var names = labelsConfig.map(function(l) { return l.name.trim().toLowerCase(); });
       var unique = new Set(names);
       if (unique.size !== names.length) {
-        showToast('Duplicate label names found — each label must have a unique name', 'error');
+        showToast('Duplicate label names found ? each label must have a unique name', 'error');
         return;
       }
 
@@ -1775,7 +1776,7 @@
       }
     }
 
-    // ══════════ UTILS ══════════
+    // ?????????? UTILS ??????????
     function esc(s) {
       if (!s) return '';
       var d = document.createElement('div');
@@ -1797,3 +1798,10 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
