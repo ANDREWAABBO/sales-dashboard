@@ -651,7 +651,7 @@
     function renderActionDates(a, labels) {
       if (labels.length <= 1) {
         var d = (a.actionDates || {})[labels[0]] || '';
-        return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Add Date' + '</span>';
+        return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')" oncontextmenu="return clearActionDate(event,\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Add Date' + '</span>';
       }
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
@@ -659,7 +659,7 @@
         var short = labelShort(labels[i]);
         var dt = (a.actionDates || {})[labels[i]] || '';
         h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
-        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + '+ Date' + '</span>';
+        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')" oncontextmenu="return clearActionDate(event,\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + '+ Date' + '</span>';
         h += '</div>';
       }
       return h + '</div>';
@@ -971,6 +971,30 @@
         if (a) a.phone = val;
         renderTable();
       } catch(e) { showToast('Error saving phone: ' + e.message, 'error'); renderTable(); }
+    }
+
+    function clearActionDate(event, actionId, label) {
+      event.preventDefault();
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return false;
+      var currentDate = (a.actionDates || {})[label] || '';
+      if (!currentDate) return false;
+
+      var oldDates = JSON.parse(JSON.stringify(a.actionDates || {}));
+      delete a.actionDates[label];
+      renderTable();
+
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{actionDates:a.actionDates}})
+      }).then(function(r){return r.json()}).then(function(data){
+        if (data.status !== 'success') throw new Error(data.message);
+      }).catch(function(e){
+        a.actionDates = oldDates;
+        renderTable();
+        showToast('Error: ' + e.message, 'error');
+      });
+      return false;
     }
 
     function getFormattedDate(offset) {
