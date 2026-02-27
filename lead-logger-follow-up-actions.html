@@ -1535,7 +1535,8 @@
       etSendingActionId = null;
       etPreviewTemplateId = null;
       document.getElementById('templatesModal').classList.add('show');
-      document.getElementById('templatesModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading templates...</p></div>';
+      renderTemplatesModal();
+      // Background refresh
       loadTemplatesFromBackend();
     }
 
@@ -1556,13 +1557,17 @@
           emailTemplates = [];
         }
       } catch(e) {
-        emailTemplates = [];
+        // Keep existing cache on error
       }
-      renderTemplatesModal();
+      // Only re-render if not in edit mode
+      if (etEditingId === null) {
+        renderTemplatesModal();
+      }
     }
 
     function renderTemplatesModal() {
       var body = document.getElementById('templatesModalBody');
+      if (!body) return;
 
       // If editing/adding, show form
       if (etEditingId !== null) {
@@ -1686,17 +1691,21 @@
       if (!subject) { showToast('Subject line is required', 'error'); return; }
       if (!bodyText) { showToast('Email body is required', 'error'); return; }
 
-      var btn = document.getElementById('etSaveBtn');
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-
       var isNew = (etEditingId === 'new');
       var payload;
+
       if (isNew) {
+        var tempId = 'temp_' + Date.now();
+        emailTemplates.push({id: tempId, name: name, subject: subject, body: bodyText});
         payload = { action: 'addEmailTemplate', template: { name: name, subject: subject, body: bodyText } };
       } else {
+        var t = emailTemplates.find(function(x) { return x.id === etEditingId; });
+        if (t) { t.name = name; t.subject = subject; t.body = bodyText; }
         payload = { action: 'updateEmailTemplate', templateId: etEditingId, updates: { name: name, subject: subject, body: bodyText } };
       }
+
+      etEditingId = null;
+      renderTemplatesModal();
 
       try {
         var res = await fetch(WEB_APP_URL, {
@@ -1706,13 +1715,11 @@
         });
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Save failed');
-        showToast(isNew ? 'Template created' : 'Template updated', 'success');
-        etEditingId = null;
-        await loadTemplatesFromBackend();
+        // Sync real IDs from backend
+        loadTemplatesFromBackend();
       } catch(e) {
-        showToast('Error: ' + e.message, 'error');
-        btn.disabled = false;
-        btn.textContent = isNew ? 'Create Template' : 'Save Changes';
+        showToast('Error saving: ' + e.message, 'error');
+        loadTemplatesFromBackend();
       }
     }
 
@@ -1727,6 +1734,9 @@
     }
 
     async function confirmDeleteTemplate(id) {
+      emailTemplates = emailTemplates.filter(function(t) { return t.id !== id; });
+      renderTemplatesModal();
+
       try {
         var res = await fetch(WEB_APP_URL, {
           method: 'POST',
@@ -1735,10 +1745,9 @@
         });
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message || 'Delete failed');
-        showToast('Template deleted', 'success');
-        await loadTemplatesFromBackend();
       } catch(e) {
         showToast('Error: ' + e.message, 'error');
+        loadTemplatesFromBackend();
       }
     }
 
