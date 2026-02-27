@@ -349,6 +349,15 @@
     .notes-edit-footer .notes-cancel{background:#e2e8f0;color:#4a5568}
     .notes-edit-footer .notes-cancel:hover{background:#cbd5e0}
 
+    /* Duplicate Check Modal */
+    .dup-match{background:#fef2f2;border:2px solid #fecaca;border-radius:10px;padding:14px;margin-bottom:10px}
+    .dup-match-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .dup-match-badge{background:#ef4444;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+    .dup-match-score{font-size:11px;color:#64748b;margin-left:auto}
+    .dup-match-company{font-weight:700;font-size:15px;color:#1e293b}
+    .dup-match-details{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:#64748b;margin-top:6px}
+    .dup-match-details span{background:#f1f5f9;padding:2px 8px;border-radius:4px}
+
     /* ==================== MOBILE RESPONSIVE ==================== */
     @media (max-width: 768px) {
       body{padding:8px}
@@ -478,6 +487,32 @@
       <div id="emptyState" class="empty-state" style="display:none;">
         <h3>No leads found</h3>
         <p>Add your first lead using the form above.</p>
+      </div>
+    </div>
+  </div>
+
+ <!-- Duplicate Check Search Modal -->
+  <div id="dupCheckModal" class="modal" aria-hidden="true" style="z-index:1100">
+    <div class="modal-content" style="max-width:540px">
+      <span class="close" onclick="closeDupCheck()">&times;</span>
+      <h2 style="margin-bottom:4px">Add New Lead</h2>
+      <p style="color:#64748b;font-size:14px;margin-bottom:16px">Enter the company name to check for duplicates first</p>
+      <div class="form-group" style="margin-bottom:12px">
+        <label for="dupSearchInput">Company Name *</label>
+        <input type="text" id="dupSearchInput" placeholder="Start typing company name..." autocomplete="off" style="font-size:16px;padding:14px"/>
+      </div>
+      <div id="dupResults" style="display:none;margin-bottom:16px">
+        <!-- Populated by JS -->
+      </div>
+      <div id="dupNoMatch" style="display:none;background:#ecfdf5;border:2px solid #10b981;border-radius:10px;padding:14px;margin-bottom:16px;text-align:center">
+        <span style="color:#059669;font-weight:700;font-size:15px">? No duplicates found</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="btn btn-secondary" onclick="closeDupCheck()" style="flex:1">Cancel</button>
+        <button type="button" class="btn btn-primary" id="dupProceedBtn" onclick="proceedFromDupCheck()" disabled style="flex:2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Continue to Add Lead
+        </button>
       </div>
     </div>
   </div>
@@ -1188,14 +1223,174 @@
       document.getElementById('emailAddress').value = primary.email || '';
     }
 
-    async function openAddLeadModal(){
+    // ==================== DUPLICATE CHECK ====================
+    let dupCheckTimer = null;
+
+    function openAddLeadModal(){
+      // Show dup check modal first (not the lead form)
+      document.getElementById('dupSearchInput').value = '';
+      document.getElementById('dupResults').style.display = 'none';
+      document.getElementById('dupResults').innerHTML = '';
+      document.getElementById('dupNoMatch').style.display = 'none';
+      document.getElementById('dupProceedBtn').disabled = true;
+      document.getElementById('dupCheckModal').style.display = 'block';
+      setTimeout(function(){ document.getElementById('dupSearchInput').focus(); }, 100);
+
+      // Live search as user types
+      var input = document.getElementById('dupSearchInput');
+      input.oninput = function() {
+        clearTimeout(dupCheckTimer);
+        var q = input.value.trim();
+        if (q.length < 2) {
+          document.getElementById('dupResults').style.display = 'none';
+          document.getElementById('dupNoMatch').style.display = 'none';
+          document.getElementById('dupProceedBtn').disabled = true;
+          return;
+        }
+        dupCheckTimer = setTimeout(function(){ runDupCheck(q); }, 250);
+      };
+    }
+
+    function closeDupCheck(){
+      document.getElementById('dupCheckModal').style.display = 'none';
+    }
+
+    function runDupCheck(query) {
+      var matches = fuzzyMatchLeads(query, allLeads || [], 5);
+      var resultsDiv = document.getElementById('dupResults');
+      var noMatchDiv = document.getElementById('dupNoMatch');
+      var proceedBtn = document.getElementById('dupProceedBtn');
+
+      if (matches.length > 0) {
+        var h = '<div style="font-weight:700;color:#dc2626;font-size:13px;margin-bottom:8px">? Potential Duplicates Found:</div>';
+        for (var i = 0; i < matches.length; i++) {
+          var m = matches[i];
+          var lead = m.lead;
+          h += '<div class="dup-match">';
+          h += '  <div class="dup-match-header">';
+          h += '    <span class="dup-match-badge">MATCH</span>';
+          h += '    <span class="dup-match-company">' + esc(lead.companyName || '') + '</span>';
+          h += '    <span class="dup-match-score">' + m.score + '% match</span>';
+          h += '  </div>';
+          h += '  <div class="dup-match-details">';
+          if (lead.contactName) h += '<span>? ' + esc(lead.contactName) + '</span>';
+          if (lead.phoneNumber) h += '<span>? ' + esc(lead.phoneNumber) + '</span>';
+          if (lead.repName) h += '<span>? ' + esc(lead.repName) + '</span>';
+          if (lead.status) h += '<span>' + esc(lead.status) + '</span>';
+          if (lead.dateAdded) h += '<span>Added: ' + esc(String(lead.dateAdded).substring(0,10)) + '</span>';
+          h += '  </div>';
+          h += '</div>';
+        }
+        h += '<div style="background:#fffbeb;border:2px solid #fbbf24;border-radius:10px;padding:12px;text-align:center">';
+        h += '<span style="font-weight:700;color:#92400e;font-size:14px">Potential duplicate ? do you still want to proceed?</span>';
+        h += '</div>';
+        resultsDiv.innerHTML = h;
+        resultsDiv.style.display = 'block';
+        noMatchDiv.style.display = 'none';
+        proceedBtn.disabled = false;
+        proceedBtn.textContent = 'Yes, Add Anyway';
+        proceedBtn.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
+      } else {
+        resultsDiv.style.display = 'none';
+        noMatchDiv.style.display = 'block';
+        proceedBtn.disabled = false;
+        proceedBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Continue to Add Lead';
+        proceedBtn.style.background = '';
+      }
+    }
+
+    function fuzzyMatchLeads(query, leads, maxResults) {
+      var q = normalizeStr(query);
+      if (!q) return [];
+      var scored = [];
+
+      for (var i = 0; i < leads.length; i++) {
+        var name = leads[i].companyName || '';
+        var n = normalizeStr(name);
+        if (!n) continue;
+
+        var score = 0;
+
+        // Exact match
+        if (n === q) { score = 100; }
+        // Starts with
+        else if (n.indexOf(q) === 0) { score = 90; }
+        // Contains
+        else if (n.indexOf(q) > 0) { score = 75; }
+        // Query starts with the lead name (user typed more)
+        else if (q.indexOf(n) === 0) { score = 70; }
+        // Word-level match
+        else {
+          var qWords = q.split(/\s+/);
+          var nWords = n.split(/\s+/);
+          var wordHits = 0;
+          for (var w = 0; w < qWords.length; w++) {
+            for (var nw = 0; nw < nWords.length; nw++) {
+              if (nWords[nw].indexOf(qWords[w]) >= 0 || qWords[w].indexOf(nWords[nw]) >= 0) {
+                wordHits++;
+                break;
+              }
+            }
+          }
+          if (wordHits > 0) {
+            score = Math.round(50 + (wordHits / Math.max(qWords.length, nWords.length)) * 30);
+          }
+        }
+
+        // Levenshtein boost for close matches
+        if (score === 0) {
+          var dist = levenshtein(q, n);
+          var maxLen = Math.max(q.length, n.length);
+          var sim = Math.round((1 - dist / maxLen) * 100);
+          if (sim >= 60) score = sim;
+        }
+
+        if (score >= 55) {
+          scored.push({ lead: leads[i], score: score });
+        }
+      }
+
+      // Sort by score descending
+      scored.sort(function(a, b) { return b.score - a.score; });
+      return scored.slice(0, maxResults);
+    }
+
+    function normalizeStr(s) {
+      return String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function levenshtein(a, b) {
+      if (a.length === 0) return b.length;
+      if (b.length === 0) return a.length;
+      var matrix = [];
+      for (var i = 0; i <= b.length; i++) matrix[i] = [i];
+      for (var j = 0; j <= a.length; j++) matrix[0][j] = j;
+      for (var i = 1; i <= b.length; i++) {
+        for (var j = 1; j <= a.length; j++) {
+          if (b.charAt(i - 1) === a.charAt(j - 1)) {
+            matrix[i][j] = matrix[i - 1][j - 1];
+          } else {
+            matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+          }
+        }
+      }
+      return matrix[b.length][a.length];
+    }
+
+    async function proceedFromDupCheck() {
+      var companyName = document.getElementById('dupSearchInput').value.trim();
+      closeDupCheck();
+      await openAddLeadForm(companyName);
+    }
+
+    async function openAddLeadForm(prefillCompany){
       currentEditId = null;
       document.getElementById('modalTitle').textContent = 'Add New Lead';
       document.getElementById('leadForm').reset();
       document.getElementById('status').value = 'Active';
       
       // Clear all fields explicitly to prevent cache contamination
-      document.getElementById('companyName').value = '';
+      document.getElementById('companyName').value = prefillCompany || '';
       document.getElementById('contactName').value = '';
       document.getElementById('phoneNumber').value = '';
       document.getElementById('emailAddress').value = '';
