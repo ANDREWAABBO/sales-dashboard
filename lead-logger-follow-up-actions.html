@@ -862,7 +862,7 @@
       h += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> auto-fill when sent.</div>';
 
       h += '</div>';
-      h += '<div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveComposeEmail()">Save</button></div>';
+      h += '<div class="modal-footer"><span style="font-size:11px;color:#64748b;margin-right:auto">? Contacts sync to Lead Database</span><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveComposeEmail()">Save & Sync</button></div>';
       h += '</div>';
 
       overlay.innerHTML = h;
@@ -933,13 +933,11 @@
       var body = document.getElementById('compBody').value.trim();
 
       var selected = _composeContacts.filter(function(c) { return c.selected && c.email.trim(); });
-      if (selected.length === 0) { showToast('Select at least one contact with an email address', 'error'); return; }
-      if (!subject && !body) { showToast('Subject or body is required', 'error'); return; }
 
       var actionId = _composeActionId;
       var a = allActions.find(function(x) { return x.id === actionId; });
 
-      // Save ALL contacts back to action data
+      // Save ALL contacts back to action data (even if empty ? allows clearing)
       var allContacts = _composeContacts.filter(function(c) { return c.email.trim() || c.name.trim(); }).map(function(c) {
         return {name:c.name.trim(), email:c.email.trim(), position:c.position.trim()};
       });
@@ -951,15 +949,21 @@
         fetch(WEB_APP_URL, {
           method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
           body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{contacts:allContacts}})
+        }).then(function() {
+          showToast('Contacts synced to Lead Database', 'success');
         }).catch(function(){});
       }
 
-      queuedEmails[actionId] = {
-        recipients: selected.map(function(c) { return {name:c.name.trim(), email:c.email.trim(), position:c.position.trim()}; }),
-        subject: subject,
-        body: body,
-        company: a ? a.company : ''
-      };
+      // Only queue email if there's content AND recipients
+      if (subject || body) {
+        if (selected.length === 0) { showToast('Add at least one contact with an email to send', 'error'); return; }
+        queuedEmails[actionId] = {
+          recipients: selected.map(function(c) { return {name:c.name.trim(), email:c.email.trim(), position:c.position.trim()}; }),
+          subject: subject,
+          body: body,
+          company: a ? a.company : ''
+        };
+      }
 
       var overlay = document.getElementById('composeOverlay');
       if (overlay) overlay.remove();
