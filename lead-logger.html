@@ -3403,27 +3403,52 @@ function exportLeadsToExcel() {
           listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:14px;font-style:italic">No notes yet</div>';
           return;
         }
-        var h = '';
+        listEl.innerHTML = '';
         for (var i = 0; i < entries.length; i++) {
-          var e = entries[i];
-          h += '<div style="padding:12px;background:' + (i % 2 === 0 ? '#fff' : '#f8fafc') + ';border-radius:8px;margin-bottom:8px;border:1px solid #e2e8f0">';
-          if (e.date) {
-            h += '<div style="font-size:11px;color:#64748b;margin-bottom:4px;font-weight:600">' + esc(e.date) + '</div>';
-          }
-          h += '<div style="font-size:14px;color:#1e293b;line-height:1.5;white-space:pre-wrap">' + esc(e.text) + '</div>';
-          h += '<div style="text-align:right;margin-top:6px"><button type="button" onclick="this.closest(\'div\').parentElement.dataset.deleteIndex=\'' + i + '\'" data-del="' + i + '" style="background:none;border:none;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;padding:2px 6px">Remove</button></div>';
-          h += '</div>';
-        }
-        listEl.innerHTML = h;
+          (function(idx) {
+            var e = entries[idx];
+            var card = document.createElement('div');
+            card.style.cssText = 'padding:12px;background:' + (idx % 2 === 0 ? '#fff' : '#f8fafc') + ';border-radius:8px;margin-bottom:8px;border:1px solid #e2e8f0';
 
-        // Attach delete handlers
-        listEl.querySelectorAll('[data-del]').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            var idx = parseInt(btn.getAttribute('data-del'));
-            entries.splice(idx, 1);
-            renderEntries();
-          });
-        });
+            if (e.date) {
+              var dateDiv = document.createElement('div');
+              dateDiv.style.cssText = 'font-size:11px;color:#64748b;margin-bottom:4px;font-weight:600';
+              dateDiv.textContent = e.date;
+              card.appendChild(dateDiv);
+            }
+
+            var textDiv = document.createElement('div');
+            textDiv.textContent = e.text;
+            textDiv.style.cssText = 'font-size:14px;color:#1e293b;line-height:1.5;white-space:pre-wrap;cursor:text;padding:4px;border-radius:4px;min-height:20px';
+            textDiv.contentEditable = 'true';
+            textDiv.spellcheck = true;
+            textDiv.addEventListener('focus', function() {
+              textDiv.style.background = '#fffbeb';
+              textDiv.style.outline = '2px solid #fbbf24';
+            });
+            textDiv.addEventListener('blur', function() {
+              textDiv.style.background = '';
+              textDiv.style.outline = '';
+              entries[idx].text = textDiv.textContent.trim();
+            });
+            card.appendChild(textDiv);
+
+            var btnRow = document.createElement('div');
+            btnRow.style.cssText = 'text-align:right;margin-top:6px';
+            var delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.textContent = 'Remove';
+            delBtn.style.cssText = 'background:none;border:none;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;padding:2px 6px';
+            delBtn.addEventListener('click', function() {
+              entries.splice(idx, 1);
+              renderEntries();
+            });
+            btnRow.appendChild(delBtn);
+            card.appendChild(btnRow);
+
+            listEl.appendChild(card);
+          })(i);
+        }
       }
       renderEntries();
       listWrap.appendChild(listEl);
@@ -3470,7 +3495,6 @@ function exportLeadsToExcel() {
           ev.preventDefault();
           addBtn.click();
         }
-        if (ev.key === 'Escape') closeOverlay();
       });
 
       function closeOverlay() {
@@ -3510,9 +3534,7 @@ function exportLeadsToExcel() {
 
       cancelBtn.addEventListener('click', closeOverlay);
 
-      overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) closeOverlay();
-      });
+      // Notes modal only closes via Save or Cancel buttons
     }
 
     function formatNoteDate(d) {
