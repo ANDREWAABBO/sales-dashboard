@@ -36,6 +36,9 @@
       background: #000000;
       margin: -20px -20px 30px -20px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      /* needed for userbar absolute positioning */
+      position: relative;
+      position: sticky;
     }
 
     .company-btn {
@@ -245,8 +248,8 @@
     @media (max-width: 768px) {
       body{padding:8px;font-size:15px}
 
-      /* Company switcher: stack vertically */
-      .company-switcher{flex-direction:column;gap:8px;padding:12px;margin:-8px -8px 20px -8px}
+      /* Company switcher: stack vertically, leave room for userbar */
+      .company-switcher{flex-direction:column;gap:8px;padding:12px;padding-bottom:56px;margin:-8px -8px 20px -8px;position:relative}
       .company-btn{padding:12px 16px;font-size:15px;gap:10px;width:100%;justify-content:center;border-radius:12px}
       .company-logo{height:28px}
       .abbondanza-logo{height:32px}
