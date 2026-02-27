@@ -1118,7 +1118,7 @@
       document.getElementById('emailAddress').value = primary.email || '';
     }
 
-    function openAddLeadModal(){
+    async function openAddLeadModal(){
       currentEditId = null;
       document.getElementById('modalTitle').textContent = 'Add New Lead';
       document.getElementById('leadForm').reset();
@@ -1139,7 +1139,7 @@
       document.getElementById('businessUnit').value = '';
       
       // Populate rep dropdown from pre-fetched team members
-      populateRepDropdown('');
+      await populateRepDropdown('');
       
       // Initialize contacts with one empty row
       leadContacts = [{name:'', email:'', position:''}];
@@ -1154,7 +1154,7 @@
       markFormPristineAndWatch();
     }
 
-    function editLead(leadId){
+    async function editLead(leadId){
       try {
       const lead = (allLeads || []).find(l => safeLeadId(l) === String(leadId));
       if (!lead) { showToast('Lead not found: ID=' + leadId, 'error'); return; }
@@ -1182,7 +1182,7 @@
       document.getElementById('emailAddress').value = lead.emailAddress || '';
 
       // Populate rep dropdown and pre-select matching rep
-      populateRepDropdown(lead.repName || '');
+      await populateRepDropdown(lead.repName || '');
       // Set hidden fields from lead data (in case rep not in dropdown)
       document.getElementById('repName').value = lead.repName || '';
       document.getElementById('repPhone').value = lead.repPhone || '';
@@ -3381,9 +3381,17 @@ function exportLeadsToExcel() {
     }
 
     // ==================== REP DROPDOWN + POST-SAVE ALERT ====================
-    function populateRepDropdown(preselect) {
+    async function populateRepDropdown(preselect) {
       var sel = document.getElementById('repSelect');
       if (!sel) return;
+      // Force-fetch if teamMembers not loaded yet
+      if (!teamMembers || teamMembers.length === 0) {
+        try {
+          var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+          var data = await resp.json();
+          teamMembers = (data.status === 'success' && data.members) ? data.members : [];
+        } catch(e) { teamMembers = []; }
+      }
       sel.innerHTML = '<option value="">Select a rep...</option>';
       var members = teamMembers || [];
       for (var i = 0; i < members.length; i++) {
