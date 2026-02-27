@@ -1143,9 +1143,9 @@
       for (var i = 0; i < leadContacts.length; i++) {
         var c = leadContacts[i];
         h += '<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f1f5f9">';
-        h += '<input type="text" value="' + (c.name||'').replace(/"/g,'&quot;') + '" placeholder="Contact name" oninput="leadContacts[' + i + '].name=this.value" style="flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
-        h += '<input type="email" value="' + (c.email||'').replace(/"/g,'&quot;') + '" placeholder="email@company.com" oninput="leadContacts[' + i + '].email=this.value" style="flex:1.2;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
-        h += '<input type="text" value="' + (c.position||'').replace(/"/g,'&quot;') + '" placeholder="e.g. Owner, GM" oninput="leadContacts[' + i + '].position=this.value" style="flex:0.7;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
+        h += '<input type="text" value="' + String(c.name||'').replace(/"/g,'&quot;') + '" placeholder="Contact name" oninput="leadContacts[' + i + '].name=this.value" style="flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
+        h += '<input type="email" value="' + String(c.email||'').replace(/"/g,'&quot;') + '" placeholder="email@company.com" oninput="leadContacts[' + i + '].email=this.value" style="flex:1.2;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
+        h += '<input type="text" value="' + String(c.position||'').replace(/"/g,'&quot;') + '" placeholder="e.g. Owner, GM" oninput="leadContacts[' + i + '].position=this.value" style="flex:0.7;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
         h += '<button type="button" onclick="removeLeadContact(' + i + ')" style="width:28px;height:28px;border:1px solid #fecaca;border-radius:6px;background:#fff;color:#ef4444;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Remove">&times;</button>';
         h += '</div>';
       }
@@ -2976,9 +2976,9 @@ function exportLeadsToExcel() {
       for (var i = 0; i < _inlineContacts.length; i++) {
         var c = _inlineContacts[i];
         h += '<div class="cp-row">';
-        h += '<input class="cp-name" type="text" value="' + (c.name||'').replace(/"/g,'&quot;') + '" placeholder="Name" oninput="_inlineContacts[' + i + '].name=this.value"/>';
-        h += '<input class="cp-email" type="email" value="' + (c.email||'').replace(/"/g,'&quot;') + '" placeholder="email@co.com" oninput="_inlineContacts[' + i + '].email=this.value"/>';
-        h += '<input class="cp-pos" type="text" value="' + (c.position||'').replace(/"/g,'&quot;') + '" placeholder="Position" oninput="_inlineContacts[' + i + '].position=this.value"/>';
+        h += '<input class="cp-name" type="text" value="' + String(c.name||'').replace(/"/g,'&quot;') + '" placeholder="Name" oninput="_inlineContacts[' + i + '].name=this.value"/>';
+        h += '<input class="cp-email" type="email" value="' + String(c.email||'').replace(/"/g,'&quot;') + '" placeholder="email@co.com" oninput="_inlineContacts[' + i + '].email=this.value"/>';
+        h += '<input class="cp-pos" type="text" value="' + String(c.position||'').replace(/"/g,'&quot;') + '" placeholder="Position" oninput="_inlineContacts[' + i + '].position=this.value"/>';
         h += '<button class="cp-del" onclick="removeInlineContact(' + i + ')" title="Remove">&times;</button>';
         h += '</div>';
       }
