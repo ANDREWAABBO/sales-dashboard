@@ -523,6 +523,11 @@
       }).catch(function(){});
     });
 
+    // Reload actions when tab becomes visible (picks up changes from Lead DB)
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) { loadActions(); }
+    });
+
     async function loadAvailableLabels() {
       try {
         var res = await fetch(WEB_APP_URL + '?action=getLabels');
