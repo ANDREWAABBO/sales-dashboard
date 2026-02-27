@@ -319,6 +319,7 @@
         <option value="Unlabeled">Unlabeled</option>
       </select>
       <input type="search" id="searchInput" placeholder="Search leads, company, notes..." oninput="filterTable()"/>
+      <span style="font-size:11px;color:#94a3b8;font-style:italic;white-space:nowrap">* Right-click to remove Date or Rep</span>
     </div>
 
     <!-- BATCH BAR -->
@@ -351,7 +352,7 @@
             <th style="width:8%">Action Date</th>
             <th style="width:8%">Who</th>
             <th style="width:9%">Attempt</th>
-            <th style="width:8%">Last Date<span class="sub">auto on attempt</span></th>
+            <th style="width:8%">Last Contact<span class="sub">attempt date auto populated</span></th>
             <th style="width:7%">Phone<span class="sub">syncs Lead DB</span></th>
             <th style="width:7%">Notes</th>
             <th style="width:7%">Email</th>
@@ -668,14 +669,14 @@
     function renderWho(a, labels) {
       if (labels.length <= 1) {
         var w = (a.who || {})[labels[0]] || '';
-        return w ? '<strong style="cursor:pointer" onclick="editWho(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(w) + '</strong>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editWho(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Assign' + '</span>';
+        return w ? '<strong style="cursor:pointer" onclick="editWho(\'' + a.id + '\',\'' + labels[0] + '\')" oncontextmenu="return clearWho(event,\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(w) + '</strong>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editWho(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Assign' + '</span>';
       }
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
         var short = labelShort(labels[i]);
         var wv = (a.who || {})[labels[i]] || '';
-        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val" style="cursor:pointer" onclick="editWho(\'' + a.id + '\',\'' + labels[i] + '\')">' + (wv ? esc(wv) : '<span style="color:#a0aec0">+ Assign</span>') + '</span></div>';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val" style="cursor:pointer" onclick="editWho(\'' + a.id + '\',\'' + labels[i] + '\')"' + (wv ? ' oncontextmenu="return clearWho(event,\'' + a.id + '\',\'' + labels[i] + '\')"' : '') + '>' + (wv ? esc(wv) : '<span style="color:#a0aec0">+ Assign</span>') + '</span></div>';
       }
       return h + '</div>';
     }
@@ -960,6 +961,11 @@
 
     async function savePhone(actionId, input) {
       var val = input.value.trim();
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      var oldPhone = a ? a.phone : '';
+      if (a) a.phone = val;
+      renderTable();
+
       try {
         var res = await fetch(WEB_APP_URL, {
           method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
@@ -967,10 +973,35 @@
         });
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message);
-        var a = allActions.find(function(x) { return x.id === actionId; });
-        if (a) a.phone = val;
+      } catch(e) {
+        if (a) a.phone = oldPhone;
         renderTable();
-      } catch(e) { showToast('Error saving phone: ' + e.message, 'error'); renderTable(); }
+        showToast('Error saving phone: ' + e.message, 'error');
+      }
+    }
+
+    function clearWho(event, actionId, label) {
+      event.preventDefault();
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return false;
+      var currentWho = (a.who || {})[label] || '';
+      if (!currentWho) return false;
+
+      var oldWho = JSON.parse(JSON.stringify(a.who || {}));
+      delete a.who[label];
+      renderTable();
+
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{who:a.who}})
+      }).then(function(r){return r.json()}).then(function(data){
+        if (data.status !== 'success') throw new Error(data.message);
+      }).catch(function(e){
+        a.who = oldWho;
+        renderTable();
+        showToast('Error: ' + e.message, 'error');
+      });
+      return false;
     }
 
     function clearActionDate(event, actionId, label) {
