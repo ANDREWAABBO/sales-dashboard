@@ -2397,13 +2397,13 @@
         // Summary tags inline
         var tags = '';
         if (lb.requiresDate) {
-          tags += '<span class="ls-tag ls-tag-date">? Date</span>';
+          tags += '<span class="ls-tag ls-tag-date">Date</span>';
         }
         if (lb.emailReminder) {
-          tags += '<span class="ls-tag ls-tag-email-rem">? ' + lb.emailDaysBefore + 'd before</span>';
+          tags += '<span class="ls-tag ls-tag-email-rem">' + lb.emailDaysBefore + 'd before</span>';
         }
         if (lb.loginPopup) {
-          tags += '<span class="ls-tag ls-tag-popup">? ' + lb.loginDaysAfter + 'd after</span>';
+          tags += '<span class="ls-tag ls-tag-popup">' + lb.loginDaysAfter + 'd after</span>';
         }
         if (lb.trackAttempts === false) {
           tags += '<span class="ls-tag" style="background:#f1f5f9;color:#64748b">No Counter</span>';
@@ -2524,7 +2524,7 @@
       var names = labelsConfig.map(function(l) { return l.name.trim().toLowerCase(); });
       var unique = new Set(names);
       if (unique.size !== names.length) {
-        showToast('Duplicate label names ? each must be unique', 'error');
+        showToast('Duplicate label names - each must be unique', 'error');
         return;
       }
 
@@ -2541,7 +2541,7 @@
       }).then(function(res) { return res.json(); }).then(function(data) {
         if (data.status !== 'success') showToast('Server sync warning: ' + (data.message || 'retry'), 'error');
       }).catch(function(e) {
-        showToast('Labels saved locally ? server sync failed, will retry', 'error');
+        showToast('Labels saved locally - server sync failed, will retry', 'error');
       });
     }
 
