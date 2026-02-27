@@ -901,8 +901,6 @@
         bodyField.value = fillPlaceholders(t.body || '', a);
         if (!t.subject && !t.body) {
           showToast('Template "' + t.name + '" has empty subject and body', 'error');
-        } else {
-          showToast('Template applied: ' + t.name, 'success');
         }
       } catch(e) {
         showToast('Template error: ' + e.message, 'error');
