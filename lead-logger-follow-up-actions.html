@@ -1719,16 +1719,21 @@
     }
 
     async function loadTemplatesFromBackend() {
+      // Instant load from cache first
+      try {
+        var cached = localStorage.getItem('emailTemplatesCache');
+        if (cached) { emailTemplates = JSON.parse(cached); }
+      } catch(e) {}
+      // Then refresh from backend in background
       try {
         var res = await fetch(WEB_APP_URL + '?action=getEmailTemplates');
         var data = await res.json();
         if (data.status === 'success') {
           emailTemplates = data.templates || [];
-        } else {
-          emailTemplates = [];
+          try { localStorage.setItem('emailTemplatesCache', JSON.stringify(emailTemplates)); } catch(e) {}
         }
       } catch(e) {
-        // Keep existing cache on error
+        // Keep cache on error
       }
       // Only re-render if not in edit mode
       if (etEditingId === null) {
