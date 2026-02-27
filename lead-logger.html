@@ -419,14 +419,8 @@
       <h2 id="modalTitle">Add New Lead</h2>
 
       <form id="leadForm" onsubmit="return false;">
-        <div class="form-group">
-          <label for="businessUnit">Business Unit *</label>
-          <select id="businessUnit" name="businessUnit" required onchange="toggleQuantumFields()">
-            <option value="">Select...</option>
-            <option value="Abbondanza Vending">Abbondanza Vending</option>
-            <option value="Quantum Solutions">Quantum Solutions</option>
-          </select>
-        </div>
+        <!-- Business Unit removed ? field left optional in backend -->
+        <input type="hidden" id="businessUnit" name="businessUnit" value=""/>
 
         <div class="form-group">
           <label for="companyName">Company Name *</label>
@@ -516,11 +510,13 @@
         <input type="hidden" id="contactName" name="contactName"/>
         <input type="hidden" id="emailAddress" name="emailAddress"/>
 
-        <div class="section-header">Sales Representative Information</div>
+        <div class="section-header">Sales Representative</div>
         <div class="form-row">
           <div class="form-group">
-            <label for="repName">Rep Name *</label>
-            <input type="text" id="repName" name="repName" required/>
+            <label for="repSelect">Select Sales Rep *</label>
+            <select id="repSelect" name="repSelect" required onchange="onRepSelected()">
+              <option value="">Select a rep...</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="status">Status</label>
@@ -531,43 +527,12 @@
             </select>
           </div>
         </div>
+        <!-- Hidden fields populated by rep dropdown -->
+        <input type="hidden" id="repName" name="repName"/>
+        <input type="hidden" id="repPhone" name="repPhone"/>
+        <input type="hidden" id="repEmail" name="repEmail"/>
 
-        <!-- FIXED: Always show Rep Phone and Email fields -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="repPhone">Rep Phone *</label>
-            <input type="tel" id="repPhone" name="repPhone" placeholder="555-123-4567" maxlength="14" required/>
-          </div>
-          <div class="form-group">
-            <label for="repEmail">Rep Email *</label>
-            <input type="email" id="repEmail" name="repEmail" placeholder="rep@company.com" required/>
-          </div>
-        </div>
-
-        <!-- Conditional section for Quantum Solutions ONLY -->
-        <div id="quantumFieldsSection" style="display:none;">
-          <div class="section-header">Customer Location (Required for Quantum Solutions)</div>
-          <p style="color:#718096;font-size:14px;margin-bottom:15px;">Note: Company Address, State, and Zip are already filled above. This section is for additional Quantum-specific requirements only.</p>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="followUp">Follow Up Date</label>
-            <input type="date" id="followUp" name="followUp"/>
-          </div>
-          <div class="form-group">
-            <label for="appointmentMade">Appointment Made?</label>
-            <select id="appointmentMade" name="appointmentMade" onchange="toggleAppointmentDate()">
-              <option value="No">No</option>
-              <option value="Yes">Yes</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group" id="appointmentDateGroup" style="display:none;">
-          <label for="appointmentDate">Appointment Date</label>
-          <input type="date" id="appointmentDate" name="appointmentDate"/>
-        </div>
+        <!-- Follow Up / Appointment fields removed ? managed via Follow Up Actions page -->
 
         <div class="form-group">
           <label for="notes">Notes</label>
@@ -885,20 +850,7 @@
 
     // FIXED: Show/hide Quantum fields based on business unit selection
     function toggleQuantumFields() {
-      const businessUnit = document.getElementById('businessUnit').value;
-      const quantumSection = document.getElementById('quantumFieldsSection');
-      
-      if (businessUnit === 'Quantum Solutions') {
-        quantumSection.style.display = 'block';
-        // Make customer address required for Quantum
-        document.getElementById('customerAddress').required = true;
-        document.getElementById('customerZip').required = true;
-      } else {
-        quantumSection.style.display = 'none';
-        // Remove required for other business units
-        document.getElementById('customerAddress').required = false;
-        document.getElementById('customerZip').required = false;
-      }
+      // No-op: Business Unit field removed from modal
     }
 
     async function loadLeads(){
@@ -1179,10 +1131,8 @@
       document.getElementById('modalTitle').textContent = 'Add New Lead';
       document.getElementById('leadForm').reset();
       document.getElementById('status').value = 'Active';
-      document.getElementById('appointmentMade').value = 'No';
       
-      // FIXED: Clear all fields explicitly to prevent cache contamination
-      document.getElementById('businessUnit').value = '';
+      // Clear all fields explicitly to prevent cache contamination
       document.getElementById('companyName').value = '';
       document.getElementById('contactName').value = '';
       document.getElementById('phoneNumber').value = '';
@@ -1193,27 +1143,21 @@
       document.getElementById('customerAddress').value = '';
       document.getElementById('customerState').value = '';
       document.getElementById('customerZip').value = '';
-      document.getElementById('followUp').value = '';
-      document.getElementById('appointmentDate').value = '';
       document.getElementById('notes').value = '';
+      document.getElementById('businessUnit').value = '';
+      
+      // Populate rep dropdown from pre-fetched team members
+      populateRepDropdown('');
       
       // Initialize contacts with one empty row
       leadContacts = [{name:'', email:'', position:''}];
       renderLeadContacts();
-      
-      // Hide Quantum fields by default and remove required
-      if (document.getElementById('quantumFieldsSection')) {
-        document.getElementById('quantumFieldsSection').style.display = 'none';
-        document.getElementById('customerAddress').required = false;
-        document.getElementById('customerZip').required = false;
-      }
       
       // Reset save button state
       const saveBtn = document.getElementById('saveBtn');
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save Lead';
       
-      toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
       markFormPristineAndWatch();
     }
@@ -1229,9 +1173,7 @@
       document.getElementById('businessUnit').value = lead.businessUnit || '';
       document.getElementById('companyName').value = lead.companyName || '';
       document.getElementById('phoneNumber').value = lead.phoneNumber || '';
-      document.getElementById('repName').value = lead.repName || '';
       document.getElementById('status').value = lead.status || 'Active';
-      document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
       document.getElementById('notes').value = lead.notes || '';
 
       // Load contacts
@@ -1247,9 +1189,13 @@
       document.getElementById('contactName').value = lead.contactName || '';
       document.getElementById('emailAddress').value = lead.emailAddress || '';
 
-      // NEW FIELDS - Always populate these
+      // Populate rep dropdown and pre-select matching rep
+      populateRepDropdown(lead.repName || '');
+      // Set hidden fields from lead data (in case rep not in dropdown)
+      document.getElementById('repName').value = lead.repName || '';
       document.getElementById('repPhone').value = lead.repPhone || '';
       document.getElementById('repEmail').value = lead.repEmail || '';
+
       document.getElementById('customerAddress').value = lead.customerAddress || '';
       document.getElementById('customerState').value = lead.customerState || '';
       // FIXED: Only pad zip code if it exists and has a value
@@ -1260,22 +1206,11 @@
         document.getElementById('customerZip').value = '';
       }
 
-      if (lead.followUp){
-        const d = new Date(lead.followUp);
-        if (!isNaN(d)) document.getElementById('followUp').value = d.toISOString().split('T')[0];
-      }
-      if (lead.appointmentDate){
-        const d = new Date(lead.appointmentDate);
-        if (!isNaN(d)) document.getElementById('appointmentDate').value = d.toISOString().split('T')[0];
-      }
-
       // Reset save button state
       const saveBtn = document.getElementById('saveBtn');
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save Lead';
 
-      toggleQuantumFields();
-      toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
       markFormPristineAndWatch();
       } catch(e) { showToast('Error opening edit: ' + e.message, 'error'); }
@@ -1299,8 +1234,7 @@
     }
 
     function toggleAppointmentDate(){
-      const show = document.getElementById('appointmentMade').value === 'Yes';
-      document.getElementById('appointmentDateGroup').style.display = show ? 'block' : 'none';
+      // No-op: Appointment fields removed from modal
     }
 
     // Track pristine/dirty state
@@ -1386,9 +1320,22 @@
           }).catch(function(e){ console.log('FU sync error:', e); });
         }
         
+        // For NEW leads: show "Alert this rep?" popup
+        var savedLeadId = isUpdate ? String(currentEditId) : (out.leadId || '');
+        var savedRepName = lead.repName || '';
+        var savedRepEmail = lead.repEmail || '';
+        var savedCompany = lead.companyName || '';
+        var savedPhone = lead.phoneNumber || '';
+        var savedContact = (validContacts && validContacts.length > 0) ? (validContacts[0].name || '') : '';
+        var savedNotes = lead.notes || '';
+        
         formDirty = false;
         closeModal();
         await loadLeads();
+        
+        if (!isUpdate && savedRepEmail) {
+          showAlertRepPopup(savedLeadId, savedRepName, savedRepEmail, savedCompany, savedPhone, savedContact, savedNotes);
+        }
       }catch(err){
         console.error('save error:', err);
         showToast('Error saving lead: ' + err.message, 'error');
@@ -3441,6 +3388,117 @@ function exportLeadsToExcel() {
       showToast('Updated', 'success');
     }
 
+    // ==================== REP DROPDOWN + POST-SAVE ALERT ====================
+    function populateRepDropdown(preselect) {
+      var sel = document.getElementById('repSelect');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">Select a rep...</option>';
+      var members = teamMembers || [];
+      for (var i = 0; i < members.length; i++) {
+        var m = members[i];
+        var opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = m.name + (m.position ? ' ? ' + m.position : '') + (m.email ? ' (' + m.email + ')' : '');
+        opt.setAttribute('data-name', m.name || '');
+        opt.setAttribute('data-email', m.email || '');
+        opt.setAttribute('data-phone', m.phone || '');
+        // Pre-select by name match
+        if (preselect && m.name && m.name.trim().toLowerCase() === String(preselect).trim().toLowerCase()) {
+          opt.selected = true;
+        }
+        sel.appendChild(opt);
+      }
+      // If preselected, fire the hidden field sync
+      if (sel.value) onRepSelected();
+    }
+
+    function onRepSelected() {
+      var sel = document.getElementById('repSelect');
+      var opt = sel.options[sel.selectedIndex];
+      if (!opt || !opt.value) {
+        document.getElementById('repName').value = '';
+        document.getElementById('repPhone').value = '';
+        document.getElementById('repEmail').value = '';
+        return;
+      }
+      document.getElementById('repName').value = opt.getAttribute('data-name') || '';
+      document.getElementById('repPhone').value = opt.getAttribute('data-phone') || '';
+      document.getElementById('repEmail').value = opt.getAttribute('data-email') || '';
+    }
+
+    function showAlertRepPopup(leadId, repName, repEmail, company, phone, contact, notes) {
+      var existing = document.getElementById('postSaveAlertOverlay');
+      if (existing) existing.remove();
+      var overlay = document.createElement('div');
+      overlay.id = 'postSaveAlertOverlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+      overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:460px;width:95%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+        '<div style="background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:18px 24px"><h3 style="margin:0;font-size:17px;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Sales Rep?</h3><p style="margin:4px 0 0;opacity:.8;font-size:13px">Lead saved successfully</p></div>' +
+        '<div style="padding:20px 24px">' +
+          '<div style="padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:16px">' +
+            '<div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-bottom:8px">New Lead Details</div>' +
+            '<div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px">' + esc(company) + '</div>' +
+            (contact ? '<div style="font-size:13px;color:#4a5568">Contact: ' + esc(contact) + '</div>' : '') +
+            (phone ? '<div style="font-size:13px;color:#4a5568">Phone: ' + esc(phone) + '</div>' : '') +
+          '</div>' +
+          '<div style="padding:12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;font-size:13px;color:#065f46;line-height:1.6">' +
+            '<div style="font-weight:700;margin-bottom:6px">Send alert to ' + esc(repName) + '?</div>' +
+            '<div style="font-size:12px;color:#4a5568">' +
+              '<div>&#8226; Email alert sent to <strong>' + esc(repEmail) + '</strong></div>' +
+              '<div>&#8226; Auto-assign <strong>Call</strong> action in Follow Up Actions</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:14px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e2e8f0">' +
+          '<button onclick="document.getElementById(\'postSaveAlertOverlay\').remove()" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px">No Thanks</button>' +
+          '<button id="postSaveAlertBtn" style="padding:9px 20px;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px">Yes, Alert Rep</button>' +
+        '</div></div>';
+      document.body.appendChild(overlay);
+
+      document.getElementById('postSaveAlertBtn').addEventListener('click', async function() {
+        var btn = this;
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+
+        // Find matching FU action ID
+        var actionId = '';
+        try {
+          var fuResp = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
+          var fuData = await fuResp.json();
+          if (fuData.status === 'success' && fuData.actions) {
+            var match = fuData.actions.find(function(a) {
+              return String(a.leadId) === String(leadId) || String(a.company).trim().toLowerCase() === String(company).trim().toLowerCase();
+            });
+            if (match) actionId = match.id;
+          }
+        } catch(e) {}
+
+        try {
+          var resp = await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({
+              action:'sendRepAlert',
+              repName: repName,
+              repEmail: repEmail,
+              company: company,
+              phone: phone,
+              contact: contact,
+              notes: notes,
+              actionId: actionId
+            })});
+          var data = await resp.json();
+          if (data.status === 'success') {
+            showToast('Alert sent to ' + repName + '!', 'success');
+          } else {
+            showToast('Error: ' + data.message, 'error');
+          }
+        } catch(e) {
+          showToast('Error: ' + e.message, 'error');
+        }
+        var ov = document.getElementById('postSaveAlertOverlay');
+        if (ov) ov.remove();
+      });
+    }
+
     // ==================== SEND REP ALERT (from Lead DB) ====================
     async function sendRepAlertFromDB(leadId) {
       var lead = allLeads.find(function(l) { return safeLeadId(l) === String(leadId); });
@@ -3553,6 +3611,9 @@ function exportLeadsToExcel() {
     window.toggleApptMade = toggleApptMade;
     window.inlineNotesEdit = inlineNotesEdit;
     window.openStatusPicker = openStatusPicker;
+    window.populateRepDropdown = populateRepDropdown;
+    window.onRepSelected = onRepSelected;
+    window.showAlertRepPopup = showAlertRepPopup;
   </script>
 </body>
 </html>
