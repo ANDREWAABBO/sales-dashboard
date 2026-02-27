@@ -1,8 +1,8 @@
 /*!
-  userbar.js — injects "👤 username" + "Logout" into the black top bar
+  userbar.js ? injects "? username" + "Logout" into the black top bar
   Requires password.js (for Auth/logout). Load AFTER password.js:
   <script defer src="password.js"></script>
-  <script defer src="userbar.js?v=1"></script>
+  <script defer src="userbar.js?v=2"></script>
 */
 (function () {
   'use strict';
@@ -29,10 +29,54 @@
     } catch (_) {}
   }
 
+  // Inject mobile-responsive styles once
+  function injectStyles() {
+    if (document.getElementById('userbar-responsive-css')) return;
+    const style = document.createElement('style');
+    style.id = 'userbar-responsive-css';
+    style.textContent = `
+      @media (max-width: 768px) {
+        .company-switcher {
+          position: relative;
+          padding-bottom: 56px !important;
+        }
+        #userbar {
+          position: absolute !important;
+          right: 0 !important;
+          left: 0 !important;
+          bottom: 0 !important;
+          top: auto !important;
+          transform: none !important;
+          justify-content: center !important;
+          padding: 8px 12px;
+          border-top: 1px solid rgba(255,255,255,0.15);
+          gap: 8px !important;
+        }
+        #userbar button {
+          font-size: 13px !important;
+          padding: 6px 12px !important;
+        }
+      }
+      @media (max-width: 480px) {
+        .company-switcher {
+          padding-bottom: 50px !important;
+        }
+        #userbar button {
+          font-size: 12px !important;
+          padding: 5px 10px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function injectUserbar() {
     if (document.getElementById(BAR_ID)) return;
     const host = document.querySelector(HOST_SELECTOR);
     if (!host) return; // only place it when the black bar exists
+
+    // Inject responsive styles
+    injectStyles();
 
     const user = sessionStorage.getItem('dashboardUser') || 'User';
     const email = sessionStorage.getItem('userEmail') || '';
@@ -52,7 +96,7 @@
 
     const userBtn = document.createElement('button');
     userBtn.type = 'button';
-    userBtn.textContent = '👤 ' + user;
+    userBtn.textContent = '? ' + user;
     userBtn.title = 'View profile';
     userBtn.style.cssText = [
       'background:rgba(255,255,255,0.1)',
@@ -62,7 +106,11 @@
       'border-radius:999px',
       'cursor:pointer',
       'font-weight:600',
-      'font-size:16px'
+      'font-size:16px',
+      'white-space:nowrap',
+      'overflow:hidden',
+      'text-overflow:ellipsis',
+      'max-width:200px'
     ].join(';');
     userBtn.onclick = () => {
       alert(`Profile: ${user}\nEmail: ${email}\nCompany: ${company}`);
@@ -78,7 +126,9 @@
       'padding:8px 14px',
       'border-radius:999px',
       'cursor:pointer',
-      'font-weight:700'
+      'font-weight:700',
+      'white-space:nowrap',
+      'flex-shrink:0'
     ].join(';');
     logoutBtn.onclick = () => {
       try {
