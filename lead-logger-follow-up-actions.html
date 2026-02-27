@@ -828,7 +828,7 @@
       // Build template dropdown
       var templateOpts = '<option value="">-- Write custom email --</option>';
       for (var i = 0; i < emailTemplates.length; i++) {
-        templateOpts += '<option value="' + esc(emailTemplates[i].id) + '">' + esc(emailTemplates[i].name) + '</option>';
+        templateOpts += '<option value="' + i + '">' + esc(emailTemplates[i].name) + '</option>';
       }
 
       var overlay = document.createElement('div');
@@ -848,7 +848,7 @@
 
       // Template dropdown
       h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Use Template <span style="font-weight:400;color:#94a3b8">(auto-fills subject & body)</span></label>';
-      h += '<select id="compTemplate" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div>';
+      h += '<select id="compTemplate" onchange="window._applyTemplate(this)" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div>';
 
       // Subject
       h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Subject <span style="font-weight:400;color:#94a3b8">(override template subject)</span></label>';
@@ -868,13 +868,37 @@
       overlay.innerHTML = h;
       document.body.appendChild(overlay);
       renderComposeContacts();
-
-      // Bind template change event after DOM is ready
-      var tplSelect = document.getElementById('compTemplate');
-      if (tplSelect) {
-        tplSelect.addEventListener('change', function() { applyComposeTemplate(); });
-      }
     }
+
+    // Global template apply ? works from both inline onchange and direct call
+    window._applyTemplate = function(sel) {
+      try {
+        var val = sel ? sel.value : '';
+        if (val === '') return;
+        var idx = parseInt(val);
+        var t = emailTemplates[idx];
+        if (!t) {
+          showToast('Template not found at index ' + idx, 'error');
+          return;
+        }
+        var subField = document.getElementById('compSubject');
+        var bodyField = document.getElementById('compBody');
+        if (!subField || !bodyField) {
+          showToast('Subject or Body field not found in DOM', 'error');
+          return;
+        }
+        var a = allActions.find(function(x) { return x.id === _composeActionId; }) || {};
+        subField.value = fillPlaceholders(t.subject || '', a);
+        bodyField.value = fillPlaceholders(t.body || '', a);
+        if (!t.subject && !t.body) {
+          showToast('Template "' + t.name + '" has empty subject and body', 'error');
+        } else {
+          showToast('Template applied: ' + t.name, 'success');
+        }
+      } catch(e) {
+        showToast('Template error: ' + e.message, 'error');
+      }
+    };
 
     function renderComposeContacts() {
       var el = document.getElementById('composeContactsList');
@@ -904,20 +928,6 @@
     function removeComposeContact(idx) {
       _composeContacts.splice(idx, 1);
       renderComposeContacts();
-    }
-
-    function applyComposeTemplate() {
-      var sel = document.getElementById('compTemplate');
-      if (!sel || sel.value === '') return;
-      var templateId = sel.value;
-      var t = emailTemplates.find(function(x) { return x.id === templateId; });
-      if (!t) return;
-      var a = allActions.find(function(x) { return x.id === _composeActionId; }) || {};
-      document.getElementById('compSubject').value = fillPlaceholders(t.subject || '', a);
-      document.getElementById('compBody').value = fillPlaceholders(t.body || '', a);
-      if (!t.subject && !t.body) {
-        showToast('Template "' + t.name + '" has no subject or body content', 'error');
-      }
     }
 
     function saveComposeEmail() {
