@@ -1266,7 +1266,7 @@
     function editPhone(actionId) {
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
-      var td = document.querySelector('tr[data-id="' + actionId + '"] td:nth-child(8)');
+      var td = document.querySelector('tr[data-id="' + actionId + '"] td:nth-child(7)');
       var current = a.phone || '';
       td.innerHTML = '<input class="inline-input" type="text" value="' + esc(current) + '" onblur="savePhone(\'' + actionId + '\',this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>';
       td.querySelector('input').focus();
