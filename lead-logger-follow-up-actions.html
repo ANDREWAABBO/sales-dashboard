@@ -1920,7 +1920,8 @@
     }
 
     function fillPlaceholders(text, action) {
-      if (!text) return '';
+      if (!text && text !== 0) return '';
+      text = String(text);
       var a = action || {};
       var today = new Date();
       var mm = String(today.getMonth()+1).padStart(2,'0');
