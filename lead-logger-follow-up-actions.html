@@ -973,22 +973,59 @@
       } catch(e) { showToast('Error saving phone: ' + e.message, 'error'); renderTable(); }
     }
 
-    function editActionDate(actionId, label) {
-      var a = allActions.find(function(x) { return x.id === actionId; });
-      if (!a || a.status === 'Dead') return;
-      var current = (a.actionDates || {})[label] || '';
+    function getFormattedDate(offset) {
+      var d = new Date();
+      d.setDate(d.getDate() + offset);
+      return String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
+    }
 
-      // Convert display date to input date
+    function quickSetDate(actionId, label, offset) {
+      var formatted = getFormattedDate(offset);
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var oldDates = JSON.parse(JSON.stringify(a.actionDates || {}));
+      if (!a.actionDates) a.actionDates = {};
+      a.actionDates[label] = formatted;
+      var overlay = document.querySelector('.modal-overlay.show');
+      if (overlay) overlay.remove();
+      renderTable();
+
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{actionDates:a.actionDates}})
+      }).then(function(r){return r.json()}).then(function(data){
+        if (data.status !== 'success') throw new Error(data.message);
+      }).catch(function(e){
+        a.actionDates = oldDates;
+        renderTable();
+        showToast('Error: ' + e.message, 'error');
+      });
+    }
+
+    function showFullDatePicker(actionId, label) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var current = (a.actionDates || {})[label] || '';
       var inputVal = '';
       if (current) {
         var parts = current.split('/');
         if (parts.length === 3) inputVal = (parts[2].length === 2 ? '20' + parts[2] : parts[2]) + '-' + parts[0].padStart(2,'0') + '-' + parts[1].padStart(2,'0');
         else inputVal = current;
       }
+      var container = document.getElementById('dateQuickBody');
+      container.innerHTML = '<input type="date" id="dateEditInput" value="' + inputVal + '" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:16px"/><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveActionDate(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div>';
+    }
+
+    function editActionDate(actionId, label) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return;
+
+      var todayStr = getFormattedDate(0);
+      var yesterdayStr = getFormattedDate(-1);
 
       var overlay = document.createElement('div');
       overlay.className = 'modal-overlay show';
-      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Edit Date</h3><p>' + esc(label) + ' - ' + esc(a.company) + '</p></div><div class="modal-body"><input type="date" id="dateEditInput" value="' + inputVal + '" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:16px"/></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveActionDate(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div></div>';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Set Date</h3><p>' + esc(label) + ' - ' + esc(a.company) + '</p></div><div class="modal-body" id="dateQuickBody"><button onclick="quickSetDate(\'' + actionId + '\',\'' + label + '\',0)" style="width:100%;padding:12px;margin-bottom:8px;border:2px solid #e2e8f0;border-radius:8px;background:#ecfdf5;color:#065f46;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center"><span>Today</span><span style="color:#10b981;font-size:13px">' + todayStr + '</span></button><button onclick="quickSetDate(\'' + actionId + '\',\'' + label + '\',-1)" style="width:100%;padding:12px;margin-bottom:8px;border:2px solid #e2e8f0;border-radius:8px;background:#f8fafc;color:#1e293b;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center"><span>Yesterday</span><span style="color:#64748b;font-size:13px">' + yesterdayStr + '</span></button><button onclick="showFullDatePicker(\'' + actionId + '\',\'' + label + '\')" style="width:100%;padding:12px;border:2px solid #e2e8f0;border-radius:8px;background:#fff;color:#2563eb;font-size:14px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Select a Date...</button></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button></div></div>';
       document.body.appendChild(overlay);
     }
 
