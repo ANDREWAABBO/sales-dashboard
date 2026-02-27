@@ -349,6 +349,76 @@
     .notes-edit-footer .notes-cancel{background:#e2e8f0;color:#4a5568}
     .notes-edit-footer .notes-cancel:hover{background:#cbd5e0}
 
+    /* ==================== MOBILE RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body{padding:8px}
+      .container{padding:12px;border-radius:12px}
+      .page-header{margin:-12px -12px 16px -12px;padding:14px 16px;border-radius:12px 12px 0 0}
+      .page-header h1{font-size:1.3rem}
+      h1{font-size:1.4rem;margin-bottom:16px}
+
+      /* Controls stack vertically */
+      .controls{flex-direction:column;align-items:stretch;gap:10px;padding:10px 0;position:relative;top:auto}
+      .controls > div{display:flex;flex-wrap:wrap;gap:6px}
+      .btn{padding:10px 14px;font-size:12px;gap:5px;flex:1 1 calc(50% - 6px);justify-content:center;min-width:0}
+      .btn svg{width:14px;height:14px}
+      .btn-settings{flex:0 0 auto;width:42px;padding:10px}
+      .filters{flex-direction:column;gap:8px;width:100%}
+      .filters select,.filters input[type="search"]{width:100%;font-size:13px;padding:10px 12px}
+
+      /* Table horizontal scroll */
+      .table-container{border-radius:8px;max-height:none}
+      table{min-width:700px;font-size:12px}
+      th{padding:8px 4px;font-size:10px}
+      td{padding:8px 4px;font-size:11px;max-width:120px}
+      td:nth-child(2){max-width:120px}
+      td:nth-child(8){max-width:100px}
+      .action-buttons{gap:3px!important}
+      .btn-small{padding:6px 8px!important;font-size:10px!important;min-width:70px!important}
+
+      /* Modal full-screen on mobile */
+      .modal-content{width:96%;margin:2% auto;padding:16px;border-radius:10px;max-height:94vh}
+      #leadModal .modal-content{max-height:94vh}
+      .section-header{font-size:1.1em;margin:18px 0 10px 0}
+      .form-row{grid-template-columns:1fr;gap:10px}
+      .form-group input,.form-group select,.form-group textarea{font-size:14px;padding:10px}
+      .form-actions{flex-direction:row;gap:8px}
+      .form-actions .btn{flex:1;padding:12px;font-size:14px;justify-content:center}
+
+      /* Contact rows */
+      .cp-row{flex-wrap:wrap;gap:4px}
+      .cp-row input{min-width:0;font-size:12px;padding:8px}
+      .contacts-popover{min-width:auto;max-width:95vw;width:95vw}
+
+      /* Team modal */
+      #teamModal > div{max-width:95vw!important;width:95vw!important}
+
+      /* Notes edit */
+      .notes-edit-card{width:95vw!important;max-width:95vw!important}
+
+      /* Lead contact rows in modal */
+      .lead-contact-row{flex-wrap:wrap!important;gap:4px!important}
+      .lead-contact-row input{min-width:0!important;flex:1 1 100%!important}
+    }
+
+    @media (max-width: 480px) {
+      body{padding:4px}
+      .container{padding:8px;border-radius:8px}
+      .page-header{margin:-8px -8px 12px -8px;padding:12px}
+      .page-header h1{font-size:1.1rem}
+      .btn{padding:9px 10px;font-size:11px;flex:1 1 calc(50% - 4px)}
+      table{min-width:600px}
+      th{font-size:9px;padding:6px 3px}
+      td{font-size:10px;padding:6px 3px}
+      .modal-content{width:98%;margin:1% auto;padding:12px}
+      .form-group label{font-size:13px}
+      .form-actions .btn{padding:12px 8px;font-size:13px}
+
+      /* Stacked action buttons on tiny screens */
+      .action-buttons{grid-template-columns:1fr!important;gap:3px!important;min-width:80px!important}
+      .btn-small{min-width:0!important;width:100%!important}
+    }
+
     
   </style>
 </head>
@@ -1326,12 +1396,56 @@
         formDirty = false;
         closeModal();
         
-        // Show alert popup IMMEDIATELY for new leads (before loadLeads)
+        // INSTANT UI: Build optimistic lead object and inject immediately
+        var optimisticLead = {
+          id: savedLeadId || ('temp-' + Date.now()),
+          leadId: savedLeadId || '',
+          dateAdded: isUpdate ? (lead.dateAdded || new Date().toISOString()) : new Date().toISOString(),
+          companyName: lead.companyName || '',
+          contactName: (validContacts && validContacts.length > 0) ? (validContacts[0].name || '') : '',
+          emailAddress: (validContacts && validContacts.length > 0) ? (validContacts[0].email || '') : '',
+          contacts: validContacts || [],
+          phoneNumber: lead.phoneNumber || '',
+          repName: lead.repName || '',
+          repPhone: lead.repPhone || '',
+          repEmail: lead.repEmail || '',
+          status: lead.status || 'Active',
+          notes: lead.notes || '',
+          businessUnit: lead.businessUnit || '',
+          customerAddress: lead.customerAddress || '',
+          customerState: lead.customerState || '',
+          customerZip: lead.customerZip || '',
+          followUp: '',
+          appointmentMade: 'No',
+          appointmentDate: ''
+        };
+
+        if (isUpdate) {
+          // Replace existing lead in allLeads
+          var idx = allLeads.findIndex(function(l) { return safeLeadId(l) === String(currentEditId); });
+          if (idx !== -1) {
+            // Preserve server fields not in form
+            optimisticLead.dateAdded = allLeads[idx].dateAdded || optimisticLead.dateAdded;
+            optimisticLead.id = allLeads[idx].id;
+            optimisticLead.leadId = allLeads[idx].leadId;
+            allLeads[idx] = optimisticLead;
+          }
+        } else {
+          // Insert new lead at top
+          allLeads.unshift(optimisticLead);
+        }
+        // Re-render table instantly
+        try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
+        updateRepFilter();
+        filterLeads();
+        
+        // Show alert popup IMMEDIATELY for new leads
         if (!isUpdate && savedRepEmail) {
           showAlertRepPopup(savedLeadId, savedRepName, savedRepEmail, savedCompany, savedPhone, savedContact, savedNotes);
         }
         
-        await loadLeads();
+        // Background sync from server (no await ? non-blocking)
+        loadLeads().catch(function(e){ console.log('Background refresh:', e); });
       }catch(err){
         console.error('save error:', err);
         showToast('Error saving lead: ' + err.message, 'error');
@@ -1363,7 +1477,13 @@
         if (out.status !== 'success') throw new Error(out.message || 'Archive failed');
 
         showToast('Lead archived', 'success');
-        await loadLeads(); // list re-renders with current filter (Active)
+        // INSTANT UI: Remove from allLeads and re-render
+        allLeads = allLeads.filter(function(l) { return safeLeadId(l) !== id; });
+        try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
+        updateRepFilter();
+        filterLeads();
+        // Background sync
+        loadLeads().catch(function(e){ console.log('Background refresh:', e); });
       }catch(err){
         console.error(err);
         showToast('Error archiving lead: ' + err.message, 'error');
@@ -1433,7 +1553,13 @@
 
         showToast('Lead "' + currentLeadToDelete.companyName + '" deleted permanently', 'success');
         closeDeleteModal();
-        await loadLeads(); // Refresh the lead list
+        // INSTANT UI: Remove from allLeads and re-render
+        allLeads = allLeads.filter(function(l) { return safeLeadId(l) !== leadId; });
+        try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
+        updateRepFilter();
+        filterLeads();
+        // Background sync
+        loadLeads().catch(function(e){ console.log('Background refresh:', e); });
         
       } catch (err) {
         console.error('Delete error:', err);
