@@ -322,19 +322,15 @@
       <span style="font-size:11px;color:#94a3b8;font-style:italic;white-space:nowrap">* Right-click to remove Date or Rep</span>
     </div>
 
-    <!-- BATCH BAR -->
-    <div class="batch-bar" id="batchBar">
-      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      <span class="batch-count" id="batchCount">0 selected</span>
-      <button class="batch-btn" onclick="openTemplatesModal()">
-        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Choose Template
-      </button>
-      <button class="batch-btn send" id="batchSendBtn" onclick="batchSend()">
+    <!-- SEND EMAILS BAR -->
+    <div class="batch-bar" id="sendEmailsBar">
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span class="batch-count" id="queuedCount">0 emails ready</span>
+      <button class="batch-btn send glow" onclick="openSendReview()">
         <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Batch Send
+        <span id="sendEmailsBtnText">Send Emails</span>
       </button>
-      <button class="batch-clear" onclick="clearSelection()">&#10005; Clear</button>
+      <button class="batch-clear" onclick="clearAllQueued()">&#10005; Clear All</button>
     </div>
 
     <!-- TABLE -->
@@ -346,7 +342,6 @@
 
       <table id="fuTable" style="display:none">
         <thead><tr>
-            <th style="width:3%"><input type="checkbox" class="row-cb" id="selectAll" onchange="toggleSelectAll(this)"/></th>
             <th style="width:10%">Company</th>
             <th style="width:10%">Action</th>
             <th style="width:8%">Action Date</th>
@@ -481,7 +476,7 @@
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
     let allActions = [];
-    let selectedIds = new Set();
+    var queuedEmails = {}; // {actionId: {to, subject, body, company, templateName}}
     let maxAttempts = 5;
 
     // ?? Label ? CSS class map ??
@@ -521,6 +516,7 @@
       loadMaxAttempts();
       loadAvailableLabels();
       loadTeamFromBackend();
+      loadTemplatesFromBackend();
     });
 
     async function loadAvailableLabels() {
@@ -580,12 +576,8 @@
         var isDead = a.status === 'Dead';
         var labels = a.actions || [];
         var isUnlabeled = labels.length === 0 && !isDead;
-        var checked = selectedIds.has(a.id) ? ' checked' : '';
 
         html += '<tr class="' + (isDead ? 'row-dead' : (isUnlabeled ? 'row-unlabeled' : '')) + '" data-id="' + a.id + '">';
-
-        // Checkbox
-        html += '<td><input type="checkbox" class="row-cb"' + checked + (isDead ? ' disabled' : '') + ' onchange="toggleRow(this,\'' + a.id + '\')"/></td>';
 
         // Company
         html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
@@ -621,8 +613,19 @@
         if (isDead) noteClass += '" style="color:#ef4444';
         html += '<td><span class="' + noteClass + '" onclick="editNotes(\'' + a.id + '\')">' + noteDisplay + '</span></td>';
 
-        // Email Send
-        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="openTemplatesModal(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Send</button>') + '</td>';
+        // Email - compose or show queued status
+        var emailCell = '';
+        if (isDead) {
+          emailCell = '<span style="color:#cbd5e0">&mdash;</span>';
+        } else if (queuedEmails[a.id]) {
+          emailCell = '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">';
+          emailCell += '<span style="display:inline-flex;align-items:center;gap:3px;color:#059669;font-size:11px;font-weight:600;cursor:pointer" onclick="openComposeEmail(\'' + a.id + '\')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#059669;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>Ready</span>';
+          emailCell += '<span style="font-size:9px;color:#ef4444;cursor:pointer;text-decoration:underline" onclick="removeQueued(\'' + a.id + '\')">remove</span>';
+          emailCell += '</div>';
+        } else {
+          emailCell = '<button class="btn-sm" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="openComposeEmail(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Email</button>';
+        }
+        html += '<td>' + emailCell + '</td>';
 
         // Proposal
         html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#059669,#047857)" onclick="openProposal(\'' + a.leadId + '\')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Prop</button>') + '</td>';
@@ -635,9 +638,8 @@
         html += '</tr>';
       }
       tbody.innerHTML = html;
-    }
-
-    // ?? Pill renderer ??
+      updateSendBar();
+    }    // ?? Pill renderer ??
     function renderPills(labels, actionId) {
       if (labels.length === 0) return '<span class="pill pill-needs" onclick="assignLabel(\'' + actionId + '\')">+ Assign Label</span>';
       var h = '<div class="pill-grid" onclick="assignLabel(\'' + actionId + '\')" style="cursor:pointer" title="Click to change labels">';
@@ -755,37 +757,179 @@
 
     function filterTable() { renderTable(); }
 
-    // ?????????? SELECTION / BATCH ??????????
-    function toggleRow(cb, id) {
-      if (cb.checked) selectedIds.add(id); else selectedIds.delete(id);
-      updateBatchBar();
-    }
-
-    function toggleSelectAll(cb) {
-      var rows = document.querySelectorAll('#fuTableBody .row-cb:not([disabled])');
-      rows.forEach(function(r) { r.checked = cb.checked; });
-      selectedIds.clear();
-      if (cb.checked) {
-        allActions.forEach(function(a) { if (a.status !== 'Dead') selectedIds.add(a.id); });
-      }
-      updateBatchBar();
-    }
-
-    function clearSelection() {
-      selectedIds.clear();
-      document.querySelectorAll('#fuTableBody .row-cb').forEach(function(r) { r.checked = false; });
-      document.getElementById('selectAll').checked = false;
-      updateBatchBar();
-    }
-
-    function updateBatchBar() {
-      var bar = document.getElementById('batchBar');
-      if (selectedIds.size > 0) {
+    // ========== EMAIL QUEUE MANAGEMENT ==========
+    function updateSendBar() {
+      var bar = document.getElementById('sendEmailsBar');
+      var count = Object.keys(queuedEmails).length;
+      if (count > 0) {
         bar.classList.add('show');
-        document.getElementById('batchCount').textContent = selectedIds.size + ' selected';
+        document.getElementById('queuedCount').textContent = count + ' email' + (count !== 1 ? 's' : '') + ' ready';
+        document.getElementById('sendEmailsBtnText').textContent = 'Send Emails (' + count + ')';
       } else {
         bar.classList.remove('show');
       }
+    }
+
+    function removeQueued(actionId) {
+      delete queuedEmails[actionId];
+      renderTable();
+      updateSendBar();
+    }
+
+    function clearAllQueued() {
+      queuedEmails = {};
+      renderTable();
+      updateSendBar();
+    }
+
+    function openComposeEmail(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return;
+
+      var existing = queuedEmails[actionId] || {};
+      var recipientEmail = existing.to || a.email || '';
+      var existingSubject = existing.subject || '';
+      var existingBody = existing.body || '';
+
+      // Load templates for dropdown
+      var templateOpts = '<option value="">-- Write custom email --</option>';
+      for (var i = 0; i < emailTemplates.length; i++) {
+        templateOpts += '<option value="' + esc(emailTemplates[i].id) + '">' + esc(emailTemplates[i].name) + '</option>';
+      }
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.id = 'composeOverlay';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:540px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Compose Email</h3><p>' + esc(a.company) + '</p></div><div class="modal-body"><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">To</label><input type="email" id="compTo" value="' + esc(recipientEmail) + '" placeholder="recipient@email.com" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"/></div><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Use Template</label><select id="compTemplate" onchange="applyComposeTemplate(\'' + actionId + '\')" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Subject</label><input type="text" id="compSubject" value="' + esc(existingSubject) + '" placeholder="Email subject..." style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"/></div><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Body</label><textarea id="compBody" placeholder="Type your email or select a template above..." style="width:100%;min-height:140px;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;resize:vertical;line-height:1.5">' + esc(existingBody) + '</textarea></div><div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> will auto-fill when sent.</div></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveComposeEmail(\'' + actionId + '\')">Save</button></div></div>';
+      document.body.appendChild(overlay);
+    }
+
+    function applyComposeTemplate(actionId) {
+      var sel = document.getElementById('compTemplate');
+      var tid = sel.value;
+      if (!tid) return;
+      var t = emailTemplates.find(function(x) { return x.id === tid; });
+      if (!t) return;
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      document.getElementById('compSubject').value = fillPlaceholders(t.subject || '', a);
+      document.getElementById('compBody').value = fillPlaceholders(t.body || '', a);
+    }
+
+    function saveComposeEmail(actionId) {
+      var to = document.getElementById('compTo').value.trim();
+      var subject = document.getElementById('compSubject').value.trim();
+      var body = document.getElementById('compBody').value.trim();
+      if (!to) { showToast('Email address is required', 'error'); return; }
+      if (!subject && !body) { showToast('Subject or body is required', 'error'); return; }
+
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      queuedEmails[actionId] = {
+        to: to,
+        subject: subject,
+        body: body,
+        company: a ? a.company : ''
+      };
+
+      var overlay = document.getElementById('composeOverlay');
+      if (overlay) overlay.remove();
+      renderTable();
+      updateSendBar();
+    }
+
+    function openSendReview() {
+      var keys = Object.keys(queuedEmails);
+      if (keys.length === 0) return;
+
+      var h = '<div class="modal-card" style="max-width:600px"><div class="modal-hdr" style="background:linear-gradient(135deg,#059669,#047857)"><h3><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Review & Send Emails</h3><p>' + keys.length + ' email' + (keys.length !== 1 ? 's' : '') + ' ready to send</p></div><div class="modal-body" style="max-height:400px;overflow-y:auto">';
+
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var q = queuedEmails[id];
+        h += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px" id="review-' + id + '">';
+        h += '<div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">' + (i+1) + '</div>';
+        h += '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#1e293b">' + esc(q.company) + '</div>';
+        h += '<div style="font-size:12px;color:#2563eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(q.to) + '</div>';
+        h += '<div style="font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Subject: ' + esc(q.subject || '(no subject)') + '</div></div>';
+        h += '<button style="padding:4px 10px;border:1px solid #cbd5e0;border-radius:4px;background:#fff;color:#2563eb;font-size:11px;font-weight:600;cursor:pointer" onclick="editQueuedFromReview(\'' + id + '\')">Edit</button>';
+        h += '<button style="padding:4px 8px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer" onclick="removeQueuedFromReview(\'' + id + '\')">&#10005;</button>';
+        h += '</div>';
+      }
+
+      h += '</div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" id="reviewSendBtn" onclick="executeQueuedSend()" style="padding:10px 24px;font-size:14px;background:linear-gradient(135deg,#10b981,#059669)"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;vertical-align:-3px;margin-right:4px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Send ' + keys.length + ' Email' + (keys.length !== 1 ? 's' : '') + '</button></div></div>';
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.id = 'reviewOverlay';
+      overlay.innerHTML = h;
+      document.body.appendChild(overlay);
+    }
+
+    function removeQueuedFromReview(actionId) {
+      delete queuedEmails[actionId];
+      var el = document.getElementById('review-' + actionId);
+      if (el) el.remove();
+      var keys = Object.keys(queuedEmails);
+      if (keys.length === 0) {
+        var overlay = document.getElementById('reviewOverlay');
+        if (overlay) overlay.remove();
+      }
+      updateSendBar();
+      renderTable();
+    }
+
+    function editQueuedFromReview(actionId) {
+      var overlay = document.getElementById('reviewOverlay');
+      if (overlay) overlay.remove();
+      openComposeEmail(actionId);
+    }
+
+    async function executeQueuedSend() {
+      var keys = Object.keys(queuedEmails);
+      if (keys.length === 0) return;
+      var btn = document.getElementById('reviewSendBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+      var sent = 0;
+      var failed = 0;
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var q = queuedEmails[id];
+        var a = allActions.find(function(x) { return x.id === id; });
+        var filledSubject = a ? fillPlaceholders(q.subject || '', a) : q.subject;
+        var filledBody = a ? fillPlaceholders(q.body || '', a) : q.body;
+
+        try {
+          var res = await fetch(WEB_APP_URL, {
+            method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({
+              action:'sendFollowUpEmail',
+              to: q.to,
+              subject: filledSubject,
+              body: filledBody,
+              actionId: id,
+              templateId: ''
+            })
+          });
+          var data = await res.json();
+          if (data.status === 'success') {
+            sent++;
+            delete queuedEmails[id];
+          } else { failed++; }
+        } catch(e) { failed++; }
+        if (btn) btn.textContent = 'Sending ' + (i+1) + '/' + keys.length + '...';
+      }
+
+      var overlay = document.getElementById('reviewOverlay');
+      if (overlay) overlay.remove();
+
+      if (failed === 0) {
+        showToast(sent + ' email' + (sent !== 1 ? 's' : '') + ' sent!', 'success');
+      } else {
+        showToast(sent + ' sent, ' + failed + ' failed', 'error');
+      }
+      updateSendBar();
+      renderTable();
     }
 
     // ?????????? ASSIGN LABEL (instant save on click) ??????????
@@ -1388,7 +1532,8 @@
 
     function openTemplatesModal(singleId) {
       etEditingId = null;
-      etSendingActionId = singleId || null;
+      etSendingActionId = null;
+      etPreviewTemplateId = null;
       document.getElementById('templatesModal').classList.add('show');
       document.getElementById('templatesModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading templates...</p></div>';
       loadTemplatesFromBackend();
@@ -1695,7 +1840,6 @@
       }
     }
 
-    function batchSend() { showToast('Batch send - coming soon', 'success'); }
 
     // ??????????????????????????????????????????????
     //  LABEL SETTINGS MODAL ? FULL IMPLEMENTATION
