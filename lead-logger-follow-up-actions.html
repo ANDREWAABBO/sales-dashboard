@@ -1672,9 +1672,11 @@
       var h = '';
 
       // Add form
-      h += '<div class="tm-add-row">';
+      h += '<div class="tm-add-row" style="flex-wrap:wrap">';
       h += '  <input type="text" id="tmNewName" placeholder="Name" />';
-      h += '  <input type="email" id="tmNewEmail" placeholder="Email" style="flex:1.5;min-width:180px" />';
+      h += '  <input type="email" id="tmNewEmail" placeholder="Email" style="flex:1.2;min-width:150px" />';
+      h += '  <input type="text" id="tmNewPosition" placeholder="Position" style="flex:0.8;min-width:90px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px" />';
+      h += '  <input type="text" id="tmNewPhone" placeholder="Phone" style="flex:0.7;min-width:90px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px" />';
       h += '  <button class="tbtn tbtn-green" onclick="addTeamMember()" style="font-size:12px;padding:8px 14px;flex-shrink:0"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>';
       h += '</div>';
 
@@ -1686,7 +1688,7 @@
           var color = AVATAR_COLORS[i % AVATAR_COLORS.length];
           h += '<div class="tm-item" id="tm-item-' + i + '">';
           h += '  <div class="tm-avatar" style="background:' + color + '">' + getInitials(m.name) + '</div>';
-          h += '  <div class="tm-info"><div class="tm-name">' + esc(m.name) + '</div><div class="tm-email">' + esc(m.email) + '</div></div>';
+          h += '  <div class="tm-info"><div class="tm-name">' + esc(m.name) + '</div><div class="tm-email">' + esc(m.email) + (m.position ? ' ? ' + esc(m.position) : '') + (m.phone ? ' ? ' + esc(m.phone) : '') + '</div></div>';
           h += '  <button class="tm-remove" onclick="removeTeamMember(' + i + ')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remove</button>';
           h += '</div>';
         }
@@ -1698,8 +1700,12 @@
     function addTeamMember() {
       var nameInput = document.getElementById('tmNewName');
       var emailInput = document.getElementById('tmNewEmail');
+      var posInput = document.getElementById('tmNewPosition');
+      var phoneInput = document.getElementById('tmNewPhone');
       var name = nameInput.value.trim();
       var email = emailInput.value.trim();
+      var position = posInput ? posInput.value.trim() : '';
+      var phone = phoneInput ? phoneInput.value.trim() : '';
 
       if (!name) { showToast('Please enter a name', 'error'); nameInput.focus(); return; }
       if (!email || email.indexOf('@') === -1) { showToast('Please enter a valid email', 'error'); emailInput.focus(); return; }
@@ -1712,7 +1718,7 @@
         }
       }
 
-      teamMembers.push({name: name, email: email});
+      teamMembers.push({name: name, email: email, position: position, phone: phone});
       renderTeamModal();
       showToast(name + ' added to team', 'success');
     }
