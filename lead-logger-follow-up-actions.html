@@ -930,7 +930,32 @@
     function removeComposeContact(idx) {
       _composeContacts.splice(idx, 1);
       renderComposeContacts();
-      syncComposeContacts();
+      // Immediate sync on delete (not debounced)
+      clearTimeout(_syncDebounce);
+      if (!_composeActionId) return;
+      var a = allActions.find(function(x) { return x.id === _composeActionId; });
+      var allContacts = _composeContacts.filter(function(c) { return String(c.email||'').trim() || String(c.name||'').trim(); }).map(function(c) {
+        return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()};
+      });
+      if (a) {
+        a.contacts = allContacts;
+        a.email = allContacts.length > 0 ? allContacts[0].email : '';
+        a.contact = allContacts.length > 0 ? allContacts[0].name : '';
+      }
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'updateFollowUpAction', actionId:_composeActionId, updates:{contacts:allContacts}})
+      }).catch(function(){});
+      var leadId = a ? a.leadId : '';
+      if (leadId) {
+        fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{contacts:allContacts}})
+        }).catch(function(){});
+      } else if (a && a.company) {
+        fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateLeadByCompany', company:a.company, updates:{contacts:allContacts}})
+        }).catch(function(){});
+      }
     }
 
     // Auto-sync contacts to backend + Lead DB on any change
@@ -976,15 +1001,42 @@
       var subject = document.getElementById('compSubject').value.trim();
       var body = document.getElementById('compBody').value.trim();
 
-      // Final sync before closing
-      syncComposeContacts();
+      // Flush contacts sync IMMEDIATELY (not debounced) before closing
+      clearTimeout(_syncDebounce);
+      var actionId = _composeActionId;
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      var allContacts = _composeContacts.filter(function(c) { return String(c.email||'').trim() || String(c.name||'').trim(); }).map(function(c) {
+        return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()};
+      });
+      if (a) {
+        a.contacts = allContacts;
+        a.email = allContacts.length > 0 ? allContacts[0].email : '';
+        a.contact = allContacts.length > 0 ? allContacts[0].name : '';
+      }
+      // Save to FollowUpActions
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{contacts:allContacts}})
+      }).catch(function(){});
+      // Save to Leads
+      var leadId = a ? a.leadId : '';
+      if (leadId) {
+        fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{contacts:allContacts}})
+        }).catch(function(){});
+      } else if (a && a.company) {
+        fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateLeadByCompany', company:a.company, updates:{contacts:allContacts}})
+        }).catch(function(){});
+      }
 
       // Only queue email if there's content
       if (subject || body) {
         var selected = _composeContacts.filter(function(c) { return c.selected && c.email.trim(); });
         if (selected.length === 0) { showToast('Add at least one contact with an email to queue', 'error'); return; }
-        var a = allActions.find(function(x) { return x.id === _composeActionId; });
-        queuedEmails[_composeActionId] = {
+        queuedEmails[actionId] = {
           recipients: selected.map(function(c) { return {name:c.name.trim(), email:c.email.trim(), position:c.position.trim()}; }),
           subject: subject,
           body: body,
