@@ -489,21 +489,19 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="contactName">Contact Name</label>
-            <input type="text" id="contactName" name="contactName"/>
-          </div>
-          <div class="form-group">
-            <label for="phoneNumber">Phone Number</label>
-            <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12"/>
-          </div>
+        <div class="form-group">
+          <label for="phoneNumber">Company Phone Number</label>
+          <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="123-456-7890" maxlength="12"/>
         </div>
 
-        <div class="form-group">
-          <label for="emailAddress">Email Address</label>
-          <input type="email" id="emailAddress" name="emailAddress"/>
+        <div class="section-header" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Contacts</span>
+          <button type="button" onclick="addLeadContact()" style="padding:4px 12px;border:1px solid #10b981;border-radius:6px;background:#ecfdf5;color:#059669;font-size:12px;font-weight:600;cursor:pointer">+ Add Contact</button>
         </div>
+        <div id="leadContactsList"></div>
+        <!-- Hidden fields for form submission backward compat -->
+        <input type="hidden" id="contactName" name="contactName"/>
+        <input type="hidden" id="emailAddress" name="emailAddress"/>
 
         <div class="section-header">Sales Representative Information</div>
         <div class="form-row">
@@ -1003,12 +1001,31 @@
       const statusClass = getStatusClass(lead.status);
       const notes = (lead.notes != null) ? String(lead.notes) : '';
 
+      // Build contact cell showing all contacts with positions
+      var contactCell = '';
+      if (lead.contacts && lead.contacts.length > 0) {
+        contactCell = lead.contacts.map(function(c) {
+          var parts = [];
+          if (c.name) parts.push(c.name);
+          if (c.position) parts.push('<span style="color:#6b7280;font-size:11px">(' + c.position + ')</span>');
+          return parts.join(' ') || '';
+        }).filter(Boolean).join('<br/>');
+      }
+      if (!contactCell) contactCell = lead.contactName || '';
+
+      // Build email cell showing all emails
+      var emailCell = '';
+      if (lead.contacts && lead.contacts.length > 0) {
+        emailCell = lead.contacts.map(function(c) { return c.email || ''; }).filter(Boolean).join('<br/>');
+      }
+      if (!emailCell) emailCell = lead.emailAddress || '';
+
       const cells = [
         dateAdded,
         `<strong>${lead.companyName || ''}</strong>`,
-        lead.contactName || '',
+        contactCell,
         lead.phoneNumber || '',
-        lead.emailAddress || '',
+        emailCell,
         lead.repName || '',
         `<span class="status-badge ${statusClass}" onclick="openStatusPicker(event,this,'${leadId}')">${lead.status || 'Active'}</span>`,
         notes
@@ -1068,7 +1085,12 @@
           (l.customerAddress && l.customerAddress.toLowerCase().includes(q)) ||
           (l.customerState && String(l.customerState).toLowerCase().includes(q)) ||
           (l.customerZip && String(l.customerZip).toLowerCase().includes(q)) ||
-          (l.notes && String(l.notes).toLowerCase().includes(q));
+          (l.notes && String(l.notes).toLowerCase().includes(q)) ||
+          (l.contacts && l.contacts.some(function(c) {
+            return (c.name && c.name.toLowerCase().includes(q)) ||
+                   (c.email && c.email.toLowerCase().includes(q)) ||
+                   (c.position && c.position.toLowerCase().includes(q));
+          }));
         return matchRep && matchStatus && matchSearch;
       });
 
@@ -1080,6 +1102,48 @@
       const reps = [...new Set((allLeads || []).map(l => l.repName).filter(Boolean))].sort();
       sel.innerHTML = '<option value="">All Reps</option>';
       reps.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o); });
+    }
+
+    // ========== MULTI-CONTACT MANAGEMENT ==========
+    var leadContacts = [];
+
+    function renderLeadContacts() {
+      var el = document.getElementById('leadContactsList');
+      if (!el) return;
+      if (leadContacts.length === 0) {
+        el.innerHTML = '<div style="padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;text-align:center;color:#94a3b8;font-size:13px">No contacts added. Click "+ Add Contact" above.</div>';
+        return;
+      }
+      var h = '<div style="display:flex;gap:4px;padding:0 0 4px;font-size:11px;color:#94a3b8;font-weight:600"><span style="flex:1">Name</span><span style="flex:1.2">Email</span><span style="flex:0.7">Position / Title</span><span style="width:28px"></span></div>';
+      for (var i = 0; i < leadContacts.length; i++) {
+        var c = leadContacts[i];
+        h += '<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f1f5f9">';
+        h += '<input type="text" value="' + (c.name||'').replace(/"/g,'&quot;') + '" placeholder="Contact name" oninput="leadContacts[' + i + '].name=this.value" style="flex:1;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
+        h += '<input type="email" value="' + (c.email||'').replace(/"/g,'&quot;') + '" placeholder="email@company.com" oninput="leadContacts[' + i + '].email=this.value" style="flex:1.2;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
+        h += '<input type="text" value="' + (c.position||'').replace(/"/g,'&quot;') + '" placeholder="e.g. Owner, GM" oninput="leadContacts[' + i + '].position=this.value" style="flex:0.7;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px"/>';
+        h += '<button type="button" onclick="removeLeadContact(' + i + ')" style="width:28px;height:28px;border:1px solid #fecaca;border-radius:6px;background:#fff;color:#ef4444;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Remove">&times;</button>';
+        h += '</div>';
+      }
+      el.innerHTML = h;
+    }
+
+    function addLeadContact() {
+      leadContacts.push({name:'', email:'', position:''});
+      renderLeadContacts();
+      // Focus the new name field
+      setTimeout(function(){ var inputs = document.querySelectorAll('#leadContactsList input[type="text"]'); if(inputs.length) inputs[inputs.length-3].focus(); }, 50);
+    }
+
+    function removeLeadContact(idx) {
+      leadContacts.splice(idx, 1);
+      renderLeadContacts();
+    }
+
+    function syncContactsToHiddenFields() {
+      // Set hidden fields for backward compat with FormData
+      var primary = leadContacts.length > 0 ? leadContacts[0] : {name:'', email:''};
+      document.getElementById('contactName').value = primary.name || '';
+      document.getElementById('emailAddress').value = primary.email || '';
     }
 
     function openAddLeadModal(){
@@ -1104,6 +1168,10 @@
       document.getElementById('followUp').value = '';
       document.getElementById('appointmentDate').value = '';
       document.getElementById('notes').value = '';
+      
+      // Initialize contacts with one empty row
+      leadContacts = [{name:'', email:'', position:''}];
+      renderLeadContacts();
       
       // Hide Quantum fields by default and remove required
       if (document.getElementById('quantumFieldsSection')) {
@@ -1131,13 +1199,24 @@
 
       document.getElementById('businessUnit').value = lead.businessUnit || '';
       document.getElementById('companyName').value = lead.companyName || '';
-      document.getElementById('contactName').value = lead.contactName || '';
       document.getElementById('phoneNumber').value = lead.phoneNumber || '';
-      document.getElementById('emailAddress').value = lead.emailAddress || '';
       document.getElementById('repName').value = lead.repName || '';
       document.getElementById('status').value = lead.status || 'Active';
       document.getElementById('appointmentMade').value = lead.appointmentMade || 'No';
       document.getElementById('notes').value = lead.notes || '';
+
+      // Load contacts
+      if (lead.contacts && lead.contacts.length > 0) {
+        leadContacts = lead.contacts.map(function(c) { return {name:c.name||'', email:c.email||'', position:c.position||''}; });
+      } else if (lead.contactName || lead.emailAddress) {
+        leadContacts = [{name:lead.contactName||'', email:lead.emailAddress||'', position:''}];
+      } else {
+        leadContacts = [{name:'', email:'', position:''}];
+      }
+      renderLeadContacts();
+      // Set hidden fields for backward compat
+      document.getElementById('contactName').value = lead.contactName || '';
+      document.getElementById('emailAddress').value = lead.emailAddress || '';
 
       // NEW FIELDS - Always populate these
       document.getElementById('repPhone').value = lead.repPhone || '';
@@ -1232,8 +1311,16 @@
       const formEl = document.getElementById('leadForm');
       if (!formEl.checkValidity()){ formEl.reportValidity(); return; }
 
+      // Sync contacts to hidden fields before FormData
+      syncContactsToHiddenFields();
+
       const form = new FormData(formEl);
       const lead = Object.fromEntries(form.entries());
+
+      // Add contacts array (filter out empty rows)
+      var validContacts = leadContacts.filter(function(c) { return (c.name && c.name.trim()) || (c.email && c.email.trim()); });
+      lead.contacts = validContacts;
+
       const saveBtn = document.getElementById('saveBtn');
       const originalText = saveBtn.textContent;
       saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
