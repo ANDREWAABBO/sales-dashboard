@@ -790,25 +790,63 @@
       var recipientEmail = existing.to || a.email || '';
       var existingSubject = existing.subject || '';
       var existingBody = existing.body || '';
+      var hasEmail = !!(a.email);
 
-      // Load templates for dropdown
+      // Build template dropdown using index to avoid ID mismatch
       var templateOpts = '<option value="">-- Write custom email --</option>';
       for (var i = 0; i < emailTemplates.length; i++) {
-        templateOpts += '<option value="' + esc(emailTemplates[i].id) + '">' + esc(emailTemplates[i].name) + '</option>';
+        templateOpts += '<option value="' + i + '">' + esc(emailTemplates[i].name) + '</option>';
+      }
+
+      // Email status message
+      var emailStatus = '';
+      if (hasEmail) {
+        emailStatus = '<div style="font-size:11px;color:#059669;margin-top:4px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#059669;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg> Email from Lead Database</div>';
+      } else {
+        emailStatus = '<div style="font-size:11px;color:#f59e0b;margin-top:4px;display:flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:#f59e0b;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> No email in Lead Database. Enter one below and it will be saved.</div>';
       }
 
       var overlay = document.createElement('div');
       overlay.className = 'modal-overlay show';
       overlay.id = 'composeOverlay';
-      overlay.innerHTML = '<div class="modal-card" style="max-width:540px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Compose Email</h3><p>' + esc(a.company) + '</p></div><div class="modal-body"><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">To</label><input type="email" id="compTo" value="' + esc(recipientEmail) + '" placeholder="recipient@email.com" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"/></div><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Use Template</label><select id="compTemplate" onchange="applyComposeTemplate(\'' + actionId + '\')" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Subject</label><input type="text" id="compSubject" value="' + esc(existingSubject) + '" placeholder="Email subject..." style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"/></div><div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Body</label><textarea id="compBody" placeholder="Type your email or select a template above..." style="width:100%;min-height:140px;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;resize:vertical;line-height:1.5">' + esc(existingBody) + '</textarea></div><div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> will auto-fill when sent.</div></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveComposeEmail(\'' + actionId + '\')">Save</button></div></div>';
+
+      var h = '<div class="modal-card" style="max-width:540px">';
+      h += '<div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Compose Email</h3><p>' + esc(a.company) + (a.contact ? ' - ' + esc(a.contact) : '') + '</p></div>';
+      h += '<div class="modal-body">';
+
+      // To field
+      h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">To</label>';
+      h += '<input type="email" id="compTo" value="' + esc(recipientEmail) + '" placeholder="recipient@email.com" style="width:100%;padding:9px 12px;border:1px solid ' + (hasEmail ? '#a7f3d0' : '#fde68a') + ';border-radius:6px;font-size:13px"/>';
+      h += emailStatus + '</div>';
+
+      // Template dropdown
+      h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Use Template <span style="font-weight:400;color:#94a3b8">(auto-fills subject & body)</span></label>';
+      h += '<select id="compTemplate" onchange="applyComposeTemplate(\'' + actionId + '\')" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div>';
+
+      // Subject
+      h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Subject <span style="font-weight:400;color:#94a3b8">(override template subject here)</span></label>';
+      h += '<input type="text" id="compSubject" value="' + esc(existingSubject) + '" placeholder="Auto-filled from template or type custom..." style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"/></div>';
+
+      // Body
+      h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Body</label>';
+      h += '<textarea id="compBody" placeholder="Select a template above or type your email..." style="width:100%;min-height:140px;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;resize:vertical;line-height:1.5">' + esc(existingBody) + '</textarea></div>';
+
+      // Placeholder hints
+      h += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> will auto-fill when sent.</div>';
+
+      h += '</div>'; // modal-body
+      h += '<div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveComposeEmail(\'' + actionId + '\')">Save</button></div>';
+      h += '</div>';
+
+      overlay.innerHTML = h;
       document.body.appendChild(overlay);
     }
 
     function applyComposeTemplate(actionId) {
       var sel = document.getElementById('compTemplate');
-      var tid = sel.value;
-      if (!tid) return;
-      var t = emailTemplates.find(function(x) { return x.id === tid; });
+      var idx = parseInt(sel.value);
+      if (isNaN(idx) || idx < 0 || idx >= emailTemplates.length) return;
+      var t = emailTemplates[idx];
       if (!t) return;
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
@@ -824,6 +862,16 @@
       if (!subject && !body) { showToast('Subject or body is required', 'error'); return; }
 
       var a = allActions.find(function(x) { return x.id === actionId; });
+
+      // If email was missing, save it to the action and sync to backend
+      if (a && !a.email && to) {
+        a.email = to;
+        fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{email:to}})
+        }).catch(function(){});
+      }
+
       queuedEmails[actionId] = {
         to: to,
         subject: subject,
