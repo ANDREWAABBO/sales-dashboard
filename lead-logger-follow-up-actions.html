@@ -1000,21 +1000,24 @@
 
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
-      var dates = a.actionDates || {};
-      dates[label] = formatted;
+      var oldDates = JSON.parse(JSON.stringify(a.actionDates || {}));
+      if (!a.actionDates) a.actionDates = {};
+      a.actionDates[label] = formatted;
+      btn.closest('.modal-overlay').remove();
+      renderTable();
 
       try {
         var res = await fetch(WEB_APP_URL, {
           method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{actionDates:dates}})
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{actionDates:a.actionDates}})
         });
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message);
-        a.actionDates = dates;
+      } catch(e) {
+        a.actionDates = oldDates;
         renderTable();
-        showToast('Date updated', 'success');
-      } catch(e) { showToast('Error: ' + e.message, 'error'); }
-      btn.closest('.modal-overlay').remove();
+        showToast('Error: ' + e.message, 'error');
+      }
     }
 
     function editWho(actionId, label) {
@@ -1040,21 +1043,24 @@
       var val = document.getElementById('whoEditSelect').value;
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
-      var who = a.who || {};
-      who[label] = val;
+      var oldWho = JSON.parse(JSON.stringify(a.who || {}));
+      if (!a.who) a.who = {};
+      a.who[label] = val;
+      btn.closest('.modal-overlay').remove();
+      renderTable();
 
       try {
         var res = await fetch(WEB_APP_URL, {
           method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{who:who}})
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{who:a.who}})
         });
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message);
-        a.who = who;
+      } catch(e) {
+        a.who = oldWho;
         renderTable();
-        showToast('Rep assigned', 'success');
-      } catch(e) { showToast('Error: ' + e.message, 'error'); }
-      btn.closest('.modal-overlay').remove();
+        showToast('Error: ' + e.message, 'error');
+      }
     }
 
     function editNotes(actionId) {
