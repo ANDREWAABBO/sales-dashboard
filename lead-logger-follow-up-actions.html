@@ -36,22 +36,22 @@
     .tbtn-red{background:linear-gradient(135deg,#ef4444,#dc2626)}
 
     /* Batch bar */
-    .batch-bar{display:none;align-items:center;gap:12px;padding:10px 24px;background:linear-gradient(135deg,#263238,#37474f);color:#fff;font-size:13px;font-weight:600}
+    .batch-bar{display:none;align-items:center;gap:12px;padding:10px 24px;background:linear-gradient(135deg,#263238,#37474f);color:#fff;font-size:14px;font-weight:600}
     .batch-bar.show{display:flex}
-    .batch-count{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:12px;font-size:12px}
-    .batch-btn{padding:7px 18px;background:#fff;color:#263238;border:none;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+    .batch-count{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:12px;font-size:13px}
+    .batch-btn{padding:7px 18px;background:#fff;color:#263238;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
     .batch-btn:hover{background:#eff6ff}
     .batch-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .batch-btn.send{background:linear-gradient(135deg,#059669,#047857);color:#fff}
     @keyframes glowGreen{0%{box-shadow:0 0 4px rgba(5,150,105,.3)}50%{box-shadow:0 0 16px rgba(5,150,105,.8),0 0 30px rgba(5,150,105,.4)}100%{box-shadow:0 0 4px rgba(5,150,105,.3)}}
     .batch-btn.send.glow{animation:glowGreen 2s ease-in-out infinite}
-    .batch-clear{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:12px;margin-left:auto}
+    .batch-clear{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:13px;margin-left:auto}
 
     /* Table wrapper */
     .table-container{overflow:auto;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);max-height:70vh;position:relative}
     table{width:100%;border-collapse:collapse;background:#fff;min-width:1600px}
     th{background:#263238;color:#fff;padding:10px 8px;text-align:center;font-weight:600;font-size:12px;position:sticky;top:0;z-index:10;white-space:nowrap;border-bottom:2px solid #1a2526;box-shadow:0 2px 4px rgba(0,0,0,.15)}
-    th .sub{font-size:9px;opacity:.6;font-weight:400;display:block;text-transform:none;letter-spacing:0}
+    th .sub{font-size:10px;opacity:.6;font-weight:400;display:block;text-transform:none;letter-spacing:0}
     td{padding:12px 8px;text-align:center;font-size:13px;color:#2d3748;border-bottom:1px solid #e2e8f0;vertical-align:middle}
     td:nth-child(2){white-space:normal;word-break:break-word;max-width:200px}
     tbody tr{border-bottom:1px solid #e2e8f0}
@@ -59,7 +59,7 @@
     tbody tr:hover td{background:#f7fafc}
     .row-dead td{background:#fef2f2!important}
     .row-unlabeled td{background:#fffbeb!important}
-    .pill-needs{background:#fef3c7;color:#92400e;border:1px dashed #d97706;cursor:pointer;animation:pulse-needs 2s infinite;font-size:11px;width:auto;padding:4px 12px}
+    .pill-needs{background:#fef3c7;color:#92400e;border:1px dashed #d97706;cursor:pointer;animation:pulse-needs 2s infinite;font-size:13px;width:auto;padding:6px 14px}
     .pill-needs:hover{background:#fde68a;transform:scale(1.05)}
     @keyframes pulse-needs{0%,100%{opacity:1}50%{opacity:.7}}
 
@@ -68,19 +68,19 @@
     .label-picker{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);min-width:300px;max-width:400px;overflow:hidden}
     .lp-header{background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
     .lp-header strong{font-size:14px}
-    .lp-company{font-size:11px;opacity:.8}
+    .lp-company{font-size:12px;opacity:.8}
     .lp-body{padding:16px 18px;display:flex;flex-direction:column;gap:8px}
     .lp-chip{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:.15s;border:1px solid #e2e8f0;background:#f8fafc}
     .lp-chip:hover{background:#f0f9ff;border-color:#93c5fd}
     .lp-chip input[type=checkbox]{width:16px;height:16px;accent-color:#10b981;cursor:pointer}
-    .lp-chip .pill{margin:0;cursor:pointer;width:auto;padding:4px 12px}
+    .lp-chip .pill{margin:0;cursor:pointer;width:auto;padding:6px 14px}
     .lp-footer{padding:12px 18px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #e2e8f0}
 
     /* Checkbox */
     .row-cb{width:16px;height:16px;cursor:pointer;accent-color:#10b981}
 
     /* Action pills */
-    .pill{padding:4px 10px;border-radius:10px;font-size:11px;font-weight:600;display:inline-block;margin:2px;text-align:center;cursor:pointer;white-space:nowrap}
+    .pill{padding:6px 14px;border-radius:10px;font-size:13px;font-weight:600;display:inline-block;margin:2px;text-align:center;cursor:pointer;white-space:nowrap}
     .pill-grid{transition:.15s;text-align:center;line-height:2}
     .pill-grid:hover{transform:scale(1.03)}
     .pill-grid:hover .pill{opacity:.8}
@@ -94,20 +94,20 @@
     /* Stacked label rows */
     .label-stack{display:flex;flex-direction:column;gap:2px;align-items:center}
     .label-row{display:flex;align-items:center;gap:4px;justify-content:center;white-space:nowrap}
-    .lr-tag{padding:2px 0;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:40px;text-align:center;flex-shrink:0;display:inline-block}
+    .lr-tag{padding:4px 4px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;width:48px;text-align:center;flex-shrink:0;display:inline-block}
     .t-email{background:#dbeafe;color:#1e40af}
     .t-call{background:#fef3c7;color:#92400e}
     .t-fu{background:#d1fae5;color:#065f46}
     .t-appt{background:#fce7f3;color:#9d174d}
     .t-prop{background:#e0f2fe;color:#0369a1}
-    .lr-val{font-size:12px;font-weight:600;color:#1e293b}
-    .lr-date{font-size:12px;color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981}
-    .lr-dim{font-size:11px;color:#a0aec0}
+    .lr-val{font-size:13px;font-weight:600;color:#1e293b;cursor:pointer}
+    .lr-date{font-size:13px;color:#10b981;cursor:pointer;border-bottom:1px dashed #10b981}
+    .lr-dim{font-size:12px;color:#a0aec0;cursor:pointer}
 
     /* Attempt counter */
     .att{display:inline-flex;align-items:center;gap:1px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 3px}
-    .att-n{font-weight:700;font-size:13px;color:#263238;min-width:16px;text-align:center}
-    .att-b{width:17px;height:17px;border-radius:3px;border:1px solid #cbd5e0;background:#fff;cursor:pointer;font-size:10px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
+    .att-n{font-weight:700;font-size:14px;color:#263238;min-width:18px;text-align:center}
+    .att-b{width:20px;height:20px;border-radius:3px;border:1px solid #cbd5e0;background:#fff;cursor:pointer;font-size:12px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
     .att-b:hover{background:#10b981;color:#fff;border-color:#10b981}
     .att-dead{border-color:#fecaca;background:#fef2f2}
     .att-dead .att-n{color:#ef4444}
@@ -117,7 +117,7 @@
     .phone-link:hover{background:#ecfdf5}
 
     /* Notes */
-    .notes-snip{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:#4a5568;display:inline-block;font-size:11px}
+    .notes-snip{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;color:#4a5568;display:inline-block;font-size:13px}
     .notes-snip.empty{color:#a0aec0;font-style:italic}
 
     /* Alert button */
@@ -151,16 +151,16 @@
     .modal-hdr{background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:18px 24px}
     .modal-hdr h3{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}
     .modal-hdr h3 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
-    .modal-hdr p{margin:4px 0 0;opacity:.8;font-size:12px}
+    .modal-hdr p{margin:4px 0 0;opacity:.8;font-size:13px}
     .modal-body{padding:20px 24px;color:#2d3748;max-height:60vh;overflow-y:auto}
     .modal-footer{padding:14px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e2e8f0}
-    .modal-footer button{padding:9px 20px;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px}
+    .modal-footer button{padding:9px 20px;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px}
     .modal-footer .btn-cancel{background:#e2e8f0;color:#4a5568}
     .modal-footer .btn-save{background:#10b981;color:#fff}
     .modal-footer .btn-danger{background:#ef4444;color:#fff}
 
     /* Inline edit input */
-    .inline-input{padding:4px 8px;border:2px solid #10b981;border-radius:6px;font-size:11px;text-align:center;width:110px}
+    .inline-input{padding:4px 8px;border:2px solid #10b981;border-radius:6px;font-size:13px;text-align:center;width:110px}
     .inline-input:focus{outline:none;box-shadow:0 0 0 3px rgba(16,185,129,.2)}
 
     /* Notes edit overlay */
@@ -178,36 +178,36 @@
     .ls-add-row{display:flex;justify-content:flex-end;margin-bottom:14px}
     .ls-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0;transition:.15s}
     .ls-item:hover{border-color:#cbd5e0}
-    .ls-pill{padding:4px 12px;border-radius:10px;font-size:11px;font-weight:700;min-width:90px;text-align:center;flex-shrink:0}
+    .ls-pill{padding:6px 14px;border-radius:10px;font-size:13px;font-weight:700;min-width:90px;text-align:center;flex-shrink:0}
     .ls-tags{flex:1;display:flex;flex-wrap:wrap;gap:4px;min-height:22px}
-    .ls-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+    .ls-tag{padding:3px 10px;border-radius:4px;font-size:12px;font-weight:600}
     .ls-tag-date{background:#d1fae5;color:#065f46}
     .ls-tag-email-rem{background:#fef3c7;color:#92400e}
     .ls-tag-popup{background:#fee2e2;color:#dc2626}
     .ls-tag-nodate{background:#e2e8f0;color:#64748b}
     .ls-tag-norem{background:#e2e8f0;color:#64748b}
-    .ls-edit-btn{padding:4px 10px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:11px;cursor:pointer;color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
+    .ls-edit-btn{padding:5px 12px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:13px;cursor:pointer;color:#10b981;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
     .ls-edit-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
     .ls-edit-btn:hover{background:#ecfdf5;border-color:#10b981}
     .ls-panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:10px;display:none;animation:modalIn .15s ease}
     .ls-panel.open{display:block}
     .ls-panel h4{color:#1e293b;margin-bottom:14px;font-size:14px;display:flex;align-items:center;gap:6px}
     .ls-field{margin-bottom:14px}
-    .ls-field label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:4px}
-    .ls-field input[type="text"],.ls-field input[type="number"]{width:100%;max-width:260px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px}
+    .ls-field label{display:block;font-size:13px;font-weight:600;color:#4a5568;margin-bottom:4px}
+    .ls-field input[type="text"],.ls-field input[type="number"]{width:100%;max-width:260px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px}
     .ls-field input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
     .ls-toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
     .ls-toggle{width:38px;height:22px;border-radius:22px;background:#cbd5e0;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}
     .ls-toggle.on{background:#10b981}
     .ls-toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
     .ls-toggle.on::after{left:18px}
-    .ls-toggle-label{font-size:12px;color:#2d3748;font-weight:500}
+    .ls-toggle-label{font-size:14px;color:#2d3748;font-weight:500}
     .ls-indent{margin-left:48px;margin-top:-4px;margin-bottom:12px}
-    .ls-indent label{display:block;font-size:11px;font-weight:600;color:#4a5568;margin-bottom:3px}
-    .ls-indent input{padding:6px 8px;border:1px solid #cbd5e0;border-radius:5px;font-size:12px;width:80px}
+    .ls-indent label{display:block;font-size:13px;font-weight:600;color:#4a5568;margin-bottom:3px}
+    .ls-indent input{padding:6px 8px;border:1px solid #cbd5e0;border-radius:5px;font-size:13px;width:80px}
     .ls-indent input:focus{outline:none;border-color:#10b981}
     .ls-delete-row{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
-    .ls-delete-btn{padding:5px 12px;border-radius:5px;border:1px solid #fecaca;background:#fff;font-size:11px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s}
+    .ls-delete-btn{padding:5px 12px;border-radius:5px;border:1px solid #fecaca;background:#fff;font-size:13px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s}
     .ls-delete-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
     .ls-delete-btn:hover{background:#fef2f2;border-color:#ef4444}
 
@@ -219,15 +219,15 @@
 
     /* ====== TEAM MEMBERS MODAL ====== */
     .tm-add-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-    .tm-add-row input{flex:1;min-width:120px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px}
+    .tm-add-row input{flex:1;min-width:120px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px}
     .tm-add-row input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
     .tm-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0;transition:.15s}
     .tm-item:hover{border-color:#cbd5e0}
     .tm-avatar{width:32px;height:32px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
     .tm-info{flex:1;min-width:0}
-    .tm-name{font-weight:600;font-size:13px;color:#1e293b}
-    .tm-email{font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .tm-remove{padding:4px 10px;border-radius:4px;border:1px solid #fecaca;background:#fff;font-size:11px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
+    .tm-name{font-weight:600;font-size:14px;color:#1e293b}
+    .tm-email{font-size:13px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .tm-remove{padding:4px 10px;border-radius:4px;border:1px solid #fecaca;background:#fff;font-size:13px;cursor:pointer;color:#ef4444;font-weight:600;display:inline-flex;align-items:center;gap:4px;transition:.15s;flex-shrink:0}
     .tm-remove svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
     .tm-remove:hover{background:#fef2f2;border-color:#ef4444}
     .tm-empty{text-align:center;padding:24px;color:#94a3b8;font-size:13px}
@@ -235,12 +235,12 @@
     /* ====== ATTEMPT SETTINGS MODAL ====== */
     .as-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
     .as-label{font-weight:600;font-size:14px;color:#1e293b}
-    .as-desc{font-size:12px;color:#64748b;margin-top:2px}
+    .as-desc{font-size:13px;color:#64748b;margin-top:2px}
     .as-input{width:68px;text-align:center;font-size:18px;font-weight:700;padding:8px;border:2px solid #e2e8f0;border-radius:8px;color:#263238}
     .as-input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
     .as-explainer{margin-top:18px;padding:14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca}
-    .as-explainer-title{font-weight:700;color:#dc2626;margin-bottom:8px;font-size:13px}
-    .as-flow{display:flex;align-items:center;gap:8px;font-size:12px;color:#4a5568;flex-wrap:wrap}
+    .as-explainer-title{font-weight:700;color:#dc2626;margin-bottom:8px;font-size:14px}
+    .as-flow{display:flex;align-items:center;gap:8px;font-size:13px;color:#4a5568;flex-wrap:wrap}
 
     /* ====== EMAIL TEMPLATES MODAL ====== */
     .et-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
@@ -251,10 +251,10 @@
     .et-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .et-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
     .et-info{flex:1;min-width:0}
-    .et-name{font-weight:600;font-size:13px;color:#1e293b}
-    .et-subject{font-size:11px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .et-name{font-weight:600;font-size:14px;color:#1e293b}
+    .et-subject{font-size:13px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .et-actions{display:flex;gap:4px;flex-shrink:0}
-    .et-btn{padding:4px 8px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:10px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:3px;transition:.15s}
+    .et-btn{padding:5px 10px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;font-size:12px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:3px;transition:.15s}
     .et-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2}
     .et-btn.edit{color:#10b981;border-color:#a7f3d0}
     .et-btn.edit:hover{background:#ecfdf5}
@@ -650,7 +650,7 @@
     function renderActionDates(a, labels) {
       if (labels.length <= 1) {
         var d = (a.actionDates || {})[labels[0]] || '';
-        return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span style="color:#a0aec0">&mdash;</span>';
+        return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Add Date' + '</span>';
       }
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
@@ -658,7 +658,7 @@
         var short = labelShort(labels[i]);
         var dt = (a.actionDates || {})[labels[i]] || '';
         h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span>';
-        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-dim">&mdash;</span>';
+        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + '+ Date' + '</span>';
         h += '</div>';
       }
       return h + '</div>';
@@ -667,14 +667,14 @@
     function renderWho(a, labels) {
       if (labels.length <= 1) {
         var w = (a.who || {})[labels[0]] || '';
-        return w ? '<strong>' + esc(w) + '</strong>' : '<span style="color:#a0aec0">&mdash;</span>';
+        return w ? '<strong style="cursor:pointer" onclick="editWho(\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(w) + '</strong>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editWho(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Assign' + '</span>';
       }
       var h = '<div class="label-stack">';
       for (var i = 0; i < labels.length; i++) {
         var tag = LABEL_CSS[labels[i]] || {tag:'t-email'};
         var short = labelShort(labels[i]);
         var wv = (a.who || {})[labels[i]] || '';
-        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val">' + (wv ? esc(wv) : '&mdash;') + '</span></div>';
+        h += '<div class="label-row"><span class="lr-tag ' + tag.tag + '">' + short + '</span><span class="lr-val" style="cursor:pointer" onclick="editWho(\'' + a.id + '\',\'' + labels[i] + '\')">' + (wv ? esc(wv) : '<span style="color:#a0aec0">+ Assign</span>') + '</span></div>';
       }
       return h + '</div>';
     }
@@ -925,9 +925,15 @@
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message);
 
-        // Sync server response (may include dead status)
-        if (data.attempts) a.attempts = data.attempts;
-        if (data.lastDates) a.lastDates = data.lastDates;
+        // Sync only the specific label from server response to avoid race conditions
+        if (data.attempts) {
+          if (!a.attempts) a.attempts = {};
+          a.attempts[label] = data.attempts[label] !== undefined ? data.attempts[label] : a.attempts[label];
+        }
+        if (data.lastDates) {
+          if (!a.lastDates) a.lastDates = {};
+          a.lastDates[label] = data.lastDates[label] !== undefined ? data.lastDates[label] : a.lastDates[label];
+        }
         if (data.isDead) {
           a.status = 'Dead';
           renderTable();
@@ -1006,6 +1012,44 @@
         a.actionDates = dates;
         renderTable();
         showToast('Date updated', 'success');
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      btn.closest('.modal-overlay').remove();
+    }
+
+    function editWho(actionId, label) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a || a.status === 'Dead') return;
+      var current = (a.who || {})[label] || '';
+
+      var options = '<option value="">? Select ?</option>';
+      for (var i = 0; i < teamMembers.length; i++) {
+        var sel = (teamMembers[i].name === current) ? ' selected' : '';
+        options += '<option value="' + esc(teamMembers[i].name) + '"' + sel + '>' + esc(teamMembers[i].name) + '</option>';
+      }
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Assign Rep</h3><p>' + esc(label) + ' ? ' + esc(a.company) + '</p></div><div class="modal-body"><select id="whoEditSelect" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + options + '</select></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveWho(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div></div>';
+      document.body.appendChild(overlay);
+    }
+
+    async function saveWho(actionId, label, btn) {
+      var val = document.getElementById('whoEditSelect').value;
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var who = a.who || {};
+      who[label] = val;
+
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{who:who}})
+        });
+        var data = await res.json();
+        if (data.status !== 'success') throw new Error(data.message);
+        a.who = who;
+        renderTable();
+        showToast('Rep assigned', 'success');
       } catch(e) { showToast('Error: ' + e.message, 'error'); }
       btn.closest('.modal-overlay').remove();
     }
