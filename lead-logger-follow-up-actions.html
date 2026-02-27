@@ -1614,7 +1614,15 @@
         window.location.href = targetPage + '?' + params.toString();
       }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
     }
-    function openTeamModal() {
+    async function openTeamModal() {
+      // Always fetch fresh
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+        var data = await res.json();
+        if (data.status === 'success' && data.members && data.members.length > 0) {
+          teamMembers = JSON.parse(JSON.stringify(data.members));
+        }
+      } catch(e) {}
       document.getElementById('teamModal').classList.add('show');
       renderTeamModal();
     }
