@@ -823,15 +823,10 @@
       var existingSubject = existing.subject || '';
       var existingBody = existing.body || '';
 
-      // Build contacts list from action data or existing queue
+      // Contacts will be fetched from Lead DB - start empty
+      _composeContacts = [];
       if (existing.recipients && existing.recipients.length > 0) {
         _composeContacts = existing.recipients.map(function(r) { return {name:r.name||'', email:r.email||'', position:r.position||'', selected:true}; });
-      } else if (a.contacts && a.contacts.length > 0) {
-        _composeContacts = a.contacts.map(function(c) { return {name:c.name||'', email:c.email||'', position:c.position||'', selected:true}; });
-      } else if (a.email) {
-        _composeContacts = [{name:a.contact||'', email:a.email, position:'', selected:true}];
-      } else {
-        _composeContacts = [];
       }
 
       // Build template dropdown
@@ -848,11 +843,10 @@
       h += '<div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Compose Email</h3><p>' + esc(a.company) + '</p></div>';
       h += '<div class="modal-body" style="max-height:70vh;overflow-y:auto">';
 
-      // Recipients section
-      h += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span>Recipients</span><button type="button" onclick="addComposeContact()" style="padding:3px 10px;border:1px solid #10b981;border-radius:5px;background:#ecfdf5;color:#059669;font-size:11px;font-weight:600;cursor:pointer">+ Add Contact</button></label>';
-      h += '<div style="display:flex;gap:4px;padding:0 4px 4px 26px;font-size:10px;color:#94a3b8;font-weight:600"><span style="flex:1">Name</span><span style="flex:1.3">Email</span><span style="flex:0.8">Position</span><span style="width:22px"></span></div>';
-      h += '<div id="composeContactsList"></div>';
-      h += '<div id="compNoContacts" style="padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;text-align:center;display:none"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#f59e0b;fill:none;stroke-width:2;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>No contacts found. Add a contact to send an email.</div>';
+      // Recipients section - read-only, pulled from Lead DB
+      h += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span>Recipients <span style="font-weight:400;color:#94a3b8;font-size:10px">(from Lead Database)</span></span></label>';
+      h += '<div id="composeContactsList" style="min-height:40px"><div style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Loading contacts from Lead Database...</div></div>';
+      h += '<div id="compNoContacts" style="padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;text-align:center;display:none"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#f59e0b;fill:none;stroke-width:2;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>No contacts found in Lead Database.<br><a href="lead-logger.html" target="_blank" style="color:#2563eb;font-weight:600;text-decoration:underline;margin-top:6px;display:inline-block">Open Lead Database to add contacts ?</a></div>';
       h += '</div>';
 
       // Template dropdown
@@ -876,7 +870,31 @@
 
       overlay.innerHTML = h;
       document.body.appendChild(overlay);
-      renderComposeContacts();
+
+      // Fetch contacts from Lead DB (single source of truth)
+      if (_composeContacts.length > 0) {
+        // Already have recipients from queued email
+        renderComposeContacts();
+      } else {
+        fetchContactsFromLeadDB(a.leadId, a.company);
+      }
+    }
+
+    function fetchContactsFromLeadDB(leadId, company) {
+      var url = WEB_APP_URL + '?action=getLeadContacts&leadId=' + encodeURIComponent(leadId || '') + '&company=' + encodeURIComponent(company || '');
+      fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.status === 'success' && data.contacts && data.contacts.length > 0) {
+          _composeContacts = data.contacts.map(function(c) {
+            return {name:String(c.name||''), email:String(c.email||''), position:String(c.position||''), selected:true};
+          });
+        } else {
+          _composeContacts = [];
+        }
+        renderComposeContacts();
+      }).catch(function() {
+        _composeContacts = [];
+        renderComposeContacts();
+      });
     }
 
     // Global template apply ? works from both inline onchange and direct call
@@ -916,133 +934,29 @@
       var h = '';
       for (var i = 0; i < _composeContacts.length; i++) {
         var c = _composeContacts[i];
-        h += '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:' + (c.selected ? '#ecfdf5' : '#f8fafc') + ';border:1px solid ' + (c.selected ? '#a7f3d0' : '#e2e8f0') + ';border-radius:6px;margin-bottom:6px">';
+        h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:' + (c.selected ? '#ecfdf5' : '#f8fafc') + ';border:1px solid ' + (c.selected ? '#a7f3d0' : '#e2e8f0') + ';border-radius:6px;margin-bottom:6px">';
         h += '<input type="checkbox" ' + (c.selected ? 'checked' : '') + ' onchange="_composeContacts[' + i + '].selected=this.checked;renderComposeContacts()" style="cursor:pointer;accent-color:#10b981;flex-shrink:0"/>';
-        h += '<input type="text" value="' + esc(c.name) + '" placeholder="Name" oninput="_composeContacts[' + i + '].name=this.value;syncComposeContacts()" style="flex:1;min-width:0;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>';
-        h += '<input type="email" value="' + esc(c.email) + '" placeholder="Email" oninput="_composeContacts[' + i + '].email=this.value;syncComposeContacts()" style="flex:1.3;min-width:0;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>';
-        h += '<input type="text" value="' + esc(c.position) + '" placeholder="Position" oninput="_composeContacts[' + i + '].position=this.value;syncComposeContacts()" style="flex:0.8;min-width:0;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>';
-        h += '<button onclick="removeComposeContact(' + i + ')" style="flex-shrink:0;width:22px;height:22px;border:1px solid #fecaca;border-radius:4px;background:#fff;color:#ef4444;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Remove">&times;</button>';
+        h += '<span style="flex:1;font-size:12px;font-weight:600;color:#1e293b">' + esc(c.name || '(no name)') + '</span>';
+        h += '<span style="flex:1.3;font-size:12px;color:#2563eb">' + esc(c.email || '(no email)') + '</span>';
+        h += '<span style="flex:0.8;font-size:11px;color:#64748b">' + esc(c.position || '') + '</span>';
         h += '</div>';
       }
       el.innerHTML = h;
     }
 
-    function addComposeContact() {
-      _composeContacts.push({name:'', email:'', position:'', selected:true});
-      renderComposeContacts();
-    }
-
-    function removeComposeContact(idx) {
-      _composeContacts.splice(idx, 1);
-      renderComposeContacts();
-      // Immediate sync on delete (not debounced)
-      clearTimeout(_syncDebounce);
-      if (!_composeActionId) return;
-      var a = allActions.find(function(x) { return x.id === _composeActionId; });
-      var allContacts = _composeContacts.filter(function(c) { return String(c.email||'').trim() || String(c.name||'').trim(); }).map(function(c) {
-        return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()};
-      });
-      if (a) {
-        a.contacts = allContacts;
-        a.email = allContacts.length > 0 ? allContacts[0].email : '';
-        a.contact = allContacts.length > 0 ? allContacts[0].name : '';
-      }
-      fetch(WEB_APP_URL, {
-        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-        body: JSON.stringify({action:'updateFollowUpAction', actionId:_composeActionId, updates:{contacts:allContacts}})
-      }).catch(function(){});
-      var leadId = a ? a.leadId : '';
-      if (leadId) {
-        fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{contacts:allContacts}})
-        }).catch(function(){});
-      } else if (a && a.company) {
-        fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateLeadByCompany', company:a.company, updates:{contacts:allContacts}})
-        }).catch(function(){});
-      }
-    }
-
-    // Auto-sync contacts to backend + Lead DB on any change
-    var _syncDebounce = null;
-    function syncComposeContacts() {
-      clearTimeout(_syncDebounce);
-      _syncDebounce = setTimeout(function() {
-        if (!_composeActionId) return;
-        var a = allActions.find(function(x) { return x.id === _composeActionId; });
-        var allContacts = _composeContacts.filter(function(c) { return String(c.email||'').trim() || String(c.name||'').trim(); }).map(function(c) {
-          return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()};
-        });
-        if (a) {
-          a.contacts = allContacts;
-          a.email = allContacts.length > 0 ? allContacts[0].email : '';
-          a.contact = allContacts.length > 0 ? allContacts[0].name : '';
-        }
-
-        // 1) Save to FollowUpActions
-        fetch(WEB_APP_URL, {
-          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateFollowUpAction', actionId:_composeActionId, updates:{contacts:allContacts}})
-        }).catch(function(){});
-
-        // 2) DIRECTLY update Leads sheet too (bypass backend sync)
-        var leadId = a ? a.leadId : '';
-        if (leadId) {
-          fetch(WEB_APP_URL, {
-            method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-            body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{contacts:allContacts}})
-          }).catch(function(){});
-        } else if (a && a.company) {
-          // No leadId ? find lead by company name and update
-          fetch(WEB_APP_URL, {
-            method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-            body: JSON.stringify({action:'updateLeadByCompany', company:a.company, updates:{contacts:allContacts}})
-          }).catch(function(){});
-        }
-      }, 600);
-    }
 
     function saveComposeEmail() {
       var subject = document.getElementById('compSubject').value.trim();
       var body = document.getElementById('compBody').value.trim();
-
-      // Flush contacts sync IMMEDIATELY (not debounced) before closing
-      clearTimeout(_syncDebounce);
       var actionId = _composeActionId;
       var a = allActions.find(function(x) { return x.id === actionId; });
-      var allContacts = _composeContacts.filter(function(c) { return String(c.email||'').trim() || String(c.name||'').trim(); }).map(function(c) {
-        return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()};
-      });
-      if (a) {
-        a.contacts = allContacts;
-        a.email = allContacts.length > 0 ? allContacts[0].email : '';
-        a.contact = allContacts.length > 0 ? allContacts[0].name : '';
-      }
-      // Save to FollowUpActions
-      fetch(WEB_APP_URL, {
-        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-        body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{contacts:allContacts}})
-      }).catch(function(){});
-      // Save to Leads
-      var leadId = a ? a.leadId : '';
-      if (leadId) {
-        fetch(WEB_APP_URL, {
-          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{contacts:allContacts}})
-        }).catch(function(){});
-      } else if (a && a.company) {
-        fetch(WEB_APP_URL, {
-          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateLeadByCompany', company:a.company, updates:{contacts:allContacts}})
-        }).catch(function(){});
-      }
 
-      // Only queue email if there's content
+      // Queue email if there's content
       if (subject || body) {
-        var selected = _composeContacts.filter(function(c) { return c.selected && c.email.trim(); });
-        if (selected.length === 0) { showToast('Add at least one contact with an email to queue', 'error'); return; }
+        var selected = _composeContacts.filter(function(c) { return c.selected && String(c.email||'').trim(); });
+        if (selected.length === 0) { showToast('No contacts with email selected', 'error'); return; }
         queuedEmails[actionId] = {
-          recipients: selected.map(function(c) { return {name:c.name.trim(), email:c.email.trim(), position:c.position.trim()}; }),
+          recipients: selected.map(function(c) { return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()}; }),
           subject: subject,
           body: body,
           company: a ? a.company : ''
