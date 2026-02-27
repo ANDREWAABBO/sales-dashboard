@@ -517,6 +517,10 @@
       loadAvailableLabels();
       loadTeamFromBackend();
       loadTemplatesFromBackend();
+      // Version check
+      fetch(WEB_APP_URL + '?action=version').then(function(r){return r.json()}).then(function(d){
+        if(d.version !== 'v17-contact-sync') showToast('WARNING: Code.gs not updated! Deploy v17 to Apps Script','error');
+      }).catch(function(){});
     });
 
     async function loadAvailableLabels() {
@@ -936,18 +940,35 @@
       _syncDebounce = setTimeout(function() {
         if (!_composeActionId) return;
         var a = allActions.find(function(x) { return x.id === _composeActionId; });
-        var allContacts = _composeContacts.filter(function(c) { return c.email.trim() || c.name.trim(); }).map(function(c) {
-          return {name:c.name.trim(), email:c.email.trim(), position:c.position.trim()};
+        var allContacts = _composeContacts.filter(function(c) { return String(c.email||'').trim() || String(c.name||'').trim(); }).map(function(c) {
+          return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()};
         });
         if (a) {
           a.contacts = allContacts;
           a.email = allContacts.length > 0 ? allContacts[0].email : '';
           a.contact = allContacts.length > 0 ? allContacts[0].name : '';
         }
+
+        // 1) Save to FollowUpActions
         fetch(WEB_APP_URL, {
           method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
           body: JSON.stringify({action:'updateFollowUpAction', actionId:_composeActionId, updates:{contacts:allContacts}})
         }).catch(function(){});
+
+        // 2) DIRECTLY update Leads sheet too (bypass backend sync)
+        var leadId = a ? a.leadId : '';
+        if (leadId) {
+          fetch(WEB_APP_URL, {
+            method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{contacts:allContacts}})
+          }).catch(function(){});
+        } else if (a && a.company) {
+          // No leadId ? find lead by company name and update
+          fetch(WEB_APP_URL, {
+            method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({action:'updateLeadByCompany', company:a.company, updates:{contacts:allContacts}})
+          }).catch(function(){});
+        }
       }, 600);
     }
 
