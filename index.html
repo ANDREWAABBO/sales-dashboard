@@ -240,6 +240,94 @@
       font-weight: 600;
       margin-left: 10px;
     }
+
+    /* ==================== MOBILE RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body{padding:8px;font-size:15px}
+
+      /* Company switcher: stack vertically */
+      .company-switcher{flex-direction:column;gap:8px;padding:12px;margin:-8px -8px 20px -8px}
+      .company-btn{padding:12px 16px;font-size:15px;gap:10px;width:100%;justify-content:center;border-radius:12px}
+      .company-logo{height:28px}
+      .abbondanza-logo{height:32px}
+
+      /* Dashboard header */
+      .header{margin-bottom:20px}
+      .header h1{font-size:1.6em;letter-spacing:1px}
+      .header p{font-size:0.95em}
+      .dashboard-container{max-width:100%;padding:0 4px}
+
+      /* Cards */
+      .quantum-grid{gap:12px;max-width:100%}
+      .card{padding:18px;border-radius:12px}
+      .card h2{font-size:1.15em;margin-bottom:8px}
+      .card p{font-size:0.9em;margin-bottom:14px;line-height:1.4}
+
+      /* Card button rows (inline styles use flex) */
+      .card [style*="display: flex"]{flex-direction:column!important;gap:10px!important}
+      .card .btn{padding:12px 20px;font-size:0.95em;text-align:center;width:100%}
+
+      /* Modals */
+      .modal{padding:18px 16px;width:96%;max-width:96vw;border-radius:14px;max-height:92vh}
+      .modal h3{font-size:1.15em}
+      .pdf-modal{width:98%;height:90%;max-height:90vh;border-radius:12px}
+      .pdf-header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+      .pdf-header h3{font-size:1em}
+      .pdf-header .close-btn{padding:8px 14px;font-size:0.9em}
+
+      /* Forms inside modals */
+      .form-row{grid-template-columns:1fr;gap:10px}
+      .form-group{margin-bottom:14px}
+      .form-group input,.form-group select,.form-group textarea{padding:12px;font-size:15px}
+      .form-group label{font-size:0.95em;margin-bottom:4px}
+      .form-group small{font-size:0.85em}
+      .modal-buttons{flex-direction:column;gap:10px}
+      .modal-buttons .btn{text-align:center;width:100%;padding:14px}
+
+      /* Filter & archive */
+      .filter-container{flex-direction:column;gap:8px}
+      .archive-filter{min-width:0;width:100%;font-size:14px;padding:10px 12px}
+      .refresh-btn,.archive-btn{width:100%!important;text-align:center}
+
+      /* Pricing summary */
+      .pricing-summary{padding:12px}
+      .pricing-summary h4{font-size:1em}
+      .pricing-display{font-size:1em}
+
+      /* Close button */
+      .close-btn{padding:8px 16px;font-size:0.9em}
+
+      /* PDF library items */
+      .link-btn{font-size:0.95em}
+    }
+
+    @media (max-width: 480px) {
+      body{padding:4px;font-size:14px}
+
+      .company-switcher{gap:6px;padding:8px;margin:-4px -4px 14px -4px}
+      .company-btn{padding:10px 12px;font-size:13px;gap:8px;border-radius:10px}
+      .company-logo{height:22px}
+      .abbondanza-logo{height:26px}
+      /* Hide company name text on very small screens, show logo only */
+      .company-btn span{font-size:12px}
+
+      .header h1{font-size:1.3em}
+      .header p{font-size:0.85em}
+
+      .card{padding:14px;border-radius:10px}
+      .card h2{font-size:1.05em}
+      .card p{font-size:0.85em}
+      .card .btn{padding:11px 14px;font-size:0.9em;border-radius:20px}
+
+      .modal{padding:14px 12px;width:98%;border-radius:10px;max-height:94vh}
+      .modal h3{font-size:1.05em}
+      .form-group input,.form-group select,.form-group textarea{padding:10px;font-size:14px}
+
+      .pdf-modal{width:99%;height:92%;max-height:92vh;border-radius:8px}
+      .pdf-header{padding:10px 12px}
+
+      .pricing-summary{padding:10px}
+    }
   </style>
 
   <!-- Optional override config for password.js (must be BEFORE password.js) -->
