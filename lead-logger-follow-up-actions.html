@@ -649,7 +649,7 @@
         html += '<td>' + emailCell + '</td>';
 
         // Proposal
-        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#059669,#047857)" onclick="openProposal(\'' + a.leadId + '\')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Prop</button>') + '</td>';
+        html += '<td>' + (isDead ? '<span style="color:#cbd5e0">&mdash;</span>' : '<button class="btn-sm" style="background:linear-gradient(135deg,#059669,#047857)" onclick="openProposal(\'' + a.leadId + '\',\'' + esc(a.company).replace(/'/g, "\\'") + '\')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Create Proposal</button>') + '</td>';
 
         // Alert
         html += '<td>' + (isDead
@@ -1495,7 +1495,47 @@
 
     // ?????????? NAV / PLACEHOLDER STUBS ??????????
     function goToLeadDB() { window.location.href = 'lead-logger.html'; }
-    function openProposal(leadId) { showToast('Proposal generator opening...', 'success'); }
+    function openProposal(leadId, company) {
+      if (!leadId) {
+        showToast('No Lead ID found for ' + (company || 'this company') + '. Open Lead Database first.', 'error');
+        return;
+      }
+      showToast('Loading lead data...', 'success');
+      fetch(WEB_APP_URL + '?action=getLeads').then(function(r) { return r.json(); }).then(function(data) {
+        if (data.status !== 'success') { showToast('Error loading leads', 'error'); return; }
+        var lead = data.leads.find(function(l) { return String(l.id) === String(leadId); });
+        if (!lead) { showToast('Lead not found in database', 'error'); return; }
+
+        if (!lead.repPhone || !lead.repEmail) {
+          showToast('Missing rep phone/email. Edit the lead in Lead Database first.', 'error');
+          return;
+        }
+
+        var params = new URLSearchParams();
+        if (lead.companyName) params.append('companyName', lead.companyName);
+        if (lead.contactName) params.append('contactName', lead.contactName);
+        if (lead.customerAddress) params.append('customerAddress', lead.customerAddress);
+        if (lead.customerZip) params.append('customerZip', lead.customerZip);
+        if (lead.repName) params.append('preparedBy', lead.repName);
+        if (lead.repPhone) params.append('preparedByPhone', lead.repPhone);
+        if (lead.repEmail) params.append('preparedByEmail', lead.repEmail);
+
+        var targetPage = '';
+        if (lead.businessUnit === 'Quantum Solutions') {
+          if (!lead.customerAddress || !lead.customerZip) {
+            showToast('Missing customer address/zip required for Quantum Solutions. Edit the lead first.', 'error');
+            return;
+          }
+          targetPage = 'quantum.html';
+        } else if (lead.businessUnit === 'Abbondanza Vending') {
+          targetPage = 'index.html';
+        } else {
+          showToast('Business unit not set for this lead. Edit in Lead Database.', 'error');
+          return;
+        }
+        window.location.href = targetPage + '?' + params.toString();
+      }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+    }
     function openTeamModal() {
       document.getElementById('teamModal').classList.add('show');
       document.getElementById('teamModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading team...</p></div>';
