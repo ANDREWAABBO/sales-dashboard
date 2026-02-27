@@ -412,6 +412,55 @@
   border-color: #1e3a8a;
 }
 
+    /* ==================== MOBILE RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body{padding:10px;font-size:15px}
+      .company-switcher{flex-direction:column;gap:8px;padding:12px;padding-bottom:56px;margin:-10px -10px 20px -10px;position:relative}
+      .company-btn{padding:10px 16px;font-size:14px;gap:8px;flex:1 1 auto;justify-content:center;min-width:0}
+      .company-logo{height:24px}
+      .abbondanza-logo{height:28px}
+      .header{margin-bottom:20px}
+      .header h1{font-size:1.8em;letter-spacing:1px}
+      .header p{font-size:1em}
+      .quantum-grid{gap:14px}
+      .card{padding:16px;border-radius:12px}
+      .card h2{font-size:1.2em}
+      .card p{font-size:0.95em;margin-bottom:14px}
+      .btn{padding:10px 20px;font-size:0.95em}
+      .filter-container{gap:10px}
+      .archive-filter{min-width:0;width:100%;font-size:14px;padding:10px 12px}
+      .modal{padding:18px;width:96%;max-width:96vw;border-radius:14px}
+      .pdf-modal{width:96%;height:85%;max-height:85vh}
+      .pdf-header{padding:14px}
+      .pdf-header h3{font-size:1.1em}
+      .form-row{grid-template-columns:1fr;gap:10px}
+      .form-group input,.form-group select,.form-group textarea{padding:12px;font-size:1em}
+      .modal-buttons{flex-direction:column;gap:10px}
+      .modal-buttons .btn{text-align:center}
+      .close-btn{padding:8px 18px;font-size:0.95em}
+      .video-grid{grid-template-columns:1fr;gap:14px}
+      .video-thumbnail{height:160px}
+      .video-title{font-size:14px}
+      .video-player-modal{width:96%;max-height:80vh}
+      .video-player-content{height:calc(80vh - 60px)}
+      .category-dropdown{width:100%;font-size:14px;padding:10px 12px}
+      .category-tab{padding:8px 14px;font-size:12px}
+      .search-box input{padding:10px 36px 10px 12px;font-size:14px}
+    }
+    @media (max-width: 480px) {
+      body{padding:6px;font-size:14px}
+      .company-switcher{gap:6px;padding:8px}
+      .company-btn{padding:8px 12px;font-size:12px;gap:6px;border-radius:30px}
+      .company-logo{height:20px}
+      .abbondanza-logo{height:22px}
+      .header h1{font-size:1.4em}
+      .card{padding:14px}
+      .card h2{font-size:1.1em}
+      .btn{padding:9px 16px;font-size:0.9em;border-radius:20px}
+      .modal{padding:14px;width:98%;border-radius:10px}
+      .video-actions{flex-direction:column;gap:6px}
+    }
+
     
   </style>
 </head>
