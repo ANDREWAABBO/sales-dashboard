@@ -352,7 +352,7 @@
             <th style="width:7%">Notes<span class="sub">synced to Lead DB</span></th>
             <th style="width:7%">Email</th>
             <th style="width:7%">Proposal</th>
-            <th style="width:7%">Alert</th>
+            <th style="width:9%">Rep Alert</th>
           </tr></thead>
           <tbody id="fuTableBody"></tbody>
         </table>
@@ -654,7 +654,7 @@
         // Alert
         html += '<td>' + (isDead
           ? '<span style="font-size:12px;color:#ef4444;font-weight:700">DEAD</span>'
-          : '<button class="alert-btn" onclick="sendAlert(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Alert</button>') + '</td>';
+          : '<button class="alert-btn" onclick="sendAlert(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Send Rep Alert</button>') + '</td>';
 
         html += '</tr>';
       }
@@ -1490,7 +1490,86 @@
     async function sendAlert(actionId) {
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
-      showToast('Alert sent for ' + a.company, 'success');
+
+      // Fetch team members
+      try {
+        var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+        var data = await resp.json();
+        var members = (data.status === 'success' && data.members) ? data.members : [];
+        if (members.length === 0) { showToast('No team members found. Add team members first.', 'error'); return; }
+
+        var opts = '';
+        for (var i = 0; i < members.length; i++) {
+          opts += '<option value="' + i + '">' + esc(members[i].name) + ' ? ' + esc(members[i].position || 'No position') + ' (' + esc(members[i].email) + ')</option>';
+        }
+
+        var overlay = document.createElement('div');
+        overlay.className = 'modal-overlay show';
+        overlay.id = 'alertOverlay';
+        overlay.innerHTML = '<div class="modal-card" style="max-width:460px">' +
+          '<div class="modal-hdr" style="background:linear-gradient(135deg,#dc2626,#ef4444)"><h3><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Send Rep Alert</h3><p>' + esc(a.company) + '</p></div>' +
+          '<div class="modal-body">' +
+            '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px">Select Sales Rep</label>' +
+            '<select id="alertRepSelect" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + opts + '</select></div>' +
+            '<div style="padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#4a5568;line-height:1.6">' +
+              '<div style="font-weight:700;color:#dc2626;margin-bottom:6px">This will:</div>' +
+              '<div>?? Send email alert to the selected rep</div>' +
+              '<div>? Auto-assign <strong>Call</strong> action to this lead</div>' +
+              '<div>? Set action date to <strong>today</strong></div>' +
+              '<div>? Assign rep as the <strong>Who</strong></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById(\'alertOverlay\').remove()">Cancel</button>' +
+          '<button class="btn-save" style="background:linear-gradient(135deg,#dc2626,#ef4444)" onclick="confirmSendAlert(\'' + actionId + '\')">Send Alert</button></div></div>';
+        document.body.appendChild(overlay);
+        window._alertMembers = members;
+      } catch(e) {
+        showToast('Error loading team: ' + e.message, 'error');
+      }
+    }
+
+    async function confirmSendAlert(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      if (!a) return;
+      var sel = document.getElementById('alertRepSelect');
+      var idx = parseInt(sel.value);
+      var member = window._alertMembers[idx];
+      if (!member) return;
+      if (!member.email) { showToast('Selected rep has no email address', 'error'); return; }
+
+      var btn = sel.closest('.modal-card').querySelector('.btn-save');
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        var resp = await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({
+            action:'sendRepAlert',
+            repName: member.name,
+            repEmail: member.email,
+            company: a.company,
+            phone: a.phone || '',
+            contact: a.contact || '',
+            notes: a.notes || '',
+            actionId: actionId
+          })
+        });
+        var data = await resp.json();
+        if (data.status === 'success') {
+          showToast('Alert sent to ' + member.name + '!', 'success');
+          document.getElementById('alertOverlay').remove();
+          loadActions(); // Refresh to show updated Call/Date/Who
+        } else {
+          showToast('Error: ' + data.message, 'error');
+          btn.textContent = 'Send Alert';
+          btn.disabled = false;
+        }
+      } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+        btn.textContent = 'Send Alert';
+        btn.disabled = false;
+      }
     }
 
     // ?????????? NAV / PLACEHOLDER STUBS ??????????
