@@ -24,7 +24,7 @@
     .filter-row input[type="search"]{padding:10px 15px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;background:#fff;color:#2d3748;width:240px;transition:border-color .2s}
     .filter-row input[type="search"]:focus{outline:none;border-color:#10b981}
 
-    .tbtn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px;color:#fff;transition:.15s}
+    .tbtn{padding:12px 24px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;color:#fff;transition:.15s}
     .tbtn:hover{transform:translateY(-1px);filter:brightness(1.1)}
     .tbtn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
     .tbtn-teal{background:linear-gradient(135deg,#14b8a6,#0d9488)}
@@ -405,9 +405,6 @@
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeTeamModal()">Close</button>
-        <button class="btn-save" id="saveTeamBtn" onclick="saveTeamToBackend()">
-          Save Team
-        </button>
       </div>
     </div>
   </div>
@@ -1491,17 +1488,22 @@
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
 
-      // Fetch team members
-      try {
-        var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
-        var data = await resp.json();
-        var members = (data.status === 'success' && data.members) ? data.members : [];
-        if (members.length === 0) { showToast('No team members found. Add team members first.', 'error'); return; }
+      var members = teamMembers;
+      if (members.length === 0) {
+        // Try one fetch if cache empty
+        try {
+          var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+          var data = await resp.json();
+          members = (data.status === 'success' && data.members) ? data.members : [];
+          teamMembers = members;
+        } catch(e) {}
+      }
+      if (members.length === 0) { showToast('No team members found. Add team members first.', 'error'); return; }
 
-        var opts = '';
-        for (var i = 0; i < members.length; i++) {
-          opts += '<option value="' + i + '">' + esc(members[i].name) + ' ? ' + esc(members[i].position || 'No position') + ' (' + esc(members[i].email) + ')</option>';
-        }
+      var opts = '';
+      for (var i = 0; i < members.length; i++) {
+        opts += '<option value="' + i + '">' + esc(members[i].name) + ' - ' + esc(members[i].position || 'No position') + ' (' + esc(members[i].email) + ')</option>';
+      }
 
         var overlay = document.createElement('div');
         overlay.className = 'modal-overlay show';
@@ -1513,19 +1515,16 @@
             '<select id="alertRepSelect" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + opts + '</select></div>' +
             '<div style="padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#4a5568;line-height:1.6">' +
               '<div style="font-weight:700;color:#dc2626;margin-bottom:6px">This will:</div>' +
-              '<div>?? Send email alert to the selected rep</div>' +
-              '<div>? Auto-assign <strong>Call</strong> action to this lead</div>' +
-              '<div>? Set action date to <strong>today</strong></div>' +
-              '<div>? Assign rep as the <strong>Who</strong></div>' +
+              '<div>&bull; Send email alert to the selected rep</div>' +
+              '<div>&bull; Auto-assign <strong>Call</strong> action to this lead</div>' +
+              '<div>&bull; Set action date to <strong>today</strong></div>' +
+              '<div>&bull; Assign rep as the <strong>Who</strong></div>' +
             '</div>' +
           '</div>' +
           '<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById(\'alertOverlay\').remove()">Cancel</button>' +
           '<button class="btn-save" style="background:linear-gradient(135deg,#dc2626,#ef4444)" onclick="confirmSendAlert(\'' + actionId + '\')">Send Alert</button></div></div>';
         document.body.appendChild(overlay);
         window._alertMembers = members;
-      } catch(e) {
-        showToast('Error loading team: ' + e.message, 'error');
-      }
     }
 
     async function confirmSendAlert(actionId) {
@@ -1617,8 +1616,7 @@
     }
     function openTeamModal() {
       document.getElementById('teamModal').classList.add('show');
-      document.getElementById('teamModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading team...</p></div>';
-      loadTeamFromBackend();
+      renderTeamModal();
     }
 
     function closeTeamModal() {
@@ -1688,7 +1686,8 @@
           var color = AVATAR_COLORS[i % AVATAR_COLORS.length];
           h += '<div class="tm-item" id="tm-item-' + i + '">';
           h += '  <div class="tm-avatar" style="background:' + color + '">' + getInitials(m.name) + '</div>';
-          h += '  <div class="tm-info"><div class="tm-name">' + esc(m.name) + '</div><div class="tm-email">' + esc(m.email) + (m.position ? ' ? ' + esc(m.position) : '') + (m.phone ? ' ? ' + esc(m.phone) : '') + '</div></div>';
+          h += '  <div class="tm-info"><div class="tm-name">' + esc(m.name) + '</div><div class="tm-email">' + esc(m.email) + (m.position ? ' | ' + esc(m.position) : '') + (m.phone ? ' | ' + esc(m.phone) : '') + '</div></div>';
+          h += '  <button class="tm-remove" style="color:#2563eb;border-color:#bfdbfe" onclick="editTeamMember(' + i + ')"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>';
           h += '  <button class="tm-remove" onclick="removeTeamMember(' + i + ')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remove</button>';
           h += '</div>';
         }
@@ -1697,7 +1696,7 @@
       body.innerHTML = h;
     }
 
-    function addTeamMember() {
+    async function addTeamMember() {
       var nameInput = document.getElementById('tmNewName');
       var emailInput = document.getElementById('tmNewEmail');
       var posInput = document.getElementById('tmNewPosition');
@@ -1710,7 +1709,6 @@
       if (!name) { showToast('Please enter a name', 'error'); nameInput.focus(); return; }
       if (!email || email.indexOf('@') === -1) { showToast('Please enter a valid email', 'error'); emailInput.focus(); return; }
 
-      // Check for duplicates
       for (var i = 0; i < teamMembers.length; i++) {
         if (teamMembers[i].email.toLowerCase() === email.toLowerCase()) {
           showToast('A team member with that email already exists', 'error');
@@ -1718,9 +1716,16 @@
         }
       }
 
-      teamMembers.push({name: name, email: email, position: position, phone: phone});
-      renderTeamModal();
-      showToast(name + ' added to team', 'success');
+      try {
+        var resp = await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'addTeamMember', member:{name:name, email:email, position:position, phone:phone}})});
+        var data = await resp.json();
+        if (data.status === 'success') {
+          teamMembers.push({id:data.id, name:name, email:email, position:position, phone:phone});
+          renderTeamModal();
+          showToast(name + ' added', 'success');
+        } else { showToast(data.message, 'error'); }
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
     }
 
     function removeTeamMember(index) {
@@ -1733,9 +1738,49 @@
       }
     }
 
-    function confirmRemoveTeamMember(index) {
+    async function confirmRemoveTeamMember(index) {
+      var m = teamMembers[index];
+      if (m && m.id) {
+        try {
+          await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({action:'removeTeamMember', memberId:m.id})});
+        } catch(e) {}
+      }
       teamMembers.splice(index, 1);
       renderTeamModal();
+      showToast('Removed', 'success');
+    }
+
+    function editTeamMember(index) {
+      var m = teamMembers[index];
+      var item = document.getElementById('tm-item-' + index);
+      if (!item) return;
+      item.innerHTML = '<div style="display:flex;gap:6px;flex:1;flex-wrap:wrap;align-items:center">' +
+        '<input id="tmEdit-name-' + index + '" value="' + esc(m.name) + '" style="flex:1;min-width:80px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '<input id="tmEdit-email-' + index + '" value="' + esc(m.email) + '" style="flex:1.2;min-width:120px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '<input id="tmEdit-pos-' + index + '" value="' + esc(m.position || '') + '" placeholder="Position" style="flex:0.7;min-width:70px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '<input id="tmEdit-phone-' + index + '" value="' + esc(m.phone || '') + '" placeholder="Phone" style="flex:0.7;min-width:70px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '</div><div style="display:flex;gap:4px;margin-left:8px">' +
+        '<button class="tm-remove" style="color:#059669;border-color:#a7f3d0" onclick="saveEditTeamMember(' + index + ')">Save</button>' +
+        '<button class="tm-remove" style="color:#4a5568;border-color:#cbd5e0" onclick="renderTeamModal()">Cancel</button></div>';
+    }
+
+    async function saveEditTeamMember(index) {
+      var m = teamMembers[index];
+      var name = document.getElementById('tmEdit-name-' + index).value.trim();
+      var email = document.getElementById('tmEdit-email-' + index).value.trim();
+      var position = document.getElementById('tmEdit-pos-' + index).value.trim();
+      var phone = document.getElementById('tmEdit-phone-' + index).value.trim();
+      if (!name || !email) { showToast('Name and email required', 'error'); return; }
+      m.name = name; m.email = email; m.position = position; m.phone = phone;
+      if (m.id) {
+        try {
+          await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({action:'updateTeamMember', member:m})});
+        } catch(e) {}
+      }
+      renderTeamModal();
+      showToast('Updated', 'success');
     }
 
     async function saveTeamToBackend() {
@@ -2149,8 +2194,7 @@
     function openLabelsModal() {
       labelsExpandedIndex = -1;
       document.getElementById('labelsModal').classList.add('show');
-      document.getElementById('labelsModalBody').innerHTML = '<div class="loading" style="padding:30px"><div class="spinner"></div><p style="margin-top:8px">Loading labels...</p></div>';
-      loadLabelsFromBackend();
+      renderLabelsModal();
     }
 
     function closeLabelsModal() {
