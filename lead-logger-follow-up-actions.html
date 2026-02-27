@@ -59,7 +59,7 @@
     tbody tr:hover td{background:#f7fafc}
     .row-dead td{background:#fef2f2!important}
     .row-unlabeled td{background:#fffbeb!important}
-    .pill-needs{background:#fef3c7;color:#92400e;border:1px dashed #d97706;cursor:pointer;animation:pulse-needs 2s infinite;font-size:13px;width:auto;padding:6px 14px}
+    .pill-needs{background:#fef3c7;color:#92400e;border:1px dashed #d97706;cursor:pointer;font-size:13px;width:auto;padding:6px 14px}
     .pill-needs:hover{background:#fde68a;transform:scale(1.05)}
     @keyframes pulse-needs{0%,100%{opacity:1}50%{opacity:.7}}
 
@@ -519,6 +519,7 @@
       loadActions();
       loadMaxAttempts();
       loadAvailableLabels();
+      loadTeamFromBackend();
     });
 
     async function loadAvailableLabels() {
@@ -1021,15 +1022,17 @@
       if (!a || a.status === 'Dead') return;
       var current = (a.who || {})[label] || '';
 
-      var options = '<option value="">? Select ?</option>';
-      for (var i = 0; i < teamMembers.length; i++) {
-        var sel = (teamMembers[i].name === current) ? ' selected' : '';
-        options += '<option value="' + esc(teamMembers[i].name) + '"' + sel + '>' + esc(teamMembers[i].name) + '</option>';
+      // Ensure team is loaded
+      var members = teamMembers.length > 0 ? teamMembers : DEFAULT_TEAM;
+      var options = '<option value="">- Select Team Member -</option>';
+      for (var i = 0; i < members.length; i++) {
+        var sel = (members[i].name === current) ? ' selected' : '';
+        options += '<option value="' + esc(members[i].name) + '"' + sel + '>' + esc(members[i].name) + '</option>';
       }
 
       var overlay = document.createElement('div');
       overlay.className = 'modal-overlay show';
-      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Assign Rep</h3><p>' + esc(label) + ' ? ' + esc(a.company) + '</p></div><div class="modal-body"><select id="whoEditSelect" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + options + '</select></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveWho(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div></div>';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:360px"><div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Assigned to Who?</h3><p>' + esc(label) + ' - ' + esc(a.company) + '</p></div><div class="modal-body"><select id="whoEditSelect" style="width:100%;padding:10px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + options + '</select></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveWho(\'' + actionId + '\',\'' + label + '\',this)">Save</button></div></div>';
       document.body.appendChild(overlay);
     }
 
