@@ -90,9 +90,8 @@
 
     .status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;display:inline-block}
     .status-active{background:#d4f1d4;color:#2d5a2d}
-    .status-followup{background:#fff3cd;color:#856404}
-    .status-notqualified{background:#f8d7da;color:#721c24}
-    .status-dead{background:#e2e8f0;color:#718096}
+    .status-signedup{background:#dbeafe;color:#1e40af}
+    .status-dead{background:#fee2e2;color:#dc2626}
     .appointment-yes{color:#48bb78;font-weight:600}
     .appointment-no{color:#e53e3e}
 
@@ -109,8 +108,7 @@
     .status-dropdown-item{padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:.1s;white-space:nowrap}
     .status-dropdown-item:hover{background:#f1f5f9}
     .status-dropdown-item.active-opt{color:#48bb78;background:#f0fff4}
-    .status-dropdown-item.followup-opt{color:#ecc94b;background:#fffff0}
-    .status-dropdown-item.notqual-opt{color:#a0aec0;background:#f7fafc}
+    .status-dropdown-item.signedup-opt{color:#2563eb;background:#eff6ff}
     .status-dropdown-item.dead-opt{color:#e53e3e;background:#fff5f5}
 
     /* Sortable table headers */
@@ -377,9 +375,8 @@
         <select id="statusFilter" onchange="filterLeads()">
           <option value="">All Status</option>
           <option value="Active" selected>Active</option>
-          <option value="Follow Up Later">Follow Up Later</option>
-          <option value="Not Qualified">Not Qualified</option>
-          <option value="Dead">Dead (Archived)</option>
+          <option value="Signed Up">Signed Up</option>
+          <option value="Dead">Dead</option>
         </select>
         <input type="search" id="searchInput" placeholder="Search leads, city, state, zip..." onkeyup="filterLeads()"/>
       </div>
@@ -402,7 +399,6 @@
             <th class="sortable" data-sort="repName">Rep</th>
             <th class="sortable" data-sort="status">Status</th>
             <th>Notes</th>
-            <th>Rep Alert</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -530,9 +526,8 @@
             <label for="status">Status</label>
             <select id="status" name="status">
               <option value="Active">Active</option>
-              <option value="Follow Up Later">Follow Up Later</option>
-              <option value="Not Qualified">Not Qualified</option>
-              <option value="Dead">Dead (Archived)</option>
+              <option value="Signed Up">Signed Up</option>
+              <option value="Dead">Dead</option>
             </select>
           </div>
         </div>
@@ -797,6 +792,8 @@
     // ====== CONFIG ======
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw1uRg1v6Cjqp9g2J-Q3CMsUzj1KbBfuiKnLgsYjhQe1n2x9bMSShB5eCw7mhA9-StC/exec';
 
+    function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
     let allLeads = [];
     let currentEditId = null;
     let knownCompanies = [];
@@ -832,6 +829,7 @@
       setupRepPhoneFormatting();
       setupNotesTooltip();
       initSortableHeaders();
+      prefetchTeamMembers();
     });
 
     // Manual refresh: user can reload page to get latest data
@@ -1060,11 +1058,11 @@
         notes
           ? `<span class="notes-clickable" onclick="inlineNotesEdit(this,'${leadId}')">${notes.length > 50 ? notes.substring(0,50) + '...' : notes}</span>`
           : `<span class="notes-clickable empty" onclick="inlineNotesEdit(this,'${leadId}')">+ Add Note</span>`,
-        `<div style="text-align:center"><button class="btn btn-small" style="background:linear-gradient(135deg,#dc2626,#ef4444);min-width:120px" onclick="sendRepAlertFromDB('${leadId}')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Send Rep Alert</button></div>`,
-        `<div class="action-buttons">
-           <button class="btn btn-small" style="background:#10b981" onclick="editLead('${leadId}')">Edit</button>
-           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%)" onclick="archiveLead(this,'${leadId}')">Archive</button>
-           <button class="btn btn-small btn-danger" onclick="openDeleteModal('${leadId}')">Delete</button>
+        `<div class="action-buttons" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:6px 12px;font-size:11px" onclick="sendRepAlertFromDB('${leadId}')"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alert Rep</button>
+           <button class="btn btn-small" style="background:#10b981;padding:6px 12px;font-size:11px" onclick="editLead('${leadId}')">Edit</button>
+           <button class="btn btn-small" style="background:linear-gradient(135deg,#ed8936 0%,#dd6b20 100%);padding:6px 12px;font-size:11px" onclick="archiveLead(this,'${leadId}')">Archive</button>
+           <button class="btn btn-small btn-danger" style="padding:6px 12px;font-size:11px" onclick="openDeleteModal('${leadId}')">Delete</button>
          </div>`
       ];
 
@@ -1085,7 +1083,7 @@
     }
 
     function getStatusClass(status){
-      const map = {'Active':'status-active','Follow Up Later':'status-followup','Not Qualified':'status-notqualified','Dead':'status-dead'};
+      const map = {'Active':'status-active','Signed Up':'status-signedup','Dead':'status-dead'};
       return map[status] || 'status-active';
     }
 
@@ -1654,8 +1652,7 @@
         [''],
         ['VALID VALUES - Status:'],
         ['- Active'],
-        ['- Follow Up Later'],
-        ['- Not Qualified'],
+        ['- Signed Up'],
         ['- Dead'],
         [''],
         ['VALID VALUES - Appointment Made:'],
@@ -1837,7 +1834,7 @@
 
         // Valid values for validation
         const VALID_BUSINESS_UNITS = ['Abbondanza Vending', 'Quantum Solutions'];
-        const VALID_STATUSES = ['Active', 'Follow Up Later', 'Not Qualified', 'Dead'];
+        const VALID_STATUSES = ['Active', 'Signed Up', 'Dead'];
         const VALID_APPOINTMENT = ['Yes', 'No'];
         const VALID_STATES = [
           'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -2189,8 +2186,7 @@ function showFixErrorsModal() {
               <label>Status</label>
               <select id="status-${index}" onchange="validateErrorRow(${index})">
                 <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
-                <option value="Follow Up Later" ${lead.status === 'Follow Up Later' ? 'selected' : ''}>Follow Up Later</option>
-                <option value="Not Qualified" ${lead.status === 'Not Qualified' ? 'selected' : ''}>Not Qualified</option>
+                <option value="Signed Up" ${lead.status === 'Signed Up' ? 'selected' : ''}>Signed Up</option>
                 <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead</option>
               </select>
             </div>
@@ -2608,8 +2604,7 @@ function exportLeadsToExcel() {
         [''],
         ['VALID VALUES - Status:'],
         ['- Active'],
-        ['- Follow Up Later'],
-        ['- Not Qualified'],
+        ['- Signed Up'],
         ['- Dead'],
         [''],
         ['VALID VALUES - Appointment Made:'],
@@ -2668,14 +2663,12 @@ function exportLeadsToExcel() {
 
     function openStatusPicker(evt, el, leadId) {
       evt.stopPropagation();
-      // Close any existing dropdown
       closeStatusPicker();
 
       var currentStatus = el.textContent.trim();
       var statuses = [
         { value: 'Active', label: 'Active', cls: 'active-opt' },
-        { value: 'Follow Up Later', label: 'Follow Up Later', cls: 'followup-opt' },
-        { value: 'Not Qualified', label: 'Not Qualified', cls: 'notqual-opt' },
+        { value: 'Signed Up', label: 'Signed Up', cls: 'signedup-opt' },
         { value: 'Dead', label: 'Dead', cls: 'dead-opt' }
       ];
 
@@ -2692,29 +2685,69 @@ function exportLeadsToExcel() {
           e.stopPropagation();
           closeStatusPicker();
           if (s.value === currentStatus) return;
+
+          if (s.value === 'Signed Up') {
+            // Show archive confirmation popup
+            var overlay = document.createElement('div');
+            overlay.id = 'archiveConfirmOverlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+            overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:400px;width:90%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+              '<div style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;padding:18px 24px"><h3 style="margin:0;font-size:17px">Signed Up!</h3></div>' +
+              '<div style="padding:20px 24px;text-align:center">' +
+                '<p style="font-size:14px;color:#1e293b;margin-bottom:16px">Archive this lead?</p>' +
+                '<p style="font-size:12px;color:#64748b">This will mark the lead as <strong>Signed Up</strong> and move it to the archive.</p>' +
+              '</div>' +
+              '<div style="padding:14px 24px;background:#f8fafc;display:flex;justify-content:center;gap:8px;border-top:1px solid #e2e8f0">' +
+                '<button onclick="document.getElementById(\'archiveConfirmOverlay\').remove()" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>' +
+                '<button onclick="confirmSignedUpArchive(\'' + leadId + '\')" style="padding:9px 20px;background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Yes, Archive</button>' +
+              '</div></div>';
+            document.body.appendChild(overlay);
+            return;
+          }
+
           // Instant UI update
           el.textContent = s.value;
           el.className = 'status-badge ' + getStatusClass(s.value);
-          // Update local data
           var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
           if (lead) lead.status = s.value;
-          // Background save
           sendInlineStatusUpdate(leadId, s.value);
         });
         dd.appendChild(item);
       });
 
-      // Position below the badge using fixed coords
       var rect = el.getBoundingClientRect();
       dd.style.top = (rect.bottom + 4) + 'px';
       dd.style.left = (rect.left + rect.width / 2 - 75) + 'px';
       document.body.appendChild(dd);
 
-      // Close on outside click
       setTimeout(function() {
         document.addEventListener('click', closeStatusPicker, { once: true });
       }, 10);
     }
+
+    async function confirmSignedUpArchive(leadId) {
+      document.getElementById('archiveConfirmOverlay').remove();
+      try {
+        var res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'updateLead', leadId: String(leadId), updates: { status: 'Signed Up' } })
+        });
+        await res.json();
+        // Now archive it
+        var res2 = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ action: 'archiveLead', leadId: String(leadId) })
+        });
+        await res2.json();
+        showToast('Lead signed up and archived!', 'success');
+        loadLeads();
+      } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+      }
+    }
+    window.confirmSignedUpArchive = confirmSignedUpArchive;
 
     function closeStatusPicker() {
       var existing = document.getElementById('statusPickerDD');
@@ -3279,19 +3312,23 @@ function exportLeadsToExcel() {
     // ==================== TEAM MEMBERS ====================
     var teamMembers = [];
 
-    async function openTeamMembersModal() {
+    async function prefetchTeamMembers() {
       try {
         var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
         var data = await resp.json();
         teamMembers = (data.status === 'success' && data.members) ? data.members : [];
       } catch(e) { teamMembers = []; }
+    }
+
+    function openTeamMembersModal() {
+      var existing = document.getElementById('teamModal');
+      if (existing) existing.remove();
 
       var overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
       overlay.id = 'teamModal';
       overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
       overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:640px;width:95%;max-height:85vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
-        '<div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;font-size:17px">? Team Members</h3><button onclick="document.getElementById(\'teamModal\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>' +
+        '<div style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;font-size:17px">Team Members</h3><button onclick="document.getElementById(\'teamModal\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&times;</button></div>' +
         '<div style="padding:20px 24px;overflow-y:auto;max-height:60vh">' +
           '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">' +
             '<input id="tmName" placeholder="Name" style="flex:1;min-width:100px;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px"/>' +
@@ -3301,7 +3338,9 @@ function exportLeadsToExcel() {
             '<button onclick="addTeamMember()" style="padding:8px 14px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:6px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap">+ Add</button>' +
           '</div>' +
           '<div id="teamList"></div>' +
-        '</div></div>';
+        '</div>' +
+        '<div style="padding:12px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:right"><button onclick="document.getElementById(\'teamModal\').remove()" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Close</button></div>' +
+        '</div>';
       document.body.appendChild(overlay);
       renderTeamList();
     }
@@ -3311,16 +3350,17 @@ function exportLeadsToExcel() {
       if (!el) return;
       if (teamMembers.length === 0) { el.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:13px">No team members yet. Add one above.</div>'; return; }
       var h = '';
+      var colors = ['#6366f1','#059669','#f59e0b','#dc2626','#8b5cf6','#14b8a6'];
       for (var i = 0; i < teamMembers.length; i++) {
         var m = teamMembers[i];
         var initials = (m.name || '??').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().substring(0,2);
-        var colors = ['#6366f1','#059669','#f59e0b','#dc2626','#8b5cf6','#14b8a6'];
         var bg = colors[i % colors.length];
-        h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0">';
-        h += '<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,' + bg + ',' + bg + ');color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + initials + '</div>';
+        h += '<div id="tmItem-' + i + '" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border:1px solid #e2e8f0">';
+        h += '<div style="width:32px;height:32px;border-radius:50%;background:' + bg + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + initials + '</div>';
         h += '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#1e293b">' + esc(m.name) + '</div>';
-        h += '<div style="font-size:11px;color:#64748b">' + esc(m.email || '(no email)') + ' ? ' + esc(m.position || '(no position)') + (m.phone ? ' ? ' + esc(m.phone) : '') + '</div></div>';
-        h += '<button onclick="removeTeamMember(\'' + m.id + '\')" style="padding:4px 10px;border-radius:4px;border:1px solid #fecaca;background:#fff;color:#ef4444;font-size:11px;cursor:pointer;font-weight:600;flex-shrink:0">Remove</button>';
+        h += '<div style="font-size:11px;color:#64748b">' + esc(m.email || '(no email)') + (m.position ? ' | ' + esc(m.position) : '') + (m.phone ? ' | ' + esc(m.phone) : '') + '</div></div>';
+        h += '<button onclick="editTeamMember(' + i + ')" style="padding:4px 10px;border-radius:4px;border:1px solid #bfdbfe;background:#fff;color:#2563eb;font-size:11px;cursor:pointer;font-weight:600;flex-shrink:0">Edit</button>';
+        h += '<button onclick="removeTeamMember(\'' + (m.id || '') + '\',' + i + ')" style="padding:4px 10px;border-radius:4px;border:1px solid #fecaca;background:#fff;color:#ef4444;font-size:11px;cursor:pointer;font-weight:600;flex-shrink:0">Remove</button>';
         h += '</div>';
       }
       el.innerHTML = h;
@@ -3344,23 +3384,54 @@ function exportLeadsToExcel() {
           document.getElementById('tmEmail').value = '';
           document.getElementById('tmPosition').value = '';
           document.getElementById('tmPhone').value = '';
-          showToast('Team member added', 'success');
+          showToast(name + ' added', 'success');
         } else { showToast(data.message, 'error'); }
       } catch(e) { showToast('Error: ' + e.message, 'error'); }
     }
 
-    async function removeTeamMember(memberId) {
+    async function removeTeamMember(memberId, index) {
       if (!confirm('Remove this team member?')) return;
-      try {
-        var resp = await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'removeTeamMember', memberId:memberId})});
-        var data = await resp.json();
-        if (data.status === 'success') {
-          teamMembers = teamMembers.filter(function(m){ return m.id !== memberId; });
-          renderTeamList();
-          showToast('Removed', 'success');
-        } else { showToast(data.message, 'error'); }
-      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+      if (memberId) {
+        try {
+          await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({action:'removeTeamMember', memberId:memberId})});
+        } catch(e) {}
+      }
+      teamMembers.splice(index, 1);
+      renderTeamList();
+      showToast('Removed', 'success');
+    }
+
+    function editTeamMember(index) {
+      var m = teamMembers[index];
+      var item = document.getElementById('tmItem-' + index);
+      if (!item) return;
+      item.innerHTML = '<div style="display:flex;gap:6px;flex:1;flex-wrap:wrap;align-items:center">' +
+        '<input id="tmEd-name-' + index + '" value="' + esc(m.name) + '" style="flex:1;min-width:80px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '<input id="tmEd-email-' + index + '" value="' + esc(m.email) + '" style="flex:1.2;min-width:120px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '<input id="tmEd-pos-' + index + '" value="' + esc(m.position || '') + '" placeholder="Position" style="flex:0.7;min-width:70px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '<input id="tmEd-phone-' + index + '" value="' + esc(m.phone || '') + '" placeholder="Phone" style="flex:0.7;min-width:70px;padding:5px 8px;border:1px solid #cbd5e0;border-radius:4px;font-size:12px"/>' +
+        '</div><div style="display:flex;gap:4px;margin-left:8px">' +
+        '<button onclick="saveEditTeamMember(' + index + ')" style="padding:4px 10px;border-radius:4px;border:1px solid #a7f3d0;background:#fff;color:#059669;font-size:11px;cursor:pointer;font-weight:600">Save</button>' +
+        '<button onclick="renderTeamList()" style="padding:4px 10px;border-radius:4px;border:1px solid #cbd5e0;background:#fff;color:#4a5568;font-size:11px;cursor:pointer;font-weight:600">Cancel</button></div>';
+    }
+
+    async function saveEditTeamMember(index) {
+      var m = teamMembers[index];
+      var name = document.getElementById('tmEd-name-' + index).value.trim();
+      var email = document.getElementById('tmEd-email-' + index).value.trim();
+      var position = document.getElementById('tmEd-pos-' + index).value.trim();
+      var phone = document.getElementById('tmEd-phone-' + index).value.trim();
+      if (!name || !email) { showToast('Name and email required', 'error'); return; }
+      m.name = name; m.email = email; m.position = position; m.phone = phone;
+      if (m.id) {
+        try {
+          await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body: JSON.stringify({action:'updateTeamMember', member:m})});
+        } catch(e) {}
+      }
+      renderTeamList();
+      showToast('Updated', 'success');
     }
 
     // ==================== SEND REP ALERT (from Lead DB) ====================
@@ -3368,41 +3439,44 @@ function exportLeadsToExcel() {
       var lead = allLeads.find(function(l) { return safeLeadId(l) === String(leadId); });
       if (!lead) { showToast('Lead not found', 'error'); return; }
 
-      // Fetch team members
-      try {
-        var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
-        var data = await resp.json();
-        var members = (data.status === 'success' && data.members) ? data.members : [];
-        if (members.length === 0) { showToast('No team members. Add team members first.', 'error'); return; }
+      var members = teamMembers;
+      if (members.length === 0) {
+        try {
+          var resp = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+          var data = await resp.json();
+          members = (data.status === 'success' && data.members) ? data.members : [];
+          teamMembers = members;
+        } catch(e) {}
+      }
+      if (members.length === 0) { showToast('No team members. Add team members first.', 'error'); return; }
 
-        var opts = '';
-        for (var i = 0; i < members.length; i++) {
-          opts += '<option value="' + i + '">' + esc(members[i].name) + ' ? ' + esc(members[i].position || 'No position') + ' (' + esc(members[i].email) + ')</option>';
-        }
+      var opts = '';
+      for (var i = 0; i < members.length; i++) {
+        opts += '<option value="' + i + '">' + esc(members[i].name) + ' - ' + esc(members[i].position || 'No position') + ' (' + esc(members[i].email) + ')</option>';
+      }
 
-        var overlay = document.createElement('div');
-        overlay.id = 'alertOverlay';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
-        overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:460px;width:95%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
-          '<div style="background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;padding:18px 24px"><h3 style="margin:0;font-size:17px">? Send Rep Alert</h3><p style="margin:4px 0 0;opacity:.8;font-size:12px">' + esc(lead.companyName || '') + '</p></div>' +
-          '<div style="padding:20px 24px">' +
-            '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px">Select Sales Rep</label>' +
-            '<select id="alertRepSelect" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + opts + '</select></div>' +
-            '<div style="padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#4a5568;line-height:1.6">' +
-              '<div style="font-weight:700;color:#dc2626;margin-bottom:6px">This will:</div>' +
-              '<div>?? Send email alert to the selected rep</div>' +
-              '<div>? Auto-assign <strong>Call</strong> action in Follow Up Actions</div>' +
-              '<div>? Set action date to <strong>today</strong></div>' +
-              '<div>? Assign rep as the <strong>Who</strong></div>' +
-            '</div>' +
+      var overlay = document.createElement('div');
+      overlay.id = 'alertOverlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+      overlay.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:460px;width:95%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">' +
+        '<div style="background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;padding:18px 24px"><h3 style="margin:0;font-size:17px">Send Rep Alert</h3><p style="margin:4px 0 0;opacity:.8;font-size:12px">' + esc(lead.companyName || '') + '</p></div>' +
+        '<div style="padding:20px 24px">' +
+          '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:block;margin-bottom:6px">Select Sales Rep</label>' +
+          '<select id="alertRepSelect" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px">' + opts + '</select></div>' +
+          '<div style="padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px;color:#4a5568;line-height:1.6">' +
+            '<div style="font-weight:700;color:#dc2626;margin-bottom:6px">This will:</div>' +
+            '<div>&bull; Send email alert to the selected rep</div>' +
+            '<div>&bull; Auto-assign <strong>Call</strong> action in Follow Up Actions</div>' +
+            '<div>&bull; Set action date to <strong>today</strong></div>' +
+            '<div>&bull; Assign rep as the <strong>Who</strong></div>' +
           '</div>' +
-          '<div style="padding:14px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e2e8f0">' +
-            '<button onclick="document.getElementById(\'alertOverlay\').remove()" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>' +
-            '<button id="alertSendBtn" onclick="confirmRepAlertFromDB(\'' + leadId + '\')" style="padding:9px 20px;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Send Alert</button>' +
-          '</div></div>';
-        document.body.appendChild(overlay);
-        window._alertMembersDB = members;
-      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+        '</div>' +
+        '<div style="padding:14px 24px;background:#f8fafc;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #e2e8f0">' +
+          '<button onclick="document.getElementById(\'alertOverlay\').remove()" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Cancel</button>' +
+          '<button id="alertSendBtn" onclick="confirmRepAlertFromDB(\'' + leadId + '\')" style="padding:9px 20px;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Send Alert</button>' +
+        '</div></div>';
+      document.body.appendChild(overlay);
+      window._alertMembersDB = members;
     }
 
     async function confirmRepAlertFromDB(leadId) {
@@ -3458,9 +3532,12 @@ function exportLeadsToExcel() {
       }
     }
 
+    window.prefetchTeamMembers = prefetchTeamMembers;
     window.openTeamMembersModal = openTeamMembersModal;
     window.addTeamMember = addTeamMember;
     window.removeTeamMember = removeTeamMember;
+    window.editTeamMember = editTeamMember;
+    window.saveEditTeamMember = saveEditTeamMember;
     window.sendRepAlertFromDB = sendRepAlertFromDB;
     window.confirmRepAlertFromDB = confirmRepAlertFromDB;
     window.saveEmailSettings = saveEmailSettings;
