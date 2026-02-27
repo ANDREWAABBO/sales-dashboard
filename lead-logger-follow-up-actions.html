@@ -273,6 +273,152 @@
     .et-placeholder-tag{display:inline-block;padding:2px 8px;background:#d1fae5;color:#065f46;border-radius:4px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;transition:.1s}
     .et-placeholder-tag:hover{background:#a7f3d0}
     .et-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9}
+
+    /* ==================== MOBILE RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body{padding:8px}
+      .container{padding:12px;border-radius:12px}
+      .title-bar{margin:-12px -12px 16px -12px;padding:14px 16px;border-radius:12px 12px 0 0}
+      .title-bar h1{font-size:1.3rem}
+
+      /* Buttons stack */
+      .btn-row{gap:6px}
+      .tbtn{padding:10px 14px;font-size:12px;gap:5px;flex:1 1 calc(50% - 6px);justify-content:center;min-width:0}
+      .tbtn svg{width:14px;height:14px}
+
+      /* Filters stack */
+      .filter-row{flex-direction:column;gap:8px}
+      .filter-row select,.filter-row input[type="search"]{width:100%;font-size:13px;padding:10px 12px}
+
+      /* Batch bar wrap */
+      .batch-bar{flex-wrap:wrap;padding:8px 12px;gap:8px;font-size:12px}
+      .batch-btn{padding:6px 12px;font-size:12px}
+
+      /* Table smaller */
+      .table-container{border-radius:8px;max-height:none}
+      table{min-width:900px}
+      th{padding:8px 4px;font-size:10px}
+      td{padding:8px 4px;font-size:11px}
+      td:nth-child(2){max-width:120px}
+      .pill{padding:4px 10px;font-size:11px}
+      .lr-tag{font-size:9px;width:40px;padding:3px 3px}
+      .lr-val{font-size:11px}
+      .lr-date{font-size:11px}
+      .lr-dim{font-size:10px}
+      .att-n{font-size:12px}
+      .att-b{width:18px;height:18px;font-size:10px}
+      .notes-snip{max-width:70px;font-size:11px}
+      .alert-btn{padding:5px 10px;font-size:10px;min-width:100px}
+      .btn-sm{padding:5px 10px;font-size:10px;min-width:100px}
+      .phone-link{font-size:11px}
+
+      /* Modals full-width */
+      .modal-card{width:95%!important;max-width:95vw!important}
+      .modal-hdr{padding:14px 16px}
+      .modal-hdr h3{font-size:15px}
+      .modal-body{padding:14px 16px;max-height:65vh}
+      .modal-footer{padding:10px 16px}
+      .modal-footer button{padding:8px 16px;font-size:13px}
+
+      /* Label picker */
+      .label-picker{min-width:auto;max-width:95vw;width:95vw}
+      .lp-body{padding:12px}
+      .lp-chip{padding:6px 10px}
+
+      /* Notes edit */
+      .notes-edit-card{width:95vw!important;max-width:95vw!important}
+      .notes-edit-body textarea{min-height:150px;font-size:14px}
+
+      /* Label settings */
+      .ls-item{flex-wrap:wrap;gap:6px;padding:8px}
+      .ls-pill{min-width:70px;font-size:11px;padding:4px 10px}
+      .ls-tags{gap:3px}
+      .ls-tag{font-size:10px;padding:2px 6px}
+      .ls-edit-btn{font-size:11px;padding:4px 8px}
+      .ls-field input[type="text"],.ls-field input[type="number"]{max-width:100%}
+      .ls-indent{margin-left:0}
+
+      /* Team members */
+      .tm-add-row{flex-direction:column}
+      .tm-add-row input{min-width:0}
+      .tm-item{flex-wrap:wrap;gap:6px}
+      .tm-email{font-size:11px}
+
+      /* Email templates */
+      .et-item{flex-wrap:wrap;gap:6px;padding:10px}
+      .et-info{min-width:calc(100% - 50px)}
+      .et-actions{width:100%;justify-content:flex-end}
+      .et-field textarea{min-height:100px}
+
+      /* Attempt settings */
+      .as-row{flex-direction:column;align-items:flex-start;gap:8px}
+
+      /* Toast */
+      .toast{top:10px;right:10px;left:10px;font-size:13px;padding:10px 16px}
+    }
+
+    @media (max-width: 480px) {
+      body{padding:4px}
+      .container{padding:8px;border-radius:8px}
+      .title-bar{margin:-8px -8px 12px -8px;padding:12px}
+      .title-bar h1{font-size:1.1rem}
+      .tbtn{padding:9px 10px;font-size:11px;flex:1 1 calc(50% - 4px)}
+      table{min-width:750px}
+      th{font-size:9px;padding:6px 3px}
+      td{font-size:10px;padding:6px 3px}
+      .pill{font-size:10px;padding:3px 8px}
+      .alert-btn{min-width:80px;font-size:9px;padding:4px 8px}
+      .btn-sm{min-width:80px;font-size:9px;padding:4px 8px}
+      .modal-card{width:98%!important}
+    }
+
+    /* ==================== MOBILE RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      body{padding:8px}
+      .container{padding:12px;border-radius:12px}
+      .title-bar{margin:-12px -12px 16px -12px;padding:14px 16px;border-radius:12px 12px 0 0}
+      .title-bar h1{font-size:1.3rem}
+      .btn-row{gap:6px}
+      .tbtn{padding:10px 14px;font-size:12px;gap:5px;flex:1 1 calc(50% - 6px);justify-content:center;min-width:0}
+      .tbtn svg{width:14px;height:14px}
+      .filter-row{flex-direction:column;gap:8px}
+      .filter-row select,.filter-row input[type="search"]{width:100%;font-size:13px;padding:10px 12px}
+      .batch-bar{flex-wrap:wrap;gap:8px;padding:8px 14px;font-size:12px}
+      .batch-btn{padding:6px 12px;font-size:12px}
+      .table-container{border-radius:8px;max-height:none}
+      table{min-width:900px}
+      th{padding:8px 4px;font-size:10px}
+      td{padding:8px 4px;font-size:11px}
+      .alert-btn{padding:6px 10px;font-size:10px;min-width:100px}
+      .btn-sm{padding:6px 10px;font-size:10px;min-width:100px}
+      .att-n{font-size:12px}
+      .notes-snip{max-width:80px;font-size:11px}
+      .modal-card{width:96%!important;max-width:96vw!important}
+      .modal-body{padding:14px}
+      .notes-edit-card{width:95vw!important;max-width:95vw!important}
+      .label-picker{min-width:auto;max-width:95vw;width:90vw}
+      .ls-item{flex-wrap:wrap;gap:6px}
+      .ls-pill{min-width:auto;font-size:11px;padding:4px 10px}
+      .ls-field input[type="text"],.ls-field input[type="number"]{max-width:100%}
+      .tm-add-row{flex-wrap:wrap}
+      .tm-add-row input{min-width:0;flex:1 1 100%}
+      .tm-item{flex-wrap:wrap;gap:6px}
+      .tm-info{min-width:0}
+      .et-item{flex-wrap:wrap;gap:6px}
+      .et-info{min-width:0}
+    }
+    @media (max-width: 480px) {
+      body{padding:4px}
+      .container{padding:8px;border-radius:8px}
+      .title-bar{margin:-8px -8px 12px -8px;padding:12px}
+      .title-bar h1{font-size:1.1rem}
+      .tbtn{padding:8px 10px;font-size:11px;flex:1 1 calc(50% - 4px)}
+      table{min-width:700px}
+      th{font-size:9px;padding:6px 3px}
+      td{font-size:10px;padding:6px 3px}
+      .modal-card{width:98%!important;max-width:98vw!important}
+      .modal-body{padding:10px}
+    }
   </style>
 </head>
 <body>
