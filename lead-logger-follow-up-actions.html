@@ -523,10 +523,7 @@
       }).catch(function(){});
     });
 
-    // Reload actions when tab becomes visible (picks up changes from Lead DB)
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden) { loadActions(); }
-    });
+    // Manual refresh: user can reload page to get latest data
 
     async function loadAvailableLabels() {
       try {
