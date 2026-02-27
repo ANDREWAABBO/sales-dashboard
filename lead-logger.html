@@ -1216,8 +1216,9 @@
     }
 
     function editLead(leadId){
+      try {
       const lead = (allLeads || []).find(l => safeLeadId(l) === String(leadId));
-      if (!lead) return;
+      if (!lead) { showToast('Lead not found: ID=' + leadId, 'error'); return; }
 
       currentEditId = safeLeadId(lead);
       document.getElementById('modalTitle').textContent = 'Edit Lead';
@@ -1274,6 +1275,7 @@
       toggleAppointmentDate();
       document.getElementById('leadModal').style.display = 'block';
       markFormPristineAndWatch();
+      } catch(e) { showToast('Error opening edit: ' + e.message, 'error'); }
     }
 
     function attemptCloseModal(){
