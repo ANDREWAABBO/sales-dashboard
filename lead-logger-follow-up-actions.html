@@ -868,6 +868,15 @@
       overlay.innerHTML = h;
       document.body.appendChild(overlay);
       renderComposeContacts();
+
+      // Auto-select first template if available and no existing content
+      if (emailTemplates.length > 0 && !existingSubject && !existingBody) {
+        var tplSel = document.getElementById('compTemplate');
+        if (tplSel) {
+          tplSel.value = '0';
+          window._applyTemplate(tplSel);
+        }
+      }
     }
 
     // Global template apply ? works from both inline onchange and direct call
