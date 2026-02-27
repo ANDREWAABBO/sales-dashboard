@@ -511,22 +511,14 @@
         <input type="hidden" id="emailAddress" name="emailAddress"/>
 
         <div class="section-header">Sales Representative</div>
-        <div class="form-row">
-          <div class="form-group">
+        <div class="form-group">
             <label for="repSelect">Select Sales Rep *</label>
             <select id="repSelect" name="repSelect" required onchange="onRepSelected()">
               <option value="">Select a rep...</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="status">Status</label>
-            <select id="status" name="status">
-              <option value="Active">Active</option>
-              <option value="Signed Up">Signed Up</option>
-              <option value="Dead">Dead</option>
-            </select>
-          </div>
         </div>
+        <!-- Status hidden ? defaults to Active on new leads -->
+        <input type="hidden" id="status" name="status" value="Active"/>
         <!-- Hidden fields populated by rep dropdown -->
         <input type="hidden" id="repName" name="repName"/>
         <input type="hidden" id="repPhone" name="repPhone"/>
@@ -3398,7 +3390,7 @@ function exportLeadsToExcel() {
         var m = members[i];
         var opt = document.createElement('option');
         opt.value = i;
-        opt.textContent = m.name + (m.position ? ' ? ' + m.position : '') + (m.email ? ' (' + m.email + ')' : '');
+        opt.textContent = m.name + (m.position ? ' - ' + m.position : '') + (m.email ? ' (' + m.email + ')' : '');
         opt.setAttribute('data-name', m.name || '');
         opt.setAttribute('data-email', m.email || '');
         opt.setAttribute('data-phone', m.phone || '');
