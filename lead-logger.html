@@ -832,10 +832,7 @@
       initSortableHeaders();
     });
 
-    // Reload leads when tab becomes visible (picks up changes from Follow Up Actions)
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden) { loadLeads(); }
-    });
+    // Manual refresh: user can reload page to get latest data
 
     function setupPhoneFormatting(){
       const phoneInput = document.getElementById('phoneNumber');
