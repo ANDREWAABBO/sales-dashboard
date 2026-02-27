@@ -536,10 +536,23 @@
     // ?????????? DATA LOADING ??????????
     async function loadActions() {
       try {
+        // Instant load from cache
+        var cached = sessionStorage.getItem('cachedActions');
+        if (cached) {
+          try {
+            allActions = JSON.parse(cached);
+            renderTable();
+          } catch(e) {}
+        }
+        
         var res = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
         var data = await res.json();
         if (data.status !== 'success') throw new Error(data.message);
         allActions = data.actions || [];
+        
+        // Cache for instant load on next visit
+        try { sessionStorage.setItem('cachedActions', JSON.stringify(allActions)); } catch(e) {}
+        
         renderTable();
       } catch(e) {
         showToast('Error loading actions: ' + e.message, 'error');
@@ -889,12 +902,13 @@
 
     function applyComposeTemplate() {
       var sel = document.getElementById('compTemplate');
+      if (!sel || sel.value === '') return;
       var idx = parseInt(sel.value);
       if (isNaN(idx) || idx < 0 || idx >= emailTemplates.length) return;
       var t = emailTemplates[idx];
       if (!t) return;
-      var a = allActions.find(function(x) { return x.id === _composeActionId; });
-      if (!a) return;
+      // Action is optional - template text works even without placeholder data
+      var a = allActions.find(function(x) { return x.id === _composeActionId; }) || {};
       document.getElementById('compSubject').value = fillPlaceholders(t.subject || '', a);
       document.getElementById('compBody').value = fillPlaceholders(t.body || '', a);
     }
@@ -1889,16 +1903,18 @@
     }
 
     function fillPlaceholders(text, action) {
+      if (!text) return '';
+      var a = action || {};
       var today = new Date();
       var mm = String(today.getMonth()+1).padStart(2,'0');
       var dd = String(today.getDate()).padStart(2,'0');
       var yyyy = today.getFullYear();
       return text
-        .replace(/\{Company\}/gi, action.company || '')
-        .replace(/\{Contact\}/gi, action.contact || '')
-        .replace(/\{Email\}/gi, action.email || '')
-        .replace(/\{Phone\}/gi, action.phone || '')
-        .replace(/\{Rep\}/gi, Object.values(action.who || {})[0] || '')
+        .replace(/\{Company\}/gi, a.company || '')
+        .replace(/\{Contact\}/gi, a.contact || '')
+        .replace(/\{Email\}/gi, a.email || '')
+        .replace(/\{Phone\}/gi, a.phone || '')
+        .replace(/\{Rep\}/gi, Object.values(a.who || {})[0] || '')
         .replace(/\{Date\}/gi, mm + '/' + dd + '/' + yyyy);
     }
 
