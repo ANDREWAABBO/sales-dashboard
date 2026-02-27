@@ -130,7 +130,7 @@
 
     /* --- MODAL: static backdrop, no accidental close --- */
     .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.5);animation:fadeIn .2s ease}
-    .modal-content{background:#fff;margin:5% auto;padding:30px;border-radius:12px;width:90%;max-width:620px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .2s ease}
+    .modal-content{background:#fff;margin:3% auto;padding:30px;border-radius:12px;width:92%;max-width:760px;box-shadow:0 20px 40px rgba(0,0,0,.2);animation:slideIn .2s ease;max-height:90vh;overflow-y:auto}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     @keyframes slideIn{from{transform:translateY(-40px);opacity:0}to{transform:translateY(0);opacity:1}}
     .close{color:#aaa;float:right;font-size:28px;font-weight:700;cursor:pointer}
@@ -152,6 +152,21 @@
 
     /* Import Modal Styles */
     #importModal .modal-content{max-width:800px}
+
+    .contacts-clickable{cursor:pointer;border-bottom:1px dashed #cbd5e0;padding-bottom:1px;transition:color .15s}
+    .contacts-clickable:hover{color:#2563eb;border-bottom-color:#2563eb}
+    .contacts-popover{position:fixed;z-index:1001;background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);border:1px solid #e2e8f0;min-width:480px;max-width:560px;animation:slideIn .15s ease}
+    .contacts-popover-hdr{background:#263238;color:#fff;padding:10px 14px;border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:space-between}
+    .contacts-popover-body{padding:12px 14px;max-height:300px;overflow-y:auto}
+    .contacts-popover-footer{padding:10px 14px;background:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 12px 12px;display:flex;justify-content:space-between}
+    .cp-row{display:flex;align-items:center;gap:5px;padding:5px 0;border-bottom:1px solid #f1f5f9}
+    .cp-row:last-child{border-bottom:none}
+    .cp-row input{padding:6px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:12px}
+    .cp-row .cp-name{flex:1;min-width:0}
+    .cp-row .cp-email{flex:1.2;min-width:0}
+    .cp-row .cp-pos{flex:0.7;min-width:0}
+    .cp-row .cp-del{width:24px;height:24px;border:1px solid #fecaca;border-radius:5px;background:#fff;color:#ef4444;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .cp-row .cp-del:hover{background:#fef2f2}
     .file-preview{background:#f7fafc;padding:15px;border-radius:8px;margin:15px 0}
     .file-preview table{font-size:12px;border-collapse:collapse}
     .file-preview th{background:#263238;color:white;padding:8px;text-align:left;border:1px solid #ccc}
@@ -886,9 +901,21 @@
 
     async function loadLeads(){
       try{
-        document.getElementById('loadingState').style.display='block';
-        document.getElementById('leadsTable').style.display='none';
-        document.getElementById('emptyState').style.display='none';
+        // Instant load from cache
+        var cached = sessionStorage.getItem('cachedLeads');
+        if (cached) {
+          try {
+            allLeads = JSON.parse(cached);
+            updateRepFilter();
+            filterLeads();
+          } catch(e) {}
+        }
+        
+        if (!cached) {
+          document.getElementById('loadingState').style.display='block';
+          document.getElementById('leadsTable').style.display='none';
+          document.getElementById('emptyState').style.display='none';
+        }
 
         const res = await fetch(WEB_APP_URL + '?action=getLeads');
         const data = await res.json();
@@ -896,13 +923,8 @@
 
         allLeads = data.leads || [];
         
-        // DEBUG: Check what data we're getting from the backend
-        console.log('Loaded leads from backend:', allLeads);
-        if (allLeads.length > 0) {
-          console.log('Sample lead data:', allLeads[0]);
-          console.log('Sample lead repPhone:', allLeads[0].repPhone);
-          console.log('Sample lead repEmail:', allLeads[0].repEmail);
-        }
+        // Cache for instant load on next visit
+        try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
         
         updateRepFilter();
         filterLeads(); // ? render using current dropdowns (default = Active)
@@ -1001,7 +1023,7 @@
       const statusClass = getStatusClass(lead.status);
       const notes = (lead.notes != null) ? String(lead.notes) : '';
 
-      // Build contact cell showing all contacts with positions
+      // Build contact cell - clickable to edit
       var contactCell = '';
       if (lead.contacts && lead.contacts.length > 0) {
         contactCell = lead.contacts.map(function(c) {
@@ -1012,13 +1034,16 @@
         }).filter(Boolean).join('<br/>');
       }
       if (!contactCell) contactCell = lead.contactName || '';
+      contactCell = '<span class="contacts-clickable" onclick="openInlineContacts(event,\'' + leadId + '\')">' + (contactCell || '<span style="color:#94a3b8;font-style:italic">+ Add Contact</span>') + '</span>';
 
-      // Build email cell showing all emails
+      // Build email cell - clickable to edit
       var emailCell = '';
       if (lead.contacts && lead.contacts.length > 0) {
         emailCell = lead.contacts.map(function(c) { return c.email || ''; }).filter(Boolean).join('<br/>');
       }
       if (!emailCell) emailCell = lead.emailAddress || '';
+      emailCell = '<span class="contacts-clickable" onclick="openInlineContacts(event,\'' + leadId + '\')">' + (emailCell || '<span style="color:#94a3b8;font-style:italic">+ Add</span>') + '</span>';
+
 
       const cells = [
         dateAdded,
@@ -2881,6 +2906,122 @@ function exportLeadsToExcel() {
       } catch (err) {
         console.error('Inline date update error:', err);
         showToast('Error updating date: ' + err.message, 'error');
+      }
+    }
+
+    // ============ INLINE CONTACTS EDITING ============
+    var _inlineContacts = [];
+    var _inlineContactLeadId = null;
+
+    function openInlineContacts(evt, leadId) {
+      evt.stopPropagation();
+      closeInlineContacts();
+      var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
+      if (!lead) return;
+      _inlineContactLeadId = leadId;
+
+      if (lead.contacts && lead.contacts.length > 0) {
+        _inlineContacts = lead.contacts.map(function(c) { return {name:c.name||'', email:c.email||'', position:c.position||''}; });
+      } else if (lead.contactName || lead.emailAddress) {
+        _inlineContacts = [{name:lead.contactName||'', email:lead.emailAddress||'', position:''}];
+      } else {
+        _inlineContacts = [{name:'', email:'', position:''}];
+      }
+
+      var pop = document.createElement('div');
+      pop.className = 'contacts-popover';
+      pop.id = 'contactsPopover';
+
+      var h = '<div class="contacts-popover-hdr"><span style="font-weight:600;font-size:13px">' + (lead.companyName||'') + ' ? Contacts</span><button onclick="closeInlineContacts()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">&times;</button></div>';
+      h += '<div class="contacts-popover-body" id="cpBody">';
+      h += '<div style="display:flex;gap:4px;padding:0 0 4px;font-size:10px;color:#94a3b8;font-weight:600"><span style="flex:1">Name</span><span style="flex:1.2">Email</span><span style="flex:0.7">Position</span><span style="width:24px"></span></div>';
+      h += '<div id="cpRows"></div>';
+      h += '</div>';
+      h += '<div class="contacts-popover-footer"><button onclick="addInlineContact()" style="padding:4px 10px;border:1px solid #10b981;border-radius:5px;background:#ecfdf5;color:#059669;font-size:11px;font-weight:600;cursor:pointer">+ Add Contact</button><div style="display:flex;gap:6px"><button onclick="closeInlineContacts()" style="padding:5px 12px;border:1px solid #cbd5e0;border-radius:5px;background:#fff;color:#4a5568;font-size:12px;font-weight:600;cursor:pointer">Cancel</button><button onclick="saveInlineContacts()" style="padding:5px 14px;border:none;border-radius:5px;background:#263238;color:#fff;font-size:12px;font-weight:600;cursor:pointer">Save</button></div></div>';
+
+      pop.innerHTML = h;
+
+      // Position near click
+      var rect = evt.target.getBoundingClientRect();
+      pop.style.top = Math.min(rect.bottom + 4, window.innerHeight - 350) + 'px';
+      pop.style.left = Math.max(8, Math.min(rect.left - 100, window.innerWidth - 520)) + 'px';
+
+      document.body.appendChild(pop);
+      renderInlineContactRows();
+
+      // Close on outside click
+      setTimeout(function() {
+        document.addEventListener('click', _cpOutsideClick);
+      }, 50);
+    }
+
+    function _cpOutsideClick(e) {
+      var pop = document.getElementById('contactsPopover');
+      if (pop && !pop.contains(e.target)) closeInlineContacts();
+    }
+
+    function closeInlineContacts() {
+      var pop = document.getElementById('contactsPopover');
+      if (pop) pop.remove();
+      document.removeEventListener('click', _cpOutsideClick);
+      _inlineContactLeadId = null;
+    }
+
+    function renderInlineContactRows() {
+      var el = document.getElementById('cpRows');
+      if (!el) return;
+      var h = '';
+      for (var i = 0; i < _inlineContacts.length; i++) {
+        var c = _inlineContacts[i];
+        h += '<div class="cp-row">';
+        h += '<input class="cp-name" type="text" value="' + (c.name||'').replace(/"/g,'&quot;') + '" placeholder="Name" oninput="_inlineContacts[' + i + '].name=this.value"/>';
+        h += '<input class="cp-email" type="email" value="' + (c.email||'').replace(/"/g,'&quot;') + '" placeholder="email@co.com" oninput="_inlineContacts[' + i + '].email=this.value"/>';
+        h += '<input class="cp-pos" type="text" value="' + (c.position||'').replace(/"/g,'&quot;') + '" placeholder="Position" oninput="_inlineContacts[' + i + '].position=this.value"/>';
+        h += '<button class="cp-del" onclick="removeInlineContact(' + i + ')" title="Remove">&times;</button>';
+        h += '</div>';
+      }
+      el.innerHTML = h;
+    }
+
+    function addInlineContact() {
+      _inlineContacts.push({name:'', email:'', position:''});
+      renderInlineContactRows();
+    }
+
+    function removeInlineContact(idx) {
+      _inlineContacts.splice(idx, 1);
+      if (_inlineContacts.length === 0) _inlineContacts.push({name:'', email:'', position:''});
+      renderInlineContactRows();
+    }
+
+    async function saveInlineContacts() {
+      var leadId = _inlineContactLeadId;
+      if (!leadId) return;
+      var valid = _inlineContacts.filter(function(c) { return (c.name && c.name.trim()) || (c.email && c.email.trim()); });
+      var primary = valid.length > 0 ? valid[0] : {name:'', email:'', position:''};
+
+      // Update local data
+      var lead = (allLeads || []).find(function(l) { return safeLeadId(l) === String(leadId); });
+      if (lead) {
+        lead.contacts = valid;
+        lead.contactName = primary.name;
+        lead.emailAddress = primary.email;
+      }
+
+      closeInlineContacts();
+      filterLeads(); // re-render table
+
+      // Save to backend
+      try {
+        await fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateLead', leadId:leadId, updates:{
+            contactName: primary.name, emailAddress: primary.email, contacts: valid
+          }})
+        });
+        try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
+      } catch(e) {
+        showToast('Error saving contacts', 'error');
       }
     }
 
