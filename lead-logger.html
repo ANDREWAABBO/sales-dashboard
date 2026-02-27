@@ -1243,6 +1243,8 @@
       formInitialSnapshot = snapshotForm();
       formDirty = false;
       removeFormWatchers();
+      // Re-attach phone formatting (removeFormWatchers clones elements, stripping listeners)
+      setupPhoneFormatting();
       const formEl = document.getElementById('leadForm');
       const markDirty = () => { formDirty = (snapshotForm() !== formInitialSnapshot); };
       formEl.querySelectorAll('input,select,textarea').forEach(el => {
@@ -1323,11 +1325,13 @@
         
         formDirty = false;
         closeModal();
-        await loadLeads();
         
+        // Show alert popup IMMEDIATELY for new leads (before loadLeads)
         if (!isUpdate && savedRepEmail) {
           showAlertRepPopup(savedLeadId, savedRepName, savedRepEmail, savedCompany, savedPhone, savedContact, savedNotes);
         }
+        
+        await loadLeads();
       }catch(err){
         console.error('save error:', err);
         showToast('Error saving lead: ' + err.message, 'error');
@@ -3456,9 +3460,10 @@ function exportLeadsToExcel() {
       document.body.appendChild(overlay);
 
       document.getElementById('postSaveAlertBtn').addEventListener('click', async function() {
-        var btn = this;
-        btn.textContent = 'Sending...';
-        btn.disabled = true;
+        // Close overlay instantly
+        var ov = document.getElementById('postSaveAlertOverlay');
+        if (ov) ov.remove();
+        showToast('Sending alert to ' + repName + '...', 'success');
 
         // Find matching FU action ID
         var actionId = '';
@@ -3494,8 +3499,6 @@ function exportLeadsToExcel() {
         } catch(e) {
           showToast('Error: ' + e.message, 'error');
         }
-        var ov = document.getElementById('postSaveAlertOverlay');
-        if (ov) ov.remove();
       });
     }
 
@@ -3552,24 +3555,25 @@ function exportLeadsToExcel() {
       var member = window._alertMembersDB[idx];
       if (!member || !member.email) { showToast('No valid email for selected rep', 'error'); return; }
 
-      var btn = document.getElementById('alertSendBtn');
-      btn.textContent = 'Sending...';
-      btn.disabled = true;
+      // Close overlay instantly
+      var ov = document.getElementById('alertOverlay');
+      if (ov) ov.remove();
+      showToast('Sending alert to ' + member.name + '...', 'success');
 
-      // Find matching FU action ID
-      var actionId = '';
+      // Fire in background
       try {
-        var fuResp = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
-        var fuData = await fuResp.json();
-        if (fuData.status === 'success' && fuData.actions) {
-          var match = fuData.actions.find(function(a) {
-            return String(a.leadId) === String(lead.id) || String(a.leadId) === String(leadId);
-          });
-          if (match) actionId = match.id;
-        }
-      } catch(e) {}
+        var actionId = '';
+        try {
+          var fuResp = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
+          var fuData = await fuResp.json();
+          if (fuData.status === 'success' && fuData.actions) {
+            var match = fuData.actions.find(function(a) {
+              return String(a.leadId) === String(lead.id) || String(a.leadId) === String(leadId);
+            });
+            if (match) actionId = match.id;
+          }
+        } catch(e) {}
 
-      try {
         var resp = await fetch(WEB_APP_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
           body: JSON.stringify({
             action:'sendRepAlert',
@@ -3584,16 +3588,11 @@ function exportLeadsToExcel() {
         var data = await resp.json();
         if (data.status === 'success') {
           showToast('Alert sent to ' + member.name + '!', 'success');
-          document.getElementById('alertOverlay').remove();
         } else {
           showToast('Error: ' + data.message, 'error');
-          btn.textContent = 'Send Alert';
-          btn.disabled = false;
         }
       } catch(e) {
         showToast('Error: ' + e.message, 'error');
-        btn.textContent = 'Send Alert';
-        btn.disabled = false;
       }
     }
 
