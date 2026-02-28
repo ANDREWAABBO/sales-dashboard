@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1186,6 +1187,26 @@
       return `${m}/${day}/${y}`;
     }
 
+    // Word-boundary search: "sig" matches "SIG Sauer" and "Signal" but NOT "Design"
+    function wordBoundaryMatch(text, query) {
+      if (!text || !query) return false;
+      var t = String(text).toLowerCase();
+      var q = query.toLowerCase();
+      // Try regex word boundary first
+      try {
+        var re = new RegExp('(^|[\\s/\\-_.,;:()\\[\\]])' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        return re.test(t);
+      } catch(e) {
+        // Fallback: check if query appears at start or after a word separator
+        var separators = [' ', '/', '-', '_', '.', ',', ';', ':', '(', ')', '[', ']'];
+        if (t.indexOf(q) === 0) return true;
+        for (var s = 0; s < separators.length; s++) {
+          if (t.indexOf(separators[s] + q) !== -1) return true;
+        }
+        return false;
+      }
+    }
+
     function filterLeads(){
       const rep = document.getElementById('repFilter').value.toLowerCase();
       const status = document.getElementById('statusFilter').value;
@@ -1195,18 +1216,18 @@
         const matchRep = !rep || ((l.repName||'').toLowerCase().includes(rep));
         const matchStatus = !status || (l.status === status);
         const matchSearch = !q ||
-          (l.companyName && l.companyName.toLowerCase().includes(q)) ||
-          (l.contactName && l.contactName.toLowerCase().includes(q)) ||
-          (l.phoneNumber && String(l.phoneNumber).toLowerCase().includes(q)) ||
-          (l.emailAddress && l.emailAddress.toLowerCase().includes(q)) ||
-          (l.customerAddress && l.customerAddress.toLowerCase().includes(q)) ||
-          (l.customerState && String(l.customerState).toLowerCase().includes(q)) ||
-          (l.customerZip && String(l.customerZip).toLowerCase().includes(q)) ||
-          (l.notes && String(l.notes).toLowerCase().includes(q)) ||
+          wordBoundaryMatch(l.companyName, q) ||
+          wordBoundaryMatch(l.contactName, q) ||
+          wordBoundaryMatch(l.phoneNumber, q) ||
+          wordBoundaryMatch(l.emailAddress, q) ||
+          wordBoundaryMatch(l.customerAddress, q) ||
+          wordBoundaryMatch(l.customerState, q) ||
+          wordBoundaryMatch(l.customerZip, q) ||
+          wordBoundaryMatch(l.notes, q) ||
           (l.contacts && l.contacts.some(function(c) {
-            return (c.name && c.name.toLowerCase().includes(q)) ||
-                   (c.email && c.email.toLowerCase().includes(q)) ||
-                   (c.position && c.position.toLowerCase().includes(q));
+            return wordBoundaryMatch(c.name, q) ||
+                   wordBoundaryMatch(c.email, q) ||
+                   wordBoundaryMatch(c.position, q);
           }));
         return matchRep && matchStatus && matchSearch;
       });
@@ -1355,18 +1376,18 @@
         if (n === q) { score = 100; }
         // Starts with
         else if (n.indexOf(q) === 0) { score = 90; }
-        // Contains
-        else if (n.indexOf(q) > 0) { score = 75; }
+        // Contains at word boundary (not mid-word)
+        else if (wordBoundaryContains(n, q)) { score = 75; }
         // Query starts with the lead name (user typed more)
         else if (q.indexOf(n) === 0) { score = 70; }
-        // Word-level match
+        // Word-level match (each query word must start a word in name)
         else {
           var qWords = q.split(/\s+/);
           var nWords = n.split(/\s+/);
           var wordHits = 0;
           for (var w = 0; w < qWords.length; w++) {
             for (var nw = 0; nw < nWords.length; nw++) {
-              if (nWords[nw].indexOf(qWords[w]) >= 0 || qWords[w].indexOf(nWords[nw]) >= 0) {
+              if (nWords[nw].indexOf(qWords[w]) === 0 || qWords[w].indexOf(nWords[nw]) === 0) {
                 wordHits++;
                 break;
               }
@@ -1393,6 +1414,17 @@
       // Sort by score descending
       scored.sort(function(a, b) { return b.score - a.score; });
       return scored.slice(0, maxResults);
+    }
+
+    // Check if query appears at a word boundary inside text
+    function wordBoundaryContains(text, query) {
+      if (!text || !query) return false;
+      var idx = text.indexOf(query);
+      while (idx >= 0) {
+        if (idx === 0 || /[\s/\-_.,;:()[\]]/.test(text[idx - 1])) return true;
+        idx = text.indexOf(query, idx + 1);
+      }
+      return false;
     }
 
     function normalizeStr(s) {
