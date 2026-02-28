@@ -2569,15 +2569,18 @@
     }
 
     function openDripModal() {
-      // Refresh data first
+      // Render immediately with cached data
+      renderDripModal();
+      // Refresh data in background
       Promise.all([
         fetch(WEB_APP_URL + '?action=getDripSettings').then(function(r){return r.json()}),
         fetch(WEB_APP_URL + '?action=getDripCampaigns').then(function(r){return r.json()})
       ]).then(function(results) {
         if (results[0].status === 'success' && results[0].settings) _dripSettings = results[0].settings;
         if (results[1].status === 'success' && results[1].campaigns) _dripCampaigns = results[1].campaigns;
-        renderDripModal();
-      }).catch(function() { renderDripModal(); });
+        // Re-render if modal still open
+        if (document.getElementById('dripOverlay')) renderDripModal();
+      }).catch(function() {});
     }
 
     function renderDripModal() {
