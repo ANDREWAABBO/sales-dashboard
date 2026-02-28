@@ -2413,12 +2413,18 @@ function importValidRowsOnly() {
     }
 
     async function showRepAssignmentModal(leadsToImport) {
-      // Fetch team members for rep dropdown
+      // Fetch team members and labels
       var members = [];
+      var labels = [];
       try {
         var res = await fetch(WEB_APP_URL + '?action=getTeamMembers');
         var data = await res.json();
         if (data.status === 'success' && data.members) members = data.members;
+      } catch(e) {}
+      try {
+        var res2 = await fetch(WEB_APP_URL + '?action=getLabels');
+        var data2 = await res2.json();
+        if (data2.status === 'success' && data2.labels) labels = data2.labels;
       } catch(e) {}
 
       var existing = document.getElementById('repAssignOverlay');
@@ -2429,29 +2435,54 @@ function importValidRowsOnly() {
       overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;justify-content:center;align-items:center;padding:20px';
 
       var card = document.createElement('div');
-      card.style.cssText = 'background:#fff;border-radius:14px;max-width:700px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+      card.style.cssText = 'background:#fff;border-radius:14px;max-width:900px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)';
 
       // Header
       var hdr = document.createElement('div');
       hdr.style.cssText = 'background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:18px 24px;flex-shrink:0';
-      hdr.innerHTML = '<h3 style="margin:0;font-size:17px">Assign Sales Rep</h3><p style="margin:4px 0 0;opacity:.8;font-size:13px">' + leadsToImport.length + ' companies ready to import - assign a rep before importing</p>';
+      hdr.innerHTML = '<h3 style="margin:0;font-size:17px">Import Setup</h3><p style="margin:4px 0 0;opacity:.8;font-size:13px">' + leadsToImport.length + ' companies - assign rep, action, and follow-up details</p>';
 
       // Body
       var body = document.createElement('div');
       body.style.cssText = 'padding:20px 24px;overflow-y:auto;flex:1';
 
-      // Assign All row
-      var repOpts = '<option value="">-- Select Rep --</option>';
+      // Build options
+      var repOpts = '<option value="">-- Rep --</option>';
       for (var m = 0; m < members.length; m++) {
         repOpts += '<option value="' + members[m].name + '" data-phone="' + (members[m].phone || '') + '" data-email="' + (members[m].email || '') + '">' + members[m].name + '</option>';
       }
+      var actionOpts = '<option value="">-- Action --</option>';
+      for (var lb = 0; lb < labels.length; lb++) {
+        actionOpts += '<option value="' + labels[lb].name + '">' + labels[lb].name + '</option>';
+      }
+      // Who uses same members list as rep
+      var whoOpts = '<option value="">-- Who --</option>';
+      for (var w = 0; w < members.length; w++) {
+        whoOpts += '<option value="' + members[w].name + '">' + members[w].name + '</option>';
+      }
 
-      var assignAllDiv = document.createElement('div');
-      assignAllDiv.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px 16px;background:#f0fdf4;border:2px solid #86efac;border-radius:10px';
-      assignAllDiv.innerHTML = '<strong style="font-size:14px;color:#166534;white-space:nowrap">Assign All:</strong>' +
-        '<select id="repAssignAll" style="flex:1;padding:8px 12px;border:2px solid #86efac;border-radius:6px;font-size:14px;font-weight:600">' + repOpts + '</select>' +
-        '<button type="button" style="background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:13px" onclick="applyRepToAll()">Apply to All</button>';
-      body.appendChild(assignAllDiv);
+      // Apply All section
+      var applyAllDiv = document.createElement('div');
+      applyAllDiv.style.cssText = 'padding:14px 16px;background:#f0fdf4;border:2px solid #86efac;border-radius:10px;margin-bottom:16px';
+      applyAllDiv.innerHTML = '<div style="font-size:13px;font-weight:700;color:#166534;margin-bottom:10px">Apply to All Leads:</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">' +
+          '<select id="repAssignAll" style="flex:1;min-width:120px;padding:7px 10px;border:2px solid #86efac;border-radius:6px;font-size:12px">' + repOpts + '</select>' +
+          '<select id="actionAssignAll" style="flex:1;min-width:120px;padding:7px 10px;border:2px solid #86efac;border-radius:6px;font-size:12px">' + actionOpts + '</select>' +
+          '<input type="date" id="dateAssignAll" style="flex:1;min-width:130px;padding:7px 10px;border:2px solid #86efac;border-radius:6px;font-size:12px"/>' +
+          '<select id="whoAssignAll" style="flex:1;min-width:120px;padding:7px 10px;border:2px solid #86efac;border-radius:6px;font-size:12px">' + whoOpts + '</select>' +
+          '<button type="button" style="background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:13px" onclick="applyAllImportFields()">Apply</button>' +
+        '</div>';
+      body.appendChild(applyAllDiv);
+
+      // Column headers
+      var colHdr = document.createElement('div');
+      colHdr.style.cssText = 'display:flex;gap:8px;padding:8px 12px;border-bottom:2px solid #e2e8f0;margin-bottom:4px';
+      colHdr.innerHTML = '<div style="flex:1.5;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Company</div>' +
+        '<div style="width:140px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Rep</div>' +
+        '<div style="width:120px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Action</div>' +
+        '<div style="width:120px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Action Date</div>' +
+        '<div style="width:120px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase">Who</div>';
+      body.appendChild(colHdr);
 
       // Individual rows
       var listDiv = document.createElement('div');
@@ -2459,10 +2490,13 @@ function importValidRowsOnly() {
       for (var i = 0; i < leadsToImport.length; i++) {
         var lead = leadsToImport[i];
         var row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid #f1f5f9';
-        row.innerHTML = '<div style="flex:1;min-width:0"><strong style="font-size:13px;color:#1e293b;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (lead.companyName || 'Unknown') + '</strong>' +
-          '<span style="font-size:11px;color:#64748b">' + (lead.contactName || '') + (lead.phoneNumber ? ' - ' + lead.phoneNumber : '') + '</span></div>' +
-          '<select class="rep-assign-select" data-index="' + i + '" style="width:180px;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px">' + repOpts + '</select>';
+        row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9';
+        row.innerHTML = '<div style="flex:1.5;min-width:0"><strong style="font-size:12px;color:#1e293b;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (lead.companyName || 'Unknown') + '</strong>' +
+          '<span style="font-size:10px;color:#64748b">' + (lead.contactName || '') + (lead.phoneNumber ? ' - ' + lead.phoneNumber : '') + '</span></div>' +
+          '<select class="rep-assign-select" data-index="' + i + '" style="width:140px;padding:6px 8px;border:1px solid #cbd5e0;border-radius:6px;font-size:11px">' + repOpts + '</select>' +
+          '<select class="action-assign-select" data-index="' + i + '" style="width:120px;padding:6px 8px;border:1px solid #cbd5e0;border-radius:6px;font-size:11px">' + actionOpts + '</select>' +
+          '<input type="date" class="date-assign-input" data-index="' + i + '" style="width:120px;padding:6px 8px;border:1px solid #cbd5e0;border-radius:6px;font-size:11px"/>' +
+          '<select class="who-assign-select" data-index="' + i + '" style="width:120px;padding:6px 8px;border:1px solid #cbd5e0;border-radius:6px;font-size:11px">' + whoOpts + '</select>';
         listDiv.appendChild(row);
       }
       body.appendChild(listDiv);
@@ -2470,7 +2504,7 @@ function importValidRowsOnly() {
       // Footer
       var footer = document.createElement('div');
       footer.style.cssText = 'padding:14px 24px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #e2e8f0;flex-shrink:0';
-      footer.innerHTML = '<span style="font-size:12px;color:#64748b">Rep is optional - you can assign later</span>' +
+      footer.innerHTML = '<span style="font-size:12px;color:#64748b">All fields optional - you can assign later in Follow Up Actions</span>' +
         '<div style="display:flex;gap:8px">' +
           '<button type="button" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px" onclick="document.getElementById(\'repAssignOverlay\').remove()">Cancel</button>' +
           '<button type="button" id="repAssignImportBtn" style="padding:9px 24px;background:#10b981;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:14px">Import ' + leadsToImport.length + ' Leads</button>' +
@@ -2488,8 +2522,12 @@ function importValidRowsOnly() {
 
       // Import button handler
       document.getElementById('repAssignImportBtn').addEventListener('click', function() {
-        var selects = document.querySelectorAll('.rep-assign-select');
-        selects.forEach(function(sel) {
+        var repSels = document.querySelectorAll('.rep-assign-select');
+        var actSels = document.querySelectorAll('.action-assign-select');
+        var datInps = document.querySelectorAll('.date-assign-input');
+        var whoSels = document.querySelectorAll('.who-assign-select');
+
+        repSels.forEach(function(sel) {
           var idx = parseInt(sel.getAttribute('data-index'));
           var lead = window._repAssignLeads[idx];
           if (sel.value) {
@@ -2499,18 +2537,41 @@ function importValidRowsOnly() {
             lead.repEmail = opt.getAttribute('data-email') || '';
           }
         });
+        actSels.forEach(function(sel) {
+          var idx = parseInt(sel.getAttribute('data-index'));
+          window._repAssignLeads[idx]._fuAction = sel.value || '';
+        });
+        datInps.forEach(function(inp) {
+          var idx = parseInt(inp.getAttribute('data-index'));
+          window._repAssignLeads[idx]._fuActionDate = inp.value || '';
+        });
+        whoSels.forEach(function(sel) {
+          var idx = parseInt(sel.getAttribute('data-index'));
+          window._repAssignLeads[idx]._fuWho = sel.value || '';
+        });
         overlay.remove();
         performImport(window._repAssignLeads);
       });
     }
 
-    function applyRepToAll() {
-      var allSel = document.getElementById('repAssignAll');
-      if (!allSel.value) return;
-      var selects = document.querySelectorAll('.rep-assign-select');
-      selects.forEach(function(sel) {
-        sel.value = allSel.value;
-      });
+    function applyAllImportFields() {
+      var repVal = document.getElementById('repAssignAll').value;
+      var actVal = document.getElementById('actionAssignAll').value;
+      var datVal = document.getElementById('dateAssignAll').value;
+      var whoVal = document.getElementById('whoAssignAll').value;
+
+      if (repVal) {
+        document.querySelectorAll('.rep-assign-select').forEach(function(sel) { sel.value = repVal; });
+      }
+      if (actVal) {
+        document.querySelectorAll('.action-assign-select').forEach(function(sel) { sel.value = actVal; });
+      }
+      if (datVal) {
+        document.querySelectorAll('.date-assign-input').forEach(function(inp) { inp.value = datVal; });
+      }
+      if (whoVal) {
+        document.querySelectorAll('.who-assign-select').forEach(function(sel) { sel.value = whoVal; });
+      }
     }
 
     async function performImport(leadsArray) {
@@ -2541,6 +2602,9 @@ function importValidRowsOnly() {
           delete leadData._isDuplicate;
           delete leadData._duplicateAction;
           delete leadData._existingLead;
+          delete leadData._fuAction;
+          delete leadData._fuActionDate;
+          delete leadData._fuWho;
 
           // Handle duplicates (missing Lead ID but company exists)
           if (isDuplicate) {
@@ -2617,6 +2681,56 @@ function importValidRowsOnly() {
       // Show success/failure message
       if (successCount > 0) {
         showToast('Successfully imported ' + successCount + ' lead' + (successCount !== 1 ? 's' : '') + (failCount > 0 ? ' (' + failCount + ' failed)' : ''), 'success');
+
+        // Sync leads to Follow Up Actions, then apply action/who/date settings
+        var fuLeads = leadsArray.filter(function(l) { return l._fuAction || l._fuWho || l._fuActionDate; });
+        if (fuLeads.length > 0) {
+          try {
+            // First sync leads to create FU rows
+            await fetch(WEB_APP_URL + '?action=syncLeadsToFollowUp');
+            // Small delay to let server finish
+            await new Promise(function(r) { setTimeout(r, 1000); });
+            // Get FU actions to find the new rows
+            var fuRes = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
+            var fuData = await fuRes.json();
+            if (fuData.status === 'success' && fuData.actions) {
+              for (var fi = 0; fi < fuLeads.length; fi++) {
+                var fl = fuLeads[fi];
+                var compName = (fl.companyName || '').toLowerCase().trim();
+                if (!compName) continue;
+                // Find matching FU action by company name
+                var match = fuData.actions.find(function(a) {
+                  return (a.company || '').toLowerCase().trim() === compName;
+                });
+                if (match) {
+                  var updates = {};
+                  if (fl._fuAction) {
+                    updates.actions = [fl._fuAction];
+                    if (fl._fuWho) {
+                      var whoObj = {}; whoObj[fl._fuAction] = fl._fuWho;
+                      updates.who = whoObj;
+                    }
+                    if (fl._fuActionDate) {
+                      var dateObj = {}; dateObj[fl._fuAction] = fl._fuActionDate;
+                      updates.actionDates = dateObj;
+                    }
+                    var attObj = {}; attObj[fl._fuAction] = 0;
+                    updates.attempts = attObj;
+                    var ldObj = {}; ldObj[fl._fuAction] = '';
+                    updates.lastDates = ldObj;
+                  }
+                  // Fire and forget
+                  fetch(WEB_APP_URL, {
+                    method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+                    body: JSON.stringify({action:'updateFollowUpAction', actionId:match.id, updates:updates})
+                  }).catch(function(e) { console.log('FU update error:', e); });
+                }
+              }
+              showToast('Follow Up Actions updated for ' + fuLeads.length + ' leads', 'success');
+            }
+          } catch(fuErr) { console.log('FU sync error:', fuErr); }
+        }
+
         await loadLeads();
       } else {
         showToast('Failed to import any leads', 'error');
