@@ -46,6 +46,15 @@
     .email-history-tmpl{color:#2563eb;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .email-history-to{color:#64748b;font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .email-history-empty{padding:12px;text-align:center;color:#94a3b8;font-size:12px;font-style:italic}
+    .log-list{max-height:60vh;overflow-y:auto;padding:0 20px}
+    .log-entry{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:12px}
+    .log-entry:last-child{border-bottom:none}
+    .log-ts{min-width:130px;flex-shrink:0;font-size:11px;color:#64748b;font-weight:500}
+    .log-msg{flex:1;color:#1e293b;line-height:1.4}
+    .log-msg .log-field{font-weight:600;color:#0369a1}
+    .log-msg .log-old{color:#ef4444;text-decoration:line-through;font-size:11px}
+    .log-msg .log-new{color:#059669;font-weight:600}
+    .log-empty{padding:40px 20px;text-align:center;color:#94a3b8;font-size:14px}
     .batch-count{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:12px;font-size:13px}
     .batch-btn{padding:7px 18px;background:#fff;color:#263238;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
     .batch-btn:hover{background:#eff6ff}
@@ -515,6 +524,7 @@
             <th style="width:6%">Email</th>
             <th style="width:6%">Proposal</th>
             <th style="width:7%">Rep Alert</th>
+            <th style="width:3%">Log</th>
           </tr></thead>
           <tbody id="fuTableBody"></tbody>
         </table>
@@ -713,7 +723,7 @@
       loadTemplatesFromBackend();
       // Version check
       fetch(WEB_APP_URL + '?action=version').then(function(r){return r.json()}).then(function(d){
-        if(d.version !== 'v17-contact-sync') showToast('WARNING: Code.gs not updated! Deploy v17 to Apps Script','error');
+        if(d.version !== 'v18-activity-log') showToast('WARNING: Code.gs not updated! Deploy v18 to Apps Script','error');
       }).catch(function(){});
     });
 
@@ -931,6 +941,10 @@
           ? '<span style="font-size:12px;color:#ef4444;font-weight:700">DEAD</span>'
           : '<button class="alert-btn" onclick="sendAlert(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Send Rep Alert</button>') + '</td>';
 
+        // History log
+        var histCount = getActivityLog(a.id).length;
+        html += '<td><button class="btn-sm" style="background:#475569;font-size:9px;padding:3px 6px" onclick="openHistoryModal(\'' + a.id + '\')"><svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + (histCount > 0 ? ' ' + histCount : '') + '</button></td>';
+
         html += '</tr>';
       }
       tbody.innerHTML = html;
@@ -1122,6 +1136,102 @@
       }
       h += '</div>';
       return h;
+    }
+
+    // ========== ACTIVITY LOG ==========
+    var _activityLogCache = {}; // in-memory cache of counts per actionId
+
+    function getActivityLog(actionId) {
+      // Returns cached entries or empty - used for count display only
+      return _activityLogCache[actionId] || [];
+    }
+
+    function logActivity(actionId, msg) {
+      // Optimistic: increment local cache count
+      if (!_activityLogCache[actionId]) _activityLogCache[actionId] = [];
+      var now = new Date();
+      var ts = String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+      _activityLogCache[actionId].unshift({ts: ts, msg: msg});
+
+      // Find company name for this action
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      var company = a ? a.company : '';
+
+      // Fire-and-forget POST to backend
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'addActivityLog', actionId: actionId, company: company, entry: {ts: ts, msg: msg}})
+      }).catch(function(e) { console.log('Activity log error:', e); });
+    }
+
+    function openHistoryModal(actionId) {
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      var company = a ? a.company : 'Unknown';
+
+      // Show loading modal immediately
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.id = 'historyOverlay';
+      overlay.innerHTML = '<div class="modal-card" style="max-width:700px"><div class="modal-hdr" style="background:linear-gradient(135deg,#334155,#475569)"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activity Log</h3><p>' + esc(company) + '</p></div><div class="modal-body" style="padding:40px;text-align:center"><div class="spinner"></div><p style="margin-top:12px;color:#64748b">Loading activity log...</p></div></div>';
+      document.body.appendChild(overlay);
+
+      // Fetch from backend
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'getActivityLog', actionId: actionId})
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        var log = (data.status === 'success' && data.entries) ? data.entries : [];
+        // Update cache
+        _activityLogCache[actionId] = log;
+
+        var el = document.getElementById('historyOverlay');
+        if (!el) return;
+
+        var h = '<div class="modal-card" style="max-width:700px">';
+        h += '<div class="modal-hdr" style="background:linear-gradient(135deg,#334155,#475569)"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activity Log</h3><p>' + esc(company) + ' - ' + log.length + ' entries</p></div>';
+
+        if (log.length === 0) {
+          h += '<div class="log-empty"><svg viewBox="0 0 24 24" style="width:40px;height:40px;stroke:#cbd5e0;fill:none;stroke-width:1.5;display:block;margin:0 auto 12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>No activity recorded yet.<br><span style="font-size:12px;color:#94a3b8">Changes will appear here automatically.</span></div>';
+        } else {
+          h += '<div class="log-list">';
+          for (var i = 0; i < log.length; i++) {
+            h += '<div class="log-entry"><span class="log-ts">' + esc(log[i].ts) + '</span><span class="log-msg">' + log[i].msg + '</span></div>';
+          }
+          h += '</div>';
+        }
+
+        h += '<div class="modal-footer" style="justify-content:space-between">';
+        if (log.length > 0) {
+          h += '<button class="btn-cancel" style="color:#ef4444;border:1px solid #fecaca" onclick="clearActivityLog(\'' + actionId + '\')">Clear Log</button>';
+        } else {
+          h += '<span></span>';
+        }
+        h += '<button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button>';
+        h += '</div></div>';
+
+        el.innerHTML = h;
+        renderTable(); // update count badge
+      }).catch(function(e) {
+        var el = document.getElementById('historyOverlay');
+        if (el) el.innerHTML = '<div class="modal-card" style="max-width:400px"><div class="modal-hdr" style="background:#ef4444"><h3>Error</h3></div><div class="modal-body"><p>Failed to load activity log: ' + esc(e.message) + '</p></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button></div></div>';
+      });
+    }
+
+    function clearActivityLog(actionId) {
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'clearActivityLog', actionId: actionId})
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.status === 'success') {
+          delete _activityLogCache[actionId];
+          showToast('Activity log cleared', 'success');
+        } else {
+          showToast('Error: ' + (data.message || 'unknown'), 'error');
+        }
+      }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
+      var overlay = document.getElementById('historyOverlay');
+      if (overlay) overlay.remove();
+      renderTable();
     }
 
     function openComposeEmail(actionId) {
@@ -1413,6 +1523,9 @@
         }
         if (!actionFailed) {
           delete queuedEmails[id];
+          // Log activity
+          var recipNames = (q.recipients || []).map(function(rc) { return rc.email; }).join(', ');
+          logActivity(id, 'Email sent to <span class="log-new">' + esc(recipNames) + '</span> | Template: ' + esc(q.templateName || 'Custom'));
           // Track this action for Email date/attempt update
           if (a) actionsToUpdate.push({id: id, action: a});
         }
@@ -1651,6 +1764,12 @@
 
       // Optimistic UI update
       if (action) {
+        var oldLabels = action.actions || [];
+        var addedLabels = selected.filter(function(l) { return oldLabels.indexOf(l) === -1; });
+        var removedLabels = oldLabels.filter(function(l) { return selected.indexOf(l) === -1; });
+        addedLabels.forEach(function(l) { logActivity(actionId, 'Action added: <span class="log-new">' + esc(l) + '</span>'); });
+        removedLabels.forEach(function(l) { logActivity(actionId, 'Action removed: <span class="log-old">' + esc(l) + '</span>'); });
+
         action.actions = selected;
         action.who = who;
         action.attempts = attempts;
@@ -1696,6 +1815,7 @@
       var newVal = Math.max(0, oldVal + delta);
       if (!a.attempts) a.attempts = {};
       a.attempts[label] = newVal;
+      logActivity(actionId, '<span class="log-field">' + esc(label) + '</span> attempt: <span class="log-old">' + oldVal + '</span> &rarr; <span class="log-new">' + newVal + '</span>');
 
       // Auto-stamp last date on increment
       if (delta > 0) {
@@ -1755,6 +1875,7 @@
       var a = allActions.find(function(x) { return x.id === actionId; });
       var oldPhone = a ? a.phone : '';
       if (a) a.phone = val;
+      if (val !== oldPhone) logActivity(actionId, '<span class="log-field">Phone</span> changed: <span class="log-old">' + esc(oldPhone || 'empty') + '</span> &rarr; <span class="log-new">' + esc(val || 'empty') + '</span>');
       renderTable();
 
       try {
@@ -1811,6 +1932,7 @@
       if (!currentWho) return false;
 
       var oldWho = JSON.parse(JSON.stringify(a.who || {}));
+      logActivity(actionId, '<span class="log-field">' + esc(label) + '</span> who removed: <span class="log-old">' + esc(currentWho) + '</span>');
       delete a.who[label];
       renderTable();
 
@@ -1835,6 +1957,7 @@
       if (!currentDate) return false;
 
       var oldDates = JSON.parse(JSON.stringify(a.actionDates || {}));
+      logActivity(actionId, '<span class="log-field">' + esc(label) + '</span> date removed: <span class="log-old">' + esc(currentDate) + '</span>');
       delete a.actionDates[label];
       renderTable();
 
@@ -1863,7 +1986,9 @@
       if (!a) return;
       var oldDates = JSON.parse(JSON.stringify(a.actionDates || {}));
       if (!a.actionDates) a.actionDates = {};
+      var oldDateVal = oldDates[label] || '';
       a.actionDates[label] = formatted;
+      logActivity(actionId, '<span class="log-field">' + esc(label) + '</span> date: ' + (oldDateVal ? '<span class="log-old">' + esc(oldDateVal) + '</span> &rarr; ' : '') + '<span class="log-new">' + esc(formatted) + '</span>');
       var overlay = document.querySelector('.modal-overlay.show');
       if (overlay) overlay.remove();
       renderTable();
@@ -1916,8 +2041,10 @@
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
       var oldDates = JSON.parse(JSON.stringify(a.actionDates || {}));
+      var oldDateVal = oldDates[label] || '';
       if (!a.actionDates) a.actionDates = {};
       a.actionDates[label] = formatted;
+      logActivity(actionId, '<span class="log-field">' + esc(label) + '</span> date: ' + (oldDateVal ? '<span class="log-old">' + esc(oldDateVal) + '</span> &rarr; ' : '') + '<span class="log-new">' + esc(formatted) + '</span>');
       btn.closest('.modal-overlay').remove();
       renderTable();
 
@@ -1959,8 +2086,10 @@
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
       var oldWho = JSON.parse(JSON.stringify(a.who || {}));
+      var oldWhoVal = oldWho[label] || '';
       if (!a.who) a.who = {};
       a.who[label] = val;
+      if (val !== oldWhoVal) logActivity(actionId, '<span class="log-field">' + esc(label) + '</span> who: ' + (oldWhoVal ? '<span class="log-old">' + esc(oldWhoVal) + '</span> &rarr; ' : '') + '<span class="log-new">' + esc(val || 'unassigned') + '</span>');
       btn.closest('.modal-overlay').remove();
       renderTable();
 
@@ -2131,7 +2260,10 @@
         }
         var serialized = serializeNoteEntries(entries);
         overlay.remove();
-        if (a) a.notes = serialized;
+        if (a) {
+          if (serialized !== String(a.notes || '')) logActivity(actionId, 'Notes updated');
+          a.notes = serialized;
+        }
         renderTable();
         showToast('Notes saved', 'success');
         // Background sync
@@ -2274,6 +2406,7 @@
         });
         var data = await resp.json();
         if (data.status === 'success') {
+          logActivity(actionId, 'Rep Alert sent to <span class="log-new">' + esc(member.name) + '</span> (' + esc(member.email) + ')');
           showToast('Alert sent to ' + member.name + '!', 'success');
           document.getElementById('alertOverlay').remove();
           loadActions(); // Refresh to show updated Call/Date/Who
