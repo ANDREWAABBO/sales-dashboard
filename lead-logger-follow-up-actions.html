@@ -757,6 +757,9 @@
       var filtered = getFilteredActions();
       document.getElementById('loadingState').style.display = 'none';
 
+      // Keep cache in sync with any local changes
+      try { sessionStorage.setItem('cachedActions', JSON.stringify(allActions)); } catch(e) {}
+
       if (filtered.length === 0) {
         document.getElementById('fuTable').style.display = 'none';
         document.getElementById('emptyState').style.display = 'block';
