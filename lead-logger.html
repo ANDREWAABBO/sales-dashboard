@@ -1726,42 +1726,32 @@
       }
 
       const leadId = safeLeadId(currentLeadToDelete);
-      const confirmBtn = document.getElementById('confirmDeleteBtn');
-      const originalText = confirmBtn.textContent;
-      
-      confirmBtn.disabled = true;
-      confirmBtn.textContent = 'Deleting...';
+      const companyName = currentLeadToDelete.companyName || 'Lead';
 
+      // INSTANT: close modal, remove from UI, show toast
+      closeDeleteModal();
+      allLeads = allLeads.filter(function(l) { return safeLeadId(l) !== leadId; });
+      try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
+      updateRepFilter();
+      filterLeads();
+      showToast('Lead "' + companyName + '" deleted permanently', 'success');
+
+      // Background server delete
       try {
         const url = WEB_APP_URL + '?action=deleteLead&leadId=' + encodeURIComponent(leadId);
         const payload = { action: 'deleteLead', leadId: leadId };
-
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
           body: JSON.stringify(payload)
         });
-
-        if (!res.ok) throw new Error(`Network ${res.status}`);
         const out = await res.json();
-        if (out.status !== 'success') throw new Error(out.message || 'Delete failed');
-
-        showToast('Lead "' + currentLeadToDelete.companyName + '" deleted permanently', 'success');
-        closeDeleteModal();
-        // INSTANT UI: Remove from allLeads and re-render
-        allLeads = allLeads.filter(function(l) { return safeLeadId(l) !== leadId; });
-        try { sessionStorage.setItem('cachedLeads', JSON.stringify(allLeads)); } catch(e) {}
-        updateRepFilter();
-        filterLeads();
-        // Background sync
-        loadLeads().catch(function(e){ console.log('Background refresh:', e); });
-        
+        if (out.status !== 'success') {
+          showToast('Server warning: ' + (out.message || 'Delete may not have synced'), 'error');
+        }
       } catch (err) {
-        console.error('Delete error:', err);
-        showToast('Error deleting lead: ' + err.message, 'error');
-      } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = originalText;
+        console.error('Delete sync error:', err);
+        showToast('Server sync failed - refresh to verify', 'error');
       }
     }
 
