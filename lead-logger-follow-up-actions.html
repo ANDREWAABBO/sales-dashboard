@@ -2728,6 +2728,19 @@
 
         // Label item header row
         h += '<div class="ls-item" id="ls-item-' + i + '" style="margin-bottom:0;border-radius:8px 8px 0 0;border-bottom:1px dashed #e2e8f0">';
+        // Move arrows
+        h += '  <div style="display:flex;flex-direction:column;gap:1px;margin-right:6px">';
+        if (i > 0) {
+          h += '<button onclick="moveLabelUp(' + i + ')" style="border:none;background:#f1f5f9;border-radius:3px;cursor:pointer;padding:2px 5px;font-size:10px;color:#475569;line-height:1" title="Move up"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="18 15 12 9 6 15"/></svg></button>';
+        } else {
+          h += '<span style="padding:2px 5px;font-size:10px;opacity:0"><svg viewBox="0 0 24 24" style="width:12px;height:12px"><polyline points="18 15 12 9 6 15"/></svg></span>';
+        }
+        if (i < labelsConfig.length - 1) {
+          h += '<button onclick="moveLabelDown(' + i + ')" style="border:none;background:#f1f5f9;border-radius:3px;cursor:pointer;padding:2px 5px;font-size:10px;color:#475569;line-height:1" title="Move down"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="6 9 12 15 18 9"/></svg></button>';
+        } else {
+          h += '<span style="padding:2px 5px;font-size:10px;opacity:0"><svg viewBox="0 0 24 24" style="width:12px;height:12px"><polyline points="6 9 12 15 18 9"/></svg></span>';
+        }
+        h += '  </div>';
         h += '  <span class="ls-pill" style="' + pillCss + '">' + esc(lb.name) + '</span>';
         // Summary tags inline
         var tags = '';
@@ -2825,6 +2838,22 @@
       renderLabelsModal();
       var body = document.getElementById('labelsModalBody');
       body.scrollTop = body.scrollHeight;
+    }
+
+    function moveLabelUp(index) {
+      if (index <= 0) return;
+      var temp = labelsConfig[index];
+      labelsConfig[index] = labelsConfig[index - 1];
+      labelsConfig[index - 1] = temp;
+      renderLabelsModal();
+    }
+
+    function moveLabelDown(index) {
+      if (index >= labelsConfig.length - 1) return;
+      var temp = labelsConfig[index];
+      labelsConfig[index] = labelsConfig[index + 1];
+      labelsConfig[index + 1] = temp;
+      renderLabelsModal();
     }
 
     function deleteLabel(index) {
