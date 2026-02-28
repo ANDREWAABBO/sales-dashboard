@@ -488,17 +488,18 @@
 
       <table id="fuTable" style="display:none">
         <thead><tr>
-            <th style="width:10%">Company</th>
-            <th style="width:10%">Action</th>
+            <th style="width:9%">Company</th>
+            <th style="width:6%">Date Added<span class="sub">from Lead DB</span></th>
+            <th style="width:9%">Action</th>
             <th style="width:8%">Action Date</th>
             <th style="width:8%">Who</th>
-            <th style="width:9%">Attempt</th>
-            <th style="width:8%">Last Contact<span class="sub">attempt date auto populated</span></th>
-            <th style="width:7%">Phone<span class="sub">synced to Lead DB</span></th>
+            <th style="width:8%">Attempt</th>
+            <th style="width:7%">Last Contact<span class="sub">attempt date auto populated</span></th>
+            <th style="width:6%">Phone<span class="sub">synced to Lead DB</span></th>
             <th style="width:7%">Notes<span class="sub">synced to Lead DB</span></th>
             <th style="width:7%">Email</th>
             <th style="width:7%">Proposal</th>
-            <th style="width:9%">Rep Alert</th>
+            <th style="width:8%">Rep Alert</th>
           </tr></thead>
           <tbody id="fuTableBody"></tbody>
         </table>
@@ -718,6 +719,32 @@
     }
 
     // ?????????? RENDER TABLE ??????????
+    // Get the most recent relevant date for sorting (dateAdded, action dates, or lastModified)
+    function getMostRecentDate(a) {
+      var dates = [];
+      // Date added from Lead DB
+      if (a.dateAdded) {
+        var d = new Date(a.dateAdded);
+        if (!isNaN(d.getTime())) dates.push(d.getTime());
+      }
+      // Action dates (future appointments, follow-ups)
+      if (a.actionDates) {
+        var ad = a.actionDates;
+        for (var key in ad) {
+          if (ad[key]) {
+            var d2 = new Date(ad[key]);
+            if (!isNaN(d2.getTime())) dates.push(d2.getTime());
+          }
+        }
+      }
+      // Last modified
+      if (a.lastModified) {
+        var d3 = new Date(a.lastModified);
+        if (!isNaN(d3.getTime())) dates.push(d3.getTime());
+      }
+      return dates.length > 0 ? Math.max.apply(null, dates) : 0;
+    }
+
     function renderTable() {
       var filtered = getFilteredActions();
       document.getElementById('loadingState').style.display = 'none';
@@ -729,6 +756,16 @@
       }
       document.getElementById('fuTable').style.display = 'table';
       document.getElementById('emptyState').style.display = 'none';
+
+      // Default sort: newest relevant date at top
+      filtered.sort(function(a, b) {
+        var da = getMostRecentDate(a);
+        var db = getMostRecentDate(b);
+        // Dead leads go to bottom
+        if (a.status === 'Dead' && b.status !== 'Dead') return 1;
+        if (a.status !== 'Dead' && b.status === 'Dead') return -1;
+        return db - da; // newest first
+      });
 
       var tbody = document.getElementById('fuTableBody');
       var html = '';
@@ -743,6 +780,18 @@
 
         // Company
         html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
+
+        // Date Added
+        var dateAddedStr = '';
+        if (a.dateAdded) {
+          var d = new Date(a.dateAdded);
+          if (!isNaN(d.getTime())) {
+            dateAddedStr = String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0') + '/' + d.getFullYear();
+          } else {
+            dateAddedStr = String(a.dateAdded);
+          }
+        }
+        html += '<td style="font-size:11px;color:' + (isDead ? '#ef4444' : '#4a5568') + '">' + esc(dateAddedStr) + '</td>';
 
         // Action pills
         html += '<td class="td-action">' + renderPills(labels, a.id) + '</td>';
