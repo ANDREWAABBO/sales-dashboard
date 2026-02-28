@@ -166,9 +166,43 @@
     .cp-row .cp-del{width:24px;height:24px;border:1px solid #fecaca;border-radius:5px;background:#fff;color:#ef4444;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
     .cp-row .cp-del:hover{background:#fef2f2}
     .file-preview{background:#f7fafc;padding:15px;border-radius:8px;margin:15px 0}
-    .file-preview table{font-size:12px;border-collapse:collapse}
-    .file-preview th{background:#263238;color:white;padding:8px;text-align:left;border:1px solid #ccc}
+    .file-preview table{font-size:12px;border-collapse:collapse;width:100%}
+    .file-preview th{background:#263238;color:white;padding:8px;text-align:left;border:1px solid #ccc;position:sticky;top:0;z-index:1}
     .file-preview td{border:1px solid #ccc;padding:8px}
+
+    /* Duplicate comparison styles */
+    .dup-compare{margin:12px 0}
+    .dup-compare-hdr{display:flex;gap:0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px 6px 0 0;font-size:10px;font-weight:700;text-transform:uppercase;color:#64748b;letter-spacing:.3px}
+    .dup-compare-hdr>div{padding:8px 10px}
+    .dup-compare-hdr .dc-field{width:120px;flex-shrink:0}
+    .dup-compare-hdr .dc-cur{flex:1;min-width:0}
+    .dup-compare-hdr .dc-imp{flex:1;min-width:0}
+    .dup-compare-hdr .dc-act{width:80px;flex-shrink:0;text-align:center}
+    .dup-row{display:flex;gap:0;border:1px solid #e2e8f0;border-top:none;font-size:12px;align-items:center}
+    .dup-row:last-child{border-radius:0 0 6px 6px}
+    .dup-row>div{padding:7px 10px;min-height:34px;display:flex;align-items:center}
+    .dup-row .dc-field{width:120px;flex-shrink:0;font-weight:600;color:#475569;font-size:11px}
+    .dup-row .dc-cur{flex:1;min-width:0;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dup-row .dc-imp{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .dup-row .dc-act{width:80px;flex-shrink:0;justify-content:center}
+    .dup-row.dc-same{background:#f8fafb}
+    .dup-row.dc-same .dc-cur,.dup-row.dc-same .dc-imp{color:#94a3b8}
+    .dup-row.dc-diff{background:#fffbeb}
+    .dup-row.dc-diff .dc-imp{color:#d97706;font-weight:600}
+    .dup-row.dc-new{background:#f0fdf4}
+    .dup-row.dc-new .dc-imp{color:#059669;font-weight:600}
+    .dup-row.dc-empty{background:#fef2f2}
+    .dup-row.dc-empty .dc-cur{color:#ef4444;font-style:italic}
+    .dup-fu-section{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:14px;margin-top:12px}
+    .dup-fu-title{font-size:12px;font-weight:700;color:#0369a1;margin-bottom:10px}
+    .dup-fu-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+    .dup-fu-row label{font-size:11px;font-weight:600;color:#475569;min-width:70px}
+    .dup-fu-row select,.dup-fu-row input[type="date"]{padding:6px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px;flex:1;min-width:120px;max-width:200px}
+    .dup-fu-current{font-size:11px;color:#0369a1;background:#e0f2fe;padding:3px 8px;border-radius:4px;font-weight:600}
+    .dup-notes-section{margin-top:12px}
+    .dup-notes-section label{display:block;font-size:12px;font-weight:600;color:#475569;margin-bottom:4px}
+    .dup-notes-section textarea{width:100%;min-height:60px;padding:8px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box}
+    .dup-notes-section textarea:focus{outline:none;border-color:#10b981}
     
     /* Proposal Modal Styles */
     .pricing-info{background:#f0f8ff;padding:15px;border-radius:8px;margin:15px 0;border:2px solid #b3d9ff}
@@ -2067,16 +2101,17 @@
             rowErrors.push('Missing required field: Company Name');
           }
 
-          // Check for duplicate company
+          // Check for duplicate company (fuzzy match)
           if (lead.companyName) {
-            const existingLead = allLeads.find(dbLead =>
-              dbLead.companyName && dbLead.companyName.toLowerCase().trim() === lead.companyName.toLowerCase().trim()
-            );
-            if (existingLead) {
+            var fuzzyHits = fuzzyMatchLeads(lead.companyName, allLeads || [], 1);
+            if (fuzzyHits.length > 0 && fuzzyHits[0].score >= 55) {
+              var existingLead = fuzzyHits[0].lead;
+              var matchScore = fuzzyHits[0].score;
               lead._isDuplicate = true;
               lead._existingLead = existingLead;
               lead._duplicateAction = 'skip';
-              rowErrors.push('POSSIBLE DUPLICATE: "' + lead.companyName + '" already exists (Added: ' + formatDate(existingLead.dateAdded) + ')');
+              var matchLabel = matchScore === 100 ? 'EXACT MATCH' : matchScore >= 80 ? 'CLOSE MATCH (' + matchScore + '%)' : 'POSSIBLE MATCH (' + matchScore + '%)';
+              rowErrors.push(matchLabel + ': "' + lead.companyName + '" matches "' + existingLead.companyName + '" (Added: ' + formatDate(existingLead.dateAdded) + ')');
             }
           }
 
@@ -2158,11 +2193,50 @@
 
 
 
-function showFixErrorsModal() {
+async function showFixErrorsModal() {
       // Update summary
       document.getElementById('errorSummary').textContent = 
         'Found ' + importValidLeads.length + ' valid rows and ' + importErrorLeads.length + ' rows with errors';
       document.getElementById('validCount').textContent = importValidLeads.length;
+
+      // Fetch FU actions + team members + labels for duplicate enrichment
+      var fuActions = [];
+      var teamMembers = [];
+      var fuLabels = [];
+      try {
+        var [fuRes, tmRes, lbRes] = await Promise.all([
+          fetch(WEB_APP_URL + '?action=getFollowUpActions'),
+          fetch(WEB_APP_URL + '?action=getTeamMembers'),
+          fetch(WEB_APP_URL + '?action=getLabels')
+        ]);
+        var fuData = await fuRes.json();
+        if (fuData.status === 'success' && fuData.actions) fuActions = fuData.actions;
+        var tmData = await tmRes.json();
+        if (tmData.status === 'success' && tmData.members) teamMembers = tmData.members;
+        var lbData = await lbRes.json();
+        if (lbData.status === 'success' && lbData.labels) fuLabels = lbData.labels;
+      } catch(e) { console.log('Error fetching FU/team data:', e); }
+
+      // Store for later use
+      window._dupFuActions = fuActions;
+      window._dupTeamMembers = teamMembers;
+      window._dupFuLabels = fuLabels;
+
+      // Build select options
+      var whoOpts = '<option value="">-- Select --</option>';
+      teamMembers.forEach(function(m) { whoOpts += '<option value="' + m.name + '">' + m.name + '</option>'; });
+      var actionOpts = '<option value="">-- Select --</option>';
+      fuLabels.forEach(function(lb) { actionOpts += '<option value="' + lb.name + '">' + lb.name + '</option>'; });
+
+      // Comparison field definitions
+      var compareFields = [
+        {key:'contactName', label:'Contact Name'},
+        {key:'phoneNumber', label:'Phone'},
+        {key:'emailAddress', label:'Email'},
+        {key:'customerAddress', label:'Address'},
+        {key:'customerZip', label:'Zip'},
+        {key:'population', label:'Population'}
+      ];
 
       // Build error rows HTML
       const container = document.getElementById('errorRowsContainer');
@@ -2173,70 +2247,145 @@ function showFixErrorsModal() {
         errorRowDiv.className = 'error-row';
         errorRowDiv.id = 'error-row-' + index;
         
-        const errorsListHTML = '<ul>' + lead._errors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+        // Filter out the duplicate match error from regular errors for cleaner display
+        var regularErrors = lead._errors.filter(function(e) { return e.indexOf('MATCH') === -1 && e.indexOf('matches') === -1; });
+        var matchError = lead._errors.find(function(e) { return e.indexOf('MATCH') !== -1 || e.indexOf('matches') !== -1; });
         
-        errorRowDiv.innerHTML = `
-        <div class="error-row-header">
-          <div class="error-row-title">Row ${lead._rowNumber}: ${lead.companyName || 'Unknown Company'}</div>
-          <span class="error-badge" id="badge-${index}">${lead._errors.length} Error${lead._errors.length !== 1 ? 's' : ''}</span>
-        </div>
-        ${lead._isDuplicate ? `
-          <div style="background:#fef3c7;padding:12px;border-radius:6px;margin-bottom:15px;border-left:4px solid #f59e0b;">
-            <strong style="color:#92400e;">${SVG_ICONS.warning} POSSIBLE DUPLICATE - LEAD ID MISSING</strong>
-            <p style="color:#78350f;font-size:14px;margin:8px 0 12px 0;">
-              Lead ID is missing, but this company matches: <strong>${lead._existingLead.companyName}</strong> (Added: ${formatDate(lead._existingLead.dateAdded)})<br>
-              <em>Did you accidentally delete the Lead ID from an export file?</em>
-            </p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="radio" name="duplicate-${index}" value="skip" checked onchange="setDuplicateAction(${index}, 'skip')">
-                <span style="color:#78350f;font-size:14px;">Skip (Keep Existing)</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="radio" name="duplicate-${index}" value="update" onchange="setDuplicateAction(${index}, 'update')">
-                <span style="color:#78350f;font-size:14px;">Update Existing Lead</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="radio" name="duplicate-${index}" value="new" onchange="setDuplicateAction(${index}, 'new')">
-                <span style="color:#78350f;font-size:14px;">Add as New (Create Duplicate)</span>
-              </label>
-            </div>
-          </div>
-        ` : ''}
-        <div class="error-list" id="error-list-${index}" ${lead._isDuplicate && lead._duplicateAction === 'skip' ? 'style="display:none;"' : ''}>
-          ${errorsListHTML}
-        </div>
-          <div class="error-row-fields">
-            <div class="error-field-group">
-              <label>Company Name *</label>
-              <input type="text" id="company-${index}" value="${lead.companyName || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Contact Name</label>
-              <input type="text" id="contact-${index}" value="${lead.contactName || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Phone Number</label>
-              <input type="tel" id="phone-${index}" value="${lead.phoneNumber || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Email Address</label>
-              <input type="email" id="email-${index}" value="${lead.emailAddress || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Customer Address</label>
-              <input type="text" id="address-${index}" value="${lead.customerAddress || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Customer Zip</label>
-              <input type="text" id="zip-${index}" value="${lead.customerZip || ''}" maxlength="5" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Population</label>
-              <input type="text" id="population-${index}" value="${lead.population || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-          </div>
-        `;
+        const errorsListHTML = regularErrors.length > 0 ? '<ul>' + regularErrors.map(e => '<li>' + e + '</li>').join('') + '</ul>' : '';
+        
+        var dupHTML = '';
+        if (lead._isDuplicate) {
+          var ex = lead._existingLead;
+          var matchScore = 0;
+          if (matchError) {
+            var scoreMatch = matchError.match(/\((\d+)%\)/);
+            if (scoreMatch) matchScore = parseInt(scoreMatch[1]);
+            else if (matchError.indexOf('EXACT') !== -1) matchScore = 100;
+          }
+          var matchLabel = matchScore === 100 ? 'EXACT MATCH' : matchScore >= 80 ? 'CLOSE MATCH (' + matchScore + '%)' : matchScore > 0 ? 'POSSIBLE MATCH (' + matchScore + '%)' : 'DUPLICATE DETECTED';
+          var matchColor = matchScore === 100 ? '#dc2626' : matchScore >= 80 ? '#d97706' : '#92400e';
+
+          // Find existing FU action for this company
+          var existingFU = fuActions.find(function(a) {
+            return (a.company || '').toLowerCase().trim() === (ex.companyName || '').toLowerCase().trim();
+          });
+
+          // Initialize per-duplicate data storage
+          lead._dupUpdateFields = {};
+          lead._dupFuAction = '';
+          lead._dupFuWho = '';
+          lead._dupFuActionDate = '';
+          lead._dupNotes = '';
+
+          dupHTML += '<div style="background:#fef3c7;padding:14px;border-radius:8px;margin-bottom:12px;border-left:4px solid #f59e0b;">';
+          dupHTML += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
+          dupHTML += '<strong style="color:' + matchColor + ';font-size:14px">' + SVG_ICONS.warning + ' ' + matchLabel + '</strong>';
+          dupHTML += '<span style="font-size:11px;color:#78350f">Existing: <strong>' + (ex.companyName || '') + '</strong> (Added: ' + formatDate(ex.dateAdded) + ')</span>';
+          dupHTML += '</div>';
+
+          // Radio buttons
+          dupHTML += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">';
+          dupHTML += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;background:#fff;border-radius:6px;border:2px solid #e2e8f0"><input type="radio" name="duplicate-' + index + '" value="skip" checked onchange="setDuplicateAction(' + index + ',\'skip\')"><span style="color:#475569;font-size:13px;font-weight:600">Skip (Keep Existing)</span></label>';
+          dupHTML += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;background:#fff;border-radius:6px;border:2px solid #e2e8f0"><input type="radio" name="duplicate-' + index + '" value="update" onchange="setDuplicateAction(' + index + ',\'update\')"><span style="color:#475569;font-size:13px;font-weight:600">Update Selected Fields</span></label>';
+          dupHTML += '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;background:#fff;border-radius:6px;border:2px solid #e2e8f0"><input type="radio" name="duplicate-' + index + '" value="new" onchange="setDuplicateAction(' + index + ',\'new\')"><span style="color:#475569;font-size:13px;font-weight:600">Add as New Lead</span></label>';
+          dupHTML += '</div>';
+          dupHTML += '</div>';
+
+          // Comparison table (hidden by default when Skip selected)
+          dupHTML += '<div id="dup-detail-' + index + '" style="display:none">';
+
+          // Field comparison
+          dupHTML += '<div class="dup-compare">';
+          dupHTML += '<div class="dup-compare-hdr"><div class="dc-field">Field</div><div class="dc-cur">Current (in DB)</div><div class="dc-imp">From Import</div><div class="dc-act">Update?</div></div>';
+          
+          compareFields.forEach(function(f) {
+            var curVal = (ex[f.key] || '').toString().trim();
+            var impVal = (lead[f.key] || '').toString().trim();
+            var rowClass = 'dc-same';
+            var checkDisabled = '';
+            var checkChecked = '';
+            
+            if (!curVal && impVal) {
+              rowClass = 'dc-new'; // new data not in DB
+              checkChecked = ' checked';
+              lead._dupUpdateFields[f.key] = true;
+            } else if (curVal && impVal && curVal.toLowerCase() !== impVal.toLowerCase()) {
+              rowClass = 'dc-diff'; // different values
+            } else if (!curVal && !impVal) {
+              rowClass = 'dc-same';
+              checkDisabled = ' disabled';
+            }
+            
+            dupHTML += '<div class="dup-row ' + rowClass + '">';
+            dupHTML += '<div class="dc-field">' + f.label + '</div>';
+            dupHTML += '<div class="dc-cur">' + (curVal || '<span style="color:#cbd5e0;font-style:italic">empty</span>') + '</div>';
+            dupHTML += '<div class="dc-imp">' + (impVal || '<span style="color:#cbd5e0;font-style:italic">empty</span>') + '</div>';
+            dupHTML += '<div class="dc-act">';
+            if (curVal === impVal || (!curVal && !impVal)) {
+              dupHTML += '<span style="font-size:10px;color:#94a3b8">Same</span>';
+            } else {
+              dupHTML += '<input type="checkbox" id="dup-chk-' + index + '-' + f.key + '" ' + checkChecked + checkDisabled + ' onchange="toggleDupField(' + index + ',\'' + f.key + '\',this.checked)" style="width:16px;height:16px;cursor:pointer">';
+            }
+            dupHTML += '</div>';
+            dupHTML += '</div>';
+          });
+          dupHTML += '</div>';
+
+          // Follow Up Actions section
+          dupHTML += '<div class="dup-fu-section">';
+          dupHTML += '<div class="dup-fu-title">Follow Up Actions</div>';
+          
+          if (existingFU && existingFU.actions && existingFU.actions.length > 0) {
+            // Show current actions
+            dupHTML += '<div style="margin-bottom:8px;font-size:12px;color:#0369a1">';
+            dupHTML += '<span style="font-weight:600">Current Actions:</span> ';
+            existingFU.actions.forEach(function(a) {
+              var whoName = existingFU.who && existingFU.who[a] ? existingFU.who[a] : 'Unassigned';
+              dupHTML += '<span class="dup-fu-current">' + a + ' (' + whoName + ')</span> ';
+            });
+            dupHTML += '</div>';
+            dupHTML += '<div style="font-size:11px;color:#475569;margin-bottom:8px;background:#fff;padding:8px 10px;border-radius:4px;border:1px solid #e0f2fe">This lead already has actions assigned. You can still add notes below to log this import activity.</div>';
+          } else {
+            dupHTML += '<div style="font-size:11px;color:#475569;margin-bottom:10px">No actions currently assigned. Assign one to start tracking follow-ups:</div>';
+          }
+
+          // Always show Action/Who/Date assignment for duplicates
+          dupHTML += '<div class="dup-fu-row">';
+          dupHTML += '<label>Action:</label>';
+          dupHTML += '<select id="dup-action-' + index + '" onchange="updateDupFU(' + index + ')">' + actionOpts + '</select>';
+          dupHTML += '<label>Who:</label>';
+          dupHTML += '<select id="dup-who-' + index + '" onchange="updateDupFU(' + index + ')">' + whoOpts + '</select>';
+          dupHTML += '<label>Date:</label>';
+          dupHTML += '<input type="date" id="dup-date-' + index + '" onchange="updateDupFU(' + index + ')">';
+          dupHTML += '</div>';
+
+          // Notes section
+          dupHTML += '<div class="dup-notes-section">';
+          dupHTML += '<label>Add Notes (will append to existing notes with timestamp):</label>';
+          dupHTML += '<textarea id="dup-notes-' + index + '" placeholder="e.g. Emailed on 2/28 - sent intro package, waiting for response..." onchange="updateDupNotes(' + index + ')"></textarea>';
+          dupHTML += '</div>';
+
+          dupHTML += '</div>'; // close dup-fu-section
+          dupHTML += '</div>'; // close dup-detail
+        }
+        
+        // Build fields section (for non-duplicates or "Add as New")
+        var fieldsHTML = '';
+        if (!lead._isDuplicate) {
+          fieldsHTML = buildErrorFieldsHTML(lead, index);
+        } else {
+          // Hidden fields section for "Add as New" mode
+          fieldsHTML = '<div id="dup-newfields-' + index + '" style="display:none">' + buildErrorFieldsHTML(lead, index) + '</div>';
+        }
+
+        errorRowDiv.innerHTML = 
+          '<div class="error-row-header">' +
+            '<div class="error-row-title">Row ' + lead._rowNumber + ': ' + (lead.companyName || 'Unknown Company') + '</div>' +
+            '<span class="error-badge" id="badge-' + index + '">' + (lead._isDuplicate ? 'Duplicate' : lead._errors.length + ' Error' + (lead._errors.length !== 1 ? 's' : '')) + '</span>' +
+          '</div>' +
+          dupHTML +
+          '<div class="error-list" id="error-list-' + index + '" ' + (lead._isDuplicate ? 'style="display:none"' : '') + '>' + errorsListHTML + '</div>' +
+          fieldsHTML;
         
         container.appendChild(errorRowDiv);
       });
@@ -2244,6 +2393,40 @@ function showFixErrorsModal() {
       // Close import modal and show fix errors modal
       document.getElementById('importModal').style.display = 'none';
       document.getElementById('fixErrorsModal').style.display = 'block';
+    }
+
+    function buildErrorFieldsHTML(lead, index) {
+      return '<div class="error-row-fields">' +
+        '<div class="error-field-group"><label>Company Name *</label><input type="text" id="company-' + index + '" value="' + (lead.companyName || '') + '" onchange="validateErrorRow(' + index + ')"/></div>' +
+        '<div class="error-field-group"><label>Contact Name</label><input type="text" id="contact-' + index + '" value="' + (lead.contactName || '') + '" onchange="validateErrorRow(' + index + ')"/></div>' +
+        '<div class="error-field-group"><label>Phone Number</label><input type="tel" id="phone-' + index + '" value="' + (lead.phoneNumber || '') + '" onchange="validateErrorRow(' + index + ')"/></div>' +
+        '<div class="error-field-group"><label>Email Address</label><input type="email" id="email-' + index + '" value="' + (lead.emailAddress || '') + '" onchange="validateErrorRow(' + index + ')"/></div>' +
+        '<div class="error-field-group"><label>Customer Address</label><input type="text" id="address-' + index + '" value="' + (lead.customerAddress || '') + '" onchange="validateErrorRow(' + index + ')"/></div>' +
+        '<div class="error-field-group"><label>Customer Zip</label><input type="text" id="zip-' + index + '" value="' + (lead.customerZip || '') + '" maxlength="5" onchange="validateErrorRow(' + index + ')"/></div>' +
+        '<div class="error-field-group"><label>Population</label><input type="text" id="population-' + index + '" value="' + (lead.population || '') + '" onchange="validateErrorRow(' + index + ')"/></div>' +
+      '</div>';
+    }
+
+    function toggleDupField(index, fieldKey, checked) {
+      var lead = importErrorLeads[index];
+      if (!lead._dupUpdateFields) lead._dupUpdateFields = {};
+      lead._dupUpdateFields[fieldKey] = checked;
+    }
+
+    function updateDupFU(index) {
+      var lead = importErrorLeads[index];
+      var actionSel = document.getElementById('dup-action-' + index);
+      var whoSel = document.getElementById('dup-who-' + index);
+      var dateInp = document.getElementById('dup-date-' + index);
+      if (actionSel) lead._dupFuAction = actionSel.value || '';
+      if (whoSel) lead._dupFuWho = whoSel.value || '';
+      if (dateInp) lead._dupFuActionDate = dateInp.value || '';
+    }
+
+    function updateDupNotes(index) {
+      var lead = importErrorLeads[index];
+      var ta = document.getElementById('dup-notes-' + index);
+      if (ta) lead._dupNotes = ta.value || '';
     }
 
 
@@ -2255,30 +2438,34 @@ function setDuplicateAction(index, action) {
       const lead = importErrorLeads[index];
       lead._duplicateAction = action;
       
-      const errorList = document.getElementById('error-list-' + index);
       const badge = document.getElementById('badge-' + index);
       const errorRow = document.getElementById('error-row-' + index);
+      const dupDetail = document.getElementById('dup-detail-' + index);
+      const dupNewFields = document.getElementById('dup-newfields-' + index);
+      const errorList = document.getElementById('error-list-' + index);
       
       if (action === 'skip') {
-        // Hide error list and mark as resolved
-        errorList.style.display = 'none';
         errorRow.classList.add('fixed');
-        badge.classList.add('fixed');
-        badge.textContent = 'Will Skip ?';
-        lead._errors = []; // Clear errors since we're skipping
-      } else {
-        // Show error list for validation
-        errorList.style.display = 'block';
+        if (badge) { badge.classList.add('fixed'); badge.textContent = 'Will Skip'; }
+        if (dupDetail) dupDetail.style.display = 'none';
+        if (dupNewFields) dupNewFields.style.display = 'none';
+        if (errorList) errorList.style.display = 'none';
+        lead._errors = [];
+      } else if (action === 'update') {
         errorRow.classList.remove('fixed');
-        badge.classList.remove('fixed');
-        
-        if (action === 'update') {
-          badge.textContent = 'Will Update';
-        } else if (action === 'new') {
-          badge.textContent = 'Will Import';
-        }
-        
-        // Re-validate if updating or importing as new
+        if (badge) { badge.classList.remove('fixed'); badge.textContent = 'Update Fields'; badge.style.background = '#dbeafe'; badge.style.color = '#1e40af'; }
+        if (dupDetail) dupDetail.style.display = 'block';
+        if (dupNewFields) dupNewFields.style.display = 'none';
+        if (errorList) errorList.style.display = 'none';
+        // Clear errors for update mode - validation not needed
+        lead._errors = [];
+        checkAllErrorsFixed();
+      } else if (action === 'new') {
+        errorRow.classList.remove('fixed');
+        if (badge) { badge.classList.remove('fixed'); badge.textContent = 'Will Import'; badge.style.background = ''; badge.style.color = ''; }
+        if (dupDetail) dupDetail.style.display = 'none';
+        if (dupNewFields) dupNewFields.style.display = 'block';
+        if (errorList) errorList.style.display = 'block';
         validateErrorRow(index);
       }
       
@@ -2408,7 +2595,20 @@ function importValidRowsOnly() {
         importErrorLeads.filter(function(l) { return !l._isDuplicate || l._duplicateAction !== 'skip'; })
       );
       document.getElementById('fixErrorsModal').style.display = 'none';
-      showRepAssignmentModal(allToImport);
+      
+      // Separate update-duplicates from new leads for rep assignment
+      // Update-duplicates already have their FU settings from the duplicate detail panel
+      var newLeads = allToImport.filter(function(l) { return !l._isDuplicate || l._duplicateAction !== 'update'; });
+      var updateDups = allToImport.filter(function(l) { return l._isDuplicate && l._duplicateAction === 'update'; });
+      
+      if (newLeads.length > 0) {
+        // Show rep assignment for new leads, then import everything together
+        window._updateDupsToImport = updateDups;
+        showRepAssignmentModal(newLeads);
+      } else if (updateDups.length > 0) {
+        // Only update-duplicates, no rep assignment needed
+        performImport(updateDups);
+      }
     }
 
     async function showRepAssignmentModal(leadsToImport) {
@@ -2549,7 +2749,13 @@ function importValidRowsOnly() {
           window._repAssignLeads[idx]._fuWho = sel.value || '';
         });
         overlay.remove();
-        performImport(window._repAssignLeads);
+        // Combine with any update-duplicates that bypassed rep assignment
+        var allFinal = window._repAssignLeads;
+        if (window._updateDupsToImport && window._updateDupsToImport.length > 0) {
+          allFinal = allFinal.concat(window._updateDupsToImport);
+          window._updateDupsToImport = [];
+        }
+        performImport(allFinal);
       });
     }
 
@@ -2604,6 +2810,16 @@ function importValidRowsOnly() {
           delete leadData._fuAction;
           delete leadData._fuActionDate;
           delete leadData._fuWho;
+          const dupUpdateFields = leadData._dupUpdateFields || {};
+          const dupFuAction = leadData._dupFuAction || '';
+          const dupFuWho = leadData._dupFuWho || '';
+          const dupFuActionDate = leadData._dupFuActionDate || '';
+          const dupNotes = leadData._dupNotes || '';
+          delete leadData._dupUpdateFields;
+          delete leadData._dupFuAction;
+          delete leadData._dupFuWho;
+          delete leadData._dupFuActionDate;
+          delete leadData._dupNotes;
 
           // Handle duplicates (missing Lead ID but company exists)
           if (isDuplicate) {
@@ -2613,21 +2829,48 @@ function importValidRowsOnly() {
               document.getElementById('importProgress').textContent = i + 1;
               continue;
             } else if (duplicateAction === 'update') {
-              // Update the existing lead
-              const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(safeLeadId(existingLead)), {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-                body: JSON.stringify({ action: 'updateLead', leadId: safeLeadId(existingLead), updates: leadData })
+              // Build selective updates - only checked fields
+              var selectiveUpdates = {};
+              var hasFieldUpdates = false;
+              Object.keys(dupUpdateFields).forEach(function(key) {
+                if (dupUpdateFields[key] && leadData[key]) {
+                  selectiveUpdates[key] = leadData[key];
+                  hasFieldUpdates = true;
+                }
               });
 
-              const result = await response.json();
-              if (result.status === 'success') {
-                successCount++;
-              } else {
-                failCount++;
-                console.error('Failed to update lead ' + (i + 1) + ':', result.message);
+              // Handle notes append
+              if (dupNotes) {
+                var timestamp = new Date().toLocaleDateString('en-US', {month:'2-digit',day:'2-digit',year:'numeric'});
+                var existingNotes = (existingLead.notes || '').trim();
+                var newNoteEntry = '[' + timestamp + ' - Import] ' + dupNotes;
+                selectiveUpdates.notes = existingNotes ? newNoteEntry + '\n' + existingNotes : newNoteEntry;
+                hasFieldUpdates = true;
               }
-              
+
+              if (hasFieldUpdates) {
+                try {
+                  const response = await fetch(WEB_APP_URL + '?action=updateLead&leadId=' + encodeURIComponent(safeLeadId(existingLead)), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+                    body: JSON.stringify({ action: 'updateLead', leadId: safeLeadId(existingLead), updates: selectiveUpdates })
+                  });
+                  const result = await response.json();
+                  if (result.status !== 'success') console.error('Failed to update lead fields:', result.message);
+                } catch(e) { console.error('Error updating lead fields:', e); }
+              }
+
+              // Handle FU action/who/date for duplicate
+              if (dupFuAction || dupFuWho || dupNotes) {
+                // Store for FU sync after import
+                leadsArray[i]._dupFuAction = dupFuAction;
+                leadsArray[i]._dupFuWho = dupFuWho;
+                leadsArray[i]._dupFuActionDate = dupFuActionDate;
+                leadsArray[i]._dupNotes = dupNotes;
+                leadsArray[i]._dupExistingCompany = existingLead.companyName;
+              }
+
+              successCount++;
               document.getElementById('importProgress').textContent = i + 1;
               continue;
             }
@@ -2728,6 +2971,63 @@ function importValidRowsOnly() {
               showToast('Follow Up Actions updated for ' + fuLeads.length + ' leads', 'success');
             }
           } catch(fuErr) { console.log('FU sync error:', fuErr); }
+        }
+
+        // Handle FU updates for duplicates (existing leads that got action/who/notes assigned)
+        var dupFuLeads = leadsArray.filter(function(l) { return l._dupFuAction || l._dupNotes; });
+        if (dupFuLeads.length > 0) {
+          try {
+            var fuRes2 = await fetch(WEB_APP_URL + '?action=getFollowUpActions');
+            var fuData2 = await fuRes2.json();
+            if (fuData2.status === 'success' && fuData2.actions) {
+              for (var di = 0; di < dupFuLeads.length; di++) {
+                var dl = dupFuLeads[di];
+                var dupCompName = (dl._dupExistingCompany || dl.companyName || '').toLowerCase().trim();
+                if (!dupCompName) continue;
+                var dupMatch = fuData2.actions.find(function(a) {
+                  return (a.company || '').toLowerCase().trim() === dupCompName;
+                });
+                if (dupMatch) {
+                  var dupUpdates = {};
+                  if (dl._dupFuAction) {
+                    // Merge with existing actions
+                    var existingActions = dupMatch.actions || [];
+                    if (existingActions.indexOf(dl._dupFuAction) === -1) {
+                      existingActions.push(dl._dupFuAction);
+                    }
+                    dupUpdates.actions = existingActions;
+                    // Set who
+                    var existingWho = dupMatch.who || {};
+                    if (dl._dupFuWho) existingWho[dl._dupFuAction] = dl._dupFuWho;
+                    dupUpdates.who = existingWho;
+                    // Set date
+                    var existingDates = dupMatch.actionDates || {};
+                    if (dl._dupFuActionDate) existingDates[dl._dupFuAction] = dl._dupFuActionDate;
+                    dupUpdates.actionDates = existingDates;
+                    // Init attempts & lastDates for new action
+                    var existingAttempts = dupMatch.attempts || {};
+                    if (!existingAttempts[dl._dupFuAction]) existingAttempts[dl._dupFuAction] = 0;
+                    dupUpdates.attempts = existingAttempts;
+                    var existingLD = dupMatch.lastDates || {};
+                    if (!existingLD[dl._dupFuAction]) existingLD[dl._dupFuAction] = '';
+                    dupUpdates.lastDates = existingLD;
+                  }
+                  // Append notes to FU action notes
+                  if (dl._dupNotes) {
+                    var timestamp = new Date().toLocaleDateString('en-US', {month:'2-digit',day:'2-digit',year:'numeric'});
+                    var existingFUNotes = (dupMatch.notes || '').trim();
+                    var newNote = '[' + timestamp + ' - Import] ' + dl._dupNotes;
+                    dupUpdates.notes = existingFUNotes ? newNote + '\n' + existingFUNotes : newNote;
+                  }
+                  fetch(WEB_APP_URL, {
+                    method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+                    body: JSON.stringify({action:'updateFollowUpAction', actionId:dupMatch.id, updates:dupUpdates})
+                  }).catch(function(e) { console.log('Dup FU update error:', e); });
+                }
+              }
+              showToast('Follow Up Actions updated for ' + dupFuLeads.length + ' existing lead(s)', 'success');
+            }
+          } catch(dupErr) { console.log('Dup FU sync error:', dupErr); }
         }
 
         await loadLeads();
