@@ -475,6 +475,7 @@
             <th class="sortable" data-sort="contactName">Contact</th>
             <th>Phone</th>
             <th>Email</th>
+            <th class="sortable" data-sort="population">Population</th>
             <th class="sortable" data-sort="repName">Rep</th>
             <th class="sortable" data-sort="status">Status</th>
             <th>Notes</th>
@@ -598,6 +599,10 @@
           <div class="form-group">
             <label for="customerZip">Company Zip</label>
             <input type="text" id="customerZip" name="customerZip" pattern="[0-9]{5}" maxlength="5" placeholder="12345" inputmode="numeric"/>
+          </div>
+          <div class="form-group">
+            <label for="population">Population</label>
+            <input type="text" id="population" name="population" placeholder="e.g. 45000" inputmode="numeric"/>
           </div>
         </div>
 
@@ -1102,6 +1107,7 @@
         contactCell,
         lead.phoneNumber || '',
         emailCell,
+        lead.population ? Number(lead.population).toLocaleString() : '',
         lead.repName || '',
         `<span class="status-badge ${statusClass}" onclick="openStatusPicker(event,this,'${leadId}')">${lead.status || 'Active'}</span>`,
         notes
@@ -1119,8 +1125,8 @@
         const td = document.createElement('td'); 
         td.innerHTML = html; 
         
-        // Add hover tooltip for notes column (index 7) - show full notes on hover
-        if (index === 7 && notes.trim() !== '') {
+        // Add hover tooltip for notes column (index 8) - show full notes on hover
+        if (index === 8 && notes.trim() !== '') {
           td.setAttribute('data-full-notes', notes);
           td.addEventListener('mouseenter', (e) => showNotesTooltip(e.target, notes));
           td.addEventListener('mouseleave', hideNotesTooltip);
@@ -1400,6 +1406,7 @@
       document.getElementById('customerAddress').value = '';
       document.getElementById('customerState').value = '';
       document.getElementById('customerZip').value = '';
+      document.getElementById('population').value = '';
       document.getElementById('notes').value = '';
       document.getElementById('businessUnit').value = '';
       
@@ -1462,6 +1469,8 @@
       } else {
         document.getElementById('customerZip').value = '';
       }
+
+      document.getElementById('population').value = lead.population || '';
 
       // Reset save button state
       const saveBtn = document.getElementById('saveBtn');
@@ -1610,6 +1619,7 @@
           customerAddress: lead.customerAddress || '',
           customerState: lead.customerState || '',
           customerZip: lead.customerZip || '',
+          population: lead.population || '',
           followUp: '',
           appointmentMade: 'No',
           appointmentDate: ''
@@ -1809,114 +1819,69 @@
 
     // Excel Template Download
  function downloadLeadTemplate() {
-      // Headers - WITH LEAD ID
       const headers = [
-        'Lead ID', 'Business Unit', 'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
-        'Rep Name', 'Rep Phone', 'Rep Email', 'Customer Address', 'Customer State', 'Customer Zip',
-        'Status', 'Follow Up Date', 'Appointment Made', 'Appointment Date', 'Notes'
+        'Company Name', 'Contact Name', 'Phone Number', 'Email Address',
+        'Customer Address', 'Customer State', 'Customer Zip', 'Population', 'Notes'
       ];
       
-      // Sample data row - with clear instruction for Lead ID
       const sampleData = [
-        'LEAVE BLANK', // Clear instruction for Lead ID
-        'Abbondanza Vending',
         'Sample Company LLC',
         'John Smith',
         '555-123-4567',
         'john.smith@example.com',
-        'Julie Garley',
-        '806-316-5195',
-        'julie.g@abbondanzavending.com',
         '123 Main Street',
         'NH',
         '03101',
-        'Active',
-        '2025-12-31',
-        'No',
-        '',
+        '45000',
         'Sample notes here'
       ];
       
       const templateData = [headers, sampleData];
       
-      // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(templateData);
       
-      // Set column widths
       const colWidths = [
-        {wch: 25}, // Lead ID
-        {wch: 18}, // Business Unit
         {wch: 25}, // Company Name
         {wch: 18}, // Contact Name
         {wch: 15}, // Phone Number
         {wch: 25}, // Email Address
-        {wch: 18}, // Rep Name
-        {wch: 15}, // Rep Phone
-        {wch: 25}, // Rep Email
         {wch: 25}, // Customer Address
         {wch: 12}, // Customer State
         {wch: 12}, // Customer Zip
-        {wch: 12}, // Status
-        {wch: 15}, // Follow Up Date
-        {wch: 15}, // Appointment Made
-        {wch: 15}, // Appointment Date
+        {wch: 12}, // Population
         {wch: 30}  // Notes
       ];
       ws['!cols'] = colWidths;
 
-      // Create Instructions sheet with prominent Lead ID warning
       const instructionsData = [
         ['LEAD IMPORT TEMPLATE - INSTRUCTIONS'],
         [''],
-        ['IMPORTANT: LEAD ID COLUMN'],
-        [''],
-        ['FOR NEW LEADS:'],
-        ['- DELETE the "LEAVE BLANK" text and leave the Lead ID cell EMPTY'],
-        ['- The system will automatically generate a unique Lead ID when you import'],
-        ['- DO NOT type anything in the Lead ID column for new leads'],
-        [''],
-        ['FOR UPDATING EXISTING LEADS:'],
-        ['- Only use exports from the system (they have Lead IDs filled in)'],
-        ['- Do NOT manually type Lead IDs'],
+        ['HOW TO USE:'],
+        ['- Fill out the Lead Template sheet with your lead data'],
+        ['- Import using the Import button in Lead Database'],
+        ['- IDs are auto-assigned - no need to add them'],
+        ['- After import you will be prompted to assign a sales rep'],
         [''],
         ['==============================================================='],
         [''],
-        ['REQUIRED FIELDS (must have values):'],
-        ['- Business Unit'],
-        ['- Company Name'],
-        ['- Rep Name'],
-        ['- Rep Phone'],
-        ['- Rep Email'],
+        ['REQUIRED FIELDS:'],
+        ['- Company Name (must have a value)'],
         [''],
-        ['VALID VALUES - Business Unit:'],
-        ['- Abbondanza Vending'],
-        ['- Quantum Solutions'],
+        ['OPTIONAL FIELDS:'],
+        ['- Contact Name, Phone Number, Email Address'],
+        ['- Customer Address, Customer State, Customer Zip'],
+        ['- Population, Notes'],
         [''],
         ['VALID VALUES - Customer State (use 2-letter abbreviations):'],
         ['AL, AK, AZ, AR, CA, CO, CT, DE, FL, GA, HI, ID, IL, IN, IA, KS, KY, LA, ME, MD,'],
         ['MA, MI, MN, MS, MO, MT, NE, NV, NH, NJ, NM, NY, NC, ND, OH, OK, OR, PA, RI, SC,'],
         ['SD, TN, TX, UT, VT, VA, WA, WV, WI, WY'],
         [''],
-        ['VALID VALUES - Status:'],
-        ['- Active'],
-        ['- Signed Up'],
-        ['- Dead'],
-        [''],
-        ['VALID VALUES - Appointment Made:'],
-        ['- Yes'],
-        ['- No'],
-        [''],
         ['FORMAT REQUIREMENTS:'],
-        ['- Customer Zip: 5 digits (will auto-add leading zeros if needed)'],
-        ['- Rep Email: must be valid email format (name@domain.com)'],
+        ['- Customer Zip: 5 digits (leading zeros added automatically)'],
         ['- Email Address: must be valid email format (name@domain.com)'],
-        ['- Follow Up Date: format as MM/DD/YYYY or YYYY-MM-DD'],
-        ['- Appointment Date: format as MM/DD/YYYY or YYYY-MM-DD'],
-        [''],
-        ['NOTE: After filling out the Lead Template sheet, import the file using'],
-        ['the "Import Excel File" button. Any validation errors will be shown'],
-        ['and you can fix them before completing the import.']
+        ['- Population: numeric value (city/town population)']
       ];
       
       const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
@@ -2059,31 +2024,19 @@
         const headers = data[0];
         const rows = data.slice(1).filter(row => row.some(cell => cell && String(cell).trim() !== ''));
 
-        // Map headers to expected field names - WITH LEAD ID
+        // Simplified field mapping - no Lead ID, no business unit, no rep fields, no status etc.
         const fieldMapping = {
-          'Lead ID': 'leadId',
-          'Business Unit': 'businessUnit',
           'Company Name': 'companyName',
           'Contact Name': 'contactName',
           'Phone Number': 'phoneNumber',
           'Email Address': 'emailAddress',
-          'Rep Name': 'repName',
-          'Rep Phone': 'repPhone',
-          'Rep Email': 'repEmail',
           'Customer Address': 'customerAddress',
           'Customer State': 'customerState',
           'Customer Zip': 'customerZip',
-          'Status': 'status',
-          'Follow Up Date': 'followUp',
-          'Appointment Made': 'appointmentMade',
-          'Appointment Date': 'appointmentDate',
+          'Population': 'population',
           'Notes': 'notes'
         };
 
-        // Valid values for validation
-        const VALID_BUSINESS_UNITS = ['Abbondanza Vending', 'Quantum Solutions'];
-        const VALID_STATUSES = ['Active', 'Signed Up', 'Dead'];
-        const VALID_APPOINTMENT = ['Yes', 'No'];
         const VALID_STATES = [
           'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
           'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -2098,116 +2051,50 @@
         rows.forEach((row, index) => {
           const lead = {};
           let rowErrors = [];
-          const requiredFields = ['businessUnit', 'companyName', 'repName', 'repPhone', 'repEmail'];
 
           // Map each cell to the corresponding field
           headers.forEach((header, cellIndex) => {
-            const fieldName = fieldMapping[header];
+            const fieldName = fieldMapping[String(header).trim()];
             if (fieldName && row[cellIndex] !== undefined && row[cellIndex] !== null) {
               const cellValue = String(row[cellIndex]).trim();
-              if (cellValue.toLowerCase() === 'none' || cellValue === '') {
-                return;
-              }
+              if (cellValue.toLowerCase() === 'none' || cellValue === '') return;
               lead[fieldName] = cellValue;
             }
           });
 
-          // GUARDRAIL 1: Remove "LEAVE BLANK" text from Lead ID
-          if (lead.leadId) {
-            const leadIdValue = lead.leadId.trim().toUpperCase();
-            if (leadIdValue === 'LEAVE BLANK' || leadIdValue === 'LEAVEBLANK') {
-              delete lead.leadId; // Remove it so it's treated as blank
-            }
+          // Only required field: Company Name
+          if (!lead.companyName) {
+            rowErrors.push('Missing required field: Company Name');
           }
 
-          // Check if this is an update (has Lead ID) or new lead (no Lead ID)
-          if (lead.leadId) {
-            // HAS LEAD ID - Check if it exists in database
-            const existingLead = allLeads.find(dbLead => dbLead.leadId === lead.leadId);
-            if (existingLead) {
-              lead._isUpdate = true;
-              lead._existingLeadId = existingLead.id; // Store the numeric ID for updating
-            } else {
-              // Lead ID provided but doesn't exist in database
-              rowErrors.push('Lead ID "' + lead.leadId + '" not found in database');
-            }
-          } else {
-            // GUARDRAIL 2: NO LEAD ID - Check if this company already exists (possible accidental deletion)
-            const existingLead = allLeads.find(dbLead => 
-              dbLead.companyName && lead.companyName &&
-              dbLead.companyName.toLowerCase().trim() === lead.companyName.toLowerCase().trim() &&
-              ((dbLead.contactName && lead.contactName && 
-                dbLead.contactName.toLowerCase().trim() === lead.contactName.toLowerCase().trim()) ||
-               (!dbLead.contactName && !lead.contactName))
+          // Check for duplicate company
+          if (lead.companyName) {
+            const existingLead = allLeads.find(dbLead =>
+              dbLead.companyName && dbLead.companyName.toLowerCase().trim() === lead.companyName.toLowerCase().trim()
             );
-            
             if (existingLead) {
-              // DUPLICATE DETECTED - Lead ID missing but company exists
               lead._isDuplicate = true;
               lead._existingLead = existingLead;
               lead._duplicateAction = 'skip';
-              lead._isUpdate = false;
-              rowErrors.push('POSSIBLE DUPLICATE: Lead ID missing but company "' + lead.companyName + '" exists in database (Added: ' + formatDate(existingLead.dateAdded) + ')');
-            } else {
-              // Truly new lead
-              lead._isUpdate = false;
+              rowErrors.push('POSSIBLE DUPLICATE: "' + lead.companyName + '" already exists (Added: ' + formatDate(existingLead.dateAdded) + ')');
             }
           }
 
-          // Set defaults
-          if (!lead.status) lead.status = 'Active';
-          if (!lead.appointmentMade) lead.appointmentMade = 'No';
+          // Defaults
+          lead.status = 'Active';
+          lead._isUpdate = false;
 
-          // Validate required fields
-          requiredFields.forEach(field => {
-            if (!lead[field]) {
-              rowErrors.push('Missing required field: ' + field);
-            }
-          });
-
-          // VALIDATE BUSINESS UNIT
-          if (lead.businessUnit) {
-            const normalizedUnit = lead.businessUnit.trim();
-            if (VALID_BUSINESS_UNITS.indexOf(normalizedUnit) === -1) {
-              rowErrors.push('Invalid Business Unit "' + normalizedUnit + '"');
-            } else {
-              if (normalizedUnit.toLowerCase() === 'abbondanza vending') {
-                lead.businessUnit = 'Abbondanza Vending';
-              } else if (normalizedUnit.toLowerCase() === 'quantum solutions') {
-                lead.businessUnit = 'Quantum Solutions';
-              }
-            }
-          }
-
-          // VALIDATE STATUS
-          if (lead.status) {
-            const normalizedStatus = lead.status.trim();
-            if (VALID_STATUSES.indexOf(normalizedStatus) === -1) {
-              rowErrors.push('Invalid Status "' + normalizedStatus + '"');
-            }
-          }
-
-          // VALIDATE APPOINTMENT MADE
-          if (lead.appointmentMade) {
-            const normalizedAppt = lead.appointmentMade.trim();
-            if (VALID_APPOINTMENT.indexOf(normalizedAppt) === -1) {
-              rowErrors.push('Invalid Appointment Made "' + normalizedAppt + '"');
-            }
-          }
-
-          // VALIDATE STATE
+          // Validate state
           if (lead.customerState) {
             const normalizedState = lead.customerState.trim().toUpperCase();
-            if (normalizedState.length !== 2) {
-              rowErrors.push('Invalid State format "' + lead.customerState + '"');
-            } else if (VALID_STATES.indexOf(normalizedState) === -1) {
-              rowErrors.push('Invalid State "' + normalizedState + '"');
-            } else {
+            if (normalizedState.length === 2 && VALID_STATES.indexOf(normalizedState) !== -1) {
               lead.customerState = normalizedState;
+            } else {
+              rowErrors.push('Invalid State "' + lead.customerState + '"');
             }
           }
 
-          // VALIDATE ZIP CODE
+          // Validate zip
           if (lead.customerZip) {
             const zipValue = String(lead.customerZip).replace(/\D/g, '');
             if (zipValue.length > 0 && zipValue.length <= 5) {
@@ -2217,15 +2104,7 @@
             }
           }
 
-          // VALIDATE REP EMAIL
-          if (lead.repEmail) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(lead.repEmail.trim())) {
-              rowErrors.push('Invalid Rep Email "' + lead.repEmail + '"');
-            }
-          }
-
-          // VALIDATE EMAIL ADDRESS
+          // Validate email
           if (lead.emailAddress) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(lead.emailAddress.trim())) {
@@ -2233,14 +2112,7 @@
             }
           }
 
-          // VALIDATE PHONE FORMATS
-          if (lead.repPhone) {
-            const phoneDigits = lead.repPhone.replace(/\D/g, '');
-            if (phoneDigits.length < 10) {
-              rowErrors.push('Invalid Rep Phone "' + lead.repPhone + '"');
-            }
-          }
-
+          // Validate phone
           if (lead.phoneNumber) {
             const phoneDigits = lead.phoneNumber.replace(/\D/g, '');
             if (phoneDigits.length > 0 && phoneDigits.length < 10) {
@@ -2248,7 +2120,11 @@
             }
           }
 
-          // Store lead with row info
+          // Clean population to numeric
+          if (lead.population) {
+            lead.population = String(lead.population).replace(/[^0-9]/g, '');
+          }
+
           lead._rowNumber = index + 2;
           lead._originalData = JSON.parse(JSON.stringify(lead));
 
@@ -2260,15 +2136,17 @@
           }
         });
 
-        // If NO errors, import all immediately
-        if (importErrorLeads.length === 0) {
-          await performImport(importValidLeads);
-          closeImportModal();
-          return;
-        }
+        // Combine valid + fixable for rep assignment
+        var allParsed = importValidLeads.concat(importErrorLeads.filter(function(l) { return !l._isDuplicate || l._duplicateAction !== 'skip'; }));
 
-        // If errors found, show fix modal
-        showFixErrorsModal();
+        if (importErrorLeads.length > 0) {
+          // Has errors - show fix modal first, rep assignment comes after
+          showFixErrorsModal();
+        } else {
+          // No errors - go straight to rep assignment modal
+          document.getElementById('importModal').style.display = 'none';
+          showRepAssignmentModal(importValidLeads);
+        }
 
       } catch (error) {
         console.error('Import error:', error);
@@ -2331,14 +2209,6 @@ function showFixErrorsModal() {
         </div>
           <div class="error-row-fields">
             <div class="error-field-group">
-              <label>Business Unit *</label>
-              <select id="bu-${index}" onchange="validateErrorRow(${index})">
-                <option value="">Select...</option>
-                <option value="Abbondanza Vending" ${lead.businessUnit === 'Abbondanza Vending' ? 'selected' : ''}>Abbondanza Vending</option>
-                <option value="Quantum Solutions" ${lead.businessUnit === 'Quantum Solutions' ? 'selected' : ''}>Quantum Solutions</option>
-              </select>
-            </div>
-            <div class="error-field-group">
               <label>Company Name *</label>
               <input type="text" id="company-${index}" value="${lead.companyName || ''}" onchange="validateErrorRow(${index})" />
             </div>
@@ -2355,95 +2225,16 @@ function showFixErrorsModal() {
               <input type="email" id="email-${index}" value="${lead.emailAddress || ''}" onchange="validateErrorRow(${index})" />
             </div>
             <div class="error-field-group">
-              <label>Rep Name *</label>
-              <input type="text" id="repName-${index}" value="${lead.repName || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Rep Phone *</label>
-              <input type="tel" id="repPhone-${index}" value="${lead.repPhone || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Rep Email *</label>
-              <input type="email" id="repEmail-${index}" value="${lead.repEmail || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
               <label>Customer Address</label>
               <input type="text" id="address-${index}" value="${lead.customerAddress || ''}" onchange="validateErrorRow(${index})" />
-            </div>
-            <div class="error-field-group">
-              <label>Customer State</label>
-              <select id="state-${index}" onchange="validateErrorRow(${index})">
-                <option value="">Select...</option>
-                <option value="AL" ${lead.customerState === 'AL' ? 'selected' : ''}>AL</option>
-                <option value="AK" ${lead.customerState === 'AK' ? 'selected' : ''}>AK</option>
-                <option value="AZ" ${lead.customerState === 'AZ' ? 'selected' : ''}>AZ</option>
-                <option value="AR" ${lead.customerState === 'AR' ? 'selected' : ''}>AR</option>
-                <option value="CA" ${lead.customerState === 'CA' ? 'selected' : ''}>CA</option>
-                <option value="CO" ${lead.customerState === 'CO' ? 'selected' : ''}>CO</option>
-                <option value="CT" ${lead.customerState === 'CT' ? 'selected' : ''}>CT</option>
-                <option value="DE" ${lead.customerState === 'DE' ? 'selected' : ''}>DE</option>
-                <option value="FL" ${lead.customerState === 'FL' ? 'selected' : ''}>FL</option>
-                <option value="GA" ${lead.customerState === 'GA' ? 'selected' : ''}>GA</option>
-                <option value="HI" ${lead.customerState === 'HI' ? 'selected' : ''}>HI</option>
-                <option value="ID" ${lead.customerState === 'ID' ? 'selected' : ''}>ID</option>
-                <option value="IL" ${lead.customerState === 'IL' ? 'selected' : ''}>IL</option>
-                <option value="IN" ${lead.customerState === 'IN' ? 'selected' : ''}>IN</option>
-                <option value="IA" ${lead.customerState === 'IA' ? 'selected' : ''}>IA</option>
-                <option value="KS" ${lead.customerState === 'KS' ? 'selected' : ''}>KS</option>
-                <option value="KY" ${lead.customerState === 'KY' ? 'selected' : ''}>KY</option>
-                <option value="LA" ${lead.customerState === 'LA' ? 'selected' : ''}>LA</option>
-                <option value="ME" ${lead.customerState === 'ME' ? 'selected' : ''}>ME</option>
-                <option value="MD" ${lead.customerState === 'MD' ? 'selected' : ''}>MD</option>
-                <option value="MA" ${lead.customerState === 'MA' ? 'selected' : ''}>MA</option>
-                <option value="MI" ${lead.customerState === 'MI' ? 'selected' : ''}>MI</option>
-                <option value="MN" ${lead.customerState === 'MN' ? 'selected' : ''}>MN</option>
-                <option value="MS" ${lead.customerState === 'MS' ? 'selected' : ''}>MS</option>
-                <option value="MO" ${lead.customerState === 'MO' ? 'selected' : ''}>MO</option>
-                <option value="MT" ${lead.customerState === 'MT' ? 'selected' : ''}>MT</option>
-                <option value="NE" ${lead.customerState === 'NE' ? 'selected' : ''}>NE</option>
-                <option value="NV" ${lead.customerState === 'NV' ? 'selected' : ''}>NV</option>
-                <option value="NH" ${lead.customerState === 'NH' ? 'selected' : ''}>NH</option>
-                <option value="NJ" ${lead.customerState === 'NJ' ? 'selected' : ''}>NJ</option>
-                <option value="NM" ${lead.customerState === 'NM' ? 'selected' : ''}>NM</option>
-                <option value="NY" ${lead.customerState === 'NY' ? 'selected' : ''}>NY</option>
-                <option value="NC" ${lead.customerState === 'NC' ? 'selected' : ''}>NC</option>
-                <option value="ND" ${lead.customerState === 'ND' ? 'selected' : ''}>ND</option>
-                <option value="OH" ${lead.customerState === 'OH' ? 'selected' : ''}>OH</option>
-                <option value="OK" ${lead.customerState === 'OK' ? 'selected' : ''}>OK</option>
-                <option value="OR" ${lead.customerState === 'OR' ? 'selected' : ''}>OR</option>
-                <option value="PA" ${lead.customerState === 'PA' ? 'selected' : ''}>PA</option>
-                <option value="RI" ${lead.customerState === 'RI' ? 'selected' : ''}>RI</option>
-                <option value="SC" ${lead.customerState === 'SC' ? 'selected' : ''}>SC</option>
-                <option value="SD" ${lead.customerState === 'SD' ? 'selected' : ''}>SD</option>
-                <option value="TN" ${lead.customerState === 'TN' ? 'selected' : ''}>TN</option>
-                <option value="TX" ${lead.customerState === 'TX' ? 'selected' : ''}>TX</option>
-                <option value="UT" ${lead.customerState === 'UT' ? 'selected' : ''}>UT</option>
-                <option value="VT" ${lead.customerState === 'VT' ? 'selected' : ''}>VT</option>
-                <option value="VA" ${lead.customerState === 'VA' ? 'selected' : ''}>VA</option>
-                <option value="WA" ${lead.customerState === 'WA' ? 'selected' : ''}>WA</option>
-                <option value="WV" ${lead.customerState === 'WV' ? 'selected' : ''}>WV</option>
-                <option value="WI" ${lead.customerState === 'WI' ? 'selected' : ''}>WI</option>
-                <option value="WY" ${lead.customerState === 'WY' ? 'selected' : ''}>WY</option>
-              </select>
             </div>
             <div class="error-field-group">
               <label>Customer Zip</label>
               <input type="text" id="zip-${index}" value="${lead.customerZip || ''}" maxlength="5" onchange="validateErrorRow(${index})" />
             </div>
             <div class="error-field-group">
-              <label>Status</label>
-              <select id="status-${index}" onchange="validateErrorRow(${index})">
-                <option value="Active" ${lead.status === 'Active' ? 'selected' : ''}>Active</option>
-                <option value="Signed Up" ${lead.status === 'Signed Up' ? 'selected' : ''}>Signed Up</option>
-                <option value="Dead" ${lead.status === 'Dead' ? 'selected' : ''}>Dead</option>
-              </select>
-            </div>
-            <div class="error-field-group">
-              <label>Appointment Made</label>
-              <select id="appt-${index}" onchange="validateErrorRow(${index})">
-                <option value="Yes" ${lead.appointmentMade === 'Yes' ? 'selected' : ''}>Yes</option>
-                <option value="No" ${lead.appointmentMade === 'No' ? 'selected' : ''}>No</option>
-              </select>
+              <label>Population</label>
+              <input type="text" id="population-${index}" value="${lead.population || ''}" onchange="validateErrorRow(${index})" />
             </div>
           </div>
         `;
@@ -2536,37 +2327,18 @@ function validateErrorRow(index) {
       const errors = [];
 
       // Get current values from form
-      const businessUnit = document.getElementById('bu-' + index).value;
       const companyName = document.getElementById('company-' + index).value.trim();
-      const repName = document.getElementById('repName-' + index).value.trim();
-      const repPhone = document.getElementById('repPhone-' + index).value.trim();
-      const repEmail = document.getElementById('repEmail-' + index).value.trim();
-      const customerState = document.getElementById('state-' + index).value;
       const customerZip = document.getElementById('zip-' + index).value.trim();
       const emailAddress = document.getElementById('email-' + index).value.trim();
       const phoneNumber = document.getElementById('phone-' + index).value.trim();
 
-      // Validate required fields
-      if (!businessUnit) errors.push('Missing Business Unit');
+      // Only required field: Company Name
       if (!companyName) errors.push('Missing Company Name');
-      if (!repName) errors.push('Missing Rep Name');
-      if (!repPhone) errors.push('Missing Rep Phone');
-      if (!repEmail) errors.push('Missing Rep Email');
 
       // Validate formats
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (repEmail && !emailRegex.test(repEmail)) {
-        errors.push('Invalid Rep Email format');
-      }
       if (emailAddress && !emailRegex.test(emailAddress)) {
         errors.push('Invalid Email Address format');
-      }
-
-      if (repPhone) {
-        const phoneDigits = repPhone.replace(/\D/g, '');
-        if (phoneDigits.length < 10) {
-          errors.push('Rep Phone must have at least 10 digits');
-        }
       }
 
       if (phoneNumber) {
@@ -2584,19 +2356,14 @@ function validateErrorRow(index) {
       }
 
       // Update lead data
-      lead.businessUnit = businessUnit;
       lead.companyName = companyName;
       lead.contactName = document.getElementById('contact-' + index).value.trim();
       lead.phoneNumber = phoneNumber;
       lead.emailAddress = emailAddress;
-      lead.repName = repName;
-      lead.repPhone = repPhone;
-      lead.repEmail = repEmail;
       lead.customerAddress = document.getElementById('address-' + index).value.trim();
-      lead.customerState = customerState;
       lead.customerZip = customerZip;
-      lead.status = document.getElementById('status-' + index).value;
-      lead.appointmentMade = document.getElementById('appt-' + index).value;
+      var popEl = document.getElementById('population-' + index);
+      lead.population = popEl ? popEl.value.trim().replace(/[^0-9]/g, '') : '';
       lead._errors = errors;
 
       // Update UI
@@ -2607,7 +2374,7 @@ function validateErrorRow(index) {
       if (errors.length === 0) {
         errorRow.classList.add('fixed');
         badge.classList.add('fixed');
-        badge.textContent = 'Fixed ?';
+        badge.textContent = 'Fixed';
         errorList.style.display = 'none';
       } else {
         errorRow.classList.remove('fixed');
@@ -2637,14 +2404,113 @@ function importValidRowsOnly() {
     }
 
     function completeImportWithFixes() {
-      const allLeadsToImport = importValidLeads.concat(importErrorLeads);
-      showConfirm(
-        'Complete Import?',
-        'Import all ' + allLeadsToImport.length + ' rows (valid + fixed)?',
-        function() {
-          performImport(allLeadsToImport);
-        }
+      // Gather all leads to import (valid + fixed errors, excluding skipped duplicates)
+      var allToImport = importValidLeads.concat(
+        importErrorLeads.filter(function(l) { return !l._isDuplicate || l._duplicateAction !== 'skip'; })
       );
+      document.getElementById('fixErrorsModal').style.display = 'none';
+      showRepAssignmentModal(allToImport);
+    }
+
+    async function showRepAssignmentModal(leadsToImport) {
+      // Fetch team members for rep dropdown
+      var members = [];
+      try {
+        var res = await fetch(WEB_APP_URL + '?action=getTeamMembers');
+        var data = await res.json();
+        if (data.status === 'success' && data.members) members = data.members;
+      } catch(e) {}
+
+      var existing = document.getElementById('repAssignOverlay');
+      if (existing) existing.remove();
+
+      var overlay = document.createElement('div');
+      overlay.id = 'repAssignOverlay';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:10000;display:flex;justify-content:center;align-items:center;padding:20px';
+
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border-radius:14px;max-width:700px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)';
+
+      // Header
+      var hdr = document.createElement('div');
+      hdr.style.cssText = 'background:linear-gradient(135deg,#263238,#37474f);color:#fff;padding:18px 24px;flex-shrink:0';
+      hdr.innerHTML = '<h3 style="margin:0;font-size:17px">Assign Sales Rep</h3><p style="margin:4px 0 0;opacity:.8;font-size:13px">' + leadsToImport.length + ' companies ready to import - assign a rep before importing</p>';
+
+      // Body
+      var body = document.createElement('div');
+      body.style.cssText = 'padding:20px 24px;overflow-y:auto;flex:1';
+
+      // Assign All row
+      var repOpts = '<option value="">-- Select Rep --</option>';
+      for (var m = 0; m < members.length; m++) {
+        repOpts += '<option value="' + members[m].name + '" data-phone="' + (members[m].phone || '') + '" data-email="' + (members[m].email || '') + '">' + members[m].name + '</option>';
+      }
+
+      var assignAllDiv = document.createElement('div');
+      assignAllDiv.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:12px 16px;background:#f0fdf4;border:2px solid #86efac;border-radius:10px';
+      assignAllDiv.innerHTML = '<strong style="font-size:14px;color:#166534;white-space:nowrap">Assign All:</strong>' +
+        '<select id="repAssignAll" style="flex:1;padding:8px 12px;border:2px solid #86efac;border-radius:6px;font-size:14px;font-weight:600">' + repOpts + '</select>' +
+        '<button type="button" style="background:#10b981;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:13px" onclick="applyRepToAll()">Apply to All</button>';
+      body.appendChild(assignAllDiv);
+
+      // Individual rows
+      var listDiv = document.createElement('div');
+      listDiv.id = 'repAssignList';
+      for (var i = 0; i < leadsToImport.length; i++) {
+        var lead = leadsToImport[i];
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid #f1f5f9';
+        row.innerHTML = '<div style="flex:1;min-width:0"><strong style="font-size:13px;color:#1e293b;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (lead.companyName || 'Unknown') + '</strong>' +
+          '<span style="font-size:11px;color:#64748b">' + (lead.contactName || '') + (lead.phoneNumber ? ' - ' + lead.phoneNumber : '') + '</span></div>' +
+          '<select class="rep-assign-select" data-index="' + i + '" style="width:180px;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px">' + repOpts + '</select>';
+        listDiv.appendChild(row);
+      }
+      body.appendChild(listDiv);
+
+      // Footer
+      var footer = document.createElement('div');
+      footer.style.cssText = 'padding:14px 24px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #e2e8f0;flex-shrink:0';
+      footer.innerHTML = '<span style="font-size:12px;color:#64748b">Rep is optional - you can assign later</span>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button type="button" style="padding:9px 20px;background:#e2e8f0;color:#4a5568;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px" onclick="document.getElementById(\'repAssignOverlay\').remove()">Cancel</button>' +
+          '<button type="button" id="repAssignImportBtn" style="padding:9px 24px;background:#10b981;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;font-size:14px">Import ' + leadsToImport.length + ' Leads</button>' +
+        '</div>';
+
+      card.appendChild(hdr);
+      card.appendChild(body);
+      card.appendChild(footer);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      // Store leads reference for import
+      window._repAssignLeads = leadsToImport;
+      window._repAssignMembers = members;
+
+      // Import button handler
+      document.getElementById('repAssignImportBtn').addEventListener('click', function() {
+        var selects = document.querySelectorAll('.rep-assign-select');
+        selects.forEach(function(sel) {
+          var idx = parseInt(sel.getAttribute('data-index'));
+          var lead = window._repAssignLeads[idx];
+          if (sel.value) {
+            lead.repName = sel.value;
+            var opt = sel.options[sel.selectedIndex];
+            lead.repPhone = opt.getAttribute('data-phone') || '';
+            lead.repEmail = opt.getAttribute('data-email') || '';
+          }
+        });
+        overlay.remove();
+        performImport(window._repAssignLeads);
+      });
+    }
+
+    function applyRepToAll() {
+      var allSel = document.getElementById('repAssignAll');
+      if (!allSel.value) return;
+      var selects = document.querySelectorAll('.rep-assign-select');
+      selects.forEach(function(sel) {
+        sel.value = allSel.value;
+      });
     }
 
     async function performImport(leadsArray) {
@@ -3071,6 +2937,16 @@ function exportLeadsToExcel() {
           var ya = (String(av).toLowerCase() === 'yes') ? 1 : 0;
           var yb = (String(bv).toLowerCase() === 'yes') ? 1 : 0;
           return (ya - yb) * dir;
+        }
+
+        // Population: numeric sort, empties last
+        if (field === 'population') {
+          var na = av ? parseInt(String(av).replace(/[^0-9]/g, ''), 10) : null;
+          var nb = bv ? parseInt(String(bv).replace(/[^0-9]/g, ''), 10) : null;
+          if (na === null && nb === null) return 0;
+          if (na === null) return 1;
+          if (nb === null) return -1;
+          return (na - nb) * dir;
         }
 
         // String fields
