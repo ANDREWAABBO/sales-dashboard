@@ -646,6 +646,17 @@
 
     let allActions = [];
     var queuedEmails = {}; // {actionId: {to, subject, body, company, templateName}}
+    // Restore queued emails from sessionStorage
+    (function() {
+      try {
+        var cached = sessionStorage.getItem('queuedEmails');
+        if (cached) queuedEmails = JSON.parse(cached);
+      } catch(e) {}
+    })();
+
+    function persistQueuedEmails() {
+      try { sessionStorage.setItem('queuedEmails', JSON.stringify(queuedEmails)); } catch(e) {}
+    }
     let maxAttempts = 5;
 
     // ?? Label ? CSS class map ??
@@ -1098,12 +1109,14 @@
 
     function removeQueued(actionId) {
       delete queuedEmails[actionId];
+      persistQueuedEmails();
       renderTable();
       updateSendBar();
     }
 
     function clearAllQueued() {
       queuedEmails = {};
+      persistQueuedEmails();
       renderTable();
       updateSendBar();
     }
@@ -1301,7 +1314,7 @@
       // Recipients section - read-only, pulled from Lead DB
       h += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span>Recipients <span style="font-weight:400;color:#94a3b8;font-size:10px">(from Lead Database)</span></span></label>';
       h += '<div id="composeContactsList" style="min-height:40px"><div style="padding:12px;text-align:center;color:#94a3b8;font-size:12px">Loading contacts from Lead Database...</div></div>';
-      h += '<div id="compNoContacts" style="padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;display:none"><div style="margin-bottom:8px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#f59e0b;fill:none;stroke-width:2;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>No contacts found in Lead Database.</div><div style="display:flex;gap:6px;align-items:center"><input id="manualEmailInput" type="email" placeholder="Enter email address..." style="flex:1;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addManualEmail()}"/><button onclick="addManualEmail()" style="padding:7px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add</button></div></div>';
+      h += '<div id="compNoContacts" style="padding:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;display:none"><div style="margin-bottom:8px"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#f59e0b;fill:none;stroke-width:2;vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>No contacts found in Lead Database.</div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input id="manualNameInput" type="text" placeholder="Name" style="flex:0.8;min-width:80px;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px"/><input id="manualEmailInput" type="email" placeholder="Email (required)" style="flex:1.2;min-width:120px;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addManualEmail()}"/><input id="manualPositionInput" type="text" placeholder="Position" style="flex:0.7;min-width:70px;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:12px"/><button onclick="addManualEmail()" style="padding:7px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">+ Add</button></div></div>';
       h += '</div>';
 
       // Template dropdown
@@ -1422,7 +1435,7 @@
       }
       // Always show add-another row when contacts exist
       if (_composeContacts.length > 0) {
-        h += '<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><input id="manualEmailInput" type="email" placeholder="Add another email..." style="flex:1;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addManualEmail()}"/><button onclick="addManualEmail()" style="padding:6px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Add</button></div>';
+        h += '<div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap"><input id="manualNameInput" type="text" placeholder="Name" style="flex:0.8;min-width:70px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px"/><input id="manualEmailInput" type="email" placeholder="Email (required)" style="flex:1.2;min-width:100px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addManualEmail()}"/><input id="manualPositionInput" type="text" placeholder="Position" style="flex:0.7;min-width:60px;padding:6px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:11px"/><button onclick="addManualEmail()" style="padding:6px 12px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Add</button></div>';
       }
       el.innerHTML = h;
     }
@@ -1437,11 +1450,34 @@
       for (var i = 0; i < _composeContacts.length; i++) {
         if (_composeContacts[i].email === email) { showToast('Email already added', 'error'); return; }
       }
-      _composeContacts.push({name: '', email: email, position: '', selected: true, manual: true});
+      var nameInput = document.getElementById('manualNameInput');
+      var posInput = document.getElementById('manualPositionInput');
+      var name = nameInput ? nameInput.value.trim() : '';
+      var position = posInput ? posInput.value.trim() : '';
+
+      _composeContacts.push({name: name, email: email, position: position, selected: true, manual: true});
       renderComposeContacts();
       // Hide the no-contacts warning since we now have a contact
       var noEl = document.getElementById('compNoContacts');
       if (noEl) noEl.style.display = 'none';
+
+      // Sync all contacts back to Lead DB
+      var a = allActions.find(function(x) { return x.id === _composeActionId; });
+      if (a) {
+        var allContacts = _composeContacts.map(function(c) {
+          return {name: String(c.name||''), email: String(c.email||''), position: String(c.position||'')};
+        });
+        // Update contacts cache
+        var cacheKey = (a.leadId || '') + '|' + (a.company || '');
+        _contactsCache[cacheKey] = allContacts;
+        // Background sync to backend
+        fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'syncContactsToFU', leadId: a.leadId, company: a.company, contacts: allContacts})
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          if (d.status === 'success') showToast('Contact saved to Lead Database', 'success');
+        }).catch(function() {});
+      }
     }
 
 
@@ -1470,6 +1506,7 @@
           company: a ? a.company : '',
           templateName: templateName
         };
+        persistQueuedEmails();
       }
 
       var overlay = document.getElementById('composeOverlay');
@@ -1530,6 +1567,7 @@
 
     function removeQueuedFromReview(actionId) {
       delete queuedEmails[actionId];
+      persistQueuedEmails();
       var el = document.getElementById('review-' + actionId);
       if (el) el.remove();
       var keys = Object.keys(queuedEmails);
@@ -1610,6 +1648,7 @@
 
       var overlay = document.getElementById('reviewOverlay');
       if (overlay) overlay.remove();
+      persistQueuedEmails();
 
       // Update Email action date + attempt count for each successfully sent company
       var emailUpdated = 0;
