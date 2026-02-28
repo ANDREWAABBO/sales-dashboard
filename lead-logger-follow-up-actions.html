@@ -512,19 +512,19 @@
       <table id="fuTable" style="display:none">
         <thead><tr>
             <th style="width:6%">Date Added<span class="sub">from Lead DB</span></th>
-            <th style="width:9%">Company</th>
+            <th style="width:8%">Company</th>
             <th style="width:5%">Pop.<span class="sub">population</span></th>
-            <th style="width:9%">Action</th>
+            <th style="width:8%">Action</th>
             <th style="width:8%">Action Date</th>
             <th style="width:7%">Who</th>
             <th style="width:7%">Attempt</th>
             <th style="width:7%">Last Contact<span class="sub">attempt date auto populated</span></th>
             <th style="width:6%">Phone<span class="sub">synced to Lead DB</span></th>
-            <th style="width:7%">Notes<span class="sub">synced to Lead DB</span></th>
+            <th style="width:6%">Notes<span class="sub">synced to Lead DB</span></th>
             <th style="width:6%">Email</th>
             <th style="width:6%">Proposal</th>
             <th style="width:7%">Rep Alert</th>
-            <th style="width:3%">Log</th>
+            <th style="width:6%">Log</th>
           </tr></thead>
           <tbody id="fuTableBody"></tbody>
         </table>
@@ -943,7 +943,7 @@
 
         // History log
         var histCount = getActivityLog(a.id).length;
-        html += '<td><button class="btn-sm" style="background:#475569;font-size:9px;padding:3px 6px" onclick="openHistoryModal(\'' + a.id + '\')"><svg viewBox="0 0 24 24" style="width:11px;height:11px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + (histCount > 0 ? ' ' + histCount : '') + '</button></td>';
+        html += '<td><button class="btn-sm" style="background:#475569" onclick="openHistoryModal(\'' + a.id + '\')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Log' + (histCount > 0 ? ' (' + histCount + ')' : '') + '</button></td>';
 
         html += '</tr>';
       }
@@ -966,13 +966,16 @@
         var d = (a.actionDates || {})[labels[0]] || '';
         return d ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')" oncontextmenu="return clearActionDate(event,\'' + a.id + '\',\'' + labels[0] + '\')">' + esc(d) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[0] + '\')">' + '+ Add Date' + '</span>';
       }
+      // Multi-label: only show labels that require dates
+      var dateLabels = labels.filter(function(l) { return labelRequiresDate(l); });
+      if (dateLabels.length === 0) return '<span style="color:#a0aec0">&mdash;</span>';
       var h = '<div class="label-stack">';
-      for (var i = 0; i < labels.length; i++) {
-        var lc = getLabelColors(labels[i]);
-        var short = labelShort(labels[i]);
-        var dt = (a.actionDates || {})[labels[i]] || '';
+      for (var i = 0; i < dateLabels.length; i++) {
+        var lc = getLabelColors(dateLabels[i]);
+        var short = labelShort(dateLabels[i]);
+        var dt = (a.actionDates || {})[dateLabels[i]] || '';
         h += '<div class="label-row"><span class="lr-tag" style="background:' + lc.bg + ';color:' + lc.text + '">' + short + '</span>';
-        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')" oncontextmenu="return clearActionDate(event,\'' + a.id + '\',\'' + labels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + labels[i] + '\')">' + '+ Date' + '</span>';
+        h += dt ? '<span class="lr-date" onclick="editActionDate(\'' + a.id + '\',\'' + dateLabels[i] + '\')" oncontextmenu="return clearActionDate(event,\'' + a.id + '\',\'' + dateLabels[i] + '\')">' + esc(dt) + '</span>' : '<span class="lr-date" style="color:#a0aec0;border-bottom:1px dashed #cbd5e0" onclick="editActionDate(\'' + a.id + '\',\'' + dateLabels[i] + '\')">' + '+ Date' + '</span>';
         h += '</div>';
       }
       return h + '</div>';
@@ -1001,6 +1004,14 @@
       return true; // default to tracking
     }
 
+    function labelRequiresDate(labelName) {
+      var labels = availableLabels.length > 0 ? availableLabels : DEFAULT_LABELS;
+      for (var i = 0; i < labels.length; i++) {
+        if (labels[i].name === labelName) return labels[i].requiresDate === true;
+      }
+      return false;
+    }
+
     function renderAttempts(a, labels, isDead) {
       if (labels.length <= 1) {
         if (!labelTracksAttempts(labels[0])) return '<span style="color:#a0aec0">&mdash;</span>';
@@ -1008,20 +1019,19 @@
         if (isDead) return '<div class="att att-dead"><span class="att-n">' + n + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
         return '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',-1)">&minus;</button><span class="att-n">' + n + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[0] + '\',1)">+</button></div>';
       }
+      // Multi-label: only show labels that track attempts
+      var trackLabels = labels.filter(function(l) { return labelTracksAttempts(l); });
+      if (trackLabels.length === 0) return '<span style="color:#a0aec0">&mdash;</span>';
       var h = '<div class="label-stack">';
-      for (var i = 0; i < labels.length; i++) {
-        var lc = getLabelColors(labels[i]);
-        var short = labelShort(labels[i]);
+      for (var i = 0; i < trackLabels.length; i++) {
+        var lc = getLabelColors(trackLabels[i]);
+        var short = labelShort(trackLabels[i]);
         h += '<div class="label-row"><span class="lr-tag" style="background:' + lc.bg + ';color:' + lc.text + '">' + short + '</span>';
-        if (!labelTracksAttempts(labels[i])) {
-          h += '<span class="lr-dim">&mdash;</span>';
+        var n2 = (a.attempts || {})[trackLabels[i]] || 0;
+        if (isDead) {
+          h += '<div class="att att-dead"><span class="att-n">' + n2 + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
         } else {
-          var n2 = (a.attempts || {})[labels[i]] || 0;
-          if (isDead) {
-            h += '<div class="att att-dead"><span class="att-n">' + n2 + '</span><span style="font-size:8px;color:#ef4444;font-weight:700">MAX</span></div>';
-          } else {
-            h += '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',-1)">&minus;</button><span class="att-n">' + n2 + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + labels[i] + '\',1)">+</button></div>';
-          }
+          h += '<div class="att"><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + trackLabels[i] + '\',-1)">&minus;</button><span class="att-n">' + n2 + '</span><button class="att-b" onclick="changeAttempt(\'' + a.id + '\',\'' + trackLabels[i] + '\',1)">+</button></div>';
         }
         h += '</div>';
       }
@@ -1035,16 +1045,15 @@
         if (!ld) return isDead ? '<span style="color:#ef4444">&mdash;</span>' : '<span style="color:#a0aec0">&mdash;</span>';
         return isDead ? '<span style="color:#ef4444">' + esc(ld) + '</span>' : esc(ld);
       }
+      // Multi-label: only show labels that track attempts
+      var trackLabels = labels.filter(function(l) { return labelTracksAttempts(l); });
+      if (trackLabels.length === 0) return '<span style="color:#a0aec0">&mdash;</span>';
       var h = '<div class="label-stack">';
-      for (var i = 0; i < labels.length; i++) {
-        var lc = getLabelColors(labels[i]);
-        var short = labelShort(labels[i]);
-        var ldv = (a.lastDates || {})[labels[i]] || '';
-        if (!labelTracksAttempts(labels[i])) {
-          h += '<div class="label-row"><span class="lr-tag" style="background:' + lc.bg + ';color:' + lc.text + '">' + short + '</span><span class="lr-dim">&mdash;</span></div>';
-        } else {
-          h += '<div class="label-row"><span class="lr-tag" style="background:' + lc.bg + ';color:' + lc.text + '">' + short + '</span><span class="lr-dim">' + (ldv ? esc(ldv) : '&mdash;') + '</span></div>';
-        }
+      for (var i = 0; i < trackLabels.length; i++) {
+        var lc = getLabelColors(trackLabels[i]);
+        var short = labelShort(trackLabels[i]);
+        var ldv = (a.lastDates || {})[trackLabels[i]] || '';
+        h += '<div class="label-row"><span class="lr-tag" style="background:' + lc.bg + ';color:' + lc.text + '">' + short + '</span><span class="lr-dim">' + (ldv ? esc(ldv) : '&mdash;') + '</span></div>';
       }
       return h + '</div>';
     }
