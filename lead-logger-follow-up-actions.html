@@ -1291,7 +1291,7 @@
         document.body.appendChild(overlay);
       }
 
-      // Fetch fresh from backend
+      // Fetch fresh from backend (silent cache update only)
       fetch(WEB_APP_URL, {
         method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
         body: JSON.stringify({action:'getActivityLog', actionId: actionId})
@@ -1299,7 +1299,9 @@
         var log = (data.status === 'success' && data.entries) ? data.entries : [];
         _activityLogCache[actionId] = log;
         try { sessionStorage.setItem('activityLogCounts', JSON.stringify(_activityLogCache)); } catch(e) {}
-        if (document.getElementById('historyOverlay')) {
+        var el = document.getElementById('historyOverlay');
+        if (el && !el.dataset.rendered) {
+          // Only render if we showed a loading spinner (no cache hit)
           renderHistoryModal(actionId, company, log);
         }
         renderTable();
@@ -2625,15 +2627,13 @@
     function openDripModal() {
       // Render immediately with cached data
       renderDripModal();
-      // Refresh data in background
+      // Refresh data in background (cache only, no re-render)
       Promise.all([
         fetch(WEB_APP_URL + '?action=getDripSettings').then(function(r){return r.json()}),
         fetch(WEB_APP_URL + '?action=getDripCampaigns').then(function(r){return r.json()})
       ]).then(function(results) {
         if (results[0].status === 'success' && results[0].settings) _dripSettings = results[0].settings;
         if (results[1].status === 'success' && results[1].campaigns) _dripCampaigns = results[1].campaigns;
-        // Re-render if modal still open
-        if (document.getElementById('dripOverlay')) renderDripModal();
       }).catch(function() {});
     }
 
