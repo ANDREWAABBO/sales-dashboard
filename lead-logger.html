@@ -1765,12 +1765,6 @@
         return;
       }
       
-      // Validate required fields
-      if (!lead.repPhone || !lead.repEmail) {
-        showToast('Missing sales rep contact information. Please edit the lead and add rep phone and email.', 'error');
-        return;
-      }
-      
       // Build URL parameters from lead data
       var params = new URLSearchParams();
       
