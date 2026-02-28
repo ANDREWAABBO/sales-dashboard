@@ -290,8 +290,25 @@
     .et-placeholder-tag{display:inline-block;padding:2px 8px;background:#d1fae5;color:#065f46;border-radius:4px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;transition:.1s}
     .et-placeholder-tag:hover{background:#a7f3d0}
     .et-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9}
-    [contenteditable]:empty:before{content:attr(data-placeholder);color:#a0aec0;pointer-events:none}
-    [contenteditable] img{max-width:100%;border-radius:4px;margin:6px 0;display:block}
+    .ebld-add{padding:5px 12px;border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:3px}
+    .ebld-add:hover{opacity:.9;transform:translateY(-1px)}
+    .ebld-block{border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;overflow:hidden;background:#fff}
+    .ebld-header{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+    .ebld-type{font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:4px}
+    .ebld-type-text{background:#dbeafe;color:#1e40af}
+    .ebld-type-img{background:#ede9fe;color:#7c3aed}
+    .ebld-controls{display:flex;gap:3px}
+    .ebld-btn{width:22px;height:22px;border:1px solid #cbd5e0;border-radius:4px;background:#fff;cursor:pointer;font-size:11px;font-weight:700;color:#64748b;display:flex;align-items:center;justify-content:center}
+    .ebld-btn:hover{background:#f1f5f9;border-color:#94a3b8}
+    .ebld-btn-del{color:#ef4444;border-color:#fecaca}
+    .ebld-btn-del:hover{background:#fef2f2;border-color:#ef4444}
+    .ebld-textarea{width:100%;min-height:80px;padding:10px 12px;border:none;font-size:13px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;color:#2d3748}
+    .ebld-textarea::placeholder{color:#a0aec0}
+    .ebld-img-preview{padding:12px;text-align:center}
+    .ebld-img-preview img{max-width:100%;max-height:200px;border-radius:6px;display:block;margin:0 auto}
+    .ebld-img-name{font-size:10px;color:#64748b;margin-top:6px}
+    .ebld-img-empty{padding:24px;text-align:center;color:#94a3b8;font-size:12px;cursor:pointer;border:2px dashed #e2e8f0;margin:8px;border-radius:8px}
+    .ebld-img-empty:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff}
 
     /* ==================== MOBILE RESPONSIVE ==================== */
     @media (max-width: 768px) {
@@ -1392,7 +1409,8 @@
 
       // Body
       h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Body</label>';
-      h += '<div id="compBody" contenteditable="true" data-placeholder="Select a template above or type your email..." style="width:100%;min-height:130px;max-height:300px;overflow-y:auto;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;line-height:1.5;background:#fff;color:#2d3748;outline:none;white-space:pre-wrap;word-wrap:break-word">' + (existingBody || '') + '</div></div>';
+      h += '<textarea id="compBody" placeholder="Select a template above or type your email..." style="width:100%;min-height:130px;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;resize:vertical;line-height:1.5">' + esc(existingBody) + '</textarea>';
+      h += '<div id="compBlockPreview" style="display:none;margin-top:8px;border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#f8fafc"></div></div>';
 
       // Placeholder hints
       h += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> auto-fill when sent.</div>';
@@ -1475,7 +1493,27 @@
         }
         var a = allActions.find(function(x) { return x.id === _composeActionId; }) || {};
         subField.value = fillPlaceholders(t.subject || '', a);
-        bodyField.innerHTML = fillPlaceholders(t.body || '', a);
+        // Handle block-based body
+        var blocks = parseBodyToBlocks(t.body || '');
+        var hasImages = blocks.some(function(b) { return b.type === 'image'; });
+        if (hasImages) {
+          // Show text in textarea, images in preview
+          var textParts = blocks.filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.content || ''; });
+          bodyField.value = fillPlaceholders(textParts.join('\n\n'), a);
+          var preview = document.getElementById('compBlockPreview');
+          if (preview) {
+            preview.style.display = 'block';
+            preview.innerHTML = '<div style="font-size:11px;font-weight:600;color:#4a5568;margin-bottom:6px">Email will include these images:</div>' + blocksToPreview(blocks.filter(function(b){ return b.type === 'image'; }), a);
+          }
+          // Store blocks for sending
+          bodyField.dataset.blocks = t.body;
+        } else {
+          var textContent = blocks.map(function(b){ return b.content || ''; }).join('\n\n');
+          bodyField.value = fillPlaceholders(textContent, a);
+          bodyField.dataset.blocks = '';
+          var preview = document.getElementById('compBlockPreview');
+          if (preview) preview.style.display = 'none';
+        }
         if (!t.subject && !t.body) {
           showToast('Template "' + t.name + '" has empty subject and body', 'error');
         }
@@ -1552,7 +1590,23 @@
     function saveComposeEmail() {
       var subject = document.getElementById('compSubject').value.trim();
       var bodyEl = document.getElementById('compBody');
-      var body = bodyEl ? bodyEl.innerHTML.trim() : '';
+      var body = bodyEl ? bodyEl.value.trim() : '';
+      // If template had blocks with images, rebuild the full HTML
+      if (bodyEl && bodyEl.dataset.blocks) {
+        try {
+          var blocks = JSON.parse(bodyEl.dataset.blocks);
+          // Update text blocks with any edits
+          var textIdx = 0;
+          var editedLines = body.split('\n\n');
+          for (var bi = 0; bi < blocks.length; bi++) {
+            if (blocks[bi].type === 'text' && textIdx < editedLines.length) {
+              blocks[bi].content = editedLines[textIdx];
+              textIdx++;
+            }
+          }
+          body = JSON.stringify(blocks);
+        } catch(e) {}
+      }
       var actionId = _composeActionId;
       var a = allActions.find(function(x) { return x.id === actionId; });
 
@@ -3253,9 +3307,12 @@
         for (var i = 0; i < emailTemplates.length; i++) {
           var t = emailTemplates[i];
           var catBadge = t.category === 'Drip' ? '<span style="background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px">DRIP</span>' : '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px">GENERAL</span>';
+          var hasImgs = false;
+          try { var bl = JSON.parse(t.body); if (Array.isArray(bl)) hasImgs = bl.some(function(b){ return b.type === 'image'; }); } catch(e) {}
+          var imgBadge = hasImgs ? ' <span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:600">IMG</span>' : '';
           h += '<div class="et-item" id="et-item-' + i + '">';
           h += '  <div class="et-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>';
-          h += '  <div class="et-info"><div class="et-name">' + esc(t.name) + catBadge + '</div><div class="et-subject">' + esc(t.subject || 'No subject') + '</div></div>';
+          h += '  <div class="et-info"><div class="et-name">' + esc(t.name) + catBadge + imgBadge + '</div><div class="et-subject">' + esc(t.subject || 'No subject') + '</div></div>';
           h += '  <div class="et-actions">';
           if (etSendingActionId) {
             h += '    <button class="et-btn" style="color:#059669;border-color:#a7f3d0;background:#ecfdf5" onclick="previewTemplate(\'' + t.id + '\')"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Use</button>';
@@ -3283,8 +3340,11 @@
 
     function renderTemplateForm(body) {
       var isNew = (etEditingId === 'new');
-      var t = isNew ? {name:'', subject:'', body:''} : emailTemplates.find(function(x) { return x.id === etEditingId; });
+      var t = isNew ? {name:'', subject:'', body:'', category:'General'} : emailTemplates.find(function(x) { return x.id === etEditingId; });
       if (!t) { etEditingId = null; renderTemplatesModal(); return; }
+
+      // Parse body into blocks
+      _etBlocks = parseBodyToBlocks(t.body || '');
 
       var h = '';
       h += '<div class="et-form">';
@@ -3293,24 +3353,28 @@
       h += '  <div class="et-field"><label>Template Name</label><input type="text" id="etName" value="' + esc(t.name) + '" placeholder="e.g. Initial Outreach"/></div>';
       h += '  <div class="et-field"><label>Category</label><select id="etCategory" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"><option value="General"' + (t.category !== 'Drip' ? ' selected' : '') + '>General</option><option value="Drip"' + (t.category === 'Drip' ? ' selected' : '') + '>Drip Marketing</option></select></div>';
       h += '  <div class="et-field"><label>Email Subject</label><input type="text" id="etSubject" value="' + esc(t.subject) + '" placeholder="e.g. Following up on our conversation"/></div>';
-      h += '  <div class="et-field"><label>Email Body</label><div id="etBody" contenteditable="true" style="width:100%;min-height:180px;max-height:400px;overflow-y:auto;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;line-height:1.6;background:#fff;color:#2d3748;outline:none;white-space:pre-wrap;word-wrap:break-word" data-placeholder="Type your email body here. Use placeholders like {Company} to auto-fill data.">' + (t.body || '') + '</div></div>';
 
-      // Image upload
-      h += '  <div class="et-field" style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#f8fafc">';
-      h += '    <label style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><span>Images</span>';
-      h += '    <label for="etImageUpload" style="padding:5px 12px;background:#2563eb;color:#fff;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Image</label></label>';
-      h += '    <input type="file" id="etImageUpload" accept="image/*" style="display:none" onchange="handleImageUpload(this)"/>';
-      h += '    <div id="etImageStatus"></div>';
-      h += '    <div id="etImageLibrary" style="margin-top:8px"><div style="text-align:center;color:#94a3b8;font-size:11px;padding:8px">Loading images...</div></div>';
+      // Block builder
+      h += '  <div class="et-field"><label style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><span>Email Body</span>';
+      h += '    <div style="display:flex;gap:4px">';
+      h += '      <button type="button" class="ebld-add" onclick="addBlock(\'text\')" style="background:#2563eb">+ Text</button>';
+      h += '      <button type="button" class="ebld-add" onclick="addBlock(\'image\')" style="background:#7c3aed">+ Image</button>';
+      h += '    </div></label>';
+      h += '    <div id="etBlockList"></div>';
       h += '  </div>';
 
+      // Placeholders hint
       h += '  <div class="et-placeholders">';
-      h += '    <div class="et-placeholders-title">Available Placeholders (click to insert):</div>';
+      h += '    <div class="et-placeholders-title">Placeholders (type into any text block):</div>';
       var placeholders = ['{Company}','{Contact}','{Email}','{Phone}','{Rep}','{Date}'];
       for (var i = 0; i < placeholders.length; i++) {
-        h += '<span class="et-placeholder-tag" onclick="insertPlaceholder(\'' + placeholders[i] + '\')">' + placeholders[i] + '</span>';
+        h += '<span class="et-placeholder-tag" onclick="insertPlaceholderIntoFocused(\'' + placeholders[i] + '\')">' + placeholders[i] + '</span>';
       }
       h += '  </div>';
+
+      // Image upload (hidden file input)
+      h += '  <input type="file" id="etImageUpload" accept="image/*" style="display:none" onchange="handleImageUpload(this)"/>';
+      h += '  <div id="etImageStatus"></div>';
 
       h += '  <div class="et-form-actions">';
       h += '    <button class="btn-cancel" onclick="cancelTemplateEdit()" style="padding:7px 16px;font-size:12px">Cancel</button>';
@@ -3319,50 +3383,238 @@
       h += '</div>';
 
       body.innerHTML = h;
-      loadTemplateImages();
+      renderBlocks();
+      // If no blocks yet, auto-add one text block
+      if (_etBlocks.length === 0) addBlock('text');
     }
 
-    function insertPlaceholder(tag) {
-      var el = document.getElementById('etBody');
-      if (!el) return;
-      el.focus();
-      document.execCommand('insertText', false, tag);
-    }
+    // ========== BLOCK-BASED EMAIL BUILDER ==========
 
-    var _templateImages = [];
+    var _etBlocks = []; // [{type:'text',content:''}, {type:'image',url:'',name:''}]
+    var _lastFocusedTextarea = null;
 
-    function loadTemplateImages() {
-      var lib = document.getElementById('etImageLibrary');
-      if (!lib) return;
-      fetch(WEB_APP_URL + '?action=getTemplateImages').then(function(r){return r.json()}).then(function(d) {
-        if (d.status === 'success') {
-          _templateImages = d.images || [];
-          renderImageLibrary();
+    function parseBodyToBlocks(body) {
+      if (!body) return [];
+      // Try JSON parse first (new format)
+      try {
+        var parsed = JSON.parse(body);
+        if (Array.isArray(parsed)) return parsed;
+      } catch(e) {}
+      // Legacy: split on img tags
+      var blocks = [];
+      var parts = body.split(/(<img[^>]+>)/gi);
+      for (var i = 0; i < parts.length; i++) {
+        var part = parts[i].trim();
+        if (!part) continue;
+        var imgMatch = part.match(/<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']+)["'])?[^>]*>/i);
+        if (imgMatch) {
+          blocks.push({type:'image', url: imgMatch[1], name: imgMatch[2] || 'Image'});
+        } else {
+          // Strip any remaining HTML tags for clean text
+          var clean = part.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+          if (clean) blocks.push({type:'text', content: clean});
         }
+      }
+      return blocks.length > 0 ? blocks : [{type:'text', content: body.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')}];
+    }
+
+    function blocksToJson() {
+      syncBlocksFromDom();
+      return JSON.stringify(_etBlocks);
+    }
+
+    function blocksToHtml(blocks, action) {
+      var html = '';
+      for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        if (b.type === 'text') {
+          var txt = b.content || '';
+          if (action) txt = fillPlaceholders(txt, action);
+          html += '<div style="font-size:14px;line-height:1.6;color:#2d3748">' + esc(txt).replace(/\n/g, '<br>') + '</div>';
+        } else if (b.type === 'image') {
+          html += '<div style="margin:12px 0;text-align:center"><img src="' + esc(b.url) + '" alt="' + esc(b.name || '') + '" style="max-width:100%;border-radius:6px"></div>';
+        }
+      }
+      return html;
+    }
+
+    function blocksToPreview(blocks, action) {
+      var html = '';
+      for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        if (b.type === 'text') {
+          var txt = b.content || '';
+          if (action) txt = fillPlaceholders(txt, action);
+          html += '<div style="font-size:13px;line-height:1.6;color:#2d3748;white-space:pre-wrap;margin-bottom:8px">' + esc(txt) + '</div>';
+        } else if (b.type === 'image') {
+          html += '<div style="margin:8px 0;text-align:center"><img src="' + esc(b.url) + '" style="max-width:100%;border-radius:6px;max-height:200px"></div>';
+        }
+      }
+      return html;
+    }
+
+    function syncBlocksFromDom() {
+      for (var i = 0; i < _etBlocks.length; i++) {
+        if (_etBlocks[i].type === 'text') {
+          var ta = document.getElementById('etBlock_' + i);
+          if (ta) _etBlocks[i].content = ta.value;
+        }
+      }
+    }
+
+    function renderBlocks() {
+      var container = document.getElementById('etBlockList');
+      if (!container) return;
+      if (_etBlocks.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px;border:2px dashed #e2e8f0;border-radius:8px">Click "+ Text" or "+ Image" to start building your email</div>';
+        return;
+      }
+      var h = '';
+      for (var i = 0; i < _etBlocks.length; i++) {
+        var b = _etBlocks[i];
+        var isText = b.type === 'text';
+        h += '<div class="ebld-block" data-idx="' + i + '">';
+        // Block header
+        h += '<div class="ebld-header">';
+        h += '<span class="ebld-type ' + (isText ? 'ebld-type-text' : 'ebld-type-img') + '">' + (isText ? 'TEXT' : 'IMAGE') + '</span>';
+        h += '<div class="ebld-controls">';
+        if (i > 0) h += '<button class="ebld-btn" onclick="moveBlock(' + i + ',-1)" title="Move up">&uarr;</button>';
+        if (i < _etBlocks.length - 1) h += '<button class="ebld-btn" onclick="moveBlock(' + i + ',1)" title="Move down">&darr;</button>';
+        h += '<button class="ebld-btn ebld-btn-del" onclick="removeBlock(' + i + ')" title="Remove">x</button>';
+        h += '</div></div>';
+        // Block content
+        if (isText) {
+          h += '<textarea id="etBlock_' + i + '" class="ebld-textarea" onfocus="_lastFocusedTextarea=this" placeholder="Type your text here... Use {Company}, {Contact} etc.">' + esc(b.content || '') + '</textarea>';
+        } else {
+          if (b.url) {
+            h += '<div class="ebld-img-preview"><img src="' + esc(b.url) + '"/>';
+            h += '<div class="ebld-img-name">' + esc(b.name || 'Image') + '</div></div>';
+          } else {
+            h += '<div class="ebld-img-empty" onclick="pickImageForBlock(' + i + ')">';
+            h += '<svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:#94a3b8;fill:none;stroke-width:1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+            h += '<div>Click to upload or select image</div></div>';
+          }
+        }
+        h += '</div>';
+      }
+      container.innerHTML = h;
+    }
+
+    function addBlock(type) {
+      syncBlocksFromDom();
+      if (type === 'text') {
+        _etBlocks.push({type:'text', content:''});
+        renderBlocks();
+        // Focus the new textarea
+        setTimeout(function() {
+          var ta = document.getElementById('etBlock_' + (_etBlocks.length - 1));
+          if (ta) ta.focus();
+        }, 50);
+      } else if (type === 'image') {
+        _etBlocks.push({type:'image', url:'', name:''});
+        _pendingImageBlockIdx = _etBlocks.length - 1;
+        renderBlocks();
+        // Trigger file picker
+        pickImageForBlock(_pendingImageBlockIdx);
+      }
+    }
+
+    var _pendingImageBlockIdx = -1;
+
+    function pickImageForBlock(idx) {
+      _pendingImageBlockIdx = idx;
+      // Show picker: upload new or choose from library
+      showImagePicker(idx);
+    }
+
+    function showImagePicker(idx) {
+      // Remove existing picker
+      var old = document.getElementById('imgPickerOverlay');
+      if (old) old.remove();
+
+      var h = '<div class="modal-overlay show" id="imgPickerOverlay" style="z-index:10001">';
+      h += '<div class="modal-card" style="max-width:500px">';
+      h += '<div class="modal-hdr" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)"><h3>Select Image</h3><p>Upload new or choose from library</p></div>';
+      h += '<div class="modal-body" style="padding:16px">';
+      // Upload button
+      h += '<div style="text-align:center;margin-bottom:16px"><label for="etImageUpload" style="padding:10px 24px;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload New Image</label></div>';
+      // Library
+      h += '<div style="font-size:12px;font-weight:600;color:#4a5568;margin-bottom:8px">Image Library</div>';
+      h += '<div id="imgPickerLibrary" style="min-height:60px"><div style="text-align:center;color:#94a3b8;font-size:11px;padding:12px">Loading...</div></div>';
+      h += '</div>';
+      h += '<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById(\'imgPickerOverlay\').remove()">Cancel</button></div>';
+      h += '</div></div>';
+
+      document.body.insertAdjacentHTML('beforeend', h);
+      loadImagePickerLibrary();
+    }
+
+    function loadImagePickerLibrary() {
+      fetch(WEB_APP_URL + '?action=getTemplateImages').then(function(r){return r.json()}).then(function(d) {
+        _templateImages = (d.status === 'success' && d.images) ? d.images : [];
+        var lib = document.getElementById('imgPickerLibrary');
+        if (!lib) return;
+        if (_templateImages.length === 0) {
+          lib.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:16px;border:2px dashed #e2e8f0;border-radius:8px">No images yet. Upload one above.</div>';
+          return;
+        }
+        var h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">';
+        for (var i = 0; i < _templateImages.length; i++) {
+          var img = _templateImages[i];
+          h += '<div style="border:2px solid #e2e8f0;border-radius:8px;overflow:hidden;cursor:pointer;transition:.15s" onclick="selectLibraryImage(\'' + esc(img.url) + '\',\'' + esc(img.name) + '\')" onmouseover="this.style.borderColor=\'#2563eb\'" onmouseout="this.style.borderColor=\'#e2e8f0\'">';
+          h += '<img src="' + esc(img.url) + '" style="width:100%;height:75px;object-fit:cover;display:block"/>';
+          h += '<div style="padding:3px 6px;font-size:9px;color:#64748b;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;background:#f8fafc">' + esc(img.name) + '</div>';
+          h += '</div>';
+        }
+        h += '</div>';
+        lib.innerHTML = h;
       }).catch(function() {
-        if (lib) lib.innerHTML = '<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px">Could not load images</div>';
+        var lib = document.getElementById('imgPickerLibrary');
+        if (lib) lib.innerHTML = '<div style="color:#ef4444;font-size:11px;text-align:center">Failed to load images</div>';
       });
     }
 
-    function renderImageLibrary() {
-      var lib = document.getElementById('etImageLibrary');
-      if (!lib) return;
-      if (_templateImages.length === 0) {
-        lib.innerHTML = '<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px">No images uploaded yet. Upload one to insert into your template.</div>';
-        return;
+    function selectLibraryImage(url, name) {
+      if (_pendingImageBlockIdx >= 0 && _pendingImageBlockIdx < _etBlocks.length) {
+        syncBlocksFromDom();
+        _etBlocks[_pendingImageBlockIdx].url = url;
+        _etBlocks[_pendingImageBlockIdx].name = name;
+        renderBlocks();
       }
-      var h = '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-      for (var i = 0; i < _templateImages.length; i++) {
-        var img = _templateImages[i];
-        h += '<div style="position:relative;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;width:90px;cursor:pointer" title="Click to insert: ' + esc(img.name) + '">';
-        h += '<img src="' + esc(img.url) + '" style="width:90px;height:68px;object-fit:cover;display:block" onclick="insertImageTag(\'' + esc(img.url) + '\',\'' + esc(img.name) + '\')"/>';
-        h += '<div style="padding:3px 5px;font-size:9px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:#f8fafc">' + esc(img.name) + '</div>';
-        h += '<button onclick="event.stopPropagation();deleteImage(\'' + esc(img.fileId) + '\',' + i + ')" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(239,68,68,.9);color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1" title="Delete image">x</button>';
-        h += '</div>';
-      }
-      h += '</div>';
-      lib.innerHTML = h;
+      var picker = document.getElementById('imgPickerOverlay');
+      if (picker) picker.remove();
     }
+
+    function moveBlock(idx, dir) {
+      syncBlocksFromDom();
+      var newIdx = idx + dir;
+      if (newIdx < 0 || newIdx >= _etBlocks.length) return;
+      var temp = _etBlocks[idx];
+      _etBlocks[idx] = _etBlocks[newIdx];
+      _etBlocks[newIdx] = temp;
+      renderBlocks();
+    }
+
+    function removeBlock(idx) {
+      syncBlocksFromDom();
+      _etBlocks.splice(idx, 1);
+      renderBlocks();
+    }
+
+    function insertPlaceholderIntoFocused(tag) {
+      if (_lastFocusedTextarea) {
+        var ta = _lastFocusedTextarea;
+        var start = ta.selectionStart;
+        var end = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + tag + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + tag.length;
+        ta.focus();
+      } else {
+        showToast('Click inside a text block first', 'error');
+      }
+    }
+
+    var _templateImages = [];
 
     function handleImageUpload(input) {
       if (!input.files || !input.files[0]) return;
@@ -3380,11 +3632,18 @@
           body: JSON.stringify({action:'uploadTemplateImage', base64: base64, fileName: file.name, mimeType: file.type})
         }).then(function(r){return r.json()}).then(function(d) {
           if (d.status === 'success') {
-            showToast('Image uploaded: ' + file.name, 'success');
+            showToast('Image uploaded!', 'success');
             _templateImages.push({fileId: d.fileId, name: d.fileName, url: d.url});
-            renderImageLibrary();
-            // Auto-insert into body
-            insertImageTag(d.url, d.fileName);
+            // Set on pending block
+            if (_pendingImageBlockIdx >= 0 && _pendingImageBlockIdx < _etBlocks.length) {
+              syncBlocksFromDom();
+              _etBlocks[_pendingImageBlockIdx].url = d.url;
+              _etBlocks[_pendingImageBlockIdx].name = d.fileName;
+              renderBlocks();
+            }
+            // Close picker
+            var picker = document.getElementById('imgPickerOverlay');
+            if (picker) picker.remove();
             if (status) status.innerHTML = '';
           } else {
             showToast('Upload failed: ' + (d.message || 'unknown'), 'error');
@@ -3399,26 +3658,6 @@
       input.value = '';
     }
 
-    function insertImageTag(url, name) {
-      var el = document.getElementById('etBody');
-      if (!el) return;
-      el.focus();
-      var imgHtml = '<br><img src="' + url + '" alt="' + name + '" style="max-width:100%;border-radius:4px"><br>';
-      document.execCommand('insertHTML', false, imgHtml);
-      showToast('Image inserted', 'success');
-    }
-
-    function deleteImage(fileId, index) {
-      _templateImages.splice(index, 1);
-      renderImageLibrary();
-      fetch(WEB_APP_URL, {
-        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-        body: JSON.stringify({action:'deleteTemplateImage', fileId: fileId})
-      }).then(function(r){return r.json()}).then(function(d) {
-        if (d.status === 'success') showToast('Image deleted', 'success');
-      }).catch(function(){});
-    }
-
     function cancelTemplateEdit() {
       etEditingId = null;
       renderTemplatesModal();
@@ -3427,8 +3666,14 @@
     async function saveTemplate() {
       var name = document.getElementById('etName').value.trim();
       var subject = document.getElementById('etSubject').value.trim();
-      var bodyEl = document.getElementById('etBody');
-      var bodyText = bodyEl ? bodyEl.innerHTML.trim() : '';
+      syncBlocksFromDom();
+      // Filter out empty blocks
+      var cleanBlocks = _etBlocks.filter(function(b) {
+        if (b.type === 'text') return (b.content || '').trim().length > 0;
+        if (b.type === 'image') return !!b.url;
+        return false;
+      });
+      var bodyText = JSON.stringify(cleanBlocks);
       var category = document.getElementById('etCategory') ? document.getElementById('etCategory').value : 'General';
 
       if (!name) { showToast('Template name is required', 'error'); return; }
@@ -3504,6 +3749,24 @@
     function fillPlaceholders(text, action) {
       if (!text && text !== 0) return '';
       text = String(text);
+      
+      // If JSON blocks, fill each text block
+      try {
+        var blocks = JSON.parse(text);
+        if (Array.isArray(blocks)) {
+          for (var i = 0; i < blocks.length; i++) {
+            if (blocks[i].type === 'text' && blocks[i].content) {
+              blocks[i].content = doFillPlaceholders(blocks[i].content, action);
+            }
+          }
+          return JSON.stringify(blocks);
+        }
+      } catch(e) {}
+      
+      return doFillPlaceholders(text, action);
+    }
+    
+    function doFillPlaceholders(text, action) {
       var a = action || {};
       var today = new Date();
       var mm = String(today.getMonth()+1).padStart(2,'0');
@@ -3544,9 +3807,11 @@
       h += '</div></div>';
 
       // Body preview
+      var blocks = parseBodyToBlocks(template.body || '');
+      var bodyPreviewHtml = blocksToPreview(blocks, action);
       h += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:14px;min-height:120px">';
       h += '<div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:8px">BODY PREVIEW</div>';
-      h += '<div style="font-size:13px;color:#2d3748;line-height:1.6;white-space:pre-wrap">' + filledBody + '</div>';
+      h += bodyPreviewHtml;
       h += '</div>';
 
       // Send button
