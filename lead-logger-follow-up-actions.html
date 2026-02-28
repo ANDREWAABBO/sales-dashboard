@@ -488,8 +488,8 @@
 
       <table id="fuTable" style="display:none">
         <thead><tr>
-            <th style="width:9%">Company</th>
             <th style="width:6%">Date Added<span class="sub">from Lead DB</span></th>
+            <th style="width:9%">Company</th>
             <th style="width:9%">Action</th>
             <th style="width:8%">Action Date</th>
             <th style="width:8%">Who</th>
@@ -778,9 +778,6 @@
 
         html += '<tr class="' + (isDead ? 'row-dead' : (isUnlabeled ? 'row-unlabeled' : '')) + '" data-id="' + a.id + '">';
 
-        // Company
-        html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
-
         // Date Added
         var dateAddedStr = '';
         if (a.dateAdded) {
@@ -792,6 +789,9 @@
           }
         }
         html += '<td style="font-size:11px;color:' + (isDead ? '#ef4444' : '#4a5568') + '">' + esc(dateAddedStr) + '</td>';
+
+        // Company
+        html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
 
         // Action pills
         html += '<td class="td-action">' + renderPills(labels, a.id) + '</td>';
