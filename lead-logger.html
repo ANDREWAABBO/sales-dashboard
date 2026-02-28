@@ -3035,8 +3035,8 @@ function exportLeadsToExcel() {
     // ============ INLINE DATE EDITING ============
 
     // ============ SORTING STATE ============
-    var currentSortField = null;
-    var currentSortDir = null; // 'asc' or 'desc'
+    var currentSortField = 'dateAdded';
+    var currentSortDir = 'desc'; // 'asc' or 'desc' ? default newest first
 
     function initSortableHeaders() {
       document.querySelectorAll('th.sortable').forEach(function(th) {
@@ -3056,6 +3056,10 @@ function exportLeadsToExcel() {
           if (currentSortDir) this.classList.add(currentSortDir);
           filterLeads();
         });
+        // Set initial sort indicator
+        if (th.getAttribute('data-sort') === currentSortField && currentSortDir) {
+          th.classList.add(currentSortDir);
+        }
       });
     }
 
