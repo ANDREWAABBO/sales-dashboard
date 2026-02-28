@@ -722,19 +722,32 @@
     async function loadAvailableLabels() {
       // Instant load from cache
       var cached = sessionStorage.getItem('cachedLabels');
+      var cachedParsed = null;
       if (cached) {
-        try { availableLabels = JSON.parse(cached); } catch(e) {}
+        try { cachedParsed = JSON.parse(cached); availableLabels = cachedParsed; } catch(e) {}
       }
       try {
         var res = await fetch(WEB_APP_URL + '?action=getLabels');
         var data = await res.json();
         if (data.status === 'success' && data.labels) {
-          availableLabels = data.labels;
+          // Merge: preserve client-only fields (trackAttempts, order) from cache if server doesn't include them
+          var serverLabels = data.labels;
+          if (cachedParsed && cachedParsed.length > 0) {
+            for (var i = 0; i < serverLabels.length; i++) {
+              var match = cachedParsed.find(function(c) { return c.name === serverLabels[i].name; });
+              if (match) {
+                if (serverLabels[i].trackAttempts === undefined && match.trackAttempts !== undefined) {
+                  serverLabels[i].trackAttempts = match.trackAttempts;
+                }
+              }
+            }
+          }
+          availableLabels = serverLabels;
         } else {
-          availableLabels = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+          if (!cachedParsed) availableLabels = JSON.parse(JSON.stringify(DEFAULT_LABELS));
         }
       } catch(e) {
-        availableLabels = JSON.parse(JSON.stringify(DEFAULT_LABELS));
+        if (!cachedParsed) availableLabels = JSON.parse(JSON.stringify(DEFAULT_LABELS));
       }
       try { sessionStorage.setItem('cachedLabels', JSON.stringify(availableLabels)); } catch(e) {}
     }
@@ -2947,16 +2960,27 @@
         var res = await fetch(WEB_APP_URL + '?action=getLabels');
         var data = await res.json();
         if (data.status === 'success' && data.labels && data.labels.length > 0) {
-          availableLabels = data.labels;
+          // Merge: preserve trackAttempts from current availableLabels if server doesn't include it
+          var serverLabels = data.labels;
+          if (availableLabels && availableLabels.length > 0) {
+            for (var i = 0; i < serverLabels.length; i++) {
+              var match = availableLabels.find(function(c) { return c.name === serverLabels[i].name; });
+              if (match && serverLabels[i].trackAttempts === undefined && match.trackAttempts !== undefined) {
+                serverLabels[i].trackAttempts = match.trackAttempts;
+              }
+            }
+          }
+          availableLabels = serverLabels;
+          try { sessionStorage.setItem('cachedLabels', JSON.stringify(availableLabels)); } catch(e) {}
           // Only re-render if modal is open and this is the silent background refresh
           // AND user hasn't made edits yet (labelsConfig matches what we had)
           if (!silent) {
-            labelsConfig = JSON.parse(JSON.stringify(data.labels));
+            labelsConfig = JSON.parse(JSON.stringify(serverLabels));
             renderLabelsModal();
           }
         }
       } catch(e) {
-        // Silent fail ? we already have cached data showing
+        // Silent fail - we already have cached data showing
       }
     }
 
@@ -3150,6 +3174,7 @@
       try { sessionStorage.setItem('cachedLabels', JSON.stringify(availableLabels)); } catch(e) {}
       closeLabelsModal();
       showToast('Label settings saved', 'success');
+      renderTable(); // Re-render table so trackAttempts changes take effect immediately
 
       // Background sync to server
       fetch(WEB_APP_URL, {
