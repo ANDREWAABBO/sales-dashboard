@@ -1277,9 +1277,10 @@
       var a = allActions.find(function(x) { return x.id === actionId; });
       var company = a ? a.company : 'Unknown';
 
-      // Render immediately from cache
+      // Render immediately from cache if we have full entries
       var cachedLog = _activityLogCache[actionId];
-      if (cachedLog && Array.isArray(cachedLog) && cachedLog.length > 0 && cachedLog[0].msg) {
+      var hasFullEntries = cachedLog && Array.isArray(cachedLog) && cachedLog.length > 0 && cachedLog[0] && cachedLog[0].msg;
+      if (hasFullEntries) {
         renderHistoryModal(actionId, company, cachedLog);
       } else {
         // Show loading
