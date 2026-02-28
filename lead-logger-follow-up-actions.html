@@ -2642,8 +2642,9 @@
       if (old) old.remove();
 
       var s = _dripSettings;
-      var templateOpts = '<option value="">-- Select Template --</option>';
+      var templateOpts = '<option value="">-- Select Drip Template --</option>';
       for (var i = 0; i < emailTemplates.length; i++) {
+        if (emailTemplates[i].category !== 'Drip') continue;
         var sel = emailTemplates[i].id === s.defaultTemplateId ? ' selected' : '';
         templateOpts += '<option value="' + esc(emailTemplates[i].id) + '"' + sel + '>' + esc(emailTemplates[i].name) + '</option>';
       }
@@ -2668,8 +2669,13 @@
       h += '<div><div style="font-weight:600;font-size:13px;color:#1e293b">Auto-Enroll New Leads</div><div style="font-size:11px;color:#64748b">Automatically start drip for every new lead synced</div></div></div>';
 
       // Default template for auto-enroll
+      var dripTemplateCount = emailTemplates.filter(function(t) { return t.category === 'Drip'; }).length;
       h += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Default Template (for auto-enrolled leads)</label>';
-      h += '<select id="dripDefaultTemplate" style="width:100%;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div>';
+      h += '<select id="dripDefaultTemplate" style="width:100%;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select>';
+      if (dripTemplateCount === 0) {
+        h += '<div style="margin-top:6px;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#92400e">No Drip templates found. Go to Email Templates and create one with category set to "Drip Marketing".</div>';
+      }
+      h += '</div>';
 
       // Active campaigns list
       h += '<div style="border-top:2px solid #e2e8f0;padding-top:16px;margin-top:8px">';
@@ -2766,8 +2772,9 @@
       var isOn = camp && camp.enabled;
       var currentTemplate = camp ? camp.templateName : '';
 
-      var templateOpts = '<option value="">-- Select Template --</option>';
+      var templateOpts = '<option value="">-- Select Drip Template --</option>';
       for (var i = 0; i < emailTemplates.length; i++) {
+        if (emailTemplates[i].category !== 'Drip') continue;
         var sel = (camp && emailTemplates[i].id === camp.templateId) ? ' selected' : '';
         templateOpts += '<option value="' + esc(emailTemplates[i].id) + '"' + sel + '>' + esc(emailTemplates[i].name) + '</option>';
       }
@@ -3242,9 +3249,10 @@
         h += '<div class="et-list">';
         for (var i = 0; i < emailTemplates.length; i++) {
           var t = emailTemplates[i];
+          var catBadge = t.category === 'Drip' ? '<span style="background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px">DRIP</span>' : '<span style="background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px">GENERAL</span>';
           h += '<div class="et-item" id="et-item-' + i + '">';
           h += '  <div class="et-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>';
-          h += '  <div class="et-info"><div class="et-name">' + esc(t.name) + '</div><div class="et-subject">' + esc(t.subject || 'No subject') + '</div></div>';
+          h += '  <div class="et-info"><div class="et-name">' + esc(t.name) + catBadge + '</div><div class="et-subject">' + esc(t.subject || 'No subject') + '</div></div>';
           h += '  <div class="et-actions">';
           if (etSendingActionId) {
             h += '    <button class="et-btn" style="color:#059669;border-color:#a7f3d0;background:#ecfdf5" onclick="previewTemplate(\'' + t.id + '\')"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg> Use</button>';
@@ -3280,6 +3288,7 @@
       h += '  <h4><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#1e293b;fill:none;stroke-width:2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> ' + (isNew ? 'New Template' : 'Edit Template') + '</h4>';
 
       h += '  <div class="et-field"><label>Template Name</label><input type="text" id="etName" value="' + esc(t.name) + '" placeholder="e.g. Initial Outreach"/></div>';
+      h += '  <div class="et-field"><label>Category</label><select id="etCategory" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"><option value="General"' + (t.category !== 'Drip' ? ' selected' : '') + '>General</option><option value="Drip"' + (t.category === 'Drip' ? ' selected' : '') + '>Drip Marketing</option></select></div>';
       h += '  <div class="et-field"><label>Email Subject</label><input type="text" id="etSubject" value="' + esc(t.subject) + '" placeholder="e.g. Following up on our conversation"/></div>';
       h += '  <div class="et-field"><label>Email Body</label><textarea id="etBody" placeholder="Type your email body here. Use placeholders like {Company} to auto-fill data.">' + esc(t.body) + '</textarea></div>';
 
@@ -3320,6 +3329,7 @@
       var name = document.getElementById('etName').value.trim();
       var subject = document.getElementById('etSubject').value.trim();
       var bodyText = document.getElementById('etBody').value.trim();
+      var category = document.getElementById('etCategory') ? document.getElementById('etCategory').value : 'General';
 
       if (!name) { showToast('Template name is required', 'error'); return; }
       if (!subject) { showToast('Subject line is required', 'error'); return; }
@@ -3330,12 +3340,12 @@
 
       if (isNew) {
         var tempId = 'temp_' + Date.now();
-        emailTemplates.push({id: tempId, name: name, subject: subject, body: bodyText});
-        payload = { action: 'addEmailTemplate', template: { name: name, subject: subject, body: bodyText } };
+        emailTemplates.push({id: tempId, name: name, subject: subject, body: bodyText, category: category});
+        payload = { action: 'addEmailTemplate', template: { name: name, subject: subject, body: bodyText, category: category } };
       } else {
         var t = emailTemplates.find(function(x) { return x.id === etEditingId; });
-        if (t) { t.name = name; t.subject = subject; t.body = bodyText; }
-        payload = { action: 'updateEmailTemplate', templateId: etEditingId, updates: { name: name, subject: subject, body: bodyText } };
+        if (t) { t.name = name; t.subject = subject; t.body = bodyText; t.category = category; }
+        payload = { action: 'updateEmailTemplate', templateId: etEditingId, updates: { name: name, subject: subject, body: bodyText, category: category } };
       }
 
       etEditingId = null;
