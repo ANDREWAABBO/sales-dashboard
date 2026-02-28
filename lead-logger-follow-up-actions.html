@@ -738,6 +738,7 @@
       loadTemplatesFromBackend();
       loadActivityLogCounts();
       loadDripData();
+      loadCurrentUser();
       // Version check
       fetch(WEB_APP_URL + '?action=version').then(function(r){return r.json()}).then(function(d){
         if(d.version !== 'v19-drip-marketing') showToast('WARNING: Code.gs not updated! Deploy v19 to Apps Script','error');
@@ -1131,6 +1132,8 @@
     var _contactsCache = {}; // cache contacts by leadId|company
     var _dripSettings = {frequencyDays:7, sendHour:9, sendMinute:0, autoEnroll:false, defaultTemplateId:'', defaultTemplateName:'', timezone:'America/New_York'};
     var _dripCampaigns = []; // array of {actionId, company, templateId, templateName, enabled, lastSentDate, nextSendDate, enrolledDate, sendCount}
+    var _currentUserEmail = '';
+    var _currentUserName = '';
 
     // Load contacts cache from sessionStorage for instant compose
     (function() {
@@ -1187,6 +1190,38 @@
       return h;
     }
 
+    function loadCurrentUser() {
+      // Try sessionStorage first
+      var cached = sessionStorage.getItem('currentUserEmail');
+      if (cached) {
+        _currentUserEmail = cached;
+        _currentUserName = sessionStorage.getItem('currentUserName') || '';
+      }
+      fetch(WEB_APP_URL + '?action=getCurrentUser').then(function(r){return r.json()}).then(function(d){
+        if (d.status === 'success' && d.email) {
+          _currentUserEmail = d.email;
+          try { sessionStorage.setItem('currentUserEmail', d.email); } catch(e){}
+          resolveCurrentUserName();
+        }
+      }).catch(function(){});
+    }
+
+    function resolveCurrentUserName() {
+      if (!_currentUserEmail) return;
+      for (var i = 0; i < teamMembers.length; i++) {
+        if (teamMembers[i].email && teamMembers[i].email.toLowerCase() === _currentUserEmail.toLowerCase()) {
+          _currentUserName = teamMembers[i].name;
+          try { sessionStorage.setItem('currentUserName', teamMembers[i].name); } catch(e){}
+          return;
+        }
+      }
+      // Fallback to email prefix
+      if (!_currentUserName) {
+        _currentUserName = _currentUserEmail.split('@')[0];
+        try { sessionStorage.setItem('currentUserName', _currentUserName); } catch(e){}
+      }
+    }
+
     // ========== ACTIVITY LOG ==========
     var _activityLogCache = {}; // in-memory cache of counts per actionId
 
@@ -1223,7 +1258,8 @@
       if (!_activityLogCache[actionId]) _activityLogCache[actionId] = [];
       var now = new Date();
       var ts = String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
-      _activityLogCache[actionId].unshift({ts: ts, msg: msg});
+      var user = _currentUserName || _currentUserEmail || '';
+      _activityLogCache[actionId].unshift({ts: ts, msg: msg, user: user});
       try { sessionStorage.setItem('activityLogCounts', JSON.stringify(_activityLogCache)); } catch(e) {}
 
       // Find company name for this action
@@ -1233,7 +1269,7 @@
       // Fire-and-forget POST to backend
       fetch(WEB_APP_URL, {
         method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-        body: JSON.stringify({action:'addActivityLog', actionId: actionId, company: company, entry: {ts: ts, msg: msg}})
+        body: JSON.stringify({action:'addActivityLog', actionId: actionId, company: company, entry: {ts: ts, msg: msg, user: user}})
       }).catch(function(e) { console.log('Activity log error:', e); });
     }
 
@@ -1241,49 +1277,66 @@
       var a = allActions.find(function(x) { return x.id === actionId; });
       var company = a ? a.company : 'Unknown';
 
-      // Show loading modal immediately
-      var overlay = document.createElement('div');
-      overlay.className = 'modal-overlay show';
-      overlay.id = 'historyOverlay';
-      overlay.innerHTML = '<div class="modal-card" style="max-width:700px"><div class="modal-hdr" style="background:linear-gradient(135deg,#334155,#475569)"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activity Log</h3><p>' + esc(company) + '</p></div><div class="modal-body" style="padding:40px;text-align:center"><div class="spinner"></div><p style="margin-top:12px;color:#64748b">Loading activity log...</p></div></div>';
-      document.body.appendChild(overlay);
+      // Render immediately from cache
+      var cachedLog = _activityLogCache[actionId];
+      if (cachedLog && Array.isArray(cachedLog) && cachedLog.length > 0 && cachedLog[0].msg) {
+        renderHistoryModal(actionId, company, cachedLog);
+      } else {
+        // Show loading
+        var overlay = document.createElement('div');
+        overlay.className = 'modal-overlay show';
+        overlay.id = 'historyOverlay';
+        overlay.innerHTML = '<div class="modal-card" style="max-width:700px"><div class="modal-hdr" style="background:linear-gradient(135deg,#334155,#475569)"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activity Log</h3><p>' + esc(company) + '</p></div><div class="modal-body" style="padding:40px;text-align:center"><div class="spinner"></div><p style="margin-top:12px;color:#64748b">Loading activity log...</p></div></div>';
+        document.body.appendChild(overlay);
+      }
 
-      // Fetch from backend
+      // Fetch fresh from backend
       fetch(WEB_APP_URL, {
         method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
         body: JSON.stringify({action:'getActivityLog', actionId: actionId})
       }).then(function(r) { return r.json(); }).then(function(data) {
         var log = (data.status === 'success' && data.entries) ? data.entries : [];
-        // Update cache
         _activityLogCache[actionId] = log;
         try { sessionStorage.setItem('activityLogCounts', JSON.stringify(_activityLogCache)); } catch(e) {}
-
-        var el = document.getElementById('historyOverlay');
-        if (!el) return;
-
-        var h = '<div class="modal-card" style="max-width:700px">';
-        h += '<div class="modal-hdr" style="background:linear-gradient(135deg,#334155,#475569)"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activity Log</h3><p>' + esc(company) + ' - ' + log.length + ' entries</p></div>';
-
-        if (log.length === 0) {
-          h += '<div class="log-empty"><svg viewBox="0 0 24 24" style="width:40px;height:40px;stroke:#cbd5e0;fill:none;stroke-width:1.5;display:block;margin:0 auto 12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>No activity recorded yet.<br><span style="font-size:12px;color:#94a3b8">Changes will appear here automatically.</span></div>';
-        } else {
-          h += '<div class="log-list">';
-          for (var i = 0; i < log.length; i++) {
-            h += '<div class="log-entry"><span class="log-ts">' + esc(log[i].ts) + '</span><span class="log-msg">' + log[i].msg + '</span></div>';
-          }
-          h += '</div>';
+        if (document.getElementById('historyOverlay')) {
+          renderHistoryModal(actionId, company, log);
         }
-
-        h += '<div class="modal-footer">';
-        h += '<button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button>';
-        h += '</div></div>';
-
-        el.innerHTML = h;
-        renderTable(); // update count badge
+        renderTable();
       }).catch(function(e) {
         var el = document.getElementById('historyOverlay');
-        if (el) el.innerHTML = '<div class="modal-card" style="max-width:400px"><div class="modal-hdr" style="background:#ef4444"><h3>Error</h3></div><div class="modal-body"><p>Failed to load activity log: ' + esc(e.message) + '</p></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button></div></div>';
+        if (el && !el.dataset.rendered) el.innerHTML = '<div class="modal-card" style="max-width:400px"><div class="modal-hdr" style="background:#ef4444"><h3>Error</h3></div><div class="modal-body"><p>Failed to load activity log: ' + esc(e.message) + '</p></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button></div></div>';
       });
+    }
+
+    function renderHistoryModal(actionId, company, log) {
+      var el = document.getElementById('historyOverlay');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'modal-overlay show';
+        el.id = 'historyOverlay';
+        document.body.appendChild(el);
+      }
+      el.dataset.rendered = '1';
+
+      var h = '<div class="modal-card" style="max-width:700px">';
+      h += '<div class="modal-hdr" style="background:linear-gradient(135deg,#334155,#475569)"><h3><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Activity Log</h3><p>' + esc(company) + ' - ' + log.length + ' entries</p></div>';
+
+      if (log.length === 0) {
+        h += '<div class="log-empty"><svg viewBox="0 0 24 24" style="width:40px;height:40px;stroke:#cbd5e0;fill:none;stroke-width:1.5;display:block;margin:0 auto 12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>No activity recorded yet.<br><span style="font-size:12px;color:#94a3b8">Changes will appear here automatically.</span></div>';
+      } else {
+        h += '<div class="log-list">';
+        for (var i = 0; i < log.length; i++) {
+          var userTag = log[i].user ? '<span style="background:#e0f2fe;color:#0369a1;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-right:6px">' + esc(log[i].user) + '</span>' : '';
+          h += '<div class="log-entry"><span class="log-ts">' + esc(log[i].ts) + '</span>' + userTag + '<span class="log-msg">' + log[i].msg + '</span></div>';
+        }
+        h += '</div>';
+      }
+
+      h += '<div class="modal-footer">';
+      h += '<button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button>';
+      h += '</div></div>';
+
+      el.innerHTML = h;
     }
 
     function openComposeEmail(actionId) {
@@ -2907,6 +2960,8 @@
         teamMembers = JSON.parse(JSON.stringify(DEFAULT_TEAM));
       }
       renderTeamModal();
+      // Resolve current user name now that team is loaded
+      resolveCurrentUserName();
     }
 
     function renderTeamModal() {
