@@ -665,6 +665,15 @@
 
     // ?????????? INIT ??????????
     window.addEventListener('DOMContentLoaded', function() {
+      // Load labels from cache first so initial render has them
+      var cachedLabels = sessionStorage.getItem('cachedLabels');
+      if (cachedLabels) {
+        try { availableLabels = JSON.parse(cachedLabels); } catch(e) {}
+      }
+      var cachedMax = sessionStorage.getItem('cachedMaxAttempts');
+      if (cachedMax) {
+        try { maxAttempts = parseInt(cachedMax) || 5; } catch(e) {}
+      }
       loadActions();
       loadMaxAttempts();
       loadAvailableLabels();
@@ -679,6 +688,11 @@
     // Manual refresh: user can reload page to get latest data
 
     async function loadAvailableLabels() {
+      // Instant load from cache
+      var cached = sessionStorage.getItem('cachedLabels');
+      if (cached) {
+        try { availableLabels = JSON.parse(cached); } catch(e) {}
+      }
       try {
         var res = await fetch(WEB_APP_URL + '?action=getLabels');
         var data = await res.json();
@@ -690,6 +704,7 @@
       } catch(e) {
         availableLabels = JSON.parse(JSON.stringify(DEFAULT_LABELS));
       }
+      try { sessionStorage.setItem('cachedLabels', JSON.stringify(availableLabels)); } catch(e) {}
     }
 
     // ?????????? DATA LOADING ??????????
@@ -720,10 +735,15 @@
     }
 
     async function loadMaxAttempts() {
+      var cached = sessionStorage.getItem('cachedMaxAttempts');
+      if (cached) { try { maxAttempts = parseInt(cached) || 5; } catch(e) {} }
       try {
         var res = await fetch(WEB_APP_URL + '?action=getMaxAttempts');
         var data = await res.json();
-        if (data.status === 'success') maxAttempts = data.maxAttempts || 5;
+        if (data.status === 'success') {
+          maxAttempts = data.maxAttempts || 5;
+          try { sessionStorage.setItem('cachedMaxAttempts', String(maxAttempts)); } catch(e) {}
+        }
       } catch(e) { /* use default */ }
     }
 
@@ -2845,6 +2865,7 @@
 
       // INSTANT: update local cache, close modal, toast immediately
       availableLabels = JSON.parse(JSON.stringify(labelsConfig));
+      try { sessionStorage.setItem('cachedLabels', JSON.stringify(availableLabels)); } catch(e) {}
       closeLabelsModal();
       showToast('Label settings saved', 'success');
 
