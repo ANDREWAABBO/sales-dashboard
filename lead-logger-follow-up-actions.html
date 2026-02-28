@@ -721,6 +721,7 @@
       loadAvailableLabels();
       loadTeamFromBackend();
       loadTemplatesFromBackend();
+      loadActivityLogCounts();
       // Version check
       fetch(WEB_APP_URL + '?action=version').then(function(r){return r.json()}).then(function(d){
         if(d.version !== 'v18-activity-log') showToast('WARNING: Code.gs not updated! Deploy v18 to Apps Script','error');
@@ -1151,6 +1152,29 @@
     // ========== ACTIVITY LOG ==========
     var _activityLogCache = {}; // in-memory cache of counts per actionId
 
+    // Load counts from sessionStorage instantly, then refresh from server
+    (function() {
+      try {
+        var cached = sessionStorage.getItem('activityLogCounts');
+        if (cached) _activityLogCache = JSON.parse(cached);
+      } catch(e) {}
+    })();
+
+    function loadActivityLogCounts() {
+      fetch(WEB_APP_URL + '?action=getActivityLogCounts').then(function(r) { return r.json(); }).then(function(data) {
+        if (data.status === 'success' && data.counts) {
+          // Convert counts to arrays of placeholder entries for length check
+          var newCache = {};
+          Object.keys(data.counts).forEach(function(aid) {
+            newCache[aid] = new Array(data.counts[aid]);
+          });
+          _activityLogCache = newCache;
+          try { sessionStorage.setItem('activityLogCounts', JSON.stringify(_activityLogCache)); } catch(e) {}
+          renderTable();
+        }
+      }).catch(function() {});
+    }
+
     function getActivityLog(actionId) {
       // Returns cached entries or empty - used for count display only
       return _activityLogCache[actionId] || [];
@@ -1162,6 +1186,7 @@
       var now = new Date();
       var ts = String(now.getMonth()+1).padStart(2,'0') + '/' + String(now.getDate()).padStart(2,'0') + '/' + now.getFullYear() + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
       _activityLogCache[actionId].unshift({ts: ts, msg: msg});
+      try { sessionStorage.setItem('activityLogCounts', JSON.stringify(_activityLogCache)); } catch(e) {}
 
       // Find company name for this action
       var a = allActions.find(function(x) { return x.id === actionId; });
@@ -1193,6 +1218,7 @@
         var log = (data.status === 'success' && data.entries) ? data.entries : [];
         // Update cache
         _activityLogCache[actionId] = log;
+        try { sessionStorage.setItem('activityLogCounts', JSON.stringify(_activityLogCache)); } catch(e) {}
 
         var el = document.getElementById('historyOverlay');
         if (!el) return;
@@ -1210,12 +1236,7 @@
           h += '</div>';
         }
 
-        h += '<div class="modal-footer" style="justify-content:space-between">';
-        if (log.length > 0) {
-          h += '<button class="btn-cancel" style="color:#ef4444;border:1px solid #fecaca" onclick="clearActivityLog(\'' + actionId + '\')">Clear Log</button>';
-        } else {
-          h += '<span></span>';
-        }
+        h += '<div class="modal-footer">';
         h += '<button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button>';
         h += '</div></div>';
 
@@ -1225,23 +1246,6 @@
         var el = document.getElementById('historyOverlay');
         if (el) el.innerHTML = '<div class="modal-card" style="max-width:400px"><div class="modal-hdr" style="background:#ef4444"><h3>Error</h3></div><div class="modal-body"><p>Failed to load activity log: ' + esc(e.message) + '</p></div><div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Close</button></div></div>';
       });
-    }
-
-    function clearActivityLog(actionId) {
-      fetch(WEB_APP_URL, {
-        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-        body: JSON.stringify({action:'clearActivityLog', actionId: actionId})
-      }).then(function(r) { return r.json(); }).then(function(data) {
-        if (data.status === 'success') {
-          delete _activityLogCache[actionId];
-          showToast('Activity log cleared', 'success');
-        } else {
-          showToast('Error: ' + (data.message || 'unknown'), 'error');
-        }
-      }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
-      var overlay = document.getElementById('historyOverlay');
-      if (overlay) overlay.remove();
-      renderTable();
     }
 
     function openComposeEmail(actionId) {
