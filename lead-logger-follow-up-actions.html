@@ -1784,7 +1784,9 @@
     }
 
     function parseNoteEntries(raw) {
-      if (!raw || !raw.trim()) return [];
+      if (raw === null || raw === undefined) return [];
+      raw = String(raw);
+      if (!raw.trim()) return [];
       var lines = raw.split('\n---\n');
       var entries = [];
       for (var i = 0; i < lines.length; i++) {
@@ -1814,6 +1816,8 @@
     }
 
     function notesPreview(raw) {
+      if (raw === null || raw === undefined) return '';
+      raw = String(raw);
       var entries = parseNoteEntries(raw);
       if (!entries.length) return raw.length > 40 ? esc(raw.substring(0,40)) + '...' : esc(raw);
       var text = entries[0].text || '';
