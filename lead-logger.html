@@ -3553,7 +3553,9 @@ function exportLeadsToExcel() {
     }
 
     function parseNoteEntries(raw) {
-      if (!raw || !raw.trim()) return [];
+      if (raw === null || raw === undefined) return [];
+      raw = String(raw);
+      if (!raw.trim()) return [];
       var lines = raw.split('\n---\n');
       var entries = [];
       for (var i = 0; i < lines.length; i++) {
@@ -3585,6 +3587,8 @@ function exportLeadsToExcel() {
     }
 
     function notesPreview(raw) {
+      if (raw === null || raw === undefined) return '';
+      raw = String(raw);
       var entries = parseNoteEntries(raw);
       if (!entries.length) return esc(raw.length > 50 ? raw.substring(0,50) + '...' : raw);
       var text = entries[0].text || '';
