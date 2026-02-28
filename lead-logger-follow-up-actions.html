@@ -36,8 +36,16 @@
     .tbtn-red{background:linear-gradient(135deg,#ef4444,#dc2626)}
 
     /* Batch bar */
-    .batch-bar{display:none;align-items:center;gap:12px;padding:10px 24px;background:linear-gradient(135deg,#263238,#37474f);color:#fff;font-size:14px;font-weight:600}
-    .batch-bar.show{display:flex}
+    .batch-inline{display:none;align-items:center;gap:8px;margin-left:auto;padding:4px 12px;background:linear-gradient(135deg,#263238,#37474f);border-radius:8px;white-space:nowrap}
+    .batch-inline.show{display:inline-flex}
+    .email-history{margin-bottom:14px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}
+    .email-history-hdr{padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:12px;font-weight:700;color:#475569;display:flex;align-items:center;gap:6px}
+    .email-history-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:12px}
+    .email-history-item:last-child{border-bottom:none}
+    .email-history-date{font-weight:600;color:#1e293b;min-width:80px;flex-shrink:0}
+    .email-history-tmpl{color:#2563eb;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .email-history-to{color:#64748b;font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .email-history-empty{padding:12px;text-align:center;color:#94a3b8;font-size:12px;font-style:italic}
     .batch-count{background:rgba(255,255,255,.2);padding:3px 12px;border-radius:12px;font-size:13px}
     .batch-btn{padding:7px 18px;background:#fff;color:#263238;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
     .batch-btn:hover{background:#eff6ff}
@@ -290,8 +298,8 @@
       .filter-row{flex-direction:column;gap:8px}
       .filter-row select,.filter-row input[type="search"]{width:100%;font-size:13px;padding:10px 12px}
 
-      /* Batch bar wrap */
-      .batch-bar{flex-wrap:wrap;padding:8px 12px;gap:8px;font-size:12px}
+      /* Batch inline wrap */
+      .batch-inline{gap:6px;padding:4px 8px;font-size:11px}
       .batch-btn{padding:6px 12px;font-size:12px}
 
       /* Table smaller */
@@ -383,7 +391,7 @@
       .tbtn svg{width:14px;height:14px}
       .filter-row{flex-direction:column;gap:8px}
       .filter-row select,.filter-row input[type="search"]{width:100%;font-size:13px;padding:10px 12px}
-      .batch-bar{flex-wrap:wrap;gap:8px;padding:8px 14px;font-size:12px}
+      .batch-inline{gap:4px;padding:4px 6px;font-size:10px;flex-wrap:wrap;margin-left:0;margin-top:4px}
       .batch-btn{padding:6px 12px;font-size:12px}
       .table-container{border-radius:8px;max-height:none}
       table{min-width:900px}
@@ -474,17 +482,15 @@
       </select>
       <input type="search" id="searchInput" placeholder="Search leads, company, notes..." oninput="filterTable()"/>
       <span style="font-size:11px;color:#94a3b8;font-style:italic;white-space:nowrap">* Right-click to remove Date or Rep</span>
-    </div>
-
-    <!-- SEND EMAILS BAR -->
-    <div class="batch-bar" id="sendEmailsBar">
-      <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      <span class="batch-count" id="queuedCount">0 emails ready</span>
-      <button class="batch-btn send glow" onclick="openSendReview()">
-        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        <span id="sendEmailsBtnText">Send Emails</span>
-      </button>
-      <button class="batch-clear" onclick="clearAllQueued()">&#10005; Clear All</button>
+      <!-- INLINE SEND EMAILS -->
+      <div class="batch-inline" id="sendEmailsBar">
+        <span class="batch-count" id="queuedCount" style="font-size:12px;font-weight:600;color:#059669;white-space:nowrap">0 emails ready</span>
+        <button class="batch-btn send glow" onclick="openSendReview()" style="padding:6px 14px;font-size:12px">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span id="sendEmailsBtnText">Send Emails</span>
+        </button>
+        <button class="batch-clear" onclick="clearAllQueued()" style="font-size:10px;padding:4px 8px">&#10005; Clear</button>
+      </div>
     </div>
 
     <!-- TABLE -->
@@ -1067,6 +1073,44 @@
     var _composeActionId = null;
     var _composeContacts = []; // working copy of contacts for current compose
 
+    // Email send history - stored per actionId
+    function getEmailHistory(actionId) {
+      try {
+        var all = JSON.parse(localStorage.getItem('emailSendHistory') || '{}');
+        return all[actionId] || [];
+      } catch(e) { return []; }
+    }
+
+    function addEmailHistory(actionId, entry) {
+      try {
+        var all = JSON.parse(localStorage.getItem('emailSendHistory') || '{}');
+        if (!all[actionId]) all[actionId] = [];
+        all[actionId].unshift(entry); // newest first
+        if (all[actionId].length > 50) all[actionId] = all[actionId].slice(0, 50);
+        localStorage.setItem('emailSendHistory', JSON.stringify(all));
+      } catch(e) {}
+    }
+
+    function buildEmailHistoryHTML(actionId) {
+      var history = getEmailHistory(actionId);
+      var h = '<div class="email-history">';
+      h += '<div class="email-history-hdr"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#475569;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Email History</div>';
+      if (history.length === 0) {
+        h += '<div class="email-history-empty">No emails sent yet</div>';
+      } else {
+        for (var i = 0; i < history.length; i++) {
+          var entry = history[i];
+          h += '<div class="email-history-item">';
+          h += '<span class="email-history-date">' + esc(entry.date || '') + '</span>';
+          h += '<span class="email-history-tmpl">' + esc(entry.template || 'Custom Email') + '</span>';
+          h += '<span class="email-history-to">' + esc(entry.to || '') + '</span>';
+          h += '</div>';
+        }
+      }
+      h += '</div>';
+      return h;
+    }
+
     function openComposeEmail(actionId) {
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a || a.status === 'Dead') return;
@@ -1095,6 +1139,9 @@
       var h = '<div class="modal-card" style="max-width:580px">';
       h += '<div class="modal-hdr"><h3><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> Compose Email</h3><p>' + esc(a.company) + '</p></div>';
       h += '<div class="modal-body" style="max-height:70vh;overflow-y:auto">';
+
+      // Email send history
+      h += buildEmailHistoryHTML(actionId);
 
       // Recipients section - read-only, pulled from Lead DB
       h += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:700;color:#1e293b;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span>Recipients <span style="font-weight:400;color:#94a3b8;font-size:10px">(from Lead Database)</span></span></label>';
@@ -1204,6 +1251,14 @@
       var actionId = _composeActionId;
       var a = allActions.find(function(x) { return x.id === actionId; });
 
+      // Track which template was selected
+      var templateName = 'Custom Email';
+      var templateSel = document.getElementById('compTemplate');
+      if (templateSel && templateSel.value !== '') {
+        var idx = parseInt(templateSel.value);
+        if (emailTemplates[idx]) templateName = emailTemplates[idx].name;
+      }
+
       // Queue email if there's content
       if (subject || body) {
         var selected = _composeContacts.filter(function(c) { return c.selected && String(c.email||'').trim(); });
@@ -1212,7 +1267,8 @@
           recipients: selected.map(function(c) { return {name:String(c.name||'').trim(), email:String(c.email||'').trim(), position:String(c.position||'').trim()}; }),
           subject: subject,
           body: body,
-          company: a ? a.company : ''
+          company: a ? a.company : '',
+          templateName: templateName
         };
       }
 
@@ -1303,6 +1359,7 @@
       keys.forEach(function(id) { var q = queuedEmails[id]; totalSends += (q.recipients ? q.recipients.length : 1); });
 
       var sendNum = 0;
+      var actionsToUpdate = []; // track which actions need Email date/attempt updates
       for (var i = 0; i < keys.length; i++) {
         var id = keys[i];
         var q = queuedEmails[id];
@@ -1328,17 +1385,77 @@
               })
             });
             var data = await res.json();
-            if (data.status === 'success') { sent++; } else { failed++; actionFailed = true; }
+            if (data.status === 'success') {
+              sent++;
+              // Log to email history
+              var dateStr = new Date().toLocaleDateString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'});
+              addEmailHistory(id, {
+                date: dateStr,
+                template: q.templateName || 'Custom Email',
+                to: recipients[r].email,
+                subject: q.subject || ''
+              });
+            } else { failed++; actionFailed = true; }
           } catch(e) { failed++; actionFailed = true; }
         }
-        if (!actionFailed) delete queuedEmails[id];
+        if (!actionFailed) {
+          delete queuedEmails[id];
+          // Track this action for Email date/attempt update
+          if (a) actionsToUpdate.push({id: id, action: a});
+        }
       }
 
       var overlay = document.getElementById('reviewOverlay');
       if (overlay) overlay.remove();
 
+      // Update Email action date + attempt count for each successfully sent company
+      var emailUpdated = 0;
+      var todayStr = new Date().toLocaleDateString('en-US', {month:'2-digit', day:'2-digit', year:'numeric'});
+      var todayISO = new Date().toISOString().split('T')[0];
+      for (var u = 0; u < actionsToUpdate.length; u++) {
+        var act = actionsToUpdate[u];
+        var actionLabels = act.action.actions || [];
+        // Check if "Email" is one of the assigned labels
+        var hasEmail = actionLabels.some(function(lb) { return lb.toLowerCase() === 'email'; });
+        if (hasEmail) {
+          var emailLabel = actionLabels.find(function(lb) { return lb.toLowerCase() === 'email'; });
+          // Increment attempt count
+          var curAttempts = (act.action.attempts && act.action.attempts[emailLabel]) ? parseInt(act.action.attempts[emailLabel]) || 0 : 0;
+          var newAttempts = curAttempts + 1;
+          // Update action date to today
+          var updates = {};
+          var attObj = Object.assign({}, act.action.attempts || {});
+          attObj[emailLabel] = newAttempts;
+          updates.attempts = attObj;
+          var dateObj = Object.assign({}, act.action.actionDates || {});
+          dateObj[emailLabel] = todayISO;
+          updates.actionDates = dateObj;
+          var ldObj = Object.assign({}, act.action.lastDates || {});
+          ldObj[emailLabel] = todayStr;
+          updates.lastDates = ldObj;
+
+          // Optimistic UI update
+          if (act.action.attempts) act.action.attempts[emailLabel] = newAttempts;
+          if (act.action.actionDates) act.action.actionDates[emailLabel] = todayISO;
+          if (act.action.lastDates) act.action.lastDates[emailLabel] = todayStr;
+
+          // Save to server
+          try {
+            fetch(WEB_APP_URL, {
+              method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+              body: JSON.stringify({action:'updateFollowUpAction', actionId: act.id, updates: updates})
+            }).catch(function(e) { console.log('Email action update error:', e); });
+            emailUpdated++;
+          } catch(e) {}
+        }
+      }
+
       if (failed === 0) {
-        showToast(sent + ' email' + (sent !== 1 ? 's' : '') + ' sent!', 'success');
+        var msg = sent + ' email' + (sent !== 1 ? 's' : '') + ' sent!';
+        if (emailUpdated > 0) {
+          msg += ' Action dates updated and email attempt count increased by 1.';
+        }
+        showToast(msg, 'success');
       } else {
         showToast(sent + ' sent, ' + failed + ' failed', 'error');
       }
