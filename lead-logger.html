@@ -602,7 +602,7 @@
           </div>
           <div class="form-group">
             <label for="population">Population</label>
-            <input type="text" id="population" name="population" placeholder="e.g. 45000" inputmode="numeric"/>
+            <input type="text" id="population" name="population" placeholder="e.g. 400-600 or 1000+"/>
           </div>
         </div>
 
@@ -1107,7 +1107,7 @@
         contactCell,
         lead.phoneNumber || '',
         emailCell,
-        lead.population ? Number(lead.population).toLocaleString() : '',
+        lead.population || '',
         lead.repName || '',
         `<span class="status-badge ${statusClass}" onclick="openStatusPicker(event,this,'${leadId}')">${lead.status || 'Active'}</span>`,
         notes
@@ -1832,7 +1832,7 @@
         '123 Main Street',
         'NH',
         '03101',
-        '45000',
+        '400-600',
         'Sample notes here'
       ];
       
@@ -1881,7 +1881,7 @@
         ['FORMAT REQUIREMENTS:'],
         ['- Customer Zip: 5 digits (leading zeros added automatically)'],
         ['- Email Address: must be valid email format (name@domain.com)'],
-        ['- Population: numeric value (city/town population)']
+        ['- Population: range format (e.g. 400-600, 1000+, 200-400)']
       ];
       
       const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
@@ -2120,9 +2120,8 @@
             }
           }
 
-          // Clean population to numeric
           if (lead.population) {
-            lead.population = String(lead.population).replace(/[^0-9]/g, '');
+            lead.population = String(lead.population).replace(/[^0-9\-\+]/g, '');
           }
 
           lead._rowNumber = index + 2;
@@ -2363,7 +2362,7 @@ function validateErrorRow(index) {
       lead.customerAddress = document.getElementById('address-' + index).value.trim();
       lead.customerZip = customerZip;
       var popEl = document.getElementById('population-' + index);
-      lead.population = popEl ? popEl.value.trim().replace(/[^0-9]/g, '') : '';
+      lead.population = popEl ? popEl.value.trim().replace(/[^0-9\-\+]/g, '') : '';
       lead._errors = errors;
 
       // Update UI
@@ -3053,10 +3052,12 @@ function exportLeadsToExcel() {
           return (ya - yb) * dir;
         }
 
-        // Population: numeric sort, empties last
+        // Population: sort by first number in range, empties last
         if (field === 'population') {
-          var na = av ? parseInt(String(av).replace(/[^0-9]/g, ''), 10) : null;
-          var nb = bv ? parseInt(String(bv).replace(/[^0-9]/g, ''), 10) : null;
+          var naMatch = String(av).match(/(\d+)/);
+          var nbMatch = String(bv).match(/(\d+)/);
+          var na = naMatch ? parseInt(naMatch[1], 10) : null;
+          var nb = nbMatch ? parseInt(nbMatch[1], 10) : null;
           if (na === null && nb === null) return 0;
           if (na === null) return 1;
           if (nb === null) return -1;
