@@ -290,6 +290,8 @@
     .et-placeholder-tag{display:inline-block;padding:2px 8px;background:#d1fae5;color:#065f46;border-radius:4px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;transition:.1s}
     .et-placeholder-tag:hover{background:#a7f3d0}
     .et-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9}
+    [contenteditable]:empty:before{content:attr(data-placeholder);color:#a0aec0;pointer-events:none}
+    [contenteditable] img{max-width:100%;border-radius:4px;margin:6px 0;display:block}
 
     /* ==================== MOBILE RESPONSIVE ==================== */
     @media (max-width: 768px) {
@@ -1390,7 +1392,7 @@
 
       // Body
       h += '<div class="et-field" style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Body</label>';
-      h += '<textarea id="compBody" placeholder="Select a template above or type your email..." style="width:100%;min-height:130px;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;resize:vertical;line-height:1.5">' + esc(existingBody) + '</textarea></div>';
+      h += '<div id="compBody" contenteditable="true" data-placeholder="Select a template above or type your email..." style="width:100%;min-height:130px;max-height:300px;overflow-y:auto;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;line-height:1.5;background:#fff;color:#2d3748;outline:none;white-space:pre-wrap;word-wrap:break-word">' + (existingBody || '') + '</div></div>';
 
       // Placeholder hints
       h += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> auto-fill when sent.</div>';
@@ -1473,7 +1475,7 @@
         }
         var a = allActions.find(function(x) { return x.id === _composeActionId; }) || {};
         subField.value = fillPlaceholders(t.subject || '', a);
-        bodyField.value = fillPlaceholders(t.body || '', a);
+        bodyField.innerHTML = fillPlaceholders(t.body || '', a);
         if (!t.subject && !t.body) {
           showToast('Template "' + t.name + '" has empty subject and body', 'error');
         }
@@ -1549,7 +1551,8 @@
 
     function saveComposeEmail() {
       var subject = document.getElementById('compSubject').value.trim();
-      var body = document.getElementById('compBody').value.trim();
+      var bodyEl = document.getElementById('compBody');
+      var body = bodyEl ? bodyEl.innerHTML.trim() : '';
       var actionId = _composeActionId;
       var a = allActions.find(function(x) { return x.id === actionId; });
 
@@ -3290,7 +3293,7 @@
       h += '  <div class="et-field"><label>Template Name</label><input type="text" id="etName" value="' + esc(t.name) + '" placeholder="e.g. Initial Outreach"/></div>';
       h += '  <div class="et-field"><label>Category</label><select id="etCategory" style="width:100%;padding:9px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px"><option value="General"' + (t.category !== 'Drip' ? ' selected' : '') + '>General</option><option value="Drip"' + (t.category === 'Drip' ? ' selected' : '') + '>Drip Marketing</option></select></div>';
       h += '  <div class="et-field"><label>Email Subject</label><input type="text" id="etSubject" value="' + esc(t.subject) + '" placeholder="e.g. Following up on our conversation"/></div>';
-      h += '  <div class="et-field"><label>Email Body</label><textarea id="etBody" placeholder="Type your email body here. Use placeholders like {Company} to auto-fill data.">' + esc(t.body) + '</textarea></div>';
+      h += '  <div class="et-field"><label>Email Body</label><div id="etBody" contenteditable="true" style="width:100%;min-height:180px;max-height:400px;overflow-y:auto;padding:10px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px;line-height:1.6;background:#fff;color:#2d3748;outline:none;white-space:pre-wrap;word-wrap:break-word" data-placeholder="Type your email body here. Use placeholders like {Company} to auto-fill data.">' + (t.body || '') + '</div></div>';
 
       // Image upload
       h += '  <div class="et-field" style="border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#f8fafc">';
@@ -3320,14 +3323,10 @@
     }
 
     function insertPlaceholder(tag) {
-      var textarea = document.getElementById('etBody');
-      if (!textarea) return;
-      var start = textarea.selectionStart;
-      var end = textarea.selectionEnd;
-      var text = textarea.value;
-      textarea.value = text.substring(0, start) + tag + text.substring(end);
-      textarea.selectionStart = textarea.selectionEnd = start + tag.length;
-      textarea.focus();
+      var el = document.getElementById('etBody');
+      if (!el) return;
+      el.focus();
+      document.execCommand('insertText', false, tag);
     }
 
     var _templateImages = [];
@@ -3401,14 +3400,12 @@
     }
 
     function insertImageTag(url, name) {
-      var textarea = document.getElementById('etBody');
-      if (!textarea) return;
-      var imgTag = '<img src="' + url + '" alt="' + name + '" style="max-width:100%">';
-      var start = textarea.selectionStart;
-      var text = textarea.value;
-      textarea.value = text.substring(0, start) + '\n' + imgTag + '\n' + text.substring(start);
-      textarea.focus();
-      showToast('Image inserted into body', 'success');
+      var el = document.getElementById('etBody');
+      if (!el) return;
+      el.focus();
+      var imgHtml = '<br><img src="' + url + '" alt="' + name + '" style="max-width:100%;border-radius:4px"><br>';
+      document.execCommand('insertHTML', false, imgHtml);
+      showToast('Image inserted', 'success');
     }
 
     function deleteImage(fileId, index) {
@@ -3430,7 +3427,8 @@
     async function saveTemplate() {
       var name = document.getElementById('etName').value.trim();
       var subject = document.getElementById('etSubject').value.trim();
-      var bodyText = document.getElementById('etBody').value.trim();
+      var bodyEl = document.getElementById('etBody');
+      var bodyText = bodyEl ? bodyEl.innerHTML.trim() : '';
       var category = document.getElementById('etCategory') ? document.getElementById('etCategory').value : 'General';
 
       if (!name) { showToast('Template name is required', 'error'); return; }
@@ -3548,7 +3546,7 @@
       // Body preview
       h += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:14px;min-height:120px">';
       h += '<div style="font-size:11px;color:#64748b;font-weight:600;margin-bottom:8px">BODY PREVIEW</div>';
-      h += '<div style="font-size:13px;color:#2d3748;line-height:1.6;white-space:pre-wrap">' + esc(filledBody) + '</div>';
+      h += '<div style="font-size:13px;color:#2d3748;line-height:1.6;white-space:pre-wrap">' + filledBody + '</div>';
       h += '</div>';
 
       // Send button
