@@ -770,7 +770,7 @@
           : '<span class="phone-link" onclick="editPhone(\'' + a.id + '\')">' + esc(a.phone || 'Add') + '</span>') + '</td>';
 
         // Notes
-        var noteDisplay = a.notes ? esc(a.notes) : '+ Add Note';
+        var noteDisplay = a.notes ? notesPreview(a.notes) : '+ Add Note';
         var noteClass = a.notes ? 'notes-snip' : 'notes-snip empty';
         if (isDead) noteClass += '" style="color:#ef4444';
         html += '<td><span class="' + noteClass + '" onclick="editNotes(\'' + a.id + '\')">' + noteDisplay + '</span></td>';
@@ -1604,29 +1604,220 @@
     function editNotes(actionId) {
       var a = allActions.find(function(x) { return x.id === actionId; });
       if (!a) return;
+      var currentNotes = String(a.notes || '');
+      var entries = parseNoteEntries(currentNotes);
+
       var overlay = document.createElement('div');
       overlay.className = 'notes-edit-overlay';
-      overlay.innerHTML = '<div class="notes-edit-card"><div class="notes-edit-header"><div><h3>' + esc(a.company) + '</h3></div><button onclick="this.closest(\'.notes-edit-overlay\').remove()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer">&#10005;</button></div><div class="notes-edit-body"><textarea id="notesEditArea">' + esc(a.notes || '') + '</textarea></div><div class="notes-edit-footer"><button onclick="this.closest(\'.notes-edit-overlay\').remove()" style="background:#e2e8f0;color:#4a5568">Cancel</button><button onclick="saveNotes(\'' + actionId + '\')" style="background:#10b981;color:#fff">Save Notes</button></div></div>';
-      document.body.appendChild(overlay);
-      document.getElementById('notesEditArea').focus();
-    }
 
-    async function saveNotes(actionId) {
-      var val = document.getElementById('notesEditArea').value.trim();
-      try {
-        var res = await fetch(WEB_APP_URL, {
-          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
-          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{notes:val}})
-        });
-        var data = await res.json();
-        if (data.status !== 'success') throw new Error(data.message);
-        var a = allActions.find(function(x) { return x.id === actionId; });
-        if (a) a.notes = val;
+      var card = document.createElement('div');
+      card.className = 'notes-edit-card';
+
+      // Header
+      var header = document.createElement('div');
+      header.className = 'notes-edit-header';
+      header.innerHTML = '<div><h3>Notes</h3><div style="opacity:.8;font-size:13px;margin-top:2px">' + esc(a.company) + '</div></div>';
+
+      // Body
+      var body = document.createElement('div');
+      body.className = 'notes-edit-body';
+      body.style.padding = '0';
+
+      // New entry input area
+      var inputArea = document.createElement('div');
+      inputArea.style.cssText = 'padding:16px 24px;border-bottom:2px solid #e2e8f0;background:#f8fafc';
+      inputArea.innerHTML = '<label style="display:block;font-size:12px;font-weight:700;color:#4a5568;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Add New Note</label>';
+      var newInput = document.createElement('textarea');
+      newInput.placeholder = 'Type a new note...';
+      newInput.style.cssText = 'width:100%;min-height:80px;padding:12px;border:2px solid #e2e8f0;border-radius:8px;font-size:15px;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.5';
+      inputArea.appendChild(newInput);
+
+      var addBtnRow = document.createElement('div');
+      addBtnRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:8px';
+      var addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.textContent = '+ Add Note';
+      addBtn.style.cssText = 'background:#10b981;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer';
+      addBtnRow.appendChild(addBtn);
+      inputArea.appendChild(addBtnRow);
+      body.appendChild(inputArea);
+
+      // Entries list
+      var listWrap = document.createElement('div');
+      listWrap.style.cssText = 'padding:16px 24px;max-height:350px;overflow-y:auto';
+      var listEl = document.createElement('div');
+
+      function renderEntries() {
+        if (entries.length === 0) {
+          listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:14px;font-style:italic">No notes yet</div>';
+          return;
+        }
+        listEl.innerHTML = '';
+        for (var i = 0; i < entries.length; i++) {
+          (function(idx) {
+            var e = entries[idx];
+            var eCard = document.createElement('div');
+            eCard.style.cssText = 'padding:12px;background:' + (idx % 2 === 0 ? '#fff' : '#f8fafc') + ';border-radius:8px;margin-bottom:8px;border:1px solid #e2e8f0';
+
+            if (e.date) {
+              var dateDiv = document.createElement('div');
+              dateDiv.style.cssText = 'font-size:11px;color:#64748b;margin-bottom:4px;font-weight:600';
+              dateDiv.textContent = e.date;
+              eCard.appendChild(dateDiv);
+            }
+
+            var textDiv = document.createElement('div');
+            textDiv.textContent = e.text;
+            textDiv.style.cssText = 'font-size:14px;color:#1e293b;line-height:1.5;white-space:pre-wrap;cursor:text;padding:4px;border-radius:4px;min-height:20px';
+            textDiv.contentEditable = 'true';
+            textDiv.spellcheck = true;
+            textDiv.addEventListener('focus', function() {
+              textDiv.style.background = '#fffbeb';
+              textDiv.style.outline = '2px solid #fbbf24';
+            });
+            textDiv.addEventListener('blur', function() {
+              textDiv.style.background = '';
+              textDiv.style.outline = '';
+              entries[idx].text = textDiv.textContent.trim();
+            });
+            eCard.appendChild(textDiv);
+
+            var btnRow = document.createElement('div');
+            btnRow.style.cssText = 'text-align:right;margin-top:6px';
+            var delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.textContent = 'Remove';
+            delBtn.style.cssText = 'background:none;border:none;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;padding:2px 6px';
+            delBtn.addEventListener('click', function() {
+              entries.splice(idx, 1);
+              renderEntries();
+            });
+            btnRow.appendChild(delBtn);
+            eCard.appendChild(btnRow);
+
+            listEl.appendChild(eCard);
+          })(i);
+        }
+      }
+      renderEntries();
+      listWrap.appendChild(listEl);
+      body.appendChild(listWrap);
+
+      // Footer
+      var footer = document.createElement('div');
+      footer.className = 'notes-edit-footer';
+
+      var cancelBtn = document.createElement('button');
+      cancelBtn.style.cssText = 'background:#e2e8f0;color:#4a5568';
+      cancelBtn.textContent = 'Cancel';
+
+      var saveBtn = document.createElement('button');
+      saveBtn.style.cssText = 'background:#10b981;color:#fff';
+      saveBtn.textContent = 'Save Notes';
+
+      footer.appendChild(cancelBtn);
+      footer.appendChild(saveBtn);
+
+      card.appendChild(header);
+      card.appendChild(body);
+      card.appendChild(footer);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      newInput.focus();
+
+      // Add note button
+      addBtn.addEventListener('click', function() {
+        var text = newInput.value.trim();
+        if (!text) { newInput.focus(); return; }
+        var now = new Date();
+        var dateStr = formatNoteDate(now);
+        entries.unshift({ date: dateStr, text: text });
+        newInput.value = '';
+        renderEntries();
+        newInput.focus();
+      });
+
+      // Enter to add, Shift+Enter for newline
+      newInput.addEventListener('keydown', function(ev) {
+        if (ev.key === 'Enter' && !ev.shiftKey) {
+          ev.preventDefault();
+          addBtn.click();
+        }
+      });
+
+      // Save - instant close, background sync
+      saveBtn.addEventListener('click', function() {
+        var pending = newInput.value.trim();
+        if (pending) {
+          entries.unshift({ date: formatNoteDate(new Date()), text: pending });
+        }
+        var serialized = serializeNoteEntries(entries);
+        overlay.remove();
+        if (a) a.notes = serialized;
         renderTable();
         showToast('Notes saved', 'success');
-      } catch(e) { showToast('Error: ' + e.message, 'error'); }
-      var overlay = document.querySelector('.notes-edit-overlay');
-      if (overlay) overlay.remove();
+        // Background sync
+        fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'updateFollowUpAction', actionId:actionId, updates:{notes:serialized}})
+        }).then(function(r) { return r.json(); }).then(function(d) {
+          if (d.status !== 'success') showToast('Server sync warning: ' + d.message, 'error');
+        }).catch(function(e) { showToast('Notes saved locally - server sync failed', 'error'); });
+      });
+
+      // Cancel
+      cancelBtn.addEventListener('click', function() { overlay.remove(); });
+
+      // No close on overlay click or escape - only Save/Cancel
+    }
+
+    function formatNoteDate(d) {
+      var m = d.getMonth() + 1;
+      var day = d.getDate();
+      var yr = d.getFullYear();
+      var hr = d.getHours();
+      var min = d.getMinutes();
+      var ampm = hr >= 12 ? 'PM' : 'AM';
+      hr = hr % 12 || 12;
+      return String(m).padStart(2,'0') + '/' + String(day).padStart(2,'0') + '/' + yr + ' ' + hr + ':' + String(min).padStart(2,'0') + ' ' + ampm;
+    }
+
+    function parseNoteEntries(raw) {
+      if (!raw || !raw.trim()) return [];
+      var lines = raw.split('\n---\n');
+      var entries = [];
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
+        if (match) {
+          entries.push({ date: match[1], text: match[2].trim() });
+        } else {
+          entries.push({ date: '', text: line });
+        }
+      }
+      return entries;
+    }
+
+    function serializeNoteEntries(entries) {
+      var parts = [];
+      for (var i = 0; i < entries.length; i++) {
+        var e = entries[i];
+        if (e.date) {
+          parts.push('[' + e.date + '] ' + e.text);
+        } else {
+          parts.push(e.text);
+        }
+      }
+      return parts.join('\n---\n');
+    }
+
+    function notesPreview(raw) {
+      var entries = parseNoteEntries(raw);
+      if (!entries.length) return raw.length > 40 ? esc(raw.substring(0,40)) + '...' : esc(raw);
+      var text = entries[0].text || '';
+      return text.length > 40 ? esc(text.substring(0,40)) + '...' : esc(text);
     }
 
     // ?????????? ALERT ??????????
