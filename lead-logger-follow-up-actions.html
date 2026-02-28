@@ -826,7 +826,7 @@
         html += '<td><strong' + (isDead ? ' style="color:#ef4444"' : '') + '>' + (isDead ? '<svg viewBox="0 0 24 24" style="width:10px;height:10px;stroke:#ef4444;fill:#ef4444;display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/></svg>' : '') + esc(a.company) + '</strong></td>';
 
         // Population
-        var popDisplay = a.population ? Number(a.population).toLocaleString() : '';
+        var popDisplay = a.population || '';
         html += '<td style="font-size:11px;color:' + (isDead ? '#ef4444' : '#4a5568') + '">' + (isDead
           ? esc(popDisplay)
           : '<span class="phone-link" onclick="editPopulation(\'' + a.id + '\')">' + esc(popDisplay || 'Add') + '</span>') + '</td>';
@@ -1518,12 +1518,12 @@
       if (!a) return;
       var td = document.querySelector('tr[data-id="' + actionId + '"] td:nth-child(3)');
       var current = a.population || '';
-      td.innerHTML = '<input class="inline-input" type="text" value="' + esc(current) + '" inputmode="numeric" style="width:70px" onblur="savePopulation(\'' + actionId + '\',this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>';
+      td.innerHTML = '<input class="inline-input" type="text" value="' + esc(current) + '" placeholder="e.g. 400-600" style="width:80px" onblur="savePopulation(\'' + actionId + '\',this)" onkeydown="if(event.key===\'Enter\')this.blur()"/>';
       td.querySelector('input').focus();
     }
 
     async function savePopulation(actionId, input) {
-      var val = input.value.trim().replace(/[^0-9]/g, '');
+      var val = input.value.trim().replace(/[^0-9\-\+]/g, '');
       var a = allActions.find(function(x) { return x.id === actionId; });
       var oldPop = a ? a.population : '';
       if (a) a.population = val;
