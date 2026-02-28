@@ -1108,6 +1108,7 @@
 
     var _composeActionId = null;
     var _composeContacts = []; // working copy of contacts for current compose
+    var _contactsCache = {}; // cache contacts by leadId|company
 
     // Email send history - stored per actionId
     function getEmailHistory(actionId) {
@@ -1313,19 +1314,32 @@
     }
 
     function fetchContactsFromLeadDB(leadId, company) {
+      // Check cache first for instant render
+      var cacheKey = (leadId || '') + '|' + (company || '');
+      if (_contactsCache[cacheKey]) {
+        _composeContacts = _contactsCache[cacheKey].map(function(c) {
+          return {name:String(c.name||''), email:String(c.email||''), position:String(c.position||''), selected:true};
+        });
+        renderComposeContacts();
+      }
+
+      // Always fetch fresh in background
       var url = WEB_APP_URL + '?action=getLeadContacts&leadId=' + encodeURIComponent(leadId || '') + '&company=' + encodeURIComponent(company || '');
       fetch(url).then(function(r) { return r.json(); }).then(function(data) {
         if (data.status === 'success' && data.contacts && data.contacts.length > 0) {
+          _contactsCache[cacheKey] = data.contacts;
           _composeContacts = data.contacts.map(function(c) {
             return {name:String(c.name||''), email:String(c.email||''), position:String(c.position||''), selected:true};
           });
-        } else {
+        } else if (!_contactsCache[cacheKey]) {
           _composeContacts = [];
         }
         renderComposeContacts();
       }).catch(function() {
-        _composeContacts = [];
-        renderComposeContacts();
+        if (!_contactsCache[cacheKey]) {
+          _composeContacts = [];
+          renderComposeContacts();
+        }
       });
     }
 
