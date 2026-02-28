@@ -419,6 +419,14 @@
       .modal-card{width:98%!important;max-width:98vw!important}
       .modal-body{padding:10px}
     }
+    .proposal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1100;display:flex;flex-direction:column}
+    .proposal-bar{background:#1e293b;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .proposal-bar-title{color:#fff;font-size:15px;font-weight:700}
+    .proposal-bar-close{background:#ef4444;color:#fff;border:none;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+    .proposal-bar-close:hover{background:#dc2626}
+    .proposal-bar-open{background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-left:8px}
+    .proposal-bar-open:hover{background:#1d4ed8}
+    .proposal-frame{flex:1;border:none;width:100%;background:#fff}
   </style>
 </head>
 <body>
@@ -1974,11 +1982,6 @@
         var lead = data.leads.find(function(l) { return String(l.id) === String(leadId); });
         if (!lead) { showToast('Lead not found in database', 'error'); return; }
 
-        if (!lead.repPhone || !lead.repEmail) {
-          showToast('Missing rep phone/email. Edit the lead in Lead Database first.', 'error');
-          return;
-        }
-
         var params = new URLSearchParams();
         if (lead.companyName) params.append('companyName', lead.companyName);
         if (lead.contactName) params.append('contactName', lead.contactName);
@@ -2001,7 +2004,33 @@
           showToast('Business unit not set for this lead. Edit in Lead Database.', 'error');
           return;
         }
-        window.location.href = targetPage + '?' + params.toString();
+
+        var proposalUrl = targetPage + '?' + params.toString();
+
+        // Open in iframe modal
+        var existing = document.getElementById('proposalOverlay');
+        if (existing) existing.remove();
+
+        var overlay = document.createElement('div');
+        overlay.className = 'proposal-overlay';
+        overlay.id = 'proposalOverlay';
+
+        var bar = document.createElement('div');
+        bar.className = 'proposal-bar';
+        bar.innerHTML = '<span class="proposal-bar-title">Proposal - ' + esc(lead.companyName || company) + '</span>' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            '<button class="proposal-bar-open" onclick="window.open(document.getElementById(\'proposalFrame\').src,\'_blank\')">Open in New Tab</button>' +
+            '<button class="proposal-bar-close" onclick="document.getElementById(\'proposalOverlay\').remove()">Close Proposal</button>' +
+          '</div>';
+
+        var frame = document.createElement('iframe');
+        frame.className = 'proposal-frame';
+        frame.id = 'proposalFrame';
+        frame.src = proposalUrl;
+
+        overlay.appendChild(bar);
+        overlay.appendChild(frame);
+        document.body.appendChild(overlay);
       }).catch(function(e) { showToast('Error: ' + e.message, 'error'); });
     }
     async function openTeamModal() {
