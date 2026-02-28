@@ -304,6 +304,12 @@
     .ebld-btn-del:hover{background:#fef2f2;border-color:#ef4444}
     .ebld-textarea{width:100%;min-height:80px;padding:10px 12px;border:none;font-size:13px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;color:#2d3748}
     .ebld-textarea::placeholder{color:#a0aec0}
+    .ebld-toolbar{display:flex;align-items:center;gap:4px;padding:4px 8px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;flex-wrap:wrap}
+    .ebld-toolbar select,.ebld-toolbar input[type=color]{padding:2px 4px;border:1px solid #cbd5e0;border-radius:4px;font-size:10px;background:#fff;cursor:pointer;height:24px}
+    .ebld-toolbar select{min-width:70px}
+    .ebld-fmt-btn{width:24px;height:24px;border:1px solid #cbd5e0;border-radius:4px;background:#fff;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:#475569}
+    .ebld-fmt-btn:hover{background:#e2e8f0}
+    .ebld-fmt-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
     .ebld-img-preview{padding:12px;text-align:center}
     .ebld-img-preview img{max-width:100%;max-height:200px;border-radius:6px;display:block;margin:0 auto}
     .ebld-img-name{font-size:10px;color:#64748b;margin-top:6px}
@@ -3423,14 +3429,24 @@
       return JSON.stringify(_etBlocks);
     }
 
+    function blockFontStyle(f, fallbackSize) {
+      f = f || {};
+      var s = 'font-size:' + (f.size || fallbackSize || '14') + 'px;line-height:1.6;color:' + (f.color || '#2d3748') + ';font-family:' + (f.family || 'Arial') + ',sans-serif';
+      if (f.bold) s += ';font-weight:bold';
+      if (f.italic) s += ';font-style:italic';
+      if (f.underline) s += ';text-decoration:underline';
+      if (f.align) s += ';text-align:' + f.align;
+      return s;
+    }
+
     function blocksToHtml(blocks, action) {
       var html = '';
       for (var i = 0; i < blocks.length; i++) {
         var b = blocks[i];
         if (b.type === 'text') {
           var txt = b.content || '';
-          if (action) txt = fillPlaceholders(txt, action);
-          html += '<div style="font-size:14px;line-height:1.6;color:#2d3748">' + esc(txt).replace(/\n/g, '<br>') + '</div>';
+          if (action) txt = doFillPlaceholders(txt, action);
+          html += '<div style="' + blockFontStyle(b.font, '14') + '">' + esc(txt).replace(/\n/g, '<br>') + '</div>';
         } else if (b.type === 'image') {
           html += '<div style="margin:12px 0;text-align:center"><img src="' + esc(b.url) + '" alt="' + esc(b.name || '') + '" style="max-width:100%;border-radius:6px"></div>';
         }
@@ -3444,8 +3460,8 @@
         var b = blocks[i];
         if (b.type === 'text') {
           var txt = b.content || '';
-          if (action) txt = fillPlaceholders(txt, action);
-          html += '<div style="font-size:13px;line-height:1.6;color:#2d3748;white-space:pre-wrap;margin-bottom:8px">' + esc(txt) + '</div>';
+          if (action) txt = doFillPlaceholders(txt, action);
+          html += '<div style="' + blockFontStyle(b.font, '13') + ';white-space:pre-wrap;margin-bottom:8px">' + esc(txt) + '</div>';
         } else if (b.type === 'image') {
           html += '<div style="margin:8px 0;text-align:center"><img src="' + esc(b.url) + '" style="max-width:100%;border-radius:6px;max-height:200px"></div>';
         }
@@ -3484,7 +3500,39 @@
         h += '</div></div>';
         // Block content
         if (isText) {
-          h += '<textarea id="etBlock_' + i + '" class="ebld-textarea" onfocus="_lastFocusedTextarea=this" placeholder="Type your text here... Use {Company}, {Contact} etc.">' + esc(b.content || '') + '</textarea>';
+          var font = b.font || {};
+          var ff = font.family || 'Arial';
+          var fs = font.size || '14';
+          var fc = font.color || '#2d3748';
+          var isBold = font.bold ? true : false;
+          var isItalic = font.italic ? true : false;
+          var isUnderline = font.underline ? true : false;
+          var align = font.align || 'left';
+          // Toolbar
+          h += '<div class="ebld-toolbar">';
+          h += '<select onchange="updateBlockFont(' + i + ',\'family\',this.value)" title="Font">';
+          var fonts = ['Arial','Helvetica','Georgia','Times New Roman','Verdana','Tahoma','Trebuchet MS','Courier New'];
+          for (var fi = 0; fi < fonts.length; fi++) {
+            h += '<option value="' + fonts[fi] + '"' + (ff === fonts[fi] ? ' selected' : '') + ' style="font-family:' + fonts[fi] + '">' + fonts[fi] + '</option>';
+          }
+          h += '</select>';
+          h += '<select onchange="updateBlockFont(' + i + ',\'size\',this.value)" title="Size" style="min-width:50px">';
+          var sizes = ['10','11','12','13','14','16','18','20','24','28','32'];
+          for (var si = 0; si < sizes.length; si++) {
+            h += '<option value="' + sizes[si] + '"' + (fs === sizes[si] ? ' selected' : '') + '>' + sizes[si] + 'px</option>';
+          }
+          h += '</select>';
+          h += '<input type="color" value="' + fc + '" onchange="updateBlockFont(' + i + ',\'color\',this.value)" title="Text color" style="width:28px;padding:0 1px"/>';
+          h += '<button type="button" class="ebld-fmt-btn' + (isBold ? ' active' : '') + '" onclick="toggleBlockFont(' + i + ',\'bold\',this)" title="Bold"><b>B</b></button>';
+          h += '<button type="button" class="ebld-fmt-btn' + (isItalic ? ' active' : '') + '" onclick="toggleBlockFont(' + i + ',\'italic\',this)" title="Italic"><i>I</i></button>';
+          h += '<button type="button" class="ebld-fmt-btn' + (isUnderline ? ' active' : '') + '" onclick="toggleBlockFont(' + i + ',\'underline\',this)" title="Underline"><u>U</u></button>';
+          h += '<span style="width:1px;height:16px;background:#cbd5e0;margin:0 2px"></span>';
+          h += '<button type="button" class="ebld-fmt-btn' + (align==='left' ? ' active' : '') + '" onclick="updateBlockFont(' + i + ',\'align\',\'left\')" title="Left align" style="font-size:10px">L</button>';
+          h += '<button type="button" class="ebld-fmt-btn' + (align==='center' ? ' active' : '') + '" onclick="updateBlockFont(' + i + ',\'align\',\'center\')" title="Center" style="font-size:10px">C</button>';
+          h += '<button type="button" class="ebld-fmt-btn' + (align==='right' ? ' active' : '') + '" onclick="updateBlockFont(' + i + ',\'align\',\'right\')" title="Right align" style="font-size:10px">R</button>';
+          h += '</div>';
+          // Textarea with live font preview
+          h += '<textarea id="etBlock_' + i + '" class="ebld-textarea" onfocus="_lastFocusedTextarea=this" placeholder="Type your text here... Use {Company}, {Contact} etc." style="font-family:' + ff + ';font-size:' + fs + 'px;color:' + fc + ';font-weight:' + (isBold ? 'bold' : 'normal') + ';font-style:' + (isItalic ? 'italic' : 'normal') + ';text-decoration:' + (isUnderline ? 'underline' : 'none') + ';text-align:' + align + '">' + esc(b.content || '') + '</textarea>';
         } else {
           if (b.url) {
             h += '<div class="ebld-img-preview"><img src="' + esc(b.url) + '"/>';
@@ -3599,6 +3647,29 @@
       syncBlocksFromDom();
       _etBlocks.splice(idx, 1);
       renderBlocks();
+    }
+
+    function updateBlockFont(idx, prop, val) {
+      syncBlocksFromDom();
+      if (!_etBlocks[idx].font) _etBlocks[idx].font = {};
+      _etBlocks[idx].font[prop] = val;
+      renderBlocks();
+      // Re-focus textarea
+      setTimeout(function() {
+        var ta = document.getElementById('etBlock_' + idx);
+        if (ta) ta.focus();
+      }, 30);
+    }
+
+    function toggleBlockFont(idx, prop, btn) {
+      syncBlocksFromDom();
+      if (!_etBlocks[idx].font) _etBlocks[idx].font = {};
+      _etBlocks[idx].font[prop] = !_etBlocks[idx].font[prop];
+      renderBlocks();
+      setTimeout(function() {
+        var ta = document.getElementById('etBlock_' + idx);
+        if (ta) ta.focus();
+      }, 30);
     }
 
     function insertPlaceholderIntoFocused(tag) {
