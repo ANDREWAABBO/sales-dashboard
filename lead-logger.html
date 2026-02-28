@@ -1,3 +1,14 @@
+================================================================================
+SELECTED FILES FROM: Sales Rep Dashboard (GIT HUB) + Google Doc Templates
+EXPORTED: 2/28/2026, 4:54:02 PM
+FILE COUNT: 1
+================================================================================
+
+
+================================================================================
+FILE: lead-logger.html
+FOLDER: Index.html (GIT HUB) Runs Abbondanza Main Page (GitHub)
+================================================================================
 
 <!DOCTYPE html>
 <html lang="en">
@@ -2312,7 +2323,34 @@ async function showFixErrorsModal() {
           dupHTML += '<div style="background:#fef3c7;padding:14px;border-radius:8px;margin-bottom:12px;border-left:4px solid #f59e0b;">';
           dupHTML += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">';
           dupHTML += '<strong style="color:' + matchColor + ';font-size:14px">' + SVG_ICONS.warning + ' ' + matchLabel + '</strong>';
-          dupHTML += '<span style="font-size:11px;color:#78350f">Existing: <strong>' + (ex.companyName || '') + '</strong> (Added: ' + formatDate(ex.dateAdded) + ')</span>';
+          dupHTML += '</div>';
+
+          // Side-by-side match comparison
+          dupHTML += '<div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">';
+          // YOUR IMPORT card
+          dupHTML += '<div style="flex:1;min-width:200px;background:#fff;border:2px solid #2563eb;border-radius:8px;padding:10px 14px">';
+          dupHTML += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#2563eb;margin-bottom:6px">YOUR IMPORT (Row ' + lead._rowNumber + ')</div>';
+          dupHTML += '<div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">' + (lead.companyName || 'Unknown') + '</div>';
+          if (lead.contactName) dupHTML += '<div style="font-size:12px;color:#475569">' + lead.contactName + '</div>';
+          if (lead.phoneNumber) dupHTML += '<div style="font-size:12px;color:#475569">' + lead.phoneNumber + '</div>';
+          if (lead.emailAddress) dupHTML += '<div style="font-size:12px;color:#2563eb">' + lead.emailAddress + '</div>';
+          if (lead.customerAddress) dupHTML += '<div style="font-size:11px;color:#64748b;margin-top:2px">' + lead.customerAddress + (lead.customerState ? ', ' + lead.customerState : '') + (lead.customerZip ? ' ' + lead.customerZip : '') + '</div>';
+          if (lead.population) dupHTML += '<div style="font-size:11px;color:#64748b">Pop: ' + lead.population + '</div>';
+          dupHTML += '</div>';
+          // ARROW
+          dupHTML += '<div style="display:flex;align-items:center;font-size:20px;color:#f59e0b;font-weight:700;padding:0 4px">=</div>';
+          // EXISTING IN DB card
+          dupHTML += '<div style="flex:1;min-width:200px;background:#fff;border:2px solid #d97706;border-radius:8px;padding:10px 14px">';
+          dupHTML += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#d97706;margin-bottom:6px">EXISTING IN DATABASE</div>';
+          dupHTML += '<div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:4px">' + (ex.companyName || 'Unknown') + '</div>';
+          if (ex.contactName) dupHTML += '<div style="font-size:12px;color:#475569">' + ex.contactName + '</div>';
+          if (ex.phoneNumber) dupHTML += '<div style="font-size:12px;color:#475569">' + ex.phoneNumber + '</div>';
+          if (ex.emailAddress) dupHTML += '<div style="font-size:12px;color:#2563eb">' + ex.emailAddress + '</div>';
+          if (ex.customerAddress) dupHTML += '<div style="font-size:11px;color:#64748b;margin-top:2px">' + ex.customerAddress + (ex.customerState ? ', ' + ex.customerState : '') + (ex.customerZip ? ' ' + ex.customerZip : '') + '</div>';
+          if (ex.population) dupHTML += '<div style="font-size:11px;color:#64748b">Pop: ' + ex.population + '</div>';
+          var addedDate = ex.dateAdded ? formatDate(ex.dateAdded) : '';
+          if (addedDate) dupHTML += '<div style="font-size:10px;color:#94a3b8;margin-top:4px">Added: ' + addedDate + (ex.repName ? ' | Rep: ' + ex.repName : '') + '</div>';
+          dupHTML += '</div>';
           dupHTML += '</div>';
 
           // Radio buttons
