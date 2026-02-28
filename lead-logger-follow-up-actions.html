@@ -476,6 +476,10 @@
         <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         Email Templates
       </button>
+      <button class="tbtn" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)" onclick="openDripModal()">
+        <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        Drip Marketing
+      </button>
     </div>
 
     <!-- FILTER ROW -->
@@ -733,9 +737,10 @@
       loadTeamFromBackend();
       loadTemplatesFromBackend();
       loadActivityLogCounts();
+      loadDripData();
       // Version check
       fetch(WEB_APP_URL + '?action=version').then(function(r){return r.json()}).then(function(d){
-        if(d.version !== 'v18-activity-log') showToast('WARNING: Code.gs not updated! Deploy v18 to Apps Script','error');
+        if(d.version !== 'v19-drip-marketing') showToast('WARNING: Code.gs not updated! Deploy v19 to Apps Script','error');
       }).catch(function(){});
     });
 
@@ -1124,6 +1129,8 @@
     var _composeActionId = null;
     var _composeContacts = []; // working copy of contacts for current compose
     var _contactsCache = {}; // cache contacts by leadId|company
+    var _dripSettings = {frequencyDays:7, sendHour:9, sendMinute:0, autoEnroll:false, defaultTemplateId:'', defaultTemplateName:'', timezone:'America/New_York'};
+    var _dripCampaigns = []; // array of {actionId, company, templateId, templateName, enabled, lastSentDate, nextSendDate, enrolledDate, sendCount}
 
     // Load contacts cache from sessionStorage for instant compose
     (function() {
@@ -1332,6 +1339,9 @@
       // Placeholder hints
       h += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 12px;font-size:11px;color:#1e40af;line-height:1.4">Placeholders: <strong>{Company}</strong>, <strong>{Contact}</strong>, <strong>{Phone}</strong>, <strong>{Rep}</strong>, <strong>{Date}</strong> auto-fill when sent.</div>';
 
+      // Drip marketing toggle
+      h += renderDripToggle(actionId);
+
       h += '</div>';
       h += '<div class="modal-footer"><button class="btn-cancel" onclick="this.closest(\'.modal-overlay\').remove()">Cancel</button><button class="btn-save" onclick="saveComposeEmail()">Save</button></div>';
       h += '</div>';
@@ -1508,6 +1518,9 @@
         };
         persistQueuedEmails();
       }
+
+      // Save drip settings if toggled on
+      saveDripFromCompose(actionId);
 
       var overlay = document.getElementById('composeOverlay');
       if (overlay) overlay.remove();
@@ -2536,6 +2549,238 @@
         btn.textContent = 'Send Alert';
         btn.disabled = false;
       }
+    }
+
+    // ========== DRIP MARKETING ==========
+    function loadDripData() {
+      fetch(WEB_APP_URL + '?action=getDripSettings').then(function(r){return r.json()}).then(function(d){
+        if (d.status === 'success' && d.settings) _dripSettings = d.settings;
+      }).catch(function(){});
+      fetch(WEB_APP_URL + '?action=getDripCampaigns').then(function(r){return r.json()}).then(function(d){
+        if (d.status === 'success' && d.campaigns) _dripCampaigns = d.campaigns;
+      }).catch(function(){});
+    }
+
+    function getDripForAction(actionId) {
+      for (var i = 0; i < _dripCampaigns.length; i++) {
+        if (_dripCampaigns[i].actionId === actionId) return _dripCampaigns[i];
+      }
+      return null;
+    }
+
+    function openDripModal() {
+      // Refresh data first
+      Promise.all([
+        fetch(WEB_APP_URL + '?action=getDripSettings').then(function(r){return r.json()}),
+        fetch(WEB_APP_URL + '?action=getDripCampaigns').then(function(r){return r.json()})
+      ]).then(function(results) {
+        if (results[0].status === 'success' && results[0].settings) _dripSettings = results[0].settings;
+        if (results[1].status === 'success' && results[1].campaigns) _dripCampaigns = results[1].campaigns;
+        renderDripModal();
+      }).catch(function() { renderDripModal(); });
+    }
+
+    function renderDripModal() {
+      var old = document.getElementById('dripOverlay');
+      if (old) old.remove();
+
+      var s = _dripSettings;
+      var templateOpts = '<option value="">-- Select Template --</option>';
+      for (var i = 0; i < emailTemplates.length; i++) {
+        var sel = emailTemplates[i].id === s.defaultTemplateId ? ' selected' : '';
+        templateOpts += '<option value="' + esc(emailTemplates[i].id) + '"' + sel + '>' + esc(emailTemplates[i].name) + '</option>';
+      }
+
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.id = 'dripOverlay';
+
+      var h = '<div class="modal-card" style="max-width:700px">';
+      h += '<div class="modal-hdr" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)"><h3><svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg> Drip Marketing Settings</h3><p>Automated email sequences for your leads</p></div>';
+      h += '<div class="modal-body">';
+
+      // Global settings
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">';
+      h += '<div><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Send Every (days)</label><input id="dripFreq" type="number" min="1" max="90" value="' + (s.frequencyDays || 7) + '" style="width:100%;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px"/></div>';
+      h += '<div><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Send Time (hour, 24h)</label><input id="dripHour" type="number" min="0" max="23" value="' + (s.sendHour || 9) + '" style="width:100%;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:14px"/></div>';
+      h += '</div>';
+
+      // Auto-enroll
+      h += '<div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:12px">';
+      h += '<div style="width:36px;height:20px;border-radius:20px;background:' + (s.autoEnroll ? '#059669' : '#cbd5e0') + ';position:relative;cursor:pointer;transition:.2s;flex-shrink:0" onclick="this.dataset.on=this.dataset.on===\'1\'?\'0\':\'1\';this.style.background=this.dataset.on===\'1\'?\'#059669\':\'#cbd5e0\';this.querySelector(\'span\').style.left=this.dataset.on===\'1\'?\'18px\':\'2px\'" id="dripAutoToggle" data-on="' + (s.autoEnroll ? '1' : '0') + '"><span style="position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:' + (s.autoEnroll ? '18px' : '2px') + ';transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></div>';
+      h += '<div><div style="font-weight:600;font-size:13px;color:#1e293b">Auto-Enroll New Leads</div><div style="font-size:11px;color:#64748b">Automatically start drip for every new lead synced</div></div></div>';
+
+      // Default template for auto-enroll
+      h += '<div style="margin-bottom:16px"><label style="font-size:12px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Default Template (for auto-enrolled leads)</label>';
+      h += '<select id="dripDefaultTemplate" style="width:100%;padding:8px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:13px">' + templateOpts + '</select></div>';
+
+      // Active campaigns list
+      h += '<div style="border-top:2px solid #e2e8f0;padding-top:16px;margin-top:8px">';
+      h += '<div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:12px">Active Drip Campaigns (' + _dripCampaigns.length + ')</div>';
+
+      if (_dripCampaigns.length === 0) {
+        h += '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">No companies enrolled in drip marketing yet.<br>Click Email on any company to enable drip.</div>';
+      } else {
+        h += '<div style="max-height:300px;overflow-y:auto">';
+        for (var c = 0; c < _dripCampaigns.length; c++) {
+          var camp = _dripCampaigns[c];
+          var bg = camp.enabled ? '#ecfdf5' : '#f8fafc';
+          var border = camp.enabled ? '#a7f3d0' : '#e2e8f0';
+          h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:' + bg + ';border:1px solid ' + border + ';border-radius:6px;margin-bottom:6px">';
+          // Toggle
+          h += '<div style="width:32px;height:18px;border-radius:18px;background:' + (camp.enabled ? '#059669' : '#cbd5e0') + ';position:relative;cursor:pointer;transition:.2s;flex-shrink:0" onclick="toggleDripCampaign(\'' + esc(camp.actionId) + '\',this,' + (camp.enabled ? 'false' : 'true') + ')"><span style="position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;left:' + (camp.enabled ? '16px' : '2px') + ';transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></div>';
+          // Info
+          h += '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(camp.company) + '</div>';
+          h += '<div style="font-size:10px;color:#64748b">Template: ' + esc(camp.templateName || 'None') + ' | Sent: ' + camp.sendCount + ' | Next: ' + (camp.nextSendDate || 'Pending') + '</div></div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+
+      h += '</div>'; // modal-body
+      h += '<div class="modal-footer"><button class="btn-cancel" onclick="document.getElementById(\'dripOverlay\').remove()">Cancel</button><button class="btn-save" onclick="saveDripSettings()">Save Settings</button></div>';
+      h += '</div>';
+
+      overlay.innerHTML = h;
+      document.body.appendChild(overlay);
+    }
+
+    function saveDripSettings() {
+      var freq = parseInt(document.getElementById('dripFreq').value) || 7;
+      var hour = parseInt(document.getElementById('dripHour').value) || 9;
+      var autoToggle = document.getElementById('dripAutoToggle');
+      var autoEnroll = autoToggle && autoToggle.dataset.on === '1';
+      var templateSel = document.getElementById('dripDefaultTemplate');
+      var templateId = templateSel ? templateSel.value : '';
+      var templateName = '';
+      if (templateSel && templateSel.selectedIndex > 0) {
+        templateName = templateSel.options[templateSel.selectedIndex].text;
+      }
+
+      _dripSettings = {
+        frequencyDays: freq,
+        sendHour: hour,
+        sendMinute: 0,
+        autoEnroll: autoEnroll,
+        defaultTemplateId: templateId,
+        defaultTemplateName: templateName,
+        timezone: 'America/New_York'
+      };
+
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'saveDripSettings', settings: _dripSettings})
+      }).then(function(r){return r.json()}).then(function(d){
+        if (d.status === 'success') showToast('Drip settings saved! Daily trigger set for ' + hour + ':00', 'success');
+        else showToast('Error: ' + d.message, 'error');
+      }).catch(function(e){ showToast('Error: ' + e.message, 'error'); });
+
+      var overlay = document.getElementById('dripOverlay');
+      if (overlay) overlay.remove();
+    }
+
+    function toggleDripCampaign(actionId, el, enabled) {
+      // Optimistic UI toggle
+      var span = el.querySelector('span');
+      if (enabled) {
+        el.style.background = '#059669';
+        span.style.left = '16px';
+      } else {
+        el.style.background = '#cbd5e0';
+        span.style.left = '2px';
+      }
+      // Update cache
+      for (var i = 0; i < _dripCampaigns.length; i++) {
+        if (_dripCampaigns[i].actionId === actionId) _dripCampaigns[i].enabled = enabled;
+      }
+      // Background save
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'toggleDrip', actionId: actionId, enabled: enabled})
+      }).then(function(r){return r.json()}).then(function(d){
+        if (d.status !== 'success') showToast('Error toggling drip', 'error');
+      }).catch(function(){});
+    }
+
+    // ========== DRIP TOGGLE IN COMPOSE MODAL ==========
+    function renderDripToggle(actionId) {
+      var camp = getDripForAction(actionId);
+      var isOn = camp && camp.enabled;
+      var currentTemplate = camp ? camp.templateName : '';
+
+      var templateOpts = '<option value="">-- Select Template --</option>';
+      for (var i = 0; i < emailTemplates.length; i++) {
+        var sel = (camp && emailTemplates[i].id === camp.templateId) ? ' selected' : '';
+        templateOpts += '<option value="' + esc(emailTemplates[i].id) + '"' + sel + '>' + esc(emailTemplates[i].name) + '</option>';
+      }
+
+      var h = '<div style="border-top:2px solid #e2e8f0;padding-top:12px;margin-top:12px">';
+      h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+      h += '<div style="width:36px;height:20px;border-radius:20px;background:' + (isOn ? '#7c3aed' : '#cbd5e0') + ';position:relative;cursor:pointer;transition:.2s;flex-shrink:0" id="dripComposeToggle" data-on="' + (isOn ? '1' : '0') + '" onclick="toggleComposedrip(this,\'' + esc(actionId) + '\')"><span style="position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:' + (isOn ? '18px' : '2px') + ';transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)"></span></div>';
+      h += '<div style="font-weight:600;font-size:13px;color:#1e293b">Drip Marketing</div>';
+      if (isOn) h += '<span style="font-size:10px;color:#7c3aed;font-weight:600;background:#ede9fe;padding:2px 8px;border-radius:10px">ACTIVE</span>';
+      h += '</div>';
+      h += '<div id="dripComposeOpts" style="' + (isOn ? '' : 'display:none;') + 'padding:10px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px">';
+      h += '<label style="font-size:11px;font-weight:600;color:#6d28d9;display:block;margin-bottom:4px">Drip Template</label>';
+      h += '<select id="dripComposeTemplate" style="width:100%;padding:7px 10px;border:1px solid #d8b4fe;border-radius:6px;font-size:12px">' + templateOpts + '</select>';
+      h += '<div style="font-size:10px;color:#7c3aed;margin-top:6px">Sends every ' + (_dripSettings.frequencyDays || 7) + ' days automatically</div>';
+      h += '</div></div>';
+      return h;
+    }
+
+    function toggleComposedrip(el, actionId) {
+      var isOn = el.dataset.on === '1';
+      var newState = !isOn;
+      el.dataset.on = newState ? '1' : '0';
+      el.style.background = newState ? '#7c3aed' : '#cbd5e0';
+      el.querySelector('span').style.left = newState ? '18px' : '2px';
+      var opts = document.getElementById('dripComposeOpts');
+      if (opts) opts.style.display = newState ? 'block' : 'none';
+
+      if (!newState) {
+        // Unenroll
+        fetch(WEB_APP_URL, {
+          method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body: JSON.stringify({action:'unenrollDrip', actionId: actionId})
+        }).then(function(r){return r.json()}).then(function(d){
+          if (d.status === 'success') {
+            for (var i = _dripCampaigns.length - 1; i >= 0; i--) {
+              if (_dripCampaigns[i].actionId === actionId) _dripCampaigns[i].enabled = false;
+            }
+            showToast('Drip marketing disabled', 'success');
+          }
+        }).catch(function(){});
+      }
+    }
+
+    function saveDripFromCompose(actionId) {
+      var toggle = document.getElementById('dripComposeToggle');
+      if (!toggle || toggle.dataset.on !== '1') return; // drip not enabled
+
+      var sel = document.getElementById('dripComposeTemplate');
+      if (!sel || !sel.value) return; // no template selected
+
+      var a = allActions.find(function(x) { return x.id === actionId; });
+      var templateName = sel.options[sel.selectedIndex].text;
+
+      fetch(WEB_APP_URL, {
+        method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'},
+        body: JSON.stringify({action:'enrollDrip', actionId: actionId, company: a ? a.company : '', templateId: sel.value, templateName: templateName})
+      }).then(function(r){return r.json()}).then(function(d){
+        if (d.status === 'success') {
+          showToast('Drip marketing enabled - sends every ' + (_dripSettings.frequencyDays || 7) + ' days', 'success');
+          // Update local cache
+          var existing = getDripForAction(actionId);
+          if (existing) {
+            existing.enabled = true;
+            existing.templateId = sel.value;
+            existing.templateName = templateName;
+          } else {
+            _dripCampaigns.push({actionId: actionId, company: a ? a.company : '', templateId: sel.value, templateName: templateName, enabled: true, lastSentDate: '', nextSendDate: '', enrolledDate: '', sendCount: 0});
+          }
+        }
+      }).catch(function(){});
     }
 
     // ?????????? NAV / PLACEHOLDER STUBS ??????????
