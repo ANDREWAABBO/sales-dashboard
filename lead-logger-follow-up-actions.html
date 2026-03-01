@@ -518,6 +518,13 @@
         <option value="Proposal Sent">Proposal Sent</option>
         <option value="Unlabeled">Unlabeled</option>
       </select>
+      <select id="dateStatusFilter" onchange="filterTable()" style="padding:7px 10px;border:2px solid #10b981;border-radius:8px;font-size:12px;font-weight:600;color:#1e293b;background:#fff;cursor:pointer">
+        <option value="">All Dates</option>
+        <option value="pastdue">Past Due</option>
+        <option value="duetoday">Due Today</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="nodate">No Date Set</option>
+      </select>
       <input type="search" id="searchInput" placeholder="Search leads, company, notes..." oninput="filterTable()"/>
       <span style="font-size:11px;color:#94a3b8;font-style:italic;white-space:nowrap">* Right-click to remove Date or Rep</span>
       <!-- INLINE SEND EMAILS -->
@@ -1106,10 +1113,53 @@
     function getFilteredActions() {
       var search = (document.getElementById('searchInput').value || '').toLowerCase();
       var actionFilter = document.getElementById('actionFilter').value;
+      var dateStatus = document.getElementById('dateStatusFilter').value;
+      var today = new Date();
+      today.setHours(0,0,0,0);
+      var todayStr = today.toISOString().slice(0,10);
+
       return allActions.filter(function(a) {
+        // Action label filter
         if (actionFilter === 'Unlabeled') {
           if ((a.actions || []).length > 0) return false;
         } else if (actionFilter && !(a.actions || []).includes(actionFilter)) return false;
+
+        // Date status filter
+        if (dateStatus) {
+          var dates = a.actionDates || {};
+          var labels = actionFilter ? [actionFilter] : (a.actions || []);
+          // Collect relevant dates for this row
+          var rowDates = [];
+          for (var di = 0; di < labels.length; di++) {
+            var dv = dates[labels[di]];
+            if (dv) {
+              var parsed = new Date(dv);
+              if (!isNaN(parsed.getTime())) {
+                parsed.setHours(0,0,0,0);
+                rowDates.push(parsed);
+              }
+            }
+          }
+          var hasAnyDate = rowDates.length > 0;
+
+          if (dateStatus === 'nodate') {
+            if (hasAnyDate) return false;
+          } else if (dateStatus === 'pastdue') {
+            if (!hasAnyDate) return false;
+            var hasPastDue = rowDates.some(function(d) { return d < today; });
+            if (!hasPastDue) return false;
+          } else if (dateStatus === 'duetoday') {
+            if (!hasAnyDate) return false;
+            var hasDueToday = rowDates.some(function(d) { return d.getTime() === today.getTime(); });
+            if (!hasDueToday) return false;
+          } else if (dateStatus === 'upcoming') {
+            if (!hasAnyDate) return false;
+            var hasUpcoming = rowDates.some(function(d) { return d > today; });
+            if (!hasUpcoming) return false;
+          }
+        }
+
+        // Search filter
         if (search) {
           var haystack = (a.company + ' ' + a.phone + ' ' + a.notes + ' ' + JSON.stringify(a.who)).toLowerCase();
           if (haystack.indexOf(search) === -1) return false;
